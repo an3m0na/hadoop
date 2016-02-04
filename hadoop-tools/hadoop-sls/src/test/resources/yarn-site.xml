@@ -68,4 +68,9 @@
     <name>yarn.scheduler.fair.assignmultiple</name>
     <value>true</value>
   </property>
+
+  <property>
+    <name>yarn.resourcemanager.scheduler.class</name>
+    <value>com.an3.tools.thesis.scheduler.data.DataOrientedScheduler</value>
+  </property>
 </configuration>
