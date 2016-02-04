@@ -59,7 +59,7 @@
   <!--  metrics  -->
   <property>
     <name>yarn.sls.metrics.switch</name>
-    <value>ON</value>
+    <value>true</value>
   </property>
   <property>
     <name>yarn.sls.metrics.web.address.port</name>
