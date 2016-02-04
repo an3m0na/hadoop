@@ -159,6 +159,7 @@ public class SLSRunner {
   private void startRM() throws IOException, ClassNotFoundException {
     Configuration rmConf = new YarnConfiguration();
     String schedulerClass = rmConf.get(YarnConfiguration.RM_SCHEDULER);
+    rmConf.addResource(conf);
     rmConf.set(SLSConfiguration.RM_SCHEDULER, schedulerClass);
     rmConf.set(YarnConfiguration.RM_SCHEDULER,
             ResourceSchedulerWrapper.class.getName());
