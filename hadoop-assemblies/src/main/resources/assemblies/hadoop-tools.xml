@@ -104,6 +104,17 @@
       <directory>../hadoop-sls/target/hadoop-sls-${project.version}/sls</directory>
       <outputDirectory>/share/hadoop/${hadoop.component}/sls</outputDirectory>
     </fileSet>
+    <fileSet>
+      <directory>../hadoop-posum/target</directory>
+      <outputDirectory>/share/hadoop/${hadoop.component}/sources</outputDirectory>
+      <includes>
+        <include>*-sources.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>../hadoop-posum/target/hadoop-posum-${project.version}/posum</directory>
+      <outputDirectory>/share/hadoop/${hadoop.component}/posum</outputDirectory>
+    </fileSet>
   </fileSets>
   <dependencySets>
     <dependencySet>
