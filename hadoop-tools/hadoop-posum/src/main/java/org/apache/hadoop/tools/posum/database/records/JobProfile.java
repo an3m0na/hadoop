@@ -177,4 +177,25 @@ public class JobProfile {
         }
         lock.writeLock().unlock();
     }
+
+    @Override
+    public String toString() {
+        return "JobProfile{" +
+                "jobId=" + jobId +
+                ", jobName='" + jobName + '\'' +
+                ", user='" + user + '\'' +
+                ", queue='" + queue + '\'' +
+                ", totalMapTasks=" + totalMapTasks +
+                ", totalReduceTasks=" + totalReduceTasks +
+                ", inputBytes=" + inputBytes +
+                ", outputBytes=" + outputBytes +
+                ", submitTime=" + submitTime +
+                ", startTime=" + startTime +
+                ", finishTime=" + finishTime +
+                ", reportedProgress=" + reportedProgress +
+                ", mapTasks=" + mapTasks +
+                ", reduceTasks=" + reduceTasks +
+                ", lock=" + lock +
+                '}';
+    }
 }

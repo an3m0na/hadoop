@@ -80,7 +80,8 @@ public class MockDataStoreClient extends DataStoreClient {
                 jobStartTimeMS = 0;
             }
 
-            JobProfile profile = new JobProfile(jobId, jobStartTimeMS);
+            JobProfile profile = new JobProfile(jobId, job.getSubmitTime() - startTime);
+            profile.setStartTime(jobStartTimeMS);
             profile.setFinishTime(jobFinishTimeMS);
             profile.setUser(job.getUser() == null ?
                     "default" : job.getUser().getValue());
@@ -115,7 +116,6 @@ public class MockDataStoreClient extends DataStoreClient {
 
     @Override
     public List<JobProfile> getComparableProfiles(String user, int count) {
-
         return super.getComparableProfiles(user, count);
     }
 }

@@ -138,4 +138,23 @@ public class TaskProfile {
     public void setOutputRecords(Long outputRecords) {
         this.outputRecords = outputRecords;
     }
+
+    @Override
+    public String toString() {
+        return "TaskProfile{" +
+                "taskId=" + taskId +
+                ", inputBytes=" + inputBytes +
+                ", inputRecords=" + inputRecords +
+                ", outputBytes=" + outputBytes +
+                ", outputRecords=" + outputRecords +
+                ", expectedInputBytes=" + expectedInputBytes +
+                ", expectedOutputBytes=" + expectedOutputBytes +
+                ", startTime=" + startTime +
+                ", finishTime=" + finishTime +
+                ", expectedDuration=" + expectedDuration +
+                ", type=" + type +
+                ", counters=" + counters +
+                ", reportedProgress=" + reportedProgress +
+                '}';
+    }
 }
