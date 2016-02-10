@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.database;
 
-import org.apache.hadoop.tools.posum.predictor.JobProfile;
-import org.apache.hadoop.tools.posum.predictor.TaskProfile;
+import org.apache.hadoop.tools.posum.database.records.JobProfile;
+import org.apache.hadoop.tools.posum.database.records.TaskProfile;
 
 import java.util.List;
 
@@ -10,8 +10,6 @@ import java.util.List;
  */
 public interface DataStore {
 
-
-    Float getAverageJobDuration(String user, String jobName);
 
     TaskProfile getTaskProfile(String taskId);
 
