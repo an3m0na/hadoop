@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.database;
 
-import org.apache.hadoop.tools.posum.predictor.JobProfile;
-import org.apache.hadoop.tools.posum.predictor.TaskProfile;
+import org.apache.hadoop.tools.posum.database.records.JobProfile;
+import org.apache.hadoop.tools.posum.database.records.TaskProfile;
 
 import java.util.List;
 
@@ -9,9 +9,8 @@ import java.util.List;
  * Created by ane on 2/9/16.
  */
 public class DataStoreClient implements DataStore {
-    public Float getAverageJobDuration(String user, String jobName) {
-        return null;
-    }
+
+    //TODO make it connect to actual database
 
     @Override
     public TaskProfile getTaskProfile(String taskId) {

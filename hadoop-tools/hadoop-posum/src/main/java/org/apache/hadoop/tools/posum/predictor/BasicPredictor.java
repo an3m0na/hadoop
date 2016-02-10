@@ -3,6 +3,8 @@ package org.apache.hadoop.tools.posum.predictor;
 import org.apache.hadoop.mapreduce.TaskType;
 import org.apache.hadoop.tools.posum.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.DataStore;
+import org.apache.hadoop.tools.posum.database.records.JobProfile;
+import org.apache.hadoop.tools.posum.database.records.TaskProfile;
 
 import java.util.List;
 

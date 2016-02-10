@@ -1,24 +1,21 @@
-package org.apache.hadoop.tools.posum.simulator;
+package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.DataStore;
-import org.apache.hadoop.tools.posum.database.DataStoreClient;
-import org.apache.hadoop.tools.posum.predictor.BasicPredictor;
-import org.apache.hadoop.tools.posum.predictor.JobBehaviorPredictor;
+import org.junit.Test;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 /**
- * Created by ane on 2/4/16.
+ * Created by ane on 2/10/16.
  */
-public class SimulatorMaster {
+public class TestPredictor {
 
-    Configuration conf;
-    DataStoreClient dataStore;
 
-    public SimulatorMaster() {
-        dataStore = new DataStoreClient();
+    private void initPredictor(DataStore dataStore) {
+        Configuration conf;
         conf = new Configuration(false);
         conf.addResource("posum-core.xml");
 
@@ -38,7 +35,18 @@ public class SimulatorMaster {
                 IllegalAccessException e) {
             e.printStackTrace();
         }
-
     }
 
+    @Test
+    public void testPredictorAccuracy() {
+        MockDataStoreClient dataStore = new MockDataStoreClient();
+        try {
+            dataStore.populateFromTrace("2jobs2min-rumen-jh.json");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        initPredictor(dataStore);
+        System.out.println(dataStore.getJobList());
+
+    }
 }

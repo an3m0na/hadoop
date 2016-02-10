@@ -1,6 +1,7 @@
-package org.apache.hadoop.tools.posum.predictor;
+package org.apache.hadoop.tools.posum.database.records;
 
 import org.apache.commons.math3.util.Pair;
+import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.TaskType;
 
 import java.util.ArrayList;
@@ -12,14 +13,16 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Created by ane on 2/8/16.
  */
 public class JobProfile {
-    private String jobId;
+    private JobID jobId;
     private String jobName;
     private String user;
+    private String queue;
     private Integer totalMapTasks;
     private Integer totalReduceTasks;
 
     private Long inputBytes;
     private Long outputBytes;
+    private Long submitTime;
     private Long startTime;
     private Long finishTime;
     private Float reportedProgress;
@@ -30,12 +33,12 @@ public class JobProfile {
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
 
-    JobProfile(String jobId, Long startTime) {
+    public JobProfile(JobID jobId, Long submitTime) {
         this.jobId = jobId;
-        this.startTime = startTime;
+        this.submitTime = submitTime;
     }
 
-    public String getJobId() {
+    public JobID getJobId() {
         return jobId;
     }
 
@@ -53,22 +56,6 @@ public class JobProfile {
 
     public void setInputBytes(long inputBytes) {
         this.inputBytes = inputBytes;
-    }
-
-    public int getTotalMapTasks() {
-        return totalMapTasks;
-    }
-
-    public void setTotalMapTasks(int totalMapTasks) {
-        this.totalMapTasks = totalMapTasks;
-    }
-
-    public int getTotalReduceTasks() {
-        return totalReduceTasks;
-    }
-
-    public void setTotalReduceTasks(int totalReduceTasks) {
-        this.totalReduceTasks = totalReduceTasks;
     }
 
     public Long getStartTime() {
@@ -125,6 +112,22 @@ public class JobProfile {
 
     public void setUser(String user) {
         this.user = user;
+    }
+
+    public String getQueue() {
+        return queue;
+    }
+
+    public void setQueue(String queue) {
+        this.queue = queue;
+    }
+
+    public Long getSubmitTime() {
+        return submitTime;
+    }
+
+    public void setSubmitTime(Long submitTime) {
+        this.submitTime = submitTime;
     }
 
     private float computeAverageTaskDuration() {

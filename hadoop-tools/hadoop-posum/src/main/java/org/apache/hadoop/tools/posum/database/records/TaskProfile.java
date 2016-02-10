@@ -1,16 +1,18 @@
-package org.apache.hadoop.tools.posum.predictor;
+package org.apache.hadoop.tools.posum.database.records;
 
 import org.apache.hadoop.mapreduce.Counters;
+import org.apache.hadoop.mapreduce.TaskID;
 import org.apache.hadoop.mapreduce.TaskType;
 
 /**
  * Created by ane on 2/8/16.
  */
 public class TaskProfile {
-    private String taskId;
-    private String jobId;
+    private TaskID taskId;
     private Long inputBytes;
+    private Long inputRecords;
     private Long outputBytes;
+    private Long outputRecords;
     private Long expectedInputBytes;
     private Long expectedOutputBytes;
     private Long startTime;
@@ -20,13 +22,12 @@ public class TaskProfile {
     private Counters counters;
     private Float reportedProgress;
 
-    public TaskProfile(String taskId, TaskType type, Long startTime){
+    public TaskProfile(TaskID taskId, TaskType type){
         this.taskId = taskId;
         this.type = type;
-        this.startTime = startTime;
     }
 
-    public String getTaskId() {
+    public TaskID getTaskId() {
         return taskId;
     }
 
@@ -110,16 +111,8 @@ public class TaskProfile {
         this.expectedDuration = expectedDuration;
     }
 
-    public String getJobId() {
-        return jobId;
-    }
-
-    public void setTaskId(String taskId) {
+    public void setTaskId(TaskID taskId) {
         this.taskId = taskId;
-    }
-
-    public void setJobId(String jobId) {
-        this.jobId = jobId;
     }
 
     public void setType(TaskType type) {
@@ -128,5 +121,21 @@ public class TaskProfile {
 
     public void setReportedProgress(Float reportedProgress) {
         this.reportedProgress = reportedProgress;
+    }
+
+    public Long getInputRecords() {
+        return inputRecords;
+    }
+
+    public void setInputRecords(Long inputRecords) {
+        this.inputRecords = inputRecords;
+    }
+
+    public Long getOutputRecords() {
+        return outputRecords;
+    }
+
+    public void setOutputRecords(Long outputRecords) {
+        this.outputRecords = outputRecords;
     }
 }
