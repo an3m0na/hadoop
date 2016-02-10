@@ -7,12 +7,12 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 
 /**
  * Created by ane on 2/10/16.
  */
 public class TestPredictor {
-
 
     private void initPredictor(DataStore dataStore) {
         Configuration conf;
@@ -41,7 +41,10 @@ public class TestPredictor {
     public void testPredictorAccuracy() {
         MockDataStoreClient dataStore = new MockDataStoreClient();
         try {
-            dataStore.populateFromTrace("2jobs2min-rumen-jh.json");
+            URL traceUrl = getClass().getClassLoader().getResource("2jobs2min-rumen-jh.json");
+            if(traceUrl == null)
+                throw new RuntimeException("Trace file not found");
+            dataStore.populateFromTrace(traceUrl.getFile());
         } catch (IOException e) {
             e.printStackTrace();
         }
