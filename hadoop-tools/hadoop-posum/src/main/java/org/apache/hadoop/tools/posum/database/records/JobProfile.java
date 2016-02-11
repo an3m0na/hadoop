@@ -2,10 +2,11 @@ package org.apache.hadoop.tools.posum.database.records;
 
 import org.apache.commons.math3.util.Pair;
 import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.mapreduce.TaskID;
 import org.apache.hadoop.mapreduce.TaskType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -27,8 +28,8 @@ public class JobProfile {
     private Long finishTime;
     private Float reportedProgress;
 
-    private ArrayList<TaskProfile> mapTasks = new ArrayList<>();
-    private ArrayList<TaskProfile> reduceTasks = new ArrayList<>();
+    private HashMap<TaskID, TaskProfile> mapTasks = new HashMap<>();
+    private HashMap<TaskID, TaskProfile> reduceTasks = new HashMap<>();
 
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -130,6 +131,14 @@ public class JobProfile {
         this.submitTime = submitTime;
     }
 
+    public Integer getTotalMapTasks() {
+        return totalMapTasks;
+    }
+
+    public Integer getTotalReduceTasks() {
+        return totalReduceTasks;
+    }
+
     private float computeAverageTaskDuration() {
         lock.readLock().lock();
         Pair<Float, Integer> maps = accumulateTasks(mapTasks);
@@ -143,11 +152,11 @@ public class JobProfile {
                 (maps.getSecond() + reds.getSecond());
     }
 
-    private Pair<Float, Integer> accumulateTasks(List<TaskProfile> tasks) {
+    private Pair<Float, Integer> accumulateTasks(Map<TaskID, TaskProfile> tasks) {
         lock.readLock().lock();
         float duration = 0.0f;
         int size = 0;
-        for (TaskProfile t : tasks) {
+        for (TaskProfile t : tasks.values()) {
             if (t.getDuration() != null) {
                 duration += t.getDuration();
                 size++;
@@ -163,19 +172,56 @@ public class JobProfile {
                 return accumulateTasks(mapTasks).getFirst();
             case REDUCE:
                 return accumulateTasks(reduceTasks).getFirst();
+            default:
+                return 0f;
         }
-        return 0f;
     }
 
     public void recordTask(TaskProfile task) {
         lock.writeLock().lock();
         if (task.getType().equals(TaskType.MAP)) {
-            mapTasks.add(task);
+            mapTasks.put(task.getTaskId(), task);
         }
         if (task.getType().equals(TaskType.REDUCE)) {
-            reduceTasks.add(task);
+            reduceTasks.put(task.getTaskId(), task);
         }
         lock.writeLock().unlock();
+    }
+
+    public TaskProfile getTask(TaskID taskId) {
+        switch (taskId.getTaskType()) {
+            case MAP:
+                return mapTasks.get(taskId);
+            case REDUCE:
+                return reduceTasks.get(taskId);
+            default:
+                return null;
+        }
+    }
+
+    public HashMap<TaskID, TaskProfile> getMapTasks() {
+        return mapTasks;
+    }
+
+    public HashMap<TaskID, TaskProfile> getReduceTasks() {
+        return reduceTasks;
+    }
+
+    public void populate(String jobName,
+                         String user,
+                         String queue,
+                         Integer totalMaps,
+                         Integer totalReduces,
+                         Long startTime,
+                         Long finishTime) {
+
+        setJobName(jobName);
+        setUser(user);
+        setQueue(queue);
+        setTotalMapTasks(totalMaps);
+        setTotalReduceTasks(totalReduces);
+        setStartTime(startTime);
+        setFinishTime(finishTime);
     }
 
     @Override
