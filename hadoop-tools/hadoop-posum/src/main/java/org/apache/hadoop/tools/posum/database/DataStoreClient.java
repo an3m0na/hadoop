@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.database;
 
+import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.mapreduce.TaskID;
 import org.apache.hadoop.tools.posum.database.records.JobProfile;
 import org.apache.hadoop.tools.posum.database.records.TaskProfile;
 
@@ -13,12 +15,12 @@ public class DataStoreClient implements DataStore {
     //TODO make it connect to actual database
 
     @Override
-    public TaskProfile getTaskProfile(String taskId) {
+    public TaskProfile getTaskProfile(TaskID taskId) {
         return null;
     }
 
     @Override
-    public JobProfile getJobProfile(String jobId) {
+    public JobProfile getJobProfile(JobID jobId) {
         return null;
     }
 

@@ -2,6 +2,8 @@ package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.mapreduce.TaskID;
 import org.apache.hadoop.mapreduce.TaskType;
 import org.apache.hadoop.tools.posum.database.DataStore;
 
@@ -18,11 +20,11 @@ public abstract class JobBehaviorPredictor implements Configurable {
         this.dataStore = dataStore;
     }
 
-    public abstract Integer predictJobDuration(String jobId);
+    public abstract Integer predictJobDuration(JobID jobId);
 
-    public abstract Integer predictTaskDuration(String jobId, TaskType type);
+    public abstract Integer predictTaskDuration(JobID jobId, TaskType type);
 
-    public abstract Integer predictTaskDuration(String jobId, String taskId);
+    public abstract Integer predictTaskDuration(JobID jobId, TaskID taskId);
 
     @Override
     public void setConf(Configuration conf) {
