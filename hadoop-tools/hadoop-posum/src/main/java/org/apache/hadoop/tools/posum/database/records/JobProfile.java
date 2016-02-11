@@ -173,7 +173,7 @@ public class JobProfile {
             case REDUCE:
                 return accumulateTasks(reduceTasks).getFirst();
             default:
-                return 0f;
+                return computeAverageTaskDuration();
         }
     }
 

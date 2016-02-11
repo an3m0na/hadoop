@@ -60,9 +60,9 @@ public class TestPredictor {
         System.out.println(dataStore.getJobList());
         int heartbeat = conf.getInt(POSUMConfiguration.MASTER_HEARTBEAT_MS,
                 POSUMConfiguration.MASTER_HEARTBEAT_MS_DEFAULT);
-        for (long i = 0; i < dataStore.getSimulationTime(); i += heartbeat) {
+        for (long i = 100000; i < dataStore.getSimulationTime(); i += heartbeat) {
             dataStore.setCurrentTime(i);
-            System.out.println("# ------------ TIME : i ------------ #");
+            System.out.println("# ------------ TIME : " + i + " ------------ #");
             for (Map.Entry<JobID, List<TaskID>> job : dataStore.getFutureJobInfo().entrySet()) {
                 StringBuilder recordBuilder = new StringBuilder(job.getValue().size() + 3);
                 recordBuilder

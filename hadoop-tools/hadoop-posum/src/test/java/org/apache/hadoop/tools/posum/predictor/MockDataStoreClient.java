@@ -46,7 +46,6 @@ public class MockDataStoreClient extends DataStoreClient {
                 TaskType.valueOf(task.getTaskType().name()));
         profile.setStartTime(task.getStartTime() - startTime);
         profile.setFinishTime(task.getFinishTime() - startTime);
-        profile.setStartTime(task.getStartTime());
         profile.setInputBytes(task.getInputBytes());
         profile.setInputRecords(task.getInputRecords());
         profile.setOutputBytes(task.getOutputBytes());
@@ -134,10 +133,13 @@ public class MockDataStoreClient extends DataStoreClient {
     }
 
     private void storeIfMoreRecent(JobProfile job, TreeMap<Long, JobProfile> list) {
-        if (list.firstKey() < job.getFinishTime()) {
-            list.remove(list.firstKey());
-            list.put(job.getFinishTime(), job);
+        if (!list.isEmpty()) {
+            if (list.firstKey() < job.getFinishTime())
+                list.remove(list.firstKey());
+            else
+                return;
         }
+        list.put(job.getFinishTime(), job);
     }
 
     @Override
@@ -164,7 +166,7 @@ public class MockDataStoreClient extends DataStoreClient {
     public Map<JobID, List<TaskID>> getFutureJobInfo() {
         Map<JobID, List<TaskID>> ret = new HashMap<>(jobList.size());
         for (JobProfile job : jobList)
-            if (job.getFinishTime() <= currentTime) {
+            if (job.getFinishTime() > currentTime) {
                 List<TaskID> tasks = new ArrayList<>(job.getTotalMapTasks() + job.getTotalReduceTasks());
                 tasks.addAll(job.getMapTasks().keySet());
                 tasks.addAll(job.getReduceTasks().keySet());
