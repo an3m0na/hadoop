@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
@@ -54,6 +55,7 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
     private final ResourceCalculator resourceCalculator = new DefaultResourceCalculator();
 
     private DOSQueue queue;
+    private RestClient restClient;
 
     public DataOrientedScheduler() {
         super(DataOrientedScheduler.class.getName());
@@ -105,6 +107,11 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
                 YarnConfiguration.DEFAULT_RM_SCHEDULER_USE_PORT_FOR_NODE_NAME);
         this.applications = new ConcurrentHashMap<>();
         this.queue = new DOSQueue(DEFAULT_QUEUE_NAME, this);
+
+        this.restClient = new RestClient();
+        logger.info("[DOScheduler] Initialized REST client");
+
+        logger.info("[DOScheduler] Rest client test: "+restClient.testClient());
     }
 
     @Override
