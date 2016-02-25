@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.database;
 
-import org.apache.hadoop.mapreduce.JobID;
-import org.apache.hadoop.mapreduce.TaskID;
+import org.apache.hadoop.mapreduce.v2.api.records.JobId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.tools.posum.database.records.JobProfile;
 import org.apache.hadoop.tools.posum.database.records.TaskProfile;
 
@@ -12,12 +12,12 @@ import java.util.List;
  */
 public class DataStoreImpl implements DataStore{
     @Override
-    public TaskProfile getTaskProfile(TaskID taskId) {
+    public TaskProfile getTaskProfile(TaskId taskId) {
         return null;
     }
 
     @Override
-    public JobProfile getJobProfile(JobID jobId) {
+    public JobProfile getJobProfile(JobId jobId) {
         return null;
     }
 

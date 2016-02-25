@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.database;
 
-import org.apache.hadoop.mapreduce.JobID;
-import org.apache.hadoop.mapreduce.TaskID;
+import org.apache.hadoop.mapreduce.v2.api.records.JobId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.tools.posum.database.records.JobProfile;
 import org.apache.hadoop.tools.posum.database.records.TaskProfile;
 
@@ -13,9 +13,9 @@ import java.util.List;
 public interface DataStore {
 
 
-    TaskProfile getTaskProfile(TaskID taskId);
+    TaskProfile getTaskProfile(TaskId taskId);
 
-    JobProfile getJobProfile(JobID jobId);
+    JobProfile getJobProfile(JobId jobId);
 
     List<JobProfile> getComparableProfiles(String user, int count);
 

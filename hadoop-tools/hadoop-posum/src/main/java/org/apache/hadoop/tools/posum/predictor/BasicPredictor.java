@@ -1,12 +1,11 @@
 package org.apache.hadoop.tools.posum.predictor;
 
-import org.apache.hadoop.mapreduce.JobID;
-import org.apache.hadoop.mapreduce.TaskID;
-import org.apache.hadoop.mapreduce.TaskType;
+import org.apache.hadoop.mapreduce.v2.api.records.JobId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.DataStore;
 import org.apache.hadoop.tools.posum.database.records.JobProfile;
-import org.apache.hadoop.tools.posum.database.records.TaskProfile;
 
 import java.util.List;
 
@@ -20,7 +19,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
     }
 
     @Override
-    public Integer predictJobDuration(JobID jobId) {
+    public Integer predictJobDuration(JobId jobId) {
         Float duration = 0.0f;
         JobProfile current = dataStore.getJobProfile(jobId);
         List<JobProfile> comparable = dataStore.getComparableProfiles(
@@ -38,7 +37,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
     }
 
     @Override
-    public Integer predictTaskDuration(JobID jobId, TaskType type) {
+    public Integer predictTaskDuration(JobId jobId, TaskType type) {
         Float duration = 0.0f;
         JobProfile current = dataStore.getJobProfile(jobId);
         float currentAverage = current.computeAverageTaskDuration(type);
@@ -59,7 +58,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
     }
 
     @Override
-    public Integer predictTaskDuration(JobID jobId, TaskID taskId) {
+    public Integer predictTaskDuration(JobId jobId, TaskId taskId) {
         return predictTaskDuration(jobId, taskId.getTaskType());
     }
 }

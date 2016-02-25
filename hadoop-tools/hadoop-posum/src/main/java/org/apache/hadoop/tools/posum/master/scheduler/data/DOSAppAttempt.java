@@ -108,7 +108,7 @@ public class DOSAppAttempt extends SchedulerApplicationAttempt {
                 new RMContainerEvent(container.getId(), RMContainerEventType.START));
 
         if (logger.isDebugEnabled()) {
-            logger.debug("allocate: applicationAttemptId="
+            logger.trace("allocate: applicationAttemptId="
                     + container.getId().getApplicationAttemptId()
                     + " container=" + container.getId() + " host="
                     + container.getNodeId().getHost() + " type=" + type);
