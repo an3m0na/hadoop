@@ -1,14 +1,14 @@
 package org.apache.hadoop.tools.posum.database.records;
 
 import org.apache.hadoop.mapreduce.Counters;
-import org.apache.hadoop.mapreduce.TaskID;
-import org.apache.hadoop.mapreduce.TaskType;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 
 /**
  * Created by ane on 2/8/16.
  */
 public class TaskProfile {
-    private TaskID taskId;
+    private TaskId taskId;
     private Long inputBytes;
     private Long inputRecords;
     private Long outputBytes;
@@ -22,12 +22,12 @@ public class TaskProfile {
     private Counters counters;
     private Float reportedProgress;
 
-    public TaskProfile(TaskID taskId, TaskType type){
+    public TaskProfile(TaskId taskId, TaskType type){
         this.taskId = taskId;
         this.type = type;
     }
 
-    public TaskID getTaskId() {
+    public TaskId getTaskId() {
         return taskId;
     }
 
@@ -111,7 +111,7 @@ public class TaskProfile {
         this.expectedDuration = expectedDuration;
     }
 
-    public void setTaskId(TaskID taskId) {
+    public void setTaskId(TaskId taskId) {
         this.taskId = taskId;
     }
 

@@ -1,12 +1,11 @@
 package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.JobID;
-import org.apache.hadoop.mapreduce.TaskID;
-import org.apache.hadoop.mapreduce.TaskType;
+import org.apache.hadoop.mapreduce.v2.api.records.JobId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.DataStore;
-import org.apache.hadoop.tools.posum.database.records.JobProfile;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -63,7 +62,7 @@ public class TestPredictor {
         for (long i = 100000; i < dataStore.getSimulationTime(); i += heartbeat) {
             dataStore.setCurrentTime(i);
             System.out.println("# ------------ TIME : " + i + " ------------ #");
-            for (Map.Entry<JobID, List<TaskID>> job : dataStore.getFutureJobInfo().entrySet()) {
+            for (Map.Entry<JobId, List<TaskId>> job : dataStore.getFutureJobInfo().entrySet()) {
                 StringBuilder recordBuilder = new StringBuilder(job.getValue().size() + 3);
                 recordBuilder
                         .append(job.getKey()).append("=").append(predictor.predictJobDuration(job.getKey()))
@@ -72,7 +71,7 @@ public class TestPredictor {
                         .append("\t")
                         .append("RED=").append(predictor.predictTaskDuration(job.getKey(), TaskType.REDUCE))
                         .append("\t");
-                for (TaskID task : job.getValue())
+                for (TaskId task : job.getValue())
                     recordBuilder
                             .append(task).append("=").append(predictor.predictTaskDuration(job.getKey(), task))
                             .append("\t");

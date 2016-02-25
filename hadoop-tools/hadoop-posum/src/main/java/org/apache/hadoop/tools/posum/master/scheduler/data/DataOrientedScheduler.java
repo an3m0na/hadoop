@@ -4,8 +4,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.RestClient;
+import org.apache.hadoop.tools.posum.database.records.AppProfile;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
@@ -27,12 +29,14 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmnode.UpdatedContainerInfo
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.*;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
+import org.apache.hadoop.yarn.util.Records;
 import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,8 +114,6 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
 
         this.restClient = new RestClient();
         logger.info("[DOScheduler] Initialized REST client");
-
-        logger.info("[DOScheduler] Rest client test: "+restClient.testClient());
     }
 
     @Override
@@ -212,11 +214,11 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
     @Override
     public Allocation allocate(
             ApplicationAttemptId applicationAttemptId, List<ResourceRequest> ask,
-            List<ContainerId> release, List<String> blacklistAdditions, List<String> blacklistRemovals){
+            List<ContainerId> release, List<String> blacklistAdditions, List<String> blacklistRemovals) {
 
         //Same everywhere
 
-    DOSAppAttempt application = getApplicationAttempt(applicationAttemptId);
+        DOSAppAttempt application = getApplicationAttempt(applicationAttemptId);
         if (application == null) {
             logger.error("Calling allocate on removed " +
                     "or non existant application " + applicationAttemptId);
@@ -241,7 +243,7 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
             }
 
             if (!ask.isEmpty()) {
-                logger.debug("allocate: pre-update" +
+                logger.trace("allocate: pre-update" +
                         " applicationId=" + applicationAttemptId +
                         " application=" + application);
                 application.showRequests();
@@ -249,12 +251,12 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
                 // Update application requests
                 application.updateResourceRequests(ask);
 
-                logger.debug("allocate: post-update" +
+                logger.trace("allocate: post-update" +
                         " applicationId=" + applicationAttemptId +
                         " application=" + application);
                 application.showRequests();
 
-                logger.debug("allocate:" +
+                logger.trace("allocate:" +
                         " applicationId=" + applicationAttemptId +
                         " #ask=" + ask.size());
             }
@@ -406,6 +408,20 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
         attempt.stop(finalAttemptState);
     }
 
+    //TODO check
+    private void readApplicationSize(ApplicationId appId) {
+        JobId jobId = Records.newRecord(JobId.class);
+        jobId.setAppId(appId);
+        jobId.setId(appId.getId());
+        logger.debug("[DOScheduler] For job: " + jobId.toString());
+        Map<String, String> requested = new HashMap<>(2);
+        requested.put("mapreduce.input.fileinputformat.inputdir", "inputdir");
+        requested.put("mapreduce.input.fileinputformat.numinputfiles", "numinputfiles");
+        Map<String, String> properties = restClient.getJobConfProperties(appId, jobId, requested);
+        logger.debug("[DOScheduler] Input dir is: " + properties.get("inputdir"));
+        logger.debug("[DOScheduler] Input files are: " + properties.get("numinputfiles"));
+    }
+
     private void addApplicationAttempt(ApplicationAttemptId appAttemptId, boolean transferStateFromPreviousAttempt, boolean isAttemptRecovering) {
         SchedulerApplication<DOSAppAttempt> application =
                 applications.get(appAttemptId.getApplicationId());
@@ -426,7 +442,7 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
                 + " to scheduler from user " + application.getUser());
         if (isAttemptRecovering) {
             if (logger.isDebugEnabled()) {
-                logger.debug(appAttemptId
+                logger.trace(appAttemptId
                         + " is recovering. Skipping notifying ATTEMPT_ADDED");
             }
         } else {
@@ -460,7 +476,7 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
                 + ", currently num of applications: " + applications.size());
         if (isAppRecovering) {
             if (logger.isDebugEnabled()) {
-                logger.debug(applicationId + " is recovering. Skip notifying APP_ACCEPTED");
+                logger.trace(applicationId + " is recovering. Skip notifying APP_ACCEPTED");
             }
         } else {
             rmContext.getDispatcher().getEventHandler()
@@ -489,19 +505,19 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
         // Process completed containers
         for (ContainerStatus completedContainer : completedContainers) {
             ContainerId containerId = completedContainer.getContainerId();
-            logger.debug("Container FINISHED: " + containerId);
+            logger.trace("Container FINISHED: " + containerId);
             completedContainer(getRMContainer(containerId),
                     completedContainer, RMContainerEventType.FINISHED);
         }
 
         if (Resources.greaterThanOrEqual(resourceCalculator, clusterResource,
                 node.getAvailableResource(), minimumAllocation)) {
-            logger.debug("Node heartbeat " + rmNode.getNodeID() +
+            logger.trace("Node heartbeat " + rmNode.getNodeID() +
                     " available resource = " + node.getAvailableResource());
 
             assignContainers(node);
 
-            logger.debug("Node after allocation " + rmNode.getNodeID() + " resource = "
+            logger.trace("Node after allocation " + rmNode.getNodeID() + " resource = "
                     + node.getAvailableResource());
         }
 
@@ -517,7 +533,7 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
     private void assignContainers(DOSchedulerNode node) {
         //TODO magic
 
-        logger.debug("assignContainers:" +
+        logger.trace("assignContainers:" +
                 " node=" + node.getRMNode().getNodeAddress() +
                 " #applications=" + applications.size());
 
@@ -529,7 +545,9 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
                 continue;
             }
 
-            logger.debug("pre-assignContainers");
+            readApplicationSize(application.getApplicationId());
+
+            logger.trace("pre-assignContainers");
             application.showRequests();
             synchronized (application) {
                 // Check if this resource is on the blacklist
@@ -552,7 +570,7 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
                 }
             }
 
-            logger.debug("post-assignContainers");
+            logger.trace("post-assignContainers");
             application.showRequests();
 
             // Done
@@ -704,7 +722,7 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
     private int assignContainer(DOSchedulerNode node, DOSAppAttempt application,
                                 Priority priority, int assignableContainers,
                                 ResourceRequest request, NodeType type) {
-        logger.debug("assignContainers:" +
+        logger.trace("assignContainers:" +
                 " node=" + node.getRMNode().getNodeAddress() +
                 " application=" + application.getApplicationId().getId() +
                 " priority=" + priority.getPriority() +
@@ -723,7 +741,7 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
                 Math.min(assignableContainers, availableContainers);
 
         if (assignedContainers > 0) {
-            for (int i=0; i < assignedContainers; ++i) {
+            for (int i = 0; i < assignedContainers; ++i) {
 
                 NodeId nodeId = node.getRMNode().getNodeID();
                 ContainerId containerId = BuilderUtils.newContainerId(application

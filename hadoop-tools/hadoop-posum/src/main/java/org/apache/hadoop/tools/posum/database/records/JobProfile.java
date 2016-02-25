@@ -1,20 +1,21 @@
 package org.apache.hadoop.tools.posum.database.records;
 
 import org.apache.commons.math3.util.Pair;
-import org.apache.hadoop.mapreduce.JobID;
-import org.apache.hadoop.mapreduce.TaskID;
-import org.apache.hadoop.mapreduce.TaskType;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.hadoop.mapreduce.v2.api.records.JobId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+
 /**
  * Created by ane on 2/8/16.
  */
 public class JobProfile {
-    private JobID jobId;
+    private JobId jobId;
     private String jobName;
     private String user;
     private String queue;
@@ -28,18 +29,18 @@ public class JobProfile {
     private Long finishTime;
     private Float reportedProgress;
 
-    private HashMap<TaskID, TaskProfile> mapTasks = new HashMap<>();
-    private HashMap<TaskID, TaskProfile> reduceTasks = new HashMap<>();
+    private HashMap<TaskId, TaskProfile> mapTasks = new HashMap<>();
+    private HashMap<TaskId, TaskProfile> reduceTasks = new HashMap<>();
 
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
 
-    public JobProfile(JobID jobId, Long submitTime) {
+    public JobProfile(JobId jobId, Long submitTime) {
         this.jobId = jobId;
         this.submitTime = submitTime;
     }
 
-    public JobID getJobId() {
+    public JobId getJobId() {
         return jobId;
     }
 
@@ -152,7 +153,7 @@ public class JobProfile {
                 (maps.getSecond() + reds.getSecond());
     }
 
-    private Pair<Float, Integer> accumulateTasks(Map<TaskID, TaskProfile> tasks) {
+    private Pair<Float, Integer> accumulateTasks(Map<TaskId, TaskProfile> tasks) {
         lock.readLock().lock();
         float duration = 0.0f;
         int size = 0;
@@ -188,7 +189,7 @@ public class JobProfile {
         lock.writeLock().unlock();
     }
 
-    public TaskProfile getTask(TaskID taskId) {
+    public TaskProfile getTask(TaskId taskId) {
         switch (taskId.getTaskType()) {
             case MAP:
                 return mapTasks.get(taskId);
@@ -199,11 +200,11 @@ public class JobProfile {
         }
     }
 
-    public HashMap<TaskID, TaskProfile> getMapTasks() {
+    public HashMap<TaskId, TaskProfile> getMapTasks() {
         return mapTasks;
     }
 
-    public HashMap<TaskID, TaskProfile> getReduceTasks() {
+    public HashMap<TaskId, TaskProfile> getReduceTasks() {
         return reduceTasks;
     }
 
