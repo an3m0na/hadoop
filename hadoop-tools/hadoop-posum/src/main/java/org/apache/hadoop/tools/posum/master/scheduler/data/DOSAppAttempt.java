@@ -23,6 +23,9 @@ public class DOSAppAttempt extends SchedulerApplicationAttempt {
 
     private static Log logger = LogFactory.getLog(DataOrientedScheduler.class);
 
+    private Long totalInputSize;
+    private Integer numInputSplits;
+
     private final Set<ContainerId> containersToPreempt =
             new HashSet<ContainerId>();
 
@@ -118,5 +121,21 @@ public class DOSAppAttempt extends SchedulerApplicationAttempt {
                 getApplicationId(), container.getId());
 
         return rmContainer;
+    }
+
+    public Integer getNumInputSplits() {
+        return numInputSplits;
+    }
+
+    public void setNumInputSplits(int numInputSplits) {
+        this.numInputSplits = numInputSplits;
+    }
+
+    public Long getTotalInputSize() {
+        return totalInputSize;
+    }
+
+    public void setTotalInputSize(long totalInputSize) {
+        this.totalInputSize = totalInputSize;
     }
 }
