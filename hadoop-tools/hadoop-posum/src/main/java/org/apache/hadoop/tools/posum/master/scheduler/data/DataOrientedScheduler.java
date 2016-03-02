@@ -4,10 +4,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapreduce.TypeConverter;
+import org.apache.hadoop.mapreduce.server.jobtracker.JTConfig;
+import org.apache.hadoop.mapreduce.split.JobSplit;
+import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
+import org.apache.hadoop.mapreduce.v2.util.MRApps;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.RestClient;
-import org.apache.hadoop.tools.posum.database.records.AppProfile;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
@@ -35,10 +42,7 @@ import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -60,6 +64,23 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
 
     private DOSQueue queue;
     private RestClient restClient;
+    private TreeSet<SchedulerApplication<DOSAppAttempt>> orderedApps =
+            new TreeSet<>(new Comparator<SchedulerApplication<DOSAppAttempt>>() {
+                @Override
+                public int compare(SchedulerApplication<DOSAppAttempt> a1, SchedulerApplication<DOSAppAttempt> a2) {
+                    if (a1.getCurrentAppAttempt().getApplicationAttemptId()
+                            .equals(a2.getCurrentAppAttempt().getApplicationAttemptId()))
+                        return 0;
+                    if (a1.getCurrentAppAttempt().getTotalInputSize() == null)
+                        return 1;
+                    if (a2.getCurrentAppAttempt().getTotalInputSize() == null) {
+                        return -1;
+                    }
+                    return new Long(a1.getCurrentAppAttempt().getTotalInputSize() -
+                            a2.getCurrentAppAttempt().getTotalInputSize()).intValue();
+                }
+            });
+
 
     public DataOrientedScheduler() {
         super(DataOrientedScheduler.class.getName());
@@ -408,18 +429,59 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
         attempt.stop(finalAttemptState);
     }
 
-    //TODO check
-    private void readApplicationSize(ApplicationId appId) {
+    private void readSplits(JobId jobId, FileSystem fs, JobConf conf, Path jobSubmitDir, DOSAppAttempt attempt) {
+        try {
+            JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = SplitMetaInfoReader.readSplitMetaInfo(
+                    TypeConverter.fromYarn(jobId), fs,
+                    conf,
+                    jobSubmitDir);
+
+            long inputLength = 0;
+            for (JobSplit.TaskSplitMetaInfo aTaskSplitMetaInfo : taskSplitMetaInfo) {
+                inputLength += aTaskSplitMetaInfo.getInputDataLength();
+            }
+
+            logger.debug("[DOScheduler] Input splits: " + taskSplitMetaInfo.length);
+            logger.debug("[DOScheduler] Total input size: " + inputLength);
+
+            attempt.setNumInputSplits(taskSplitMetaInfo.length);
+            attempt.setTotalInputSize(inputLength);
+
+        } catch (IOException e) {
+            throw new YarnRuntimeException(e);
+        }
+    }
+
+    private void readApplicationInfo(DOSAppAttempt attempt) {
         JobId jobId = Records.newRecord(JobId.class);
-        jobId.setAppId(appId);
-        jobId.setId(appId.getId());
+        jobId.setAppId(attempt.getApplicationId());
+        jobId.setId(attempt.getApplicationId().getId());
         logger.debug("[DOScheduler] For job: " + jobId.toString());
-        Map<String, String> requested = new HashMap<>(2);
-        requested.put("mapreduce.input.fileinputformat.inputdir", "inputdir");
-        requested.put("mapreduce.input.fileinputformat.numinputfiles", "numinputfiles");
-        Map<String, String> properties = restClient.getJobConfProperties(appId, jobId, requested);
-        logger.debug("[DOScheduler] Input dir is: " + properties.get("inputdir"));
-        logger.debug("[DOScheduler] Input files are: " + properties.get("numinputfiles"));
+
+//        Map<String, String> requested = new HashMap<>(2);
+//        requested.put("mapreduce.input.fileinputformat.inputdir", "inputdir");
+//        requested.put("mapreduce.input.fileinputformat.numinputfiles", "numinputfiles");
+//        Map<String, String> properties = restClient.getJobConfProperties(appId, jobId, requested);
+//        logger.debug("[DOScheduler] Input dir is: " + properties.get("inputdir"));
+//        logger.debug("[DOScheduler] Input files are: " + properties.get("numinputfiles"));
+
+        try {
+            FileSystem fs = FileSystem.get(conf);
+            Path confPath = new Path(MRApps.getStagingAreaDir(conf, UserGroupInformation.getCurrentUser().getUserName()),
+                    jobId.toString()
+            );
+            confPath = fs.makeQualified(confPath);
+            JobConf jobConf = new JobConf(new Path(confPath, "job.xml"));
+            if (fs.exists(confPath)) {
+                logger.debug("[DOScheduler] Found staging path: " + confPath);
+                readSplits(jobId, fs, jobConf, confPath, attempt);
+            } else {
+                logger.debug("[DOScheduler] Path does not exist: " + confPath);
+            }
+        } catch (Exception e) {
+            logger.debug("[DOScheduler] Could not read input size for: " + jobId, e);
+        }
+
     }
 
     private void addApplicationAttempt(ApplicationAttemptId appAttemptId, boolean transferStateFromPreviousAttempt, boolean isAttemptRecovering) {
@@ -435,6 +497,20 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
             schedulerAppAttempt.transferStateFromPreviousAttempt(application
                     .getCurrentAppAttempt());
         }
+
+        orderedApps.remove(application);
+        readApplicationInfo(schedulerAppAttempt);
+        orderedApps.add(application);
+
+        if (logger.isDebugEnabled()) {
+            StringBuilder debugBuilder = new StringBuilder("[");
+            for (SchedulerApplication<DOSAppAttempt> app : orderedApps) {
+                debugBuilder.append(app.getCurrentAppAttempt().getApplicationId()).append(", ");
+            }
+            debugBuilder.append("]");
+            logger.debug(debugBuilder.toString());
+        }
+
         application.setCurrentAppAttempt(schedulerAppAttempt);
 
         queue.getMetrics().submitAppAttempt(user);
@@ -465,12 +541,15 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
                 applicationId);
         application.stop(finalState);
         applications.remove(applicationId);
+        orderedApps.remove(application);
     }
 
     private void addApplication(ApplicationId applicationId, String user, boolean isAppRecovering) {
         SchedulerApplication<DOSAppAttempt> application =
                 new SchedulerApplication<>(queue, user);
         applications.put(applicationId, application);
+        orderedApps.add(application);
+
         queue.getMetrics().submitApp(user);
         logger.info("Accepted application " + applicationId + " from user: " + user
                 + ", currently num of applications: " + applications.size());
@@ -544,8 +623,6 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
             if (application == null) {
                 continue;
             }
-
-            readApplicationSize(application.getApplicationId());
 
             logger.trace("pre-assignContainers");
             application.showRequests();
