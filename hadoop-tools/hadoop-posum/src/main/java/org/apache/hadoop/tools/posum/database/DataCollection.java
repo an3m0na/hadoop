@@ -9,8 +9,11 @@ import org.apache.hadoop.tools.posum.common.records.TaskProfile;
  */
 public enum DataCollection {
     JOBS("jobs", JobProfile.class),
+    JOBS_HISTORY("jobs_history", JobProfile.class),
     TASKS("tasks", TaskProfile.class),
-    APPS("apps", AppProfile.class);
+    TASKS_HISTORY("tasks_history", TaskProfile.class),
+    APPS("apps", AppProfile.class),
+    APPS_HISTORY("apps_history", AppProfile.class);
 
     private String label;
     private Class mappedClass;

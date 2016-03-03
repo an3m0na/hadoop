@@ -10,7 +10,7 @@
     </property>
     <property>
         <name>tools.posum.monitor.heartbeat.ms</name>
-        <value>1000</value>
+        <value>10000</value>
     </property>
     <property>
         <name>tools.posum.predictor.basic.buffer</name>

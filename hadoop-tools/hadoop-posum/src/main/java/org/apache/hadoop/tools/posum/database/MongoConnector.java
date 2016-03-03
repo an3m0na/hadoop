@@ -4,6 +4,8 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoDatabase;
+import org.apache.commons.configuration.SystemConfiguration;
+import org.apache.hadoop.tools.posum.POSUMConfiguration;
 import org.bson.Document;
 
 import java.util.Arrays;
@@ -19,11 +21,17 @@ public class MongoConnector {
     protected MongoDatabase db;
     protected MongoClient client;
 
-    public MongoConnector(String database) {
-        if (database == null)
-            database = "test";
+    public MongoConnector(String databaseName){
+        this(databaseName, null);
+    }
+
+    public MongoConnector(String databaseName, String databaseUrl) {
+        if (databaseName == null)
+            databaseName = "test";
+        if (databaseUrl != null)
+            client = new MongoClient(databaseUrl);
         client = new MongoClient();
-        db = client.getDatabase(database);
+        db = client.getDatabase(databaseName);
     }
 
     public void insertDoc(String collection, Document doc) {
@@ -55,7 +63,7 @@ public class MongoConnector {
     }
 
     public AggregateIterable<Document> aggregateDocs(String collection, Document... query) {
-        List<Document> actualQuery = query == null ? Collections.<Document>emptyList(): Arrays.asList(query);
+        List<Document> actualQuery = query == null ? Collections.<Document>emptyList() : Arrays.asList(query);
         return db.getCollection(collection).aggregate(actualQuery);
     }
 

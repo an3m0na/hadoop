@@ -9,6 +9,7 @@ public class POSUMConfiguration {
     public static final String MASTER_PREFIX = PREFIX + "master.";
     public static final String MONITOR_PREFIX = PREFIX + "monitor.";
     public static final String PREDICTOR_PREFIX = PREFIX + "predictor.";
+    public static final String DATABASE_PREFIX = PREFIX + "database.";
 
     public static final String MASTER_HEARTBEAT_MS = MASTER_PREFIX + "heartbeat.ms";
     public static final int MASTER_HEARTBEAT_MS_DEFAULT = 1000;
@@ -26,5 +27,11 @@ public class POSUMConfiguration {
     public static final int AVERAGE_TASK_DURATION_DEFAULT = 20000;
 
     public static final String PREDICTOR_CLASS = PREDICTOR_PREFIX + "class";
+
+    public static final String DATABASE_URL = DATABASE_PREFIX + "url";
+    public static final String DATABASE_URL_DEFAULT = "127.0.0.1:27017";
+
+    public static final String DATABASE_NAME = DATABASE_PREFIX + "name";
+    public static final String DATABASE_NAME_DEFAULT = "posum";
 
 }

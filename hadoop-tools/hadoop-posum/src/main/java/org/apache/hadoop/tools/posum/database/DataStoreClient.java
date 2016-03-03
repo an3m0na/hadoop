@@ -2,8 +2,10 @@ package org.apache.hadoop.tools.posum.database;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
+import org.apache.hadoop.tools.posum.common.records.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.TaskProfile;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
 
 import java.util.List;
 
@@ -22,6 +24,16 @@ public class DataStoreClient implements DataStore {
     @Override
     public JobProfile getJobProfile(JobId jobId) {
         return null;
+    }
+
+    @Override
+    public AppProfile getAppProfile(ApplicationId appId) {
+        return null;
+    }
+
+    @Override
+    public <T> void store(DataCollection collection, T toInsert) {
+
     }
 
     @Override
