@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.database.records;
+package org.apache.hadoop.tools.posum.common.records;
 
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;

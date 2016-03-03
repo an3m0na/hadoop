@@ -5,7 +5,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.DataStore;
-import org.apache.hadoop.tools.posum.database.records.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.JobProfile;
 
 import java.util.List;
 

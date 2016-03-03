@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.tools.posum.common.RestClient;
-import org.apache.hadoop.tools.posum.database.records.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.AppProfile;
 import org.apache.hadoop.yarn.util.Records;
 import org.junit.Test;
 
