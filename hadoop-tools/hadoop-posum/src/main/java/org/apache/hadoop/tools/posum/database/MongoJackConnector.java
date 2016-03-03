@@ -16,10 +16,15 @@ public class MongoJackConnector extends MongoConnector {
     Map<Integer, JacksonDBCollection> collections = new HashMap<>();
     DB deprecatedDb;
 
-    public MongoJackConnector(String database) {
-        super(database);
+    public MongoJackConnector(String databaseName) {
+        this(databaseName, null);
+    }
+
+    public MongoJackConnector(String databaseName, String databaseUrl) {
+        super(databaseName, databaseUrl);
         deprecatedDb = client.getDB(db.getName());
     }
+
 
     public void addCollection(DataCollection collection) {
         collections.put(collection.getId(),
@@ -28,8 +33,7 @@ public class MongoJackConnector extends MongoConnector {
                         String.class));
     }
 
-    public <T> String insertObject(T object) {
-        DataCollection collection = DataCollection.getByClass(object.getClass());
+    public <T> String insertObject(DataCollection collection, T object) {
         WriteResult<T, String> result = collections.get(collection).insert(object);
         return result.getSavedId();
     }

@@ -124,4 +124,20 @@ public class AppProfile {
                 ", trackingUI=" + trackingUI +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AppProfile that = (AppProfile) o;
+
+        return appId.equals(that.appId);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return appId.hashCode();
+    }
 }

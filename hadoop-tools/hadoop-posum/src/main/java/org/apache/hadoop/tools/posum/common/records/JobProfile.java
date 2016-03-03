@@ -245,4 +245,20 @@ public class JobProfile {
                 ", lock=" + lock +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        JobProfile that = (JobProfile) o;
+
+        return jobId.equals(that.jobId);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return jobId.hashCode();
+    }
 }

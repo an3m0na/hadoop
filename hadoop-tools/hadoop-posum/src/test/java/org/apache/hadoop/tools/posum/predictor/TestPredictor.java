@@ -22,8 +22,7 @@ public class TestPredictor {
 
     private JobBehaviorPredictor initPredictor(DataStore dataStore) {
 
-        conf = new Configuration(false);
-        conf.addResource("posum-core.xml");
+        conf = TestUtils.getConf();
 
         Class<? extends JobBehaviorPredictor> predictorClass = conf.getClass(
                 POSUMConfiguration.PREDICTOR_CLASS,

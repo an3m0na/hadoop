@@ -157,4 +157,20 @@ public class TaskProfile {
                 ", reportedProgress=" + reportedProgress +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TaskProfile that = (TaskProfile) o;
+
+        return taskId.equals(that.taskId);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return taskId.hashCode();
+    }
 }
