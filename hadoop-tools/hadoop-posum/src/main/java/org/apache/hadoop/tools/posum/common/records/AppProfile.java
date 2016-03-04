@@ -5,12 +5,15 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.mongojack.Id;
 
 /**
  * Created by ane on 2/24/16.
  */
 public class AppProfile {
-    private ApplicationId appId;
+
+    @Id
+    private String appId;
     private Long startTime;
     private Long finishTime;
     private String user;
@@ -19,25 +22,12 @@ public class AppProfile {
     private FinalApplicationStatus status;
     private RestClient.TrackingUI trackingUI;
 
-    public ApplicationId getAppId() {
+    public String getAppId() {
         return appId;
     }
 
-    public void setAppId(ApplicationId appId) {
+    public void setAppId(String appId) {
         this.appId = appId;
-    }
-
-    public void setAppId(String appId) throws YarnException {
-        if (appId != null) {
-            String[] parts = appId.split("_");
-            if (parts.length != 3)
-                throw new YarnException("Could not parse application id: " + appId);
-            try {
-                this.appId = ApplicationId.newInstance(Long.parseLong(parts[1]), Integer.parseInt(parts[2]));
-            } catch (NumberFormatException e) {
-                throw new YarnException("Could not parse application id: " + appId, e);
-            }
-        }
     }
 
     public Long getStartTime() {
@@ -68,10 +58,6 @@ public class AppProfile {
         return state;
     }
 
-    public void setState(YarnApplicationState state) {
-        this.state = state;
-    }
-
     public void setState(String state) {
         if (status != null)
             this.state = YarnApplicationState.valueOf(state);
@@ -79,10 +65,6 @@ public class AppProfile {
 
     public FinalApplicationStatus getStatus() {
         return status;
-    }
-
-    public void setStatus(FinalApplicationStatus status) {
-        this.status = status;
     }
 
     public void setStatus(String status) {
@@ -100,10 +82,6 @@ public class AppProfile {
 
     public RestClient.TrackingUI getTrackingUI() {
         return trackingUI;
-    }
-
-    public void setTrackingUI(RestClient.TrackingUI trackingUI) {
-        this.trackingUI = trackingUI;
     }
 
     public void setTrackingUI(String trackingUI) {

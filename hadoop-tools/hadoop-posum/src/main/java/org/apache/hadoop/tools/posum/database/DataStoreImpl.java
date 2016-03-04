@@ -2,7 +2,6 @@ package org.apache.hadoop.tools.posum.database;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.tools.posum.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.records.AppProfile;
@@ -10,7 +9,6 @@ import org.apache.hadoop.tools.posum.common.records.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.TaskProfile;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 
-import javax.xml.crypto.Data;
 import java.util.List;
 
 /**
@@ -47,7 +45,7 @@ public class DataStoreImpl implements DataStore, Configurable {
     }
 
     @Override
-    public JobProfile getJobProfile(JobId jobId) {
+    public JobProfile getJobProfile(String jobId) {
         return conn.findObjectById(DataCollection.JOBS, jobId.toString());
     }
 

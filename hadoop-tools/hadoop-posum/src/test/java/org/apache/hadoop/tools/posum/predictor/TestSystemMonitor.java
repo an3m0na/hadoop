@@ -16,12 +16,11 @@ public class TestSystemMonitor {
         Configuration conf = TestUtils.getConf();
         DataStore dataStore = new DataStoreImpl(conf);
         SystemMonitor monitor = new SystemMonitor(dataStore);
-        Thread monitorThread = new Thread(monitor);
-        monitorThread.start();
+        monitor.start();
         try {
             Thread.sleep(100000);
-            monitor.stop();
-            monitorThread.join();
+            monitor.exit();
+            monitor.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

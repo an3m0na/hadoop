@@ -4,7 +4,6 @@ import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.tools.posum.common.records.AppProfile;
 import org.apache.hadoop.tools.posum.database.DataCollection;
 import org.apache.hadoop.tools.posum.database.DataStore;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
 
 import java.util.HashSet;
 import java.util.List;
@@ -15,8 +14,8 @@ import java.util.Set;
  */
 public class DatabaseFeeder {
     private RestClient restClient = new RestClient();
-    private Set<ApplicationId> running = new HashSet<>();
-    private Set<ApplicationId> finished = new HashSet<>();
+    private Set<String> running = new HashSet<>();
+    private Set<String> finished = new HashSet<>();
     private DataStore dataStore;
 
     public DatabaseFeeder(DataStore dataStore) {
@@ -27,7 +26,7 @@ public class DatabaseFeeder {
         List<AppProfile> apps = restClient.getAppsInfo();
         for (AppProfile app : apps) {
             if (!finished.contains(app.getAppId())) {
-                if (app.getTrackingUI().equals(RestClient.TrackingUI.HISTORY)) {
+                if (RestClient.TrackingUI.HISTORY.equals(app.getTrackingUI())) {
                     //TODO move it, its jobs and its tasks from the current collections to the history collections
                 } else {
                     if (!running.contains(app.getAppId())) {
