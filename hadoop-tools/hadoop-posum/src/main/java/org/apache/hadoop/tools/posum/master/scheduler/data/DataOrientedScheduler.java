@@ -68,6 +68,10 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
             new TreeSet<>(new Comparator<SchedulerApplication<DOSAppAttempt>>() {
                 @Override
                 public int compare(SchedulerApplication<DOSAppAttempt> a1, SchedulerApplication<DOSAppAttempt> a2) {
+                    if (a1.getCurrentAppAttempt() == null)
+                        return 1;
+                    if (a2.getCurrentAppAttempt() == null)
+                        return -1;
                     if (a1.getCurrentAppAttempt().getApplicationAttemptId()
                             .equals(a2.getCurrentAppAttempt().getApplicationAttemptId()))
                         return 0;
@@ -120,8 +124,8 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
                         YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB,
                         YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB));
         Resource maxResource = Resources.createResource(conf.getInt(
-                        YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
-                        YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB),
+                YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB,
+                YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_MB),
                 conf.getInt(
                         YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES,
                         YarnConfiguration.DEFAULT_RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES));
@@ -498,6 +502,8 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
                     .getCurrentAppAttempt());
         }
 
+        application.setCurrentAppAttempt(schedulerAppAttempt);
+
         orderedApps.remove(application);
         readApplicationInfo(schedulerAppAttempt);
         orderedApps.add(application);
@@ -510,8 +516,6 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
             debugBuilder.append("]");
             logger.debug(debugBuilder.toString());
         }
-
-        application.setCurrentAppAttempt(schedulerAppAttempt);
 
         queue.getMetrics().submitAppAttempt(user);
         logger.info("Added Application Attempt " + appAttemptId

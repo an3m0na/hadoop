@@ -3,7 +3,6 @@ package org.apache.hadoop.tools.posum.predictor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.TypeConverter;
-import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.database.DataStoreClient;
@@ -43,7 +42,7 @@ public class MockDataStoreClient extends DataStoreClient {
     }
 
     private TaskProfile buildTaskProfile(LoggedTask task, long startTime) {
-        TaskProfile profile = new TaskProfile(TypeConverter.toYarn(task.getTaskID()),
+        TaskProfile profile = new TaskProfile(task.getTaskID().toString(),
                 TaskType.valueOf(task.getTaskType().name()));
         profile.setStartTime(task.getStartTime() - startTime);
         profile.setFinishTime(task.getFinishTime() - startTime);
@@ -66,7 +65,7 @@ public class MockDataStoreClient extends DataStoreClient {
         long startTime = 0;
         while ((job = reader.getNext()) != null) {
 
-            JobId jobId = TypeConverter.toYarn(job.getJobID());
+            String jobId = job.getJobID().toString();
 
             long jobStartTimeMS = job.getSubmitTime();
             long jobFinishTimeMS = job.getFinishTime();
@@ -106,7 +105,7 @@ public class MockDataStoreClient extends DataStoreClient {
 
     @Override
     public TaskProfile getTaskProfile(TaskId taskId) {
-        JobId parent = taskId.getJobId();
+        String parent = taskId.getJobId().toString();
         return getJobProfile(parent).getTask(taskId);
     }
 
@@ -126,7 +125,7 @@ public class MockDataStoreClient extends DataStoreClient {
     }
 
     @Override
-    public JobProfile getJobProfile(JobId jobId) {
+    public JobProfile getJobProfile(String jobId) {
         for (JobProfile job : jobList)
             if (job.getJobId().equals(jobId))
                 return snapshot(job);
@@ -164,11 +163,11 @@ public class MockDataStoreClient extends DataStoreClient {
         return ret;
     }
 
-    public Map<JobId, List<TaskId>> getFutureJobInfo() {
-        Map<JobId, List<TaskId>> ret = new HashMap<>(jobList.size());
+    public Map<String, List<String>> getFutureJobInfo() {
+        Map<String, List<String>> ret = new HashMap<>(jobList.size());
         for (JobProfile job : jobList)
             if (job.getFinishTime() > currentTime) {
-                List<TaskId> tasks = new ArrayList<>(job.getTotalMapTasks() + job.getTotalReduceTasks());
+                List<String> tasks = new ArrayList<>(job.getTotalMapTasks() + job.getTotalReduceTasks());
                 tasks.addAll(job.getMapTasks().keySet());
                 tasks.addAll(job.getReduceTasks().keySet());
                 ret.put(job.getJobId(), tasks);

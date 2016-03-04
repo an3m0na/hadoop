@@ -106,7 +106,7 @@ public class RestClient {
                 //TODO maybe queue
                 apps.add(app);
             }
-        } catch (JSONException | YarnException e) {
+        } catch (JSONException e) {
             logger.debug("[RestClient] Exception parsing apps", e);
         }
         return apps;
@@ -142,12 +142,12 @@ public class RestClient {
         return jobs;
     }
 
-    public Map<String, String> getJobConfProperties(ApplicationId appId, JobId jobId, Map<String, String> requested) {
+    public Map<String, String> getJobConfProperties(String appId, String jobId, Map<String, String> requested) {
         Map<String, String> ret = new HashMap<>(requested.size());
         try {
             JSONObject wrapper = getInfo(TrackingUI.AM, "jobs/%s/conf", new String[]{
-                    appId.toString(),
-                    jobId.toString()
+                    appId,
+                    jobId
             });
             try {
                 JSONArray properties = wrapper.getJSONObject("conf").getJSONArray("property");

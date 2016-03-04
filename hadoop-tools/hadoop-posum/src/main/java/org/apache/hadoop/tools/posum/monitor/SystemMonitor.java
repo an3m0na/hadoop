@@ -10,7 +10,7 @@ import org.apache.hadoop.tools.posum.database.DataStore;
 /**
  * Created by ane on 2/4/16.
  */
-public class SystemMonitor implements Configurable, Runnable {
+public class SystemMonitor extends Thread implements Configurable {
 
     Configuration conf = new Configuration(false);
     private static Log logger = LogFactory.getLog(SystemMonitor.class);
@@ -32,10 +32,9 @@ public class SystemMonitor implements Configurable, Runnable {
         return conf;
     }
 
-    public void stop() {
+    public void exit() {
         exit = true;
-        feeder.feedDatabase();
-        Thread.currentThread().interrupt();
+        interrupt();
     }
 
     @Override
@@ -44,7 +43,8 @@ public class SystemMonitor implements Configurable, Runnable {
                 POSUMConfiguration.MONITOR_HEARTBEAT_MS_DEFAULT);
         while (!exit) {
             try {
-                Thread.sleep(time);
+                feeder.feedDatabase();
+                sleep(time);
             } catch (InterruptedException e) {
                 logger.warn(e);
             }

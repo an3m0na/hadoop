@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 
@@ -15,7 +14,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
  * Created by ane on 2/8/16.
  */
 public class JobProfile {
-    private JobId jobId;
+    private String jobId;
     private String jobName;
     private String user;
     private String queue;
@@ -29,18 +28,18 @@ public class JobProfile {
     private Long finishTime;
     private Float reportedProgress;
 
-    private HashMap<TaskId, TaskProfile> mapTasks = new HashMap<>();
-    private HashMap<TaskId, TaskProfile> reduceTasks = new HashMap<>();
+    private HashMap<String, TaskProfile> mapTasks = new HashMap<>();
+    private HashMap<String, TaskProfile> reduceTasks = new HashMap<>();
 
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
 
-    public JobProfile(JobId jobId, Long submitTime) {
+    public JobProfile(String jobId, Long submitTime) {
         this.jobId = jobId;
         this.submitTime = submitTime;
     }
 
-    public JobId getJobId() {
+    public String getJobId() {
         return jobId;
     }
 
@@ -50,14 +49,6 @@ public class JobProfile {
 
     public void setJobName(String jobName) {
         this.jobName = jobName;
-    }
-
-    public long getInputBytes() {
-        return inputBytes;
-    }
-
-    public void setInputBytes(long inputBytes) {
-        this.inputBytes = inputBytes;
     }
 
     public Long getStartTime() {
@@ -153,7 +144,7 @@ public class JobProfile {
                 (maps.getSecond() + reds.getSecond());
     }
 
-    private Pair<Float, Integer> accumulateTasks(Map<TaskId, TaskProfile> tasks) {
+    private Pair<Float, Integer> accumulateTasks(Map<String, TaskProfile> tasks) {
         lock.readLock().lock();
         float duration = 0.0f;
         int size = 0;
@@ -200,11 +191,11 @@ public class JobProfile {
         }
     }
 
-    public HashMap<TaskId, TaskProfile> getMapTasks() {
+    public HashMap<String, TaskProfile> getMapTasks() {
         return mapTasks;
     }
 
-    public HashMap<TaskId, TaskProfile> getReduceTasks() {
+    public HashMap<String, TaskProfile> getReduceTasks() {
         return reduceTasks;
     }
 

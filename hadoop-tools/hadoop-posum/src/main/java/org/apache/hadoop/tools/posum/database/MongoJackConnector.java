@@ -6,6 +6,7 @@ import org.mongojack.JacksonDBCollection;
 import org.mongojack.WriteResult;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,7 +26,6 @@ public class MongoJackConnector extends MongoConnector {
         deprecatedDb = client.getDB(db.getName());
     }
 
-
     public void addCollection(DataCollection collection) {
         collections.put(collection.getId(),
                 JacksonDBCollection.wrap(deprecatedDb.getCollection(collection.getLabel()),
@@ -33,16 +33,21 @@ public class MongoJackConnector extends MongoConnector {
                         String.class));
     }
 
+
+    <T> JacksonDBCollection<T, String> getCollection(DataCollection collection) {
+        return (JacksonDBCollection<T, String>) collections.get(collection.getId());
+    }
+
     public <T> String insertObject(DataCollection collection, T object) {
-        WriteResult<T, String> result = collections.get(collection).insert(object);
+        WriteResult<T, String> result = this.<T>getCollection(collection).insert(object);
         return result.getSavedId();
     }
 
     public <T> T findObjectById(DataCollection collection, String id) {
-        return (T) collections.get(collection).findOneById(id);
+        return this.<T>getCollection(collection).findOneById(id);
     }
 
-    public <T> T findObjects(DataCollection collection, DBQuery.Query query) {
-        return (T) collections.get(collection).find(query);
+    public <T> List<T> findObjects(DataCollection collection, DBQuery.Query query) {
+        return this.<T>getCollection(collection).find(query).toArray();
     }
 }

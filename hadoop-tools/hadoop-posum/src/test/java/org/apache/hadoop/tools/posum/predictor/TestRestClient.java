@@ -23,14 +23,11 @@ public class TestRestClient {
         System.out.println(apps);
         for (AppProfile app : apps) {
             if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-                JobId jobId = Records.newRecord(JobId.class);
-                jobId.setAppId(app.getAppId());
-                jobId.setId(app.getAppId().getId());
-                System.out.println("For job: " + jobId.toString());
+                System.out.println("For job: " + app.getAppId());
                 Map<String, String> requested = new HashMap<>(2);
                 requested.put("mapreduce.input.fileinputformat.inputdir", "inputdir");
                 requested.put("mapreduce.input.fileinputformat.numinputfiles", "numinputfiles");
-                Map<String, String> properties = client.getJobConfProperties(app.getAppId(), jobId, requested);
+                Map<String, String> properties = client.getJobConfProperties(app.getAppId(), app.getAppId(), requested);
                 System.out.println("Input dir is: " + properties.get("inputdir"));
                 System.out.println("Input files are: " + properties.get("numinputfiles"));
             }
