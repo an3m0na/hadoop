@@ -1,9 +1,7 @@
 package org.apache.hadoop.tools.posum.predictor;
 
-import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.tools.posum.common.records.AppProfile;
-import org.apache.hadoop.yarn.util.Records;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -23,11 +21,11 @@ public class TestRestClient {
         System.out.println(apps);
         for (AppProfile app : apps) {
             if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-                System.out.println("For job: " + app.getAppId());
+                System.out.println("For job: " + app.getId());
                 Map<String, String> requested = new HashMap<>(2);
                 requested.put("mapreduce.input.fileinputformat.inputdir", "inputdir");
                 requested.put("mapreduce.input.fileinputformat.numinputfiles", "numinputfiles");
-                Map<String, String> properties = client.getJobConfProperties(app.getAppId(), app.getAppId(), requested);
+                Map<String, String> properties = client.getJobConfProperties(app.getId(), app.getId(), requested);
                 System.out.println("Input dir is: " + properties.get("inputdir"));
                 System.out.println("Input files are: " + properties.get("numinputfiles"));
             }

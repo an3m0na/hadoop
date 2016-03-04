@@ -2,12 +2,13 @@ package org.apache.hadoop.tools.posum.common.records;
 
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.mongojack.Id;
 
 /**
  * Created by ane on 2/8/16.
  */
-public class TaskProfile {
-    private String taskId;
+public class TaskProfile extends GeneralProfile {
     private Long inputBytes;
     private Long inputRecords;
     private Long outputBytes;
@@ -21,13 +22,9 @@ public class TaskProfile {
     private Counters counters;
     private Float reportedProgress;
 
-    public TaskProfile(String taskId, TaskType type){
-        this.taskId = taskId;
+    public TaskProfile(String id, TaskType type) {
+        this.id = id;
         this.type = type;
-    }
-
-    public String getTaskId() {
-        return taskId;
     }
 
     public Long getInputBytes() {
@@ -102,8 +99,8 @@ public class TaskProfile {
         this.expectedDuration = expectedDuration;
     }
 
-    public void setTaskId(String taskId) {
-        this.taskId = taskId;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public void setType(TaskType type) {
@@ -133,7 +130,7 @@ public class TaskProfile {
     @Override
     public String toString() {
         return "TaskProfile{" +
-                "taskId=" + taskId +
+                "id=" + id +
                 ", inputBytes=" + inputBytes +
                 ", inputRecords=" + inputRecords +
                 ", outputBytes=" + outputBytes +
@@ -149,19 +146,4 @@ public class TaskProfile {
                 '}';
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        TaskProfile that = (TaskProfile) o;
-
-        return taskId.equals(that.taskId);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return taskId.hashCode();
-    }
 }

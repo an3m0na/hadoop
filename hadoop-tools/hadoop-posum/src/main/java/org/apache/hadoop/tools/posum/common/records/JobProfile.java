@@ -9,12 +9,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.mongojack.Id;
 
 /**
  * Created by ane on 2/8/16.
  */
-public class JobProfile {
-    private String jobId;
+public class JobProfile extends GeneralProfile{
     private String jobName;
     private String user;
     private String queue;
@@ -34,13 +35,9 @@ public class JobProfile {
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
 
-    public JobProfile(String jobId, Long submitTime) {
-        this.jobId = jobId;
+    public JobProfile(String id, Long submitTime) {
+        this.id = id;
         this.submitTime = submitTime;
-    }
-
-    public String getJobId() {
-        return jobId;
     }
 
     public String getJobName() {
@@ -172,10 +169,10 @@ public class JobProfile {
     public void recordTask(TaskProfile task) {
         lock.writeLock().lock();
         if (task.getType().equals(TaskType.MAP)) {
-            mapTasks.put(task.getTaskId(), task);
+            mapTasks.put(task.getId(), task);
         }
         if (task.getType().equals(TaskType.REDUCE)) {
-            reduceTasks.put(task.getTaskId(), task);
+            reduceTasks.put(task.getId(), task);
         }
         lock.writeLock().unlock();
     }
@@ -219,7 +216,7 @@ public class JobProfile {
     @Override
     public String toString() {
         return "JobProfile{" +
-                "jobId=" + jobId +
+                "id=" + id +
                 ", jobName='" + jobName + '\'' +
                 ", user='" + user + '\'' +
                 ", queue='" + queue + '\'' +
@@ -235,21 +232,5 @@ public class JobProfile {
                 ", reduceTasks=" + reduceTasks +
                 ", lock=" + lock +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        JobProfile that = (JobProfile) o;
-
-        return jobId.equals(that.jobId);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return jobId.hashCode();
     }
 }
