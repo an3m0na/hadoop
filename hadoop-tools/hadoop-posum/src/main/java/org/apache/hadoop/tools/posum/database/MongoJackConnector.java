@@ -1,10 +1,12 @@
 package org.apache.hadoop.tools.posum.database;
 
 import com.mongodb.DB;
+import org.apache.hadoop.tools.posum.common.records.GeneralProfile;
 import org.mongojack.DBQuery;
 import org.mongojack.JacksonDBCollection;
 import org.mongojack.WriteResult;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,11 +45,52 @@ public class MongoJackConnector extends MongoConnector {
         return result.getSavedId();
     }
 
+    public <T extends GeneralProfile> boolean updateObject(DataCollection collection, T object) {
+        return this.<T>getCollection(collection).updateById(object.getId(), object).getN() == 1;
+    }
+
+    public <T extends GeneralProfile> boolean upsertObject(DataCollection collection, T object) {
+        Object upsertedId = this.<T>getCollection(collection)
+                .update(DBQuery.is("_id", object.getId()), object, true, false).getUpsertedId();
+        if (object.getId() != null)
+            return object.getId().equals(upsertedId);
+        else
+            return upsertedId != null;
+    }
+
+    public <T> void deleteObject(DataCollection collection, String id) {
+        this.<T>getCollection(collection).removeById(id);
+    }
+
+    public <T> void deleteObjects(DataCollection collection, String field, Object value) {
+        this.<T>getCollection(collection).remove(DBQuery.is(field, value));
+    }
+
+    private DBQuery.Query composeQuery(Map<String, Object> queryParams) {
+        ArrayList<DBQuery.Query> paramList = new ArrayList<>(queryParams.size());
+        for (Map.Entry<String, Object> param : queryParams.entrySet()) {
+            paramList.add(DBQuery.is(param.getKey(), param.getValue()));
+        }
+        return DBQuery.and(paramList.toArray(new DBQuery.Query[queryParams.size()]));
+    }
+
+    public <T> void deleteObject(DataCollection collection, Map<String, Object> queryParams) {
+        this.<T>getCollection(collection).remove(composeQuery(queryParams));
+    }
+
     public <T> T findObjectById(DataCollection collection, String id) {
         return this.<T>getCollection(collection).findOneById(id);
     }
 
+    public <T> List<T> findObjects(DataCollection collection, String field, Object value) {
+        return this.<T>getCollection(collection).find(DBQuery.is(field, value)).toArray();
+    }
+
     public <T> List<T> findObjects(DataCollection collection, DBQuery.Query query) {
         return this.<T>getCollection(collection).find(query).toArray();
+    }
+
+    public <T> List<T> findObjects(DataCollection collection, Map<String, Object> queryParams) {
+        return findObjects(collection, composeQuery(queryParams));
     }
 }

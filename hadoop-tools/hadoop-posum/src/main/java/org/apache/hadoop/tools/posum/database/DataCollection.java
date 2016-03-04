@@ -35,9 +35,9 @@ public enum DataCollection {
         return mappedClass;
     }
 
-    static DataCollection getByClass(Class tclass) {
+    static DataCollection getByClass(Class tClass) {
         for (DataCollection value : DataCollection.values()) {
-            if (value.getMappedClass().equals(tclass))
+            if (value.getMappedClass().equals(tClass))
                 return value;
         }
         return null;

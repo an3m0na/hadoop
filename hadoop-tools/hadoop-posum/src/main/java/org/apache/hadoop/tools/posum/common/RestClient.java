@@ -8,7 +8,6 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.tools.posum.common.records.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.JobProfile;
 import org.apache.hadoop.tools.posum.master.scheduler.data.DataOrientedScheduler;
@@ -94,8 +93,7 @@ public class RestClient {
             apps = new ArrayList<>(rawApps.length());
             for (int i = 0; i < rawApps.length(); i++) {
                 JSONObject rawApp = rawApps.getJSONObject(i);
-                AppProfile app = new AppProfile();
-                app.setAppId(rawApp.getString("id"));
+                AppProfile app = new AppProfile(rawApp.getString("id"));
                 app.setStartTime(rawApp.getLong("startedTime"));
                 app.setFinishTime(rawApp.getLong("finishedTime"));
                 app.setName(rawApp.getString("name"));

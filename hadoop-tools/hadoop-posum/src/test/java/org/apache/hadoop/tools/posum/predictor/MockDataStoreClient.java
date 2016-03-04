@@ -2,7 +2,6 @@ package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.TypeConverter;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.database.DataStoreClient;
@@ -110,7 +109,7 @@ public class MockDataStoreClient extends DataStoreClient {
     }
 
     private JobProfile snapshot(JobProfile original) {
-        JobProfile copy = new JobProfile(original.getJobId(), original.getSubmitTime());
+        JobProfile copy = new JobProfile(original.getId(), original.getSubmitTime());
         copy.populate(
                 original.getJobName(),
                 original.getUser() == null ? "default" : original.getUser(),
@@ -127,7 +126,7 @@ public class MockDataStoreClient extends DataStoreClient {
     @Override
     public JobProfile getJobProfile(String jobId) {
         for (JobProfile job : jobList)
-            if (job.getJobId().equals(jobId))
+            if (job.getId().equals(jobId))
                 return snapshot(job);
         return null;
     }
@@ -170,7 +169,7 @@ public class MockDataStoreClient extends DataStoreClient {
                 List<String> tasks = new ArrayList<>(job.getTotalMapTasks() + job.getTotalReduceTasks());
                 tasks.addAll(job.getMapTasks().keySet());
                 tasks.addAll(job.getReduceTasks().keySet());
-                ret.put(job.getJobId(), tasks);
+                ret.put(job.getId(), tasks);
             }
         return ret;
     }

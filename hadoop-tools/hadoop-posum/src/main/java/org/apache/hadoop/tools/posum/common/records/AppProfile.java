@@ -1,19 +1,16 @@
 package org.apache.hadoop.tools.posum.common.records;
 
 import org.apache.hadoop.tools.posum.common.RestClient;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
-import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.mongojack.Id;
 
 /**
  * Created by ane on 2/24/16.
  */
-public class AppProfile {
+public class AppProfile extends GeneralProfile {
 
-    @Id
-    private String appId;
     private Long startTime;
     private Long finishTime;
     private String user;
@@ -22,12 +19,13 @@ public class AppProfile {
     private FinalApplicationStatus status;
     private RestClient.TrackingUI trackingUI;
 
-    public String getAppId() {
-        return appId;
+
+    private AppProfile() {
+
     }
 
-    public void setAppId(String appId) {
-        this.appId = appId;
+    public AppProfile(String id) {
+        this.id = id;
     }
 
     public Long getStartTime() {
@@ -92,7 +90,7 @@ public class AppProfile {
     @Override
     public String toString() {
         return "AppProfile{" +
-                "appId=" + appId +
+                "id=" + id +
                 ", startTime=" + startTime +
                 ", finishTime=" + finishTime +
                 ", user='" + user + '\'' +
@@ -101,21 +99,5 @@ public class AppProfile {
                 ", status=" + status +
                 ", trackingUI=" + trackingUI +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        AppProfile that = (AppProfile) o;
-
-        return appId.equals(that.appId);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return appId.hashCode();
     }
 }
