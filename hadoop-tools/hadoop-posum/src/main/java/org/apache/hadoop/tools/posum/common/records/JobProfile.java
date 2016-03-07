@@ -7,27 +7,31 @@ import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.mongojack.Id;
 
 /**
  * Created by ane on 2/8/16.
  */
-public class JobProfile extends GeneralProfile{
+public class JobProfile extends GeneralProfile {
     private String jobName;
+    private String appId;
     private String user;
-    private String queue;
     private Integer totalMapTasks;
     private Integer totalReduceTasks;
-
-    private Long inputBytes;
-    private Long outputBytes;
-    private Long submitTime;
-    private Long startTime;
-    private Long finishTime;
-    private Float reportedProgress;
+    private Integer inputSplits; // only from conf
+    private Long inputBytes; // only from conf
+    private Long outputBytes; // only in history
+    private Long submitTime; // only in history
+    private Long startTime = 0L;
+    private Long finishTime = 0L;
+    private JobState state;
+    private Float mapProgress;
+    private Float reduceProgress;
+    private Integer completedMaps;
+    private Integer completedReduces;
+    private Boolean uberized;
 
     private HashMap<String, TaskProfile> mapTasks = new HashMap<>();
     private HashMap<String, TaskProfile> reduceTasks = new HashMap<>();
@@ -35,9 +39,8 @@ public class JobProfile extends GeneralProfile{
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
 
-    public JobProfile(String id, Long submitTime) {
+    public JobProfile(String id) {
         this.id = id;
-        this.submitTime = submitTime;
     }
 
     public String getJobName() {
@@ -60,19 +63,12 @@ public class JobProfile extends GeneralProfile{
         return finishTime;
     }
 
-    public Float getReportedProgress() {
-        return reportedProgress;
-    }
-
     public void setFinishTime(Long finishTime) {
         this.finishTime = finishTime;
     }
 
-    public void setReportedProgress(Float reportedProgress) {
-        this.reportedProgress = reportedProgress;
-    }
-
     public Integer getDuration() {
+        if(finishTime == 0) return -1;
         return new Long(finishTime - startTime).intValue();
     }
 
@@ -104,14 +100,6 @@ public class JobProfile extends GeneralProfile{
         this.user = user;
     }
 
-    public String getQueue() {
-        return queue;
-    }
-
-    public void setQueue(String queue) {
-        this.queue = queue;
-    }
-
     public Long getSubmitTime() {
         return submitTime;
     }
@@ -126,6 +114,75 @@ public class JobProfile extends GeneralProfile{
 
     public Integer getTotalReduceTasks() {
         return totalReduceTasks;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
+
+    public JobState getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        if (state != null)
+            this.state = JobState.valueOf(state);
+    }
+
+    public Float getMapProgress() {
+        return mapProgress;
+    }
+
+    public void setMapProgress(Float mapProgress) {
+        this.mapProgress = mapProgress;
+    }
+
+    public Float getReduceProgress() {
+        return reduceProgress;
+    }
+
+    public void setReduceProgress(Float reduceProgress) {
+        this.reduceProgress = reduceProgress;
+    }
+
+    public Integer getCompletedMaps() {
+        return completedMaps;
+    }
+
+    public void setCompletedMaps(Integer completedMaps) {
+        this.completedMaps = completedMaps;
+    }
+
+    public Integer getCompletedReduces() {
+        return completedReduces;
+    }
+
+    public void setCompletedReduces(Integer completedReduces) {
+        this.completedReduces = completedReduces;
+    }
+
+    public Boolean isUberized() {
+        return uberized;
+    }
+
+    public void setUberized(Boolean uberized) {
+        this.uberized = uberized;
+    }
+
+    public Integer getInputSplits() {
+        return inputSplits;
+    }
+
+    public void setInputSplits(Integer inputSplits) {
+        this.inputSplits = inputSplits;
+    }
+
+    public Long getInputBytes() {
+        return inputBytes;
     }
 
     private float computeAverageTaskDuration() {
@@ -198,7 +255,6 @@ public class JobProfile extends GeneralProfile{
 
     public void populate(String jobName,
                          String user,
-                         String queue,
                          Integer totalMaps,
                          Integer totalReduces,
                          Long startTime,
@@ -206,7 +262,6 @@ public class JobProfile extends GeneralProfile{
 
         setJobName(jobName);
         setUser(user);
-        setQueue(queue);
         setTotalMapTasks(totalMaps);
         setTotalReduceTasks(totalReduces);
         setStartTime(startTime);
@@ -219,7 +274,6 @@ public class JobProfile extends GeneralProfile{
                 "id=" + id +
                 ", jobName='" + jobName + '\'' +
                 ", user='" + user + '\'' +
-                ", queue='" + queue + '\'' +
                 ", totalMapTasks=" + totalMapTasks +
                 ", totalReduceTasks=" + totalReduceTasks +
                 ", inputBytes=" + inputBytes +
@@ -227,7 +281,6 @@ public class JobProfile extends GeneralProfile{
                 ", submitTime=" + submitTime +
                 ", startTime=" + startTime +
                 ", finishTime=" + finishTime +
-                ", reportedProgress=" + reportedProgress +
                 ", mapTasks=" + mapTasks +
                 ", reduceTasks=" + reduceTasks +
                 ", lock=" + lock +

@@ -78,10 +78,9 @@ public class MockDataStoreClient extends DataStoreClient {
                 jobStartTimeMS = 0;
             }
 
-            JobProfile profile = new JobProfile(jobId, job.getSubmitTime() - startTime);
+            JobProfile profile = new JobProfile(jobId);
             profile.populate(job.getJobName().getValue(),
                     job.getUser() == null ? "default" : job.getUser().getValue(),
-                    job.getQueue().getValue(),
                     job.getTotalMaps(),
                     job.getTotalReduces(),
                     jobStartTimeMS,
@@ -109,11 +108,10 @@ public class MockDataStoreClient extends DataStoreClient {
     }
 
     private JobProfile snapshot(JobProfile original) {
-        JobProfile copy = new JobProfile(original.getId(), original.getSubmitTime());
+        JobProfile copy = new JobProfile(original.getId());
         copy.populate(
                 original.getJobName(),
                 original.getUser() == null ? "default" : original.getUser(),
-                original.getQueue(),
                 original.getTotalMapTasks(),
                 original.getTotalReduceTasks(),
                 original.getStartTime() > currentTime ? null : original.getStartTime(),

@@ -4,15 +4,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapreduce.TypeConverter;
-import org.apache.hadoop.mapreduce.server.jobtracker.JTConfig;
-import org.apache.hadoop.mapreduce.split.JobSplit;
-import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
-import org.apache.hadoop.mapreduce.v2.api.records.JobId;
-import org.apache.hadoop.mapreduce.v2.util.MRApps;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.yarn.api.records.*;
@@ -36,7 +27,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmnode.UpdatedContainerInfo
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.*;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
-import org.apache.hadoop.yarn.util.Records;
 import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
@@ -63,7 +53,6 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
     private final ResourceCalculator resourceCalculator = new DefaultResourceCalculator();
 
     private DOSQueue queue;
-    private RestClient restClient;
     private TreeSet<SchedulerApplication<DOSAppAttempt>> orderedApps =
             new TreeSet<>(new Comparator<SchedulerApplication<DOSAppAttempt>>() {
                 @Override
@@ -136,9 +125,6 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
                 YarnConfiguration.DEFAULT_RM_SCHEDULER_USE_PORT_FOR_NODE_NAME);
         this.applications = new ConcurrentHashMap<>();
         this.queue = new DOSQueue(DEFAULT_QUEUE_NAME, this);
-
-        this.restClient = new RestClient();
-        logger.info("[DOScheduler] Initialized REST client");
     }
 
     @Override
@@ -168,7 +154,7 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
         DOSchedulerNode node = nodes.get(container.getNodeId());
 
         if (application == null) {
-            logger.info("Unknown application: " + appId +
+            logger.trace("Unknown application: " + appId +
                     " released container " + container.getId() +
                     " on node: " + node +
                     " with event: " + rmContainerEventType);
@@ -184,7 +170,7 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
         // Update total usage
         Resources.subtractFrom(usedResource, container.getResource());
 
-        logger.info("Application attempt " + application.getApplicationAttemptId() +
+        logger.trace("Application attempt " + application.getApplicationAttemptId() +
                 " released container " + container.getId() +
                 " on node: " + node +
                 " with event: " + rmContainerEventType);
@@ -433,57 +419,11 @@ public class DataOrientedScheduler extends AbstractYarnScheduler<DOSAppAttempt, 
         attempt.stop(finalAttemptState);
     }
 
-    private void readSplits(JobId jobId, FileSystem fs, JobConf conf, Path jobSubmitDir, DOSAppAttempt attempt) {
-        try {
-            JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = SplitMetaInfoReader.readSplitMetaInfo(
-                    TypeConverter.fromYarn(jobId), fs,
-                    conf,
-                    jobSubmitDir);
-
-            long inputLength = 0;
-            for (JobSplit.TaskSplitMetaInfo aTaskSplitMetaInfo : taskSplitMetaInfo) {
-                inputLength += aTaskSplitMetaInfo.getInputDataLength();
-            }
-
-            logger.debug("[DOScheduler] Input splits: " + taskSplitMetaInfo.length);
-            logger.debug("[DOScheduler] Total input size: " + inputLength);
-
-            attempt.setNumInputSplits(taskSplitMetaInfo.length);
-            attempt.setTotalInputSize(inputLength);
-
-        } catch (IOException e) {
-            throw new YarnRuntimeException(e);
-        }
-    }
-
     private void readApplicationInfo(DOSAppAttempt attempt) {
-        JobId jobId = Records.newRecord(JobId.class);
-        jobId.setAppId(attempt.getApplicationId());
-        jobId.setId(attempt.getApplicationId().getId());
-        logger.debug("[DOScheduler] For job: " + jobId.toString());
-
-//        Map<String, String> requested = new HashMap<>(2);
-//        requested.put("mapreduce.input.fileinputformat.inputdir", "inputdir");
-//        requested.put("mapreduce.input.fileinputformat.numinputfiles", "numinputfiles");
-//        Map<String, String> properties = restClient.getJobConfProperties(appId, jobId, requested);
-//        logger.debug("[DOScheduler] Input dir is: " + properties.get("inputdir"));
-//        logger.debug("[DOScheduler] Input files are: " + properties.get("numinputfiles"));
-
         try {
-            FileSystem fs = FileSystem.get(conf);
-            Path confPath = new Path(MRApps.getStagingAreaDir(conf, UserGroupInformation.getCurrentUser().getUserName()),
-                    jobId.toString()
-            );
-            confPath = fs.makeQualified(confPath);
-            JobConf jobConf = new JobConf(new Path(confPath, "job.xml"));
-            if (fs.exists(confPath)) {
-                logger.debug("[DOScheduler] Found staging path: " + confPath);
-                readSplits(jobId, fs, jobConf, confPath, attempt);
-            } else {
-                logger.debug("[DOScheduler] Path does not exist: " + confPath);
-            }
+            //TODO access the database and think of a way to make sure the database is populated
         } catch (Exception e) {
-            logger.debug("[DOScheduler] Could not read input size for: " + jobId, e);
+            logger.debug("[DOScheduler] Could not read input size for: " + attempt.getApplicationId(), e);
         }
 
     }

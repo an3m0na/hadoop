@@ -26,6 +26,16 @@ import java.util.*;
  */
 public class RestClient {
 
+    private static Log logger = LogFactory.getLog(RestClient.class);
+
+    private Client client;
+
+    public RestClient() {
+        ClientConfig clientConfig = new DefaultClientConfig();
+        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        client = Client.create(clientConfig);
+    }
+
     public enum TrackingUI {
         RM("ResourceManager", "http://localhost:8088", "ws/v1/"),
         HISTORY("History", "http://localhost:8088", "ws/v1/"),
@@ -55,16 +65,6 @@ public class RestClient {
 
     }
 
-    private static Log logger = LogFactory.getLog(DataOrientedScheduler.class);
-
-    private Client client;
-
-    public RestClient() {
-        ClientConfig clientConfig = new DefaultClientConfig();
-        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        client = Client.create(clientConfig);
-    }
-
     public JSONObject getInfo(TrackingUI trackingUI, String path, String[] args) {
         WebResource resource = client.resource(trackingUI.host).path(String.format(trackingUI.root + path, args));
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
@@ -81,87 +81,5 @@ public class RestClient {
             logger.error("Could not parse response as JSON ", e);
         }
         return null;
-    }
-
-    public List<AppProfile> getAppsInfo() {
-        List<AppProfile> apps = null;
-        try {
-            JSONObject wrapper = getInfo(TrackingUI.RM, "cluster/apps", new String[]{});
-            if (wrapper.isNull("apps"))
-                return Collections.emptyList();
-            JSONArray rawApps = wrapper.getJSONObject("apps").getJSONArray("app");
-            apps = new ArrayList<>(rawApps.length());
-            for (int i = 0; i < rawApps.length(); i++) {
-                JSONObject rawApp = rawApps.getJSONObject(i);
-                AppProfile app = new AppProfile(rawApp.getString("id"));
-                app.setStartTime(rawApp.getLong("startedTime"));
-                app.setFinishTime(rawApp.getLong("finishedTime"));
-                app.setName(rawApp.getString("name"));
-                app.setUser(rawApp.getString("user"));
-                app.setState(rawApp.getString("state"));
-                app.setStatus(rawApp.getString("finalStatus"));
-                app.setTrackingUI(rawApp.getString("trackingUI"));
-                //TODO maybe queue
-                apps.add(app);
-            }
-        } catch (JSONException e) {
-            logger.debug("[RestClient] Exception parsing apps", e);
-        }
-        return apps;
-    }
-
-    public List<JobProfile> getJobsInfo(ApplicationId appId) {
-        List<JobProfile> jobs = null;
-        try {
-            JSONObject wrapper = getInfo(TrackingUI.AM, "jobs", new String[]{appId.toString()});
-            if (wrapper.isNull("jobs"))
-                return Collections.emptyList();
-            JSONArray rawJobs = wrapper.getJSONObject("jobs").getJSONArray("job");
-            jobs = new ArrayList<>(rawJobs.length());
-            if (jobs.size() != 1)
-                throw new YarnException("Application contains unexpected number of jobs: " + jobs.size());
-            for (int i = 0; i < rawJobs.length(); i++) {
-                JSONObject rawJob = rawJobs.getJSONObject(i);
-//                JobProfile job = new JobProfile();
-//                AppProfile app = new AppProfile();
-//                app.setAppId(rawApp.getString("appId"));
-//                app.setStartTime(rawApp.getLong("startedTime"));
-//                app.setFinishTime(rawApp.getLong("finishedTime"));
-//                app.setName(rawApp.getString("name"));
-//                app.setUser(rawApp.getString("user"));
-//                app.setState(rawApp.getString("state"));
-//                app.setStatus(rawApp.getString("status"));
-                //TODO maybe queue
-//                jobs.add(job);
-            }
-        } catch (JSONException | YarnException e) {
-            logger.debug("[RestClient] Exception parsing apps", e);
-        }
-        return jobs;
-    }
-
-    public Map<String, String> getJobConfProperties(String appId, String jobId, Map<String, String> requested) {
-        Map<String, String> ret = new HashMap<>(requested.size());
-        try {
-            JSONObject wrapper = getInfo(TrackingUI.AM, "jobs/%s/conf", new String[]{
-                    appId,
-                    jobId
-            });
-            try {
-                JSONArray properties = wrapper.getJSONObject("conf").getJSONArray("property");
-                for (int i = 0; i < properties.length(); i++) {
-                    JSONObject property = properties.getJSONObject(i);
-                    String requestedLabel = requested.get(property.getString("name"));
-                    if (requestedLabel != null)
-                        ret.put(requestedLabel, property.getString("value"));
-                }
-            } catch (JSONException e) {
-                logger.debug("[RestClient] Exception parsing job conf", e);
-            }
-        } catch (WebApplicationException e) {
-            logger.error("[RestClient] Could not get job conf for " + jobId, e);
-        }
-        return ret;
-
     }
 }

@@ -11,8 +11,8 @@ import org.mongojack.Id;
  */
 public class AppProfile extends GeneralProfile {
 
-    private Long startTime;
-    private Long finishTime;
+    private Long startTime = 0L;
+    private Long finishTime = 0L;
     private String user;
     private String name;
     private YarnApplicationState state;
