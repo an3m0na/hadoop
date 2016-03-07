@@ -15,12 +15,14 @@ public class TaskProfile extends GeneralProfile {
     private Long outputRecords;
     private Long expectedInputBytes;
     private Long expectedOutputBytes;
-    private Long startTime;
-    private Long finishTime;
+    private Long startTime = 0L;
+    private Long finishTime = 0L;
     private Integer expectedDuration;
     private TaskType type;
     private Counters counters;
     private Float reportedProgress;
+    private String appId;
+    private String jobId;
 
     public TaskProfile(String id, TaskType type) {
         this.id = id;
@@ -44,6 +46,7 @@ public class TaskProfile extends GeneralProfile {
     }
 
     public Integer getDuration() {
+        if(finishTime == 0) return -1;
         return new Long(finishTime - startTime).intValue();
     }
 
@@ -125,6 +128,26 @@ public class TaskProfile extends GeneralProfile {
 
     public void setOutputRecords(Long outputRecords) {
         this.outputRecords = outputRecords;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
+
+    public String getJobId() {
+        return jobId;
+    }
+
+    public void setJobId(String jobId) {
+        this.jobId = jobId;
+    }
+
+    public Float getReportedProgress() {
+        return reportedProgress;
     }
 
     @Override

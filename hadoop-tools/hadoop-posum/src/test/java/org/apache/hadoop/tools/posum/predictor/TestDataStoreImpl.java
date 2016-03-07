@@ -23,5 +23,7 @@ public class TestDataStoreImpl {
         dataStore.updateOrStore(DataCollection.APPS, profile);
         profile.setId("blabla2");
         assertTrue(dataStore.updateOrStore(DataCollection.APPS, profile));
+        dataStore.delete(DataCollection.APPS, "blabla1");
+        dataStore.delete(DataCollection.APPS, "blabla2");
     }
 }

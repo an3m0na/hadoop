@@ -19,7 +19,7 @@ public class SystemMonitor extends Thread implements Configurable {
     DatabaseFeeder feeder;
 
     public SystemMonitor(DataStore dataStore) {
-        feeder = new DatabaseFeeder(dataStore);
+        feeder = new DatabaseFeeder(conf, dataStore);
     }
 
     @Override
