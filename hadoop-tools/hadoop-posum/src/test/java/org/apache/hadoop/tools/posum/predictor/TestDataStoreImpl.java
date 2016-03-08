@@ -1,9 +1,12 @@
 package org.apache.hadoop.tools.posum.predictor;
 
+import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.JobProfile;
 import org.apache.hadoop.tools.posum.database.DataCollection;
 import org.apache.hadoop.tools.posum.database.DataStore;
 import org.apache.hadoop.tools.posum.database.DataStoreImpl;
+import org.codehaus.jettison.json.JSONObject;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -25,5 +28,31 @@ public class TestDataStoreImpl {
         assertTrue(dataStore.updateOrStore(DataCollection.APPS, profile));
         dataStore.delete(DataCollection.APPS, "blabla1");
         dataStore.delete(DataCollection.APPS, "blabla2");
+    }
+
+    @Test
+    public void checkFinder() {
+        DataStore dataStore = new DataStoreImpl(TestUtils.getConf());
+        long time = System.currentTimeMillis();
+        JobProfile job = new JobProfile("job_" + time + "_0000");
+        job.setAppId("application_" + time + "_0000");
+        job.setStartTime(time);
+        job.setFinishTime(0L);
+        job.setJobName("test job");
+        job.setUser("THE user");
+        job.setState(JobState.RUNNING.toString());
+        job.setMapProgress(0.44f);
+        job.setReduceProgress(0.12f);
+        job.setCompletedMaps(7);
+        job.setCompletedReduces(1);
+        job.setTotalMapTasks(15);
+        job.setTotalReduceTasks(10);
+        job.setUberized(false);
+        try {
+            dataStore.store(DataCollection.JOBS, job);
+            assertEquals(job, dataStore.findById(DataCollection.JOBS, job.getId()));
+        } finally {
+            dataStore.delete(DataCollection.JOBS, job.getId());
+        }
     }
 }

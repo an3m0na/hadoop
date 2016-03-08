@@ -3,8 +3,6 @@ package org.apache.hadoop.tools.posum.common.records;
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.mongojack.Id;
 
 /**
  * Created by ane on 2/24/16.
@@ -19,9 +17,7 @@ public class AppProfile extends GeneralProfile {
     private FinalApplicationStatus status;
     private RestClient.TrackingUI trackingUI;
 
-
-    private AppProfile() {
-
+    public AppProfile() {
     }
 
     public AppProfile(String id) {
@@ -90,8 +86,7 @@ public class AppProfile extends GeneralProfile {
     @Override
     public String toString() {
         return "AppProfile{" +
-                "id=" + id +
-                ", startTime=" + startTime +
+                "startTime=" + startTime +
                 ", finishTime=" + finishTime +
                 ", user='" + user + '\'' +
                 ", name='" + name + '\'' +

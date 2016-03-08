@@ -2,8 +2,6 @@ package org.apache.hadoop.tools.posum.common.records;
 
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.mongojack.Id;
 
 /**
  * Created by ane on 2/8/16.
@@ -14,7 +12,6 @@ public class TaskProfile extends GeneralProfile {
     private Long outputBytes;
     private Long outputRecords;
     private Long expectedInputBytes;
-    private Long expectedOutputBytes;
     private Long startTime = 0L;
     private Long finishTime = 0L;
     private Integer expectedDuration;
@@ -24,9 +21,11 @@ public class TaskProfile extends GeneralProfile {
     private String appId;
     private String jobId;
 
-    public TaskProfile(String id, TaskType type) {
+    public TaskProfile() {
+    }
+
+    public TaskProfile(String id) {
         this.id = id;
-        this.type = type;
     }
 
     public Long getInputBytes() {
@@ -46,7 +45,7 @@ public class TaskProfile extends GeneralProfile {
     }
 
     public Integer getDuration() {
-        if(finishTime == 0) return -1;
+        if (finishTime == 0) return -1;
         return new Long(finishTime - startTime).intValue();
     }
 
@@ -86,14 +85,6 @@ public class TaskProfile extends GeneralProfile {
         this.expectedInputBytes = expectedInputBytes;
     }
 
-    public Long getExpectedOutputBytes() {
-        return expectedOutputBytes;
-    }
-
-    public void setExpectedOutputBytes(Long expectedOutputBytes) {
-        this.expectedOutputBytes = expectedOutputBytes;
-    }
-
     public Integer getExpectedDuration() {
         return expectedDuration;
     }
@@ -106,8 +97,9 @@ public class TaskProfile extends GeneralProfile {
         this.id = id;
     }
 
-    public void setType(TaskType type) {
-        this.type = type;
+    public void setType(String type) {
+        if (type != null)
+            this.type = TaskType.valueOf(type);
     }
 
     public void setReportedProgress(Float reportedProgress) {
@@ -153,20 +145,19 @@ public class TaskProfile extends GeneralProfile {
     @Override
     public String toString() {
         return "TaskProfile{" +
-                "id=" + id +
-                ", inputBytes=" + inputBytes +
+                "inputBytes=" + inputBytes +
                 ", inputRecords=" + inputRecords +
                 ", outputBytes=" + outputBytes +
                 ", outputRecords=" + outputRecords +
                 ", expectedInputBytes=" + expectedInputBytes +
-                ", expectedOutputBytes=" + expectedOutputBytes +
                 ", startTime=" + startTime +
                 ", finishTime=" + finishTime +
                 ", expectedDuration=" + expectedDuration +
                 ", type=" + type +
                 ", counters=" + counters +
                 ", reportedProgress=" + reportedProgress +
+                ", appId='" + appId + '\'' +
+                ", jobId='" + jobId + '\'' +
                 '}';
     }
-
 }

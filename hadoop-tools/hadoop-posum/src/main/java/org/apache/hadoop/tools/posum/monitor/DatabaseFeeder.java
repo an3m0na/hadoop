@@ -4,9 +4,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.tools.posum.common.records.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.HistoryProfile;
 import org.apache.hadoop.tools.posum.common.records.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.TaskProfile;
 import org.apache.hadoop.tools.posum.database.DataCollection;
 import org.apache.hadoop.tools.posum.database.DataStore;
 
@@ -71,26 +74,58 @@ public class DatabaseFeeder implements Configurable {
         //TODO save task info to history
         //TODO save job info to history
         dataStore.updateOrStore(DataCollection.APPS_HISTORY, app);
+        dataStore.store(DataCollection.HISTORY, new HistoryProfile<>(app));
     }
 
     public void updateAppInfo(AppProfile app) {
         logger.debug("[" + getClass().getSimpleName() + "] Updating " + app.getId() + " info");
         if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-            List<JobProfile> jobs = collector.getRunningJobsInfo(app.getId());
-            logger.debug("[" + getClass().getSimpleName() + "] Found " + jobs.size() + " jobs for " + app.getId());
-            for (JobProfile job : jobs) {
-                //TODO for each job, fetch tasks and tasks attempts
-                //TODO store task info
+            JobProfile lastJobInfo = dataStore.getJobProfileForApp(app.getId());
+            JobProfile job = collector.getRunningJobInfo(app.getId(), lastJobInfo);
+            if (job == null)
+                logger.debug("[" + getClass().getSimpleName() + "] Could not find job for " + app.getId());
+            else {
+                List<TaskProfile> tasks = collector.getRunningTasksInfo(job);
+                Integer mapDuration = 0, reduceDuration = 0, avgDuration = 0, mapNo = 0, reduceNo = 0, avgNo = 0;
+                for (TaskProfile task : tasks) {
+                    Integer duration = task.getDuration();
+                    if (duration > 0) {
+                        if (TaskType.MAP.equals(task.getType())) {
+                            mapDuration += task.getDuration();
+                            mapNo++;
+                        }
+                        if (TaskType.REDUCE.equals(task.getType())) {
+                            reduceDuration += task.getDuration();
+                            reduceNo++;
+                        }
+                        avgDuration += duration;
+                        avgNo++;
+                    }
+                    if (avgNo > 0) {
+                        job.setAvgTaskDuration(avgDuration / avgNo);
+                        if (mapNo > 0)
+                            job.setAvgMapDuration(mapDuration / mapNo);
+                        if (reduceNo > 0)
+                            job.setAvgReduceDuration(reduceDuration / reduceNo);
+                    }
+                    dataStore.updateOrStore(DataCollection.TASKS, task);
+                    dataStore.store(DataCollection.HISTORY, new HistoryProfile<>(task));
+                }
                 dataStore.updateOrStore(DataCollection.JOBS, job);
+                dataStore.store(DataCollection.HISTORY, new HistoryProfile<>(job));
             }
         } else {
             //app is not yet tracked
             logger.debug("[" + getClass().getSimpleName() + "] App " + app.getId() + " is not tracked");
-            List<JobProfile> jobs = collector.getSubmittedJobsInfo(app.getId());
-            for (JobProfile job : jobs) {
+            try {
+                JobProfile job = collector.getSubmittedJobInfo(app.getId());
                 dataStore.updateOrStore(DataCollection.JOBS, job);
+                dataStore.store(DataCollection.HISTORY, job);
+            } catch (Exception e) {
+                logger.error("Could not get job info from staging dir!", e);
             }
         }
         dataStore.updateOrStore(DataCollection.APPS, app);
+        dataStore.store(DataCollection.HISTORY, new HistoryProfile<>(app));
     }
 }
