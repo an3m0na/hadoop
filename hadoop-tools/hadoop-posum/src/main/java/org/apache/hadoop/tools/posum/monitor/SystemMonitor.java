@@ -12,7 +12,7 @@ import org.apache.hadoop.tools.posum.database.DataStore;
  */
 public class SystemMonitor extends Thread implements Configurable {
 
-    Configuration conf = new Configuration(false);
+    Configuration conf = new Configuration();
     private static Log logger = LogFactory.getLog(SystemMonitor.class);
 
     boolean exit = false;

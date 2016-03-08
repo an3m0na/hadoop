@@ -8,7 +8,7 @@ import org.apache.hadoop.conf.Configuration;
 public class TestUtils {
 
     static Configuration getConf() {
-        Configuration conf = new Configuration(false);
+        Configuration conf = new Configuration();
         conf.addResource("posum-core.xml");
         return conf;
     }

@@ -9,6 +9,8 @@ import org.apache.hadoop.tools.posum.common.records.GeneralProfile;
 import org.apache.hadoop.tools.posum.common.records.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.TaskProfile;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 
 import java.util.List;
 import java.util.Map;
@@ -42,18 +44,18 @@ public class DataStoreImpl implements DataStore, Configurable {
     }
 
     @Override
-    public TaskProfile getTaskProfile(TaskId taskId) {
-        return conn.findObjectById(DataCollection.TASKS, taskId.toString());
+    public <T extends GeneralProfile> T findById(DataCollection collection, String id) {
+        return conn.findObjectById(collection, id);
     }
 
     @Override
-    public JobProfile getJobProfile(String jobId) {
-        return conn.findObjectById(DataCollection.JOBS, jobId.toString());
-    }
-
-    @Override
-    public AppProfile getAppProfile(ApplicationId appId) {
-        return conn.findObjectById(DataCollection.APPS, appId.toString());
+    public JobProfile getJobProfileForApp(String appId) {
+        List<JobProfile> profiles = conn.findObjects(DataCollection.JOBS, "appId", appId);
+        if (profiles.size() > 1)
+            throw new YarnRuntimeException("Found too many profiles in database for app " + appId);
+        if (profiles.size() < 1)
+            return null;
+        return profiles.get(0);
     }
 
     @Override

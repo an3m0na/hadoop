@@ -2,8 +2,12 @@ package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.tools.posum.common.Utils;
+import org.apache.hadoop.tools.posum.common.records.GeneralProfile;
+import org.apache.hadoop.tools.posum.database.DataCollection;
 import org.apache.hadoop.tools.posum.database.DataStoreClient;
 import org.apache.hadoop.tools.posum.common.records.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.TaskProfile;
@@ -21,6 +25,7 @@ import java.util.*;
 public class MockDataStoreClient extends DataStoreClient {
 
     private List<JobProfile> jobList = new ArrayList<>();
+    private Map<String, Map<String, TaskProfile>> taskMap = new HashMap<>();
     private long simulationTime = 0;
     private long currentTime = 0;
 
@@ -41,14 +46,14 @@ public class MockDataStoreClient extends DataStoreClient {
     }
 
     private TaskProfile buildTaskProfile(LoggedTask task, long startTime) {
-        TaskProfile profile = new TaskProfile(task.getTaskID().toString(),
-                TaskType.valueOf(task.getTaskType().name()));
+        TaskProfile profile = new TaskProfile(task.getTaskID().toString());
         profile.setStartTime(task.getStartTime() - startTime);
         profile.setFinishTime(task.getFinishTime() - startTime);
         profile.setInputBytes(task.getInputBytes());
         profile.setInputRecords(task.getInputRecords());
         profile.setOutputBytes(task.getOutputBytes());
         profile.setOutputRecords(task.getOutputRecords());
+        profile.setJobId(task.getTaskID().getJobID().toString());
         //TODO continue with other task characteristics (!attempts)
         return profile;
     }
@@ -88,23 +93,18 @@ public class MockDataStoreClient extends DataStoreClient {
             );
             //TODO continue with other job characteristics (look into computonsperbyte)
 
+            Map<String, TaskProfile> taskList = new HashMap<>(job.getMapTasks().size() + job.getReduceTasks().size());
             for (LoggedTask task : job.getMapTasks())
-                profile.recordTask(buildTaskProfile(task, startTime));
+                taskList.put(task.getTaskID().toString(), buildTaskProfile(task, startTime));
             for (LoggedTask task : job.getReduceTasks())
-                profile.recordTask(buildTaskProfile(task, startTime));
+                taskList.put(task.getTaskID().toString(), buildTaskProfile(task, startTime));
+            taskMap.put(jobId, taskList);
 
             jobList.add(profile);
 
             if (jobFinishTimeMS > simulationTime)
                 simulationTime = jobFinishTimeMS;
         }
-    }
-
-
-    @Override
-    public TaskProfile getTaskProfile(TaskId taskId) {
-        String parent = taskId.getJobId().toString();
-        return getJobProfile(parent).getTask(taskId);
     }
 
     private JobProfile snapshot(JobProfile original) {
@@ -122,11 +122,18 @@ public class MockDataStoreClient extends DataStoreClient {
     }
 
     @Override
-    public JobProfile getJobProfile(String jobId) {
-        for (JobProfile job : jobList)
-            if (job.getId().equals(jobId))
-                return snapshot(job);
+    public <T extends GeneralProfile> T findById(DataCollection collection, String id) {
+        if (DataCollection.JOBS.equals(collection)) {
+            for (JobProfile job : jobList)
+                if (job.getId().equals(id))
+                    return (T) snapshot(job);
+        }
+        if (DataCollection.TASKS.equals(collection)) {
+            JobId parent = Utils.parseTaskId(id).getJobId();
+            return (T) taskMap.get(parent.toString()).get(id);
+        }
         return null;
+
     }
 
     private void storeIfMoreRecent(JobProfile job, TreeMap<Long, JobProfile> list) {
@@ -165,8 +172,7 @@ public class MockDataStoreClient extends DataStoreClient {
         for (JobProfile job : jobList)
             if (job.getFinishTime() > currentTime) {
                 List<String> tasks = new ArrayList<>(job.getTotalMapTasks() + job.getTotalReduceTasks());
-                tasks.addAll(job.getMapTasks().keySet());
-                tasks.addAll(job.getReduceTasks().keySet());
+                tasks.addAll(taskMap.get(job.getId()).keySet());
                 ret.put(job.getId(), tasks);
             }
         return ret;

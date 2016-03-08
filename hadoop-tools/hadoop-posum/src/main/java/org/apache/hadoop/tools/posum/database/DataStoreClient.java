@@ -18,17 +18,12 @@ public class DataStoreClient implements DataStore {
     //TODO make it connect to actual database
 
     @Override
-    public TaskProfile getTaskProfile(TaskId taskId) {
+    public <T extends GeneralProfile> T findById(DataCollection collection, String id) {
         return null;
     }
 
     @Override
-    public JobProfile getJobProfile(String jobId) {
-        return null;
-    }
-
-    @Override
-    public AppProfile getAppProfile(ApplicationId appId) {
+    public JobProfile getJobProfileForApp(String appId) {
         return null;
     }
 

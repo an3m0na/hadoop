@@ -1,15 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records;
 
-import org.apache.commons.math3.util.Pair;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
-import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
-import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 
 /**
  * Created by ane on 2/8/16.
@@ -32,12 +23,11 @@ public class JobProfile extends GeneralProfile {
     private Integer completedMaps;
     private Integer completedReduces;
     private Boolean uberized;
+    private Integer avgMapDuration;
+    private Integer avgReduceDuration;
+    private Integer avgTaskDuration;
 
-    private HashMap<String, TaskProfile> mapTasks = new HashMap<>();
-    private HashMap<String, TaskProfile> reduceTasks = new HashMap<>();
-
-    private ReadWriteLock lock = new ReentrantReadWriteLock();
-
+    public JobProfile(){}
 
     public JobProfile(String id) {
         this.id = id;
@@ -68,7 +58,7 @@ public class JobProfile extends GeneralProfile {
     }
 
     public Integer getDuration() {
-        if(finishTime == 0) return -1;
+        if (finishTime == 0) return -1;
         return new Long(finishTime - startTime).intValue();
     }
 
@@ -185,73 +175,77 @@ public class JobProfile extends GeneralProfile {
         return inputBytes;
     }
 
-    private float computeAverageTaskDuration() {
-        lock.readLock().lock();
-        Pair<Float, Integer> maps = accumulateTasks(mapTasks);
-        Pair<Float, Integer> reds = accumulateTasks(reduceTasks);
-        lock.readLock().unlock();
-        if (maps.getSecond() == 0)
-            return maps.getFirst();
-        if (reds.getSecond() == 0)
-            return reds.getFirst();
-        return (maps.getFirst() * maps.getSecond() + reds.getFirst() * reds.getSecond()) /
-                (maps.getSecond() + reds.getSecond());
+    public Long getAvgSplitSize() {
+        if (inputSplits != null && inputSplits != 0)
+            return inputBytes / inputSplits;
+        return -1L;
     }
 
-    private Pair<Float, Integer> accumulateTasks(Map<String, TaskProfile> tasks) {
-        lock.readLock().lock();
-        float duration = 0.0f;
-        int size = 0;
-        for (TaskProfile t : tasks.values()) {
-            if (t.getDuration() != null) {
-                duration += t.getDuration();
-                size++;
-            }
-        }
-        lock.readLock().lock();
-        return new Pair<>(duration / size, size);
+    public Integer getAvgMapDuration() {
+        return avgMapDuration;
     }
 
-    public float computeAverageTaskDuration(TaskType type) {
-        switch (type) {
-            case MAP:
-                return accumulateTasks(mapTasks).getFirst();
-            case REDUCE:
-                return accumulateTasks(reduceTasks).getFirst();
-            default:
-                return computeAverageTaskDuration();
-        }
+    public void setAvgMapDuration(Integer avgMapDuration) {
+        this.avgMapDuration = avgMapDuration;
     }
 
-    public void recordTask(TaskProfile task) {
-        lock.writeLock().lock();
-        if (task.getType().equals(TaskType.MAP)) {
-            mapTasks.put(task.getId(), task);
-        }
-        if (task.getType().equals(TaskType.REDUCE)) {
-            reduceTasks.put(task.getId(), task);
-        }
-        lock.writeLock().unlock();
+    public Integer getAvgReduceDuration() {
+        return avgReduceDuration;
     }
 
-    public TaskProfile getTask(TaskId taskId) {
-        switch (taskId.getTaskType()) {
-            case MAP:
-                return mapTasks.get(taskId);
-            case REDUCE:
-                return reduceTasks.get(taskId);
-            default:
-                return null;
-        }
+    public void setAvgReduceDuration(Integer avgReduceDuration) {
+        this.avgReduceDuration = avgReduceDuration;
     }
 
-    public HashMap<String, TaskProfile> getMapTasks() {
-        return mapTasks;
+    public Integer getAvgTaskDuration() {
+        return avgTaskDuration;
     }
 
-    public HashMap<String, TaskProfile> getReduceTasks() {
-        return reduceTasks;
+    public void setAvgTaskDuration(Integer avgTaskDuration) {
+        this.avgTaskDuration = avgTaskDuration;
     }
+
+    //    private float computeAverageTaskDuration() {
+//        Pair<Float, Integer> maps = accumulateTasks(mapTasks);
+//        Pair<Float, Integer> reds = accumulateTasks(reduceTasks);
+//        if (maps.getSecond() == 0)
+//            return maps.getFirst();
+//        if (reds.getSecond() == 0)
+//            return reds.getFirst();
+//        return (maps.getFirst() * maps.getSecond() + reds.getFirst() * reds.getSecond()) /
+//                (maps.getSecond() + reds.getSecond());
+//    }
+//
+//    private Pair<Float, Integer> accumulateTasks(Map<String, TaskProfile> tasks) {
+//        float duration = 0.0f;
+//        int size = 0;
+//        for (TaskProfile t : tasks.values()) {
+//            if (t.getDuration() != null) {
+//                duration += t.getDuration();
+//                size++;
+//            }
+//        }
+//        return new Pair<>(duration / size, size);
+//    }
+//
+//    public float computeAverageTaskDuration(TaskType type) {
+//        switch (type) {
+//            case MAP:
+//                return accumulateTasks(mapTasks).getFirst();
+//            case REDUCE:
+//                return accumulateTasks(reduceTasks).getFirst();
+//            default:
+//                return computeAverageTaskDuration();
+//        }
+//    }
+//
+//    public HashMap<String, TaskProfile> getMapTasks() {
+//        return mapTasks;
+//    }
+//
+//    public HashMap<String, TaskProfile> getReduceTasks() {
+//        return reduceTasks;
+//    }
 
     public void populate(String jobName,
                          String user,
@@ -271,19 +265,26 @@ public class JobProfile extends GeneralProfile {
     @Override
     public String toString() {
         return "JobProfile{" +
-                "id=" + id +
-                ", jobName='" + jobName + '\'' +
+                "jobName='" + jobName + '\'' +
+                ", appId='" + appId + '\'' +
                 ", user='" + user + '\'' +
                 ", totalMapTasks=" + totalMapTasks +
                 ", totalReduceTasks=" + totalReduceTasks +
+                ", inputSplits=" + inputSplits +
                 ", inputBytes=" + inputBytes +
                 ", outputBytes=" + outputBytes +
                 ", submitTime=" + submitTime +
                 ", startTime=" + startTime +
                 ", finishTime=" + finishTime +
-                ", mapTasks=" + mapTasks +
-                ", reduceTasks=" + reduceTasks +
-                ", lock=" + lock +
+                ", state=" + state +
+                ", mapProgress=" + mapProgress +
+                ", reduceProgress=" + reduceProgress +
+                ", completedMaps=" + completedMaps +
+                ", completedReduces=" + completedReduces +
+                ", uberized=" + uberized +
+                ", avgMapDuration=" + avgMapDuration +
+                ", avgReduceDuration=" + avgReduceDuration +
+                ", avgTaskDuration=" + avgTaskDuration +
                 '}';
     }
 }

@@ -1,11 +1,13 @@
 package org.apache.hadoop.tools.posum.common.records;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.mongojack.Id;
 
 /**
  * Created by ane on 3/4/16.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GeneralProfile {
 
     @Id
@@ -32,7 +34,7 @@ public class GeneralProfile {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        AppProfile that = (AppProfile) o;
+        GeneralProfile that = (GeneralProfile) o;
 
         return id.equals(that.id);
 

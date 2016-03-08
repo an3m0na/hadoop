@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.predictor;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.Utils;
+import org.apache.hadoop.tools.posum.database.DataCollection;
 import org.apache.hadoop.tools.posum.database.DataStore;
 import org.apache.hadoop.tools.posum.common.records.JobProfile;
 
@@ -20,7 +21,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
     @Override
     public Integer predictJobDuration(String jobId) {
         Float duration = 0.0f;
-        JobProfile current = dataStore.getJobProfile(jobId);
+        JobProfile current = dataStore.findById(DataCollection.JOBS, jobId);
         List<JobProfile> comparable = dataStore.getComparableProfiles(
                 current.getUser(),
                 conf.getInt(POSUMConfiguration.BUFFER,
@@ -38,8 +39,8 @@ public class BasicPredictor extends JobBehaviorPredictor {
     @Override
     public Integer predictTaskDuration(String jobId, TaskType type) {
         Float duration = 0.0f;
-        JobProfile current = dataStore.getJobProfile(jobId);
-        float currentAverage = current.computeAverageTaskDuration(type);
+        JobProfile current = dataStore.findById(DataCollection.JOBS, jobId);
+        float currentAverage = TaskType.MAP.equals(type) ? current.getAvgMapDuration() : current.getAvgReduceDuration();
         if (currentAverage > 0)
             return new Float(currentAverage).intValue();
 
@@ -51,7 +52,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
             return conf.getInt(POSUMConfiguration.AVERAGE_TASK_DURATION,
                     POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
         for (JobProfile profile : comparable)
-            duration += profile.computeAverageTaskDuration(type);
+            duration += TaskType.MAP.equals(type) ? profile.getAvgMapDuration() : profile.getAvgReduceDuration();
         duration /= comparable.size();
         return duration.intValue();
     }

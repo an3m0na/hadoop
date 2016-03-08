@@ -16,11 +16,9 @@ import java.util.Map;
 public interface DataStore {
 
 
-    TaskProfile getTaskProfile(TaskId taskId);
+    <T extends GeneralProfile> T findById(DataCollection collection, String id);
 
-    JobProfile getJobProfile(String jobId);
-
-    AppProfile getAppProfile(ApplicationId appId);
+    JobProfile getJobProfileForApp(String appId);
 
     <T extends GeneralProfile> void store(DataCollection collection, T toInsert);
 
