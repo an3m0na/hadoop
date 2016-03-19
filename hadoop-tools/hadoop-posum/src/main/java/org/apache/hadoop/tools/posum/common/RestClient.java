@@ -38,7 +38,7 @@ public class RestClient {
 
     public enum TrackingUI {
         RM("ResourceManager", "http://localhost:8088", "ws/v1/"),
-        HISTORY("History", "http://localhost:8088", "ws/v1/"),
+        HISTORY("History", "http://localhost:8088", "ws/v1/history/mapreduce/"),
         AM("ApplicationMaster", "http://localhost:8088", "proxy/%s/ws/v1/mapreduce/");
 
         private static final Map<String, TrackingUI> labelMap = new HashMap<>();

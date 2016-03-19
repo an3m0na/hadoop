@@ -68,7 +68,7 @@ public class DatabaseFeeder implements Configurable {
         finished.add(app.getId());
         dataStore.delete(DataCollection.APPS, app.getId());
         dataStore.delete(DataCollection.JOBS, "appId", app.getId());
-        dataStore.delete(DataCollection.TASKS, "jobId", app.getId());
+        dataStore.delete(DataCollection.TASKS, "appId", app.getId());
         //TODO fetch job info from history server
         //TODO fetch task info from history server
         //TODO save task info to history
