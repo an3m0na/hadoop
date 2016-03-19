@@ -129,7 +129,33 @@ public class SystemInfoCollector implements Configurable {
     }
 
     public JobProfile getFinishedJobInfo(String appId) {
-        //TODO get from history
+        //TODO finish
+        try {
+            JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.HISTORY, "jobs", new String[]{appId});
+            if (wrapper.isNull("jobs"))
+                return null;
+            JSONArray rawJobs = wrapper.getJSONObject("jobs").getJSONArray("job");
+            if (rawJobs.length() != 1)
+                throw new YarnRuntimeException("Unexpected number of jobs for mapreduce app " + appId);
+            JSONObject rawJob = rawJobs.getJSONObject(0);
+            JobProfile job = new JobProfile(rawJob.getString("id"));
+            job.setAppId(appId);
+            job.setStartTime(rawJob.getLong("startTime"));
+            job.setFinishTime(rawJob.getLong("finishTime"));
+            job.setJobName(rawJob.getString("name"));
+            job.setUser(rawJob.getString("user"));
+            job.setState(rawJob.getString("state"));
+            job.setMapProgress(new Double(rawJob.getDouble("mapProgress")).floatValue());
+            job.setReduceProgress(new Double(rawJob.getDouble("reduceProgress")).floatValue());
+            job.setCompletedMaps(rawJob.getInt("mapsCompleted"));
+            job.setCompletedReduces(rawJob.getInt("reducesCompleted"));
+            job.setTotalMapTasks(rawJob.getInt("mapsTotal"));
+            job.setTotalReduceTasks(rawJob.getInt("reducesTotal"));
+            job.setUberized(rawJob.getBoolean("uberized"));
+            return job;
+        } catch (JSONException e) {
+            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing jobs from AM", e);
+        }
         return null;
     }
 
