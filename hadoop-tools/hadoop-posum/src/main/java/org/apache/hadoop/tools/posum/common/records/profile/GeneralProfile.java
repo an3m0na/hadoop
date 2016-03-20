@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records;
+package org.apache.hadoop.tools.posum.common.records.profile;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;

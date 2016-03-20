@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.database;
 
 import com.mongodb.DB;
-import org.apache.hadoop.tools.posum.common.records.GeneralProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
 import org.mongojack.DBQuery;
 import org.mongojack.JacksonDBCollection;
 import org.mongojack.WriteResult;

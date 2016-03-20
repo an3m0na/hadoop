@@ -1,12 +1,11 @@
 package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
-import org.apache.hadoop.tools.posum.common.records.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
 import org.apache.hadoop.tools.posum.database.DataCollection;
 import org.apache.hadoop.tools.posum.database.DataStore;
 import org.apache.hadoop.tools.posum.database.DataStoreImpl;
-import org.codehaus.jettison.json.JSONObject;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

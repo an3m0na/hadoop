@@ -1,11 +1,7 @@
 package org.apache.hadoop.tools.posum.database;
 
-import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
-import org.apache.hadoop.tools.posum.common.records.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.GeneralProfile;
-import org.apache.hadoop.tools.posum.common.records.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.TaskProfile;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
 
 import java.util.List;
 import java.util.Map;

@@ -1,9 +1,12 @@
 package org.apache.hadoop.tools.posum.database;
 
-import org.apache.hadoop.tools.posum.common.records.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.HistoryProfile;
-import org.apache.hadoop.tools.posum.common.records.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.TaskProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.HistoryProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.TaskProfile;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by ane on 3/3/16.
@@ -19,7 +22,6 @@ public enum DataCollection {
 
     private String label;
     private Class mappedClass;
-
     DataCollection(String label, Class mappedClass) {
         this.label = label;
         this.mappedClass = mappedClass;
@@ -35,22 +37,6 @@ public enum DataCollection {
 
     Class getMappedClass() {
         return mappedClass;
-    }
-
-    static DataCollection getByClass(Class tClass) {
-        for (DataCollection value : DataCollection.values()) {
-            if (value.getMappedClass().equals(tClass))
-                return value;
-        }
-        return null;
-    }
-
-    static DataCollection getByLabel(String label) {
-        for (DataCollection value : DataCollection.values()) {
-            if (value.getLabel().equals(label))
-                return value;
-        }
-        return null;
     }
 
 }

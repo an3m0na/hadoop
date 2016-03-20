@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records;
+package org.apache.hadoop.tools.posum.common.records.profile;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 
