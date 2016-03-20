@@ -5,7 +5,7 @@ import org.apache.hadoop.tools.posum.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.Utils;
 import org.apache.hadoop.tools.posum.database.DataCollection;
 import org.apache.hadoop.tools.posum.database.DataStore;
-import org.apache.hadoop.tools.posum.common.records.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
 
 import java.util.List;
 

@@ -4,8 +4,12 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
+import org.apache.hadoop.tools.posum.common.records.protocol.ListObjectsRequest;
+import org.apache.hadoop.tools.posum.common.records.protocol.ListObjectsResponse;
+import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectRequest;
+import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectResponse;
 import org.apache.hadoop.yarn.api.ApplicationMasterProtocol;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -15,18 +19,18 @@ import java.net.InetSocketAddress;
  */
 public class DataMasterService extends AbstractService implements DataMasterProtocol {
 
-    DataMasterContext context;
+    DataMasterContext dmContext;
     private Server server;
     private InetSocketAddress bindAddress;
 
     /**
      * Construct the service.
      *
-     * @param context service context
+     * @param context service dmContext
      */
     public DataMasterService(DataMasterContext context) {
         super(DataMasterService.class.getName());
-        this.context = context;
+        this.dmContext = context;
     }
 
     @Override
@@ -37,10 +41,10 @@ public class DataMasterService extends AbstractService implements DataMasterProt
                 POSUMConfiguration.DM_ADDRESS,
                 POSUMConfiguration.DEFAULT_DM_ADDRESS,
                 POSUMConfiguration.DEFAULT_DM_PORT);
-        context.setTokenSecretManager(new DummyTokenSecretManager());
+        dmContext.setTokenSecretManager(new DummyTokenSecretManager());
         this.server =
                 rpc.getServer(ApplicationMasterProtocol.class, this, masterServiceAddress,
-                        getConfig(), context.getTokenSecretManager(),
+                        getConfig(), dmContext.getTokenSecretManager(),
                         getConfig().getInt(POSUMConfiguration.DM_SERVICE_THREAD_COUNT,
                                 POSUMConfiguration.DEFAULT_DM_SERVICE_THREAD_COUNT));
 
@@ -53,4 +57,15 @@ public class DataMasterService extends AbstractService implements DataMasterProt
         super.serviceStart();
     }
 
+    @Override
+    public ListObjectsResponse listObjects(ListObjectsRequest request) {
+        return null;
+    }
+
+    @Override
+    public SingleObjectResponse getObject(SingleObjectRequest request) {
+        GeneralProfile ret = dmContext.getDataStore().findById(DataCollection.valueOf(request.getObjectClass()),
+                request.getObjectId());
+        return SingleObjectResponse.newInstance("Response for: " + ret.getId());
+    }
 }

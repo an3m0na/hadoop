@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records;
+package org.apache.hadoop.tools.posum.common.records.profile;
 
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;

@@ -2,14 +2,9 @@ package org.apache.hadoop.tools.posum.database;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.tools.posum.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.records.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.GeneralProfile;
-import org.apache.hadoop.tools.posum.common.records.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.TaskProfile;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 
 import java.util.List;

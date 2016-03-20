@@ -9,6 +9,7 @@ import org.apache.hadoop.yarn.event.Dispatcher;
 public class DataMasterContext {
     private Dispatcher dispatcher;
     private DummyTokenSecretManager tokenSecretManager;
+    private DataStore dataStore;
 
     public void setDispatcher(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -24,5 +25,13 @@ public class DataMasterContext {
 
     public DummyTokenSecretManager getTokenSecretManager() {
         return tokenSecretManager;
+    }
+
+    public void setDataStore(DataStore dataStore) {
+        this.dataStore = dataStore;
+    }
+
+    public DataStore getDataStore() {
+        return dataStore;
     }
 }

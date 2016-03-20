@@ -1,0 +1,13 @@
+package hadoop.tools.posum;
+
+option java_package = "org.apache.hadoop.tools.posum.proto";
+option java_outer_classname = "POSUMProtos";
+
+message SingleObjectRequestProto {
+  required string objectClass = 1;
+  required string objectId = 2;
+}
+
+message SingleObjectResponseProto {
+  required string response = 1;
+}

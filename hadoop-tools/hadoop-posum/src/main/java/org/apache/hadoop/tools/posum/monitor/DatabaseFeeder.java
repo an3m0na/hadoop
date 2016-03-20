@@ -6,10 +6,10 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.RestClient;
-import org.apache.hadoop.tools.posum.common.records.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.HistoryProfile;
-import org.apache.hadoop.tools.posum.common.records.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.TaskProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.HistoryProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.TaskProfile;
 import org.apache.hadoop.tools.posum.database.DataCollection;
 import org.apache.hadoop.tools.posum.database.DataStore;
 
