@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
-import org.apache.hadoop.tools.posum.database.store.DataCollection;
+import org.apache.hadoop.tools.posum.database.store.DataEntityType;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
@@ -8,16 +8,16 @@ import org.apache.hadoop.yarn.util.Records;
  */
 public abstract class SingleEntityRequest {
 
-    public static SingleEntityRequest newInstance(DataCollection type, String id) {
+    public static SingleEntityRequest newInstance(DataEntityType type, String id) {
         SingleEntityRequest request = Records.newRecord(SingleEntityRequest.class);
         request.setType(type);
         request.setId(id);
         return request;
     }
 
-    public abstract DataCollection getType();
+    public abstract DataEntityType getType();
 
-    public abstract void setType(DataCollection type);
+    public abstract void setType(DataEntityType type);
 
     public abstract String getId();
 

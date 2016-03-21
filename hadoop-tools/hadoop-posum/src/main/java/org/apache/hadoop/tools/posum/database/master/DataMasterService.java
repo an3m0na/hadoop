@@ -4,11 +4,10 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.common.records.profile.impl.pb.AppProfilePBImpl;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityResponse;
-import org.apache.hadoop.tools.posum.database.store.DataCollection;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 import org.apache.hadoop.yarn.util.Records;
 

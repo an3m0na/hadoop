@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records.profile;
+package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
@@ -6,7 +6,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 /**
  * Created by ane on 2/8/16.
  */
-public class TaskProfile extends GeneralProfile {
+public class TaskProfile extends GeneralDataEntity {
     private Long inputBytes;
     private Long inputRecords;
     private Long outputBytes;

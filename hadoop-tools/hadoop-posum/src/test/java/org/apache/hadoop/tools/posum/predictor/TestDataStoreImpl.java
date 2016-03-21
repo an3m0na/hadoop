@@ -1,9 +1,9 @@
 package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
-import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
-import org.apache.hadoop.tools.posum.database.store.DataCollection;
+import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.database.store.DataEntityType;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.junit.Test;
@@ -17,16 +17,16 @@ public class TestDataStoreImpl {
     @Test
     public void checkDatabase() {
         DataStore dataStore = new DataStoreImpl(TestUtils.getConf());
-        dataStore.delete(DataCollection.APPS, "blabla1");
-        dataStore.delete(DataCollection.APPS, "blabla2");
+        dataStore.delete(DataEntityType.APP, "blabla1");
+        dataStore.delete(DataEntityType.APP, "blabla2");
         AppProfile profile = new AppProfile("blabla1");
-        dataStore.store(DataCollection.APPS, profile);
+        dataStore.store(DataEntityType.APP, profile);
         profile.setFinishTime(System.currentTimeMillis());
-        dataStore.updateOrStore(DataCollection.APPS, profile);
+        dataStore.updateOrStore(DataEntityType.APP, profile);
         profile.setId("blabla2");
-        assertTrue(dataStore.updateOrStore(DataCollection.APPS, profile));
-        dataStore.delete(DataCollection.APPS, "blabla1");
-        dataStore.delete(DataCollection.APPS, "blabla2");
+        assertTrue(dataStore.updateOrStore(DataEntityType.APP, profile));
+        dataStore.delete(DataEntityType.APP, "blabla1");
+        dataStore.delete(DataEntityType.APP, "blabla2");
     }
 
     @Test
@@ -48,10 +48,10 @@ public class TestDataStoreImpl {
         job.setTotalReduceTasks(10);
         job.setUberized(false);
         try {
-            dataStore.store(DataCollection.JOBS, job);
-            assertEquals(job, dataStore.findById(DataCollection.JOBS, job.getId()));
+            dataStore.store(DataEntityType.JOB, job);
+            assertEquals(job, dataStore.findById(DataEntityType.JOB, job.getId()));
         } finally {
-            dataStore.delete(DataCollection.JOBS, job.getId());
+            dataStore.delete(DataEntityType.JOB, job.getId());
         }
     }
 }

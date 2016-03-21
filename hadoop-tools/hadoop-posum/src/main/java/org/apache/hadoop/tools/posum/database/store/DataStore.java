@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.database.store;
 
-import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
-import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 
 import java.util.List;
 import java.util.Map;
@@ -12,20 +12,20 @@ import java.util.Map;
 public interface DataStore {
 
 
-    <T extends GeneralProfile> T findById(DataCollection collection, String id);
+    <T extends GeneralDataEntity> T findById(DataEntityType collection, String id);
 
     JobProfile getJobProfileForApp(String appId);
 
-    <T extends GeneralProfile> void store(DataCollection collection, T toInsert);
+    <T extends GeneralDataEntity> void store(DataEntityType collection, T toInsert);
 
     List<JobProfile> getComparableProfiles(String user, int count);
 
     //returns true if an existing object was overwritten
-    <T extends GeneralProfile> boolean updateOrStore(DataCollection apps, T toUpdate);
+    <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType apps, T toUpdate);
 
-    void delete(DataCollection collection, String id);
+    void delete(DataEntityType collection, String id);
 
-    void delete(DataCollection collection, String field, Object value);
+    void delete(DataEntityType collection, String field, Object value);
 
-    void delete(DataCollection collection, Map<String, Object> queryParams);
+    void delete(DataEntityType collection, Map<String, Object> queryParams);
 }

@@ -1,9 +1,9 @@
-package org.apache.hadoop.tools.posum.common.records.profile;
+package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 /**
  * Created by ane on 3/7/16.
  */
-public class HistoryProfile<T extends GeneralProfile> extends GeneralProfile {
+public class HistoryProfile<T extends GeneralDataEntity> extends GeneralDataEntity {
     private T original;
     private Class<T> tClass;
     private Long timestamp;

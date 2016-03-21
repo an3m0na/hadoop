@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
-import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
-import org.apache.hadoop.tools.posum.database.store.DataCollection;
+import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
+import org.apache.hadoop.tools.posum.database.store.DataEntityType;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
@@ -9,7 +9,7 @@ import org.apache.hadoop.yarn.util.Records;
  */
 public abstract class SingleEntityResponse {
 
-    public static SingleEntityResponse newInstance(DataCollection type, AppProfile object) {
+    public static SingleEntityResponse newInstance(DataEntityType type, AppProfile object) {
         SingleEntityResponse response = Records.newRecord(SingleEntityResponse.class);
         response.setType(type);
         response.setEntity(object);
@@ -17,9 +17,9 @@ public abstract class SingleEntityResponse {
     }
 
 
-    public abstract DataCollection getType();
+    public abstract DataEntityType getType();
 
-    public abstract void setType(DataCollection type);
+    public abstract void setType(DataEntityType type);
 
     public abstract AppProfile getEntity();
 
