@@ -39,4 +39,9 @@ public class POSUMConfiguration {
     public static final int DEFAULT_DM_PORT = 7000;
     public static final String DM_SERVICE_THREAD_COUNT = DATABASE_PREFIX + "conn.thread-count";
     public static final int DEFAULT_DM_SERVICE_THREAD_COUNT = 50;
+
+    public static final String POSUM_CONNECT_MAX_WAIT_MS = PREFIX + "conn.max-wait.ms";
+    public static final long DEFAULT_POSUM_CONNECT_MAX_WAIT_MS = 15 * 60 * 1000;
+    public static final String POSUM_CONNECT_RETRY_INTERVAL_MS = PREFIX + "conn.retry-interval.ms";
+    public static final long DEFAULT_POSUM_CONNECT_RETRY_INTERVAL_MS = 30 * 1000;
 }

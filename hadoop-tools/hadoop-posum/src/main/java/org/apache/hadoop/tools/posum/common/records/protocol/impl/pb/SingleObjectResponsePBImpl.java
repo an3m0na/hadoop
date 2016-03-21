@@ -2,8 +2,8 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectResponse;
-import org.apache.hadoop.tools.posum.proto.POSUMProtos.SingleObjectResponseProto;
-import org.apache.hadoop.tools.posum.proto.POSUMProtos.SingleObjectResponseProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SingleObjectResponseProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SingleObjectResponseProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
@@ -52,7 +52,6 @@ public class SingleObjectResponsePBImpl extends SingleObjectResponse {
     }
 
     private void mergeLocalToBuilder() {
-        builder.setResponse(response);
     }
 
     private void mergeLocalToProto() {

@@ -2,8 +2,8 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectRequest;
-import org.apache.hadoop.tools.posum.proto.POSUMProtos.SingleObjectRequestProto;
-import org.apache.hadoop.tools.posum.proto.POSUMProtos.SingleObjectRequestProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SingleObjectRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SingleObjectRequestProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
@@ -53,8 +53,7 @@ public class SingleObjectRequestPBImpl extends SingleObjectRequest {
     }
 
     private void mergeLocalToBuilder() {
-        builder.setObjectClass(objectClass);
-        builder.setObjectId(objectId);
+
     }
 
     private void mergeLocalToProto() {
