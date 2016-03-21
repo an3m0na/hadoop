@@ -35,7 +35,7 @@ public class DataMasterService extends AbstractService implements DataMasterProt
     protected void serviceStart() throws Exception {
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
-                POSUMConfiguration.DM_ADDRESS,
+                POSUMConfiguration.DM_BIND_ADDRESS,
                 POSUMConfiguration.DM_ADDRESS,
                 POSUMConfiguration.DEFAULT_DM_ADDRESS,
                 POSUMConfiguration.DEFAULT_DM_PORT);
@@ -47,7 +47,8 @@ public class DataMasterService extends AbstractService implements DataMasterProt
                                 POSUMConfiguration.DEFAULT_DM_SERVICE_THREAD_COUNT));
 
         this.server.start();
-        this.bindAddress = getConfig().updateConnectAddr(POSUMConfiguration.DM_ADDRESS,
+        this.bindAddress = getConfig().updateConnectAddr(
+                POSUMConfiguration.DM_BIND_ADDRESS,
                 POSUMConfiguration.DM_ADDRESS,
                 POSUMConfiguration.DEFAULT_DM_ADDRESS,
                 server.getListenerAddress());
