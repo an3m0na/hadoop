@@ -2,12 +2,12 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service;
 
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
-import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectResponse;
+import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
-import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.SingleObjectRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.SingleObjectResponsePBImpl;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SingleObjectResponseProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SingleObjectRequestProto;
+import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.SingleEntityRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.SingleEntityResponsePBImpl;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityResponseProto;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
@@ -24,12 +24,12 @@ public class DataMasterProtocolPBServiceImpl implements DataMasterProtocolPB {
     }
 
     @Override
-    public SingleObjectResponseProto getObject(RpcController controller,
-                                               SingleObjectRequestProto proto) throws ServiceException {
-        SingleObjectRequestPBImpl request = new SingleObjectRequestPBImpl(proto);
+    public SingleEntityResponseProto getObject(RpcController controller,
+                                               SingleEntityRequestProto proto) throws ServiceException {
+        SingleEntityRequestPBImpl request = new SingleEntityRequestPBImpl(proto);
         try {
-            SingleObjectResponse response = real.getObject(request);
-            return ((SingleObjectResponsePBImpl) response).getProto();
+            SingleEntityResponse response = real.getObject(request);
+            return ((SingleEntityResponsePBImpl) response).getProto();
         } catch (YarnException | IOException e) {
             throw new ServiceException(e);
         }

@@ -4,13 +4,23 @@ option java_package = "org.apache.hadoop.yarn.proto";
 
 option java_outer_classname = "POSUMProtos";
 
-message SingleObjectRequestProto {
-    required string objectClass = 1;
-    required string objectId = 2;
+enum EntityType {
+    TYPE_APPS = 0;
+    TYPE_JOBS = 1;
+    TYPE_TASKS = 2;
+    TYPE_APPS_HISTORY = 3;
+    TYPE_JOBS_HISTORY = 4;
+    TYPE_TASKS_HISTORY = 5;
 }
 
-message SingleObjectResponseProto {
-    optional bytes object = 1;
+message SingleEntityRequestProto {
+    required EntityType type = 1;
+    required string id = 2;
+}
+
+message SingleEntityResponseProto {
+    required EntityType type = 1;
+    optional bytes entity = 2;
 }
 
 message AppProfileProto {
@@ -35,7 +45,7 @@ message AppProfileProto {
         STATE_KILLED = 8;
     }
 
-    enum AppStatus{
+    enum AppStatus {
         STATUS_NULL = 0;
         STATUS_UNDEFINED = 1;
         STATUS_SUCCEEDED = 2;
@@ -43,7 +53,7 @@ message AppProfileProto {
         STATUS_KILLED = 4;
     }
 
-    enum AppTrackingUI{
+    enum AppTrackingUI {
         UI_NULL = 0;
         UI_RM = 1;
         UI_AM = 2;

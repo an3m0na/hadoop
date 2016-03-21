@@ -8,5 +8,5 @@ import "posum_protos.proto";
 
 
 service DataMasterProtocolService {
-    rpc getObject (SingleObjectRequestProto) returns (SingleObjectResponseProto);
+    rpc getObject (SingleEntityRequestProto) returns (SingleEntityResponseProto);
 }
