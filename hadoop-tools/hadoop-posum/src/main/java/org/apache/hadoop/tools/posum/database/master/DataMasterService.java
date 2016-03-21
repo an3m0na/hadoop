@@ -4,6 +4,7 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
@@ -66,7 +67,7 @@ public class DataMasterService extends AbstractService implements DataMasterProt
 
     @Override
     public SingleEntityResponse getObject(SingleEntityRequest request) {
-        AppProfilePBImpl ret = dmContext.getDataStore().findById(request.getType(), request.getId());
+        GeneralDataEntity ret = dmContext.getDataStore().findById(request.getType(), request.getId());
         SingleEntityResponse response = Records.newRecord(SingleEntityResponse.class);
         response.setType(request.getType());
         response.setEntity(ret);

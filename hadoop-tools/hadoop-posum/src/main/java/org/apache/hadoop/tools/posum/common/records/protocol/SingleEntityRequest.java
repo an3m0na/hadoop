@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
-import org.apache.hadoop.tools.posum.database.store.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.yarn.util.Records;
 
 /**

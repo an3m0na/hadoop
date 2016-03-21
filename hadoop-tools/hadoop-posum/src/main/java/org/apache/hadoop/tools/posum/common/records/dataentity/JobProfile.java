@@ -6,7 +6,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobState;
  * Created by ane on 2/8/16.
  */
 public class JobProfile extends GeneralDataEntity {
-    private String jobName;
+    private String name;
     private String appId;
     private String user;
     private Integer totalMapTasks;
@@ -33,12 +33,12 @@ public class JobProfile extends GeneralDataEntity {
         this.id = id;
     }
 
-    public String getJobName() {
-        return jobName;
+    public String getName() {
+        return name;
     }
 
-    public void setJobName(String jobName) {
-        this.jobName = jobName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public Long getStartTime() {
@@ -254,7 +254,7 @@ public class JobProfile extends GeneralDataEntity {
                          Long startTime,
                          Long finishTime) {
 
-        setJobName(jobName);
+        setName(jobName);
         setUser(user);
         setTotalMapTasks(totalMaps);
         setTotalReduceTasks(totalReduces);
@@ -265,7 +265,7 @@ public class JobProfile extends GeneralDataEntity {
     @Override
     public String toString() {
         return "JobProfile[" + getId() + "]{" +
-                "jobName='" + jobName + '\'' +
+                "jobName='" + name + '\'' +
                 ", appId='" + appId + '\'' +
                 ", user='" + user + '\'' +
                 ", totalMapTasks=" + totalMapTasks +
