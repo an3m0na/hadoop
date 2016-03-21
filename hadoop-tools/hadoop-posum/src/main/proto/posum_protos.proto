@@ -10,41 +10,44 @@ message SingleObjectRequestProto {
 }
 
 message SingleObjectResponseProto {
-    required bytes object = 1;
+    optional bytes object = 1;
 }
 
 message AppProfileProto {
     required string id = 1;
-    required int64 startTime = 2;
-    required int64 finishTime = 3;
-    required string user = 4;
-    required string name = 5;
-    required AppState state = 6;
-    required AppStatus status = 7;
-    required AppTrackingUI trackingUI = 8;
+    optional int64 startTime = 2;
+    optional int64 finishTime = 3;
+    optional string user = 4;
+    optional string name = 5;
+    optional AppState state = 6;
+    optional AppStatus status = 7;
+    optional AppTrackingUI trackingUI = 8;
 
     enum AppState {
-        STATE_NEW = 0;
-        STATE_NEW_SAVING = 1;
-        STATE_SUBMITTED = 2;
-        STATE_ACCEPTED = 3;
-        STATE_RUNNING = 4;
-        STATE_FINISHED = 5;
-        STATE_FAILED = 6;
-        STATE_KILLED = 7;
+        STATE_NULL = 0;
+        STATE_NEW = 1;
+        STATE_NEW_SAVING = 2;
+        STATE_SUBMITTED = 3;
+        STATE_ACCEPTED = 4;
+        STATE_RUNNING = 5;
+        STATE_FINISHED = 6;
+        STATE_FAILED = 7;
+        STATE_KILLED = 8;
     }
 
     enum AppStatus{
-        STATUS_UNDEFINED = 0;
-        STATUS_SUCCEEDED = 1;
-        STATUS_FAILED = 2;
-        STATUS_KILLED = 3;
+        STATUS_NULL = 0;
+        STATUS_UNDEFINED = 1;
+        STATUS_SUCCEEDED = 2;
+        STATUS_FAILED = 3;
+        STATUS_KILLED = 4;
     }
 
     enum AppTrackingUI{
-        UI_RM = 0;
-        UI_AM = 1;
-        UI_HISTORY = 2;
+        UI_NULL = 0;
+        UI_RM = 1;
+        UI_AM = 2;
+        UI_HISTORY = 3;
     }
 }
 

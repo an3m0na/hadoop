@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.profile.impl.pb;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
@@ -12,9 +13,9 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.AppProfileProtoOrBuilder;
  * Created by ane on 3/21/16.
  */
 public class AppProfilePBImpl extends AppProfile {
-    AppProfileProto proto = AppProfileProto.getDefaultInstance();
-    AppProfileProto.Builder builder = null;
-    boolean viaProto = false;
+    private AppProfileProto proto = AppProfileProto.getDefaultInstance();
+    private AppProfileProto.Builder builder = null;
+    private boolean viaProto = false;
 
     public AppProfilePBImpl() {
         builder = AppProfileProto.newBuilder();
@@ -25,6 +26,7 @@ public class AppProfilePBImpl extends AppProfile {
         viaProto = true;
     }
 
+    @JsonIgnore
     public AppProfileProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
@@ -111,7 +113,7 @@ public class AppProfilePBImpl extends AppProfile {
     public YarnApplicationState getState() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
         AppProfileProto.AppState enumValue = p.getState();
-        if (enumValue == null)
+        if (enumValue == null || enumValue.name().equals("STATE_NULL"))
             return null;
         return YarnApplicationState.valueOf(enumValue.name().substring("STATE_".length()));
     }
@@ -121,13 +123,15 @@ public class AppProfilePBImpl extends AppProfile {
         maybeInitBuilder();
         if (state != null)
             builder.setState(AppProfileProto.AppState.valueOf("STATE_" + state));
+        else
+            builder.setState(AppProfileProto.AppState.STATE_NULL);
     }
 
     @Override
     public FinalApplicationStatus getStatus() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
         AppProfileProto.AppStatus enumValue = p.getStatus();
-        if (enumValue == null)
+        if (enumValue == null || enumValue.name().equals("STATUS_NULL"))
             return null;
         return FinalApplicationStatus.valueOf(enumValue.name().substring("STATUS_".length()));
     }
@@ -137,6 +141,8 @@ public class AppProfilePBImpl extends AppProfile {
         maybeInitBuilder();
         if (status != null)
             builder.setStatus(AppProfileProto.AppStatus.valueOf("STATUS_" + status));
+        else
+            builder.setStatus(AppProfileProto.AppStatus.STATUS_NULL);
     }
 
     @Override
@@ -155,7 +161,7 @@ public class AppProfilePBImpl extends AppProfile {
     public RestClient.TrackingUI getTrackingUI() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
         AppProfileProto.AppTrackingUI enumValue = p.getTrackingUI();
-        if (enumValue == null)
+        if (enumValue == null || enumValue.name().equals("UI_NULL"))
             return null;
         return RestClient.TrackingUI.valueOf(enumValue.name().substring("UI_".length()));
     }
@@ -165,6 +171,8 @@ public class AppProfilePBImpl extends AppProfile {
         maybeInitBuilder();
         if (trackingUI != null)
             builder.setTrackingUI(AppProfileProto.AppTrackingUI.valueOf("UI_" + trackingUI));
+        else
+            builder.setTrackingUI(AppProfileProto.AppTrackingUI.UI_NULL);
     }
 
     @Override
