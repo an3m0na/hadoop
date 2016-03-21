@@ -1,10 +1,10 @@
 package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.database.DataStore;
-import org.apache.hadoop.tools.posum.database.DataStoreImpl;
-import org.apache.hadoop.tools.posum.monitor.SystemInfoCollector;
-import org.apache.hadoop.tools.posum.monitor.SystemMonitor;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
+import org.apache.hadoop.tools.posum.database.monitor.SystemInfoCollector;
+import org.apache.hadoop.tools.posum.database.monitor.SystemMonitor;
 import org.junit.Test;
 
 import java.io.IOException;
