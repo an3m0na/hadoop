@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.database.client;
+package org.apache.hadoop.tools.posum.common;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -9,7 +9,6 @@ import org.apache.hadoop.io.retry.RetryProxy;
 import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.net.ConnectTimeoutException;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.yarn.conf.HAUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -25,38 +24,74 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by ane on 3/20/16.
+ * Created by ane on 3/21/16.
  */
-public class ClientDMProxy {
+public class StandardClientProxyFactory<T> {
 
-    private static final Log LOG = LogFactory.getLog(ClientDMProxy.class);
+    private static final Log LOG = LogFactory.getLog(StandardClientProxyFactory.class);
 
-    protected static DataMasterProtocol createDMProxy(final Configuration configuration) throws IOException {
-        YarnConfiguration conf = (configuration instanceof YarnConfiguration)
-                ? (YarnConfiguration) configuration
-                : new YarnConfiguration(configuration);
-        RetryPolicy retryPolicy = createRetryPolicy(conf);
+    private final Configuration conf;
+    private final AcceptableProtocol<T> protocol;
 
-        InetSocketAddress dmAddress = getDMAddress(conf);
-        LOG.info("Connecting to DataMaster at " + dmAddress);
-        DataMasterProtocol proxy = getProxy(conf, dmAddress);
-        return (DataMasterProtocol) RetryProxy.create(DataMasterProtocol.class, proxy, retryPolicy);
+    private static class AcceptableProtocol<P> {
+        public Class<P> pClass;
+        public String address;
+        public String default_address;
+        public int port;
+
+        public AcceptableProtocol(Class<P> pClass, String address, String default_address, int port) {
+            this.pClass = pClass;
+            this.address = address;
+            this.default_address = default_address;
+            this.port = port;
+        }
     }
 
-    protected static DataMasterProtocol getProxy(final Configuration conf, final InetSocketAddress address) throws IOException {
+    private static Map<Class, AcceptableProtocol> protocols;
+
+    static {
+        protocols = new HashMap<>();
+        protocols.put(DataMasterProtocol.class, new AcceptableProtocol<>(
+                DataMasterProtocol.class,
+                POSUMConfiguration.DM_ADDRESS,
+                POSUMConfiguration.DEFAULT_DM_ADDRESS,
+                POSUMConfiguration.DEFAULT_DM_PORT
+        ));
+    }
+
+    public StandardClientProxyFactory(Configuration conf, Class<T> protocol) {
+        this.conf = conf;
+        System.out.println(protocols.entrySet());
+        this.protocol = protocols.get(protocol);
+        if (this.protocol == null) {
+            throw new POSUMException("Protocol not acceptable " + protocol);
+        }
+    }
+
+    public T createProxy() throws IOException {
+        YarnConfiguration conf = (this.conf instanceof YarnConfiguration)
+                ? (YarnConfiguration) this.conf
+                : new YarnConfiguration(this.conf);
+        RetryPolicy retryPolicy = createRetryPolicy(conf);
+
+        InetSocketAddress remoteAddress = getRemoteAddress(conf);
+        LOG.info("Connecting via" + protocol.pClass.getName() + " at " + remoteAddress);
+        T proxy = getProxy(remoteAddress);
+        return (T) RetryProxy.create(protocol.pClass, proxy, retryPolicy);
+    }
+
+    private T getProxy(final InetSocketAddress address) throws IOException {
         return UserGroupInformation.getCurrentUser().doAs(
-                new PrivilegedAction<DataMasterProtocol>() {
+                new PrivilegedAction<T>() {
                     @Override
-                    public DataMasterProtocol run() {
-                        return (DataMasterProtocol) YarnRPC.create(conf).getProxy(DataMasterProtocol.class, address, conf);
+                    public T run() {
+                        return (T) YarnRPC.create(conf).getProxy(protocol.pClass, address, conf);
                     }
                 });
     }
 
-    protected static InetSocketAddress getDMAddress(YarnConfiguration conf) throws IOException {
-        return conf.getSocketAddr(POSUMConfiguration.DM_ADDRESS,
-                POSUMConfiguration.DEFAULT_DM_ADDRESS,
-                POSUMConfiguration.DEFAULT_DM_PORT);
+    protected InetSocketAddress getRemoteAddress(YarnConfiguration conf) throws IOException {
+        return conf.getSocketAddr(protocol.address, protocol.default_address, protocol.port);
     }
 
     protected static RetryPolicy createRetryPolicy(Configuration conf) {
@@ -74,15 +109,15 @@ public class ClientDMProxy {
         if (!waitForEver) {
             if (rmConnectWaitMS < 0) {
                 throw new YarnRuntimeException("Invalid Configuration. "
-                        + YarnConfiguration.RESOURCEMANAGER_CONNECT_MAX_WAIT_MS
+                        + POSUMConfiguration.POSUM_CONNECT_MAX_WAIT_MS
                         + " can be -1, but can not be other negative numbers");
             }
 
             // try connect once
             if (rmConnectWaitMS < rmConnectionRetryIntervalMS) {
-                LOG.warn(YarnConfiguration.RESOURCEMANAGER_CONNECT_MAX_WAIT_MS
+                LOG.warn(POSUMConfiguration.POSUM_CONNECT_MAX_WAIT_MS
                         + " is smaller than "
-                        + YarnConfiguration.RESOURCEMANAGER_CONNECT_RETRY_INTERVAL_MS
+                        + POSUMConfiguration.POSUM_CONNECT_RETRY_INTERVAL_MS
                         + ". Only try connect once.");
                 rmConnectWaitMS = 0;
             }
@@ -91,15 +126,15 @@ public class ClientDMProxy {
         // Handle HA case first
         if (HAUtil.isHAEnabled(conf)) {
             final long failoverSleepBaseMs = conf.getLong(
-                    YarnConfiguration.CLIENT_FAILOVER_SLEEPTIME_BASE_MS,
+                    POSUMConfiguration.CLIENT_FAILOVER_SLEEPTIME_BASE_MS,
                     rmConnectionRetryIntervalMS);
 
             final long failoverSleepMaxMs = conf.getLong(
-                    YarnConfiguration.CLIENT_FAILOVER_SLEEPTIME_MAX_MS,
+                    POSUMConfiguration.CLIENT_FAILOVER_SLEEPTIME_MAX_MS,
                     rmConnectionRetryIntervalMS);
 
             int maxFailoverAttempts = conf.getInt(
-                    YarnConfiguration.CLIENT_FAILOVER_MAX_ATTEMPTS, -1);
+                    POSUMConfiguration.CLIENT_FAILOVER_MAX_ATTEMPTS, -1);
 
             if (maxFailoverAttempts == -1) {
                 if (waitForEver) {
@@ -116,7 +151,7 @@ public class ClientDMProxy {
 
         if (rmConnectionRetryIntervalMS < 0) {
             throw new YarnRuntimeException("Invalid Configuration. " +
-                    YarnConfiguration.RESOURCEMANAGER_CONNECT_RETRY_INTERVAL_MS +
+                    POSUMConfiguration.POSUM_CONNECT_RETRY_INTERVAL_MS +
                     " should not be negative.");
         }
 

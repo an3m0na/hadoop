@@ -3,6 +3,8 @@ package org.apache.hadoop.tools.posum.database.client;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.tools.posum.common.POSUMException;
+import org.apache.hadoop.tools.posum.common.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
 import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
@@ -31,9 +33,9 @@ public class DataStoreClient extends AbstractService implements DataStore {
     protected void serviceStart() throws Exception {
         final Configuration conf = getConfig();
         try {
-            dmClient = ClientDMProxy.createDMProxy(conf);
+            dmClient = new StandardClientProxyFactory<>(conf, DataMasterProtocol.class).createProxy();
         } catch (IOException e) {
-            throw new YarnRuntimeException(e);
+            throw new POSUMException("Could not init DataMaster client", e);
         }
         super.serviceStart();
     }
