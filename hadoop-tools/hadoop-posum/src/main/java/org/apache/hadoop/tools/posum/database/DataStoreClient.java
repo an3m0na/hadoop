@@ -1,20 +1,56 @@
 package org.apache.hadoop.tools.posum.database;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
 import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectRequest;
+import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Created by ane on 2/9/16.
  */
-public class DataStoreClient implements DataStore {
+public class DataStoreClient extends AbstractService implements DataStore {
 
-    //TODO make it connect to actual database
+    public DataStoreClient() {
+        super(DataStoreClient.class.getName());
+    }
+
+    DataMasterProtocol dmClient;
+
+    @Override
+    protected void serviceStart() throws Exception {
+        final Configuration conf = getConfig();
+        try {
+            dmClient = ClientDMProxy.createDMProxy(conf);
+        } catch (IOException e) {
+            throw new YarnRuntimeException(e);
+        }
+        super.serviceStart();
+    }
+
+    @Override
+    protected void serviceStop() throws Exception {
+        if (this.dmClient != null) {
+            RPC.stopProxy(this.dmClient);
+        }
+        super.serviceStop();
+    }
 
     @Override
     public <T extends GeneralProfile> T findById(DataCollection collection, String id) {
+        try {
+            System.out.println(dmClient.getObject(SingleObjectRequest.newInstance(collection.name(), id)).getResponse());
+        } catch (IOException | YarnException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 

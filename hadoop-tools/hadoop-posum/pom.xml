@@ -103,6 +103,7 @@
                                 <directory>${basedir}/src/main/proto</directory>
                                 <includes>
                                     <include>posum_protos.proto</include>
+                                    <include>datamaster_protocol.proto</include>
                                 </includes>
                             </source>
                             <output>${project.build.directory}/generated-sources/java</output>
