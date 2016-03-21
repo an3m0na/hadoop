@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.predictor;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.database.store.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class TestDataStoreImpl {
         job.setAppId("application_" + time + "_0000");
         job.setStartTime(time);
         job.setFinishTime(0L);
-        job.setJobName("test job");
+        job.setName("test job");
         job.setUser("THE user");
         job.setState(JobState.RUNNING.toString());
         job.setMapProgress(0.44f);

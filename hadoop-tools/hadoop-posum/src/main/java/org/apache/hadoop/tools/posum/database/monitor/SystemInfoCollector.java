@@ -94,7 +94,7 @@ public class SystemInfoCollector implements Configurable {
 
         JobProfile profile = new JobProfile(jobId.toString());
         profile.setAppId(appId);
-        profile.setJobName(conf.getJobName());
+        profile.setName(conf.getJobName());
         profile.setUser(conf.getUser());
         profile.setInputBytes(inputLength);
         profile.setInputSplits(taskSplitMetaInfo.length);
@@ -142,7 +142,7 @@ public class SystemInfoCollector implements Configurable {
             job.setAppId(appId);
             job.setStartTime(rawJob.getLong("startTime"));
             job.setFinishTime(rawJob.getLong("finishTime"));
-            job.setJobName(rawJob.getString("name"));
+            job.setName(rawJob.getString("name"));
             job.setUser(rawJob.getString("user"));
             job.setState(rawJob.getString("state"));
             job.setMapProgress(new Double(rawJob.getDouble("mapProgress")).floatValue());
@@ -172,7 +172,7 @@ public class SystemInfoCollector implements Configurable {
             job.setAppId(appId);
             job.setStartTime(rawJob.getLong("startTime"));
             job.setFinishTime(rawJob.getLong("finishTime"));
-            job.setJobName(rawJob.getString("name"));
+            job.setName(rawJob.getString("name"));
             job.setUser(rawJob.getString("user"));
             job.setState(rawJob.getString("state"));
             job.setMapProgress(new Double(rawJob.getDouble("mapProgress")).floatValue());

@@ -1,6 +1,8 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
@@ -12,7 +14,7 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.AppProfileProtoOrBuilder;
 /**
  * Created by ane on 3/21/16.
  */
-public class AppProfilePBImpl extends AppProfile {
+public class AppProfilePBImpl extends AppProfile implements GeneralDataEntityPBImpl<AppProfile, AppProfileProto> {
     private AppProfileProto proto = AppProfileProto.getDefaultInstance();
     private AppProfileProto.Builder builder = null;
     private boolean viaProto = false;
@@ -32,6 +34,13 @@ public class AppProfilePBImpl extends AppProfile {
         proto = viaProto ? proto : builder.build();
         viaProto = true;
         return proto;
+    }
+
+    @Override
+    public AppProfile parseToEntity(ByteString data) throws InvalidProtocolBufferException {
+        this.proto = AppProfileProto.parseFrom(data);
+        viaProto = true;
+        return this;
     }
 
     @Override

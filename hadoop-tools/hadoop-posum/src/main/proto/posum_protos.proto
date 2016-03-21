@@ -62,4 +62,39 @@ message AppProfileProto {
     }
 }
 
+message JobProfileProto {
+    required string id = 1;
+    optional string name = 2;
+    optional string appId = 3;
+    optional string user = 4;
+    optional int32 totalMapTasks = 5;
+    optional int32 totalReduceTasks = 6;
+    optional int32 inputSplits = 7; // only from conf
+    optional int64 inputBytes = 8; // only from conf
+    optional int64 outputBytes = 9; // only in history
+    optional int64 submitTime = 10; // only in history
+    optional int64 startTime = 11;
+    optional int64 finishTime = 12;
+    optional JobState state = 13;
+    optional float mapProgress = 14;
+    optional float reduceProgress = 15;
+    optional int32 completedMaps = 16;
+    optional int32 completedReduces = 17;
+    optional bool uberized = 18;
+    optional int32 avgMapDuration = 19;
+    optional int32 avgReduceDuration = 20;
+    optional int32 avgTaskDuration = 21;
+
+    enum JobState {
+        STATE_NULL = 0;
+        STATE_NEW = 1;
+        STATE_INITED = 2;
+        STATE_RUNNING = 3;
+        STATE_SUCCEEDED = 4;
+        STATE_FAILED = 5;
+        STATE_KILLED = 6;
+        STATE_ERROR = 7;
+    }
+}
+
 

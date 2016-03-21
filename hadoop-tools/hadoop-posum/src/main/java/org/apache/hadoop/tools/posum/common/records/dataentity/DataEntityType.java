@@ -1,16 +1,17 @@
-package org.apache.hadoop.tools.posum.database.store;
+package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.HistoryProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.JobProfilePBImpl;
 
 /**
  * Created by ane on 3/3/16.
  */
 public enum DataEntityType {
-    JOB("jobs", JobProfile.class),
+    JOB("jobs", JobProfilePBImpl.class),
     JOB_HISTORY("jobs_history", JobProfile.class),
     TASK("tasks", TaskProfile.class),
     TASK_HISTORY("tasks_history", TaskProfile.class),
@@ -26,15 +27,15 @@ public enum DataEntityType {
         this.mappedClass = mappedClass;
     }
 
-    Integer getId() {
+    public Integer getId() {
         return ordinal();
     }
 
-    String getLabel() {
+    public String getLabel() {
         return label;
     }
 
-    Class getMappedClass() {
+    public Class getMappedClass() {
         return mappedClass;
     }
 

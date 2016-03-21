@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.database.store;
 
 import com.mongodb.DB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.mongojack.DBQuery;
 import org.mongojack.JacksonDBCollection;

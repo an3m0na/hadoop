@@ -5,7 +5,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.tools.posum.common.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.database.store.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
@@ -108,7 +108,7 @@ public class MockDataStoreClient extends DataStoreClient {
     private JobProfile snapshot(JobProfile original) {
         JobProfile copy = new JobProfile(original.getId());
         copy.populate(
-                original.getJobName(),
+                original.getName(),
                 original.getUser() == null ? "default" : original.getUser(),
                 original.getTotalMapTasks(),
                 original.getTotalReduceTasks(),

@@ -3,12 +3,14 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
+import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityResponse;
-import org.apache.hadoop.tools.posum.database.store.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityResponseProtoOrBuilder;
+import org.apache.hadoop.yarn.util.Records;
 
 /**
  * Created by ane on 3/20/16.
@@ -85,23 +87,23 @@ public class SingleEntityResponsePBImpl extends SingleEntityResponse {
     }
 
     @Override
-    public AppProfile getEntity() {
+    public GeneralDataEntity getEntity() {
         SingleEntityResponseProtoOrBuilder p = viaProto ? proto : builder;
         if (p.getEntity() != null) {
             try {
-                AppProfile ret = new AppProfilePBImpl(POSUMProtos.AppProfileProto.parseFrom(p.getEntity()));
-                return ret;
+                Class eClass = DataEntityType.valueOf(p.getType().name().substring("TYPE_".length())).getMappedClass();
+                return ((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(p.getEntity());
             } catch (Exception e) {
-                throw new POSUMException("Could not read object from byte string " + p.getEntity());
+                throw new POSUMException("Could not read object from byte string " + p.getEntity(), e);
             }
         }
         return null;
     }
 
     @Override
-    public void setEntity(AppProfile entity) {
+    public void setEntity(GeneralDataEntity entity) {
         maybeInitBuilder();
         if (entity != null)
-            builder.setEntity(((AppProfilePBImpl) entity).getProto().toByteString());
+            builder.setEntity(((GeneralDataEntityPBImpl) entity).getProto().toByteString());
     }
 }
