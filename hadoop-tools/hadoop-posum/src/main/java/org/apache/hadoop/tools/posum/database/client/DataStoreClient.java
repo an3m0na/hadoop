@@ -8,11 +8,10 @@ import org.apache.hadoop.tools.posum.common.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
 import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
-import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectRequest;
+import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
 import org.apache.hadoop.tools.posum.database.store.DataCollection;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 
 import java.io.IOException;
 import java.util.List;
@@ -51,7 +50,7 @@ public class DataStoreClient extends AbstractService implements DataStore {
     @Override
     public <T extends GeneralProfile> T findById(DataCollection collection, String id) {
         try {
-            return (T)dmClient.getObject(SingleObjectRequest.newInstance(collection.name(), id)).getObject();
+            return (T)dmClient.getObject(SingleEntityRequest.newInstance(collection, id)).getEntity();
         } catch (IOException | YarnException e) {
             e.printStackTrace();
         }

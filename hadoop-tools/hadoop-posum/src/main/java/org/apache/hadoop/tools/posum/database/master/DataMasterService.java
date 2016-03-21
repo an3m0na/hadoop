@@ -4,15 +4,11 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
 import org.apache.hadoop.tools.posum.common.records.profile.impl.pb.AppProfilePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
-import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectRequest;
-import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectResponse;
+import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityResponse;
 import org.apache.hadoop.tools.posum.database.store.DataCollection;
-import org.apache.hadoop.yarn.factories.RecordFactory;
-import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 import org.apache.hadoop.yarn.util.Records;
 
@@ -70,11 +66,11 @@ public class DataMasterService extends AbstractService implements DataMasterProt
     }
 
     @Override
-    public SingleObjectResponse getObject(SingleObjectRequest request) {
-        AppProfilePBImpl ret = dmContext.getDataStore().findById(DataCollection.valueOf(request.getObjectClass()),
-                request.getObjectId());
-        SingleObjectResponse response = Records.newRecord(SingleObjectResponse.class);
-        response.setObject(ret);
+    public SingleEntityResponse getObject(SingleEntityRequest request) {
+        AppProfilePBImpl ret = dmContext.getDataStore().findById(request.getType(), request.getId());
+        SingleEntityResponse response = Records.newRecord(SingleEntityResponse.class);
+        response.setType(request.getType());
+        response.setEntity(ret);
         return response;
     }
 }

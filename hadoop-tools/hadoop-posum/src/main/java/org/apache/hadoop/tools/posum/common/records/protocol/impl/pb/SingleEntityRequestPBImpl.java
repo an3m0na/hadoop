@@ -1,28 +1,30 @@
 package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectRequest;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SingleObjectRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SingleObjectRequestProtoOrBuilder;
+import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
+import org.apache.hadoop.tools.posum.database.store.DataCollection;
+import org.apache.hadoop.yarn.proto.POSUMProtos;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityRequestProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
  */
-public class SingleObjectRequestPBImpl extends SingleObjectRequest {
-    SingleObjectRequestProto proto = SingleObjectRequestProto.getDefaultInstance();
-    SingleObjectRequestProto.Builder builder = null;
+public class SingleEntityRequestPBImpl extends SingleEntityRequest {
+    SingleEntityRequestProto proto = SingleEntityRequestProto.getDefaultInstance();
+    SingleEntityRequestProto.Builder builder = null;
     boolean viaProto = false;
 
-    public SingleObjectRequestPBImpl() {
-        builder = SingleObjectRequestProto.newBuilder();
+    public SingleEntityRequestPBImpl() {
+        builder = SingleEntityRequestProto.newBuilder();
     }
 
-    public SingleObjectRequestPBImpl(SingleObjectRequestProto proto) {
+    public SingleEntityRequestPBImpl(SingleEntityRequestProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public SingleObjectRequestProto getProto() {
+    public SingleEntityRequestProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -63,32 +65,33 @@ public class SingleObjectRequestPBImpl extends SingleObjectRequest {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = SingleObjectRequestProto.newBuilder(proto);
+            builder = SingleEntityRequestProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
-    public String getObjectClass() {
-        SingleObjectRequestProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getObjectClass();
+    public DataCollection getType() {
+        SingleEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
+        return DataCollection.valueOf(p.getType().name().substring("TYPE_".length()));
     }
 
     @Override
-    public void setObjectClass(String objectClass) {
+    public void setType(DataCollection type) {
         maybeInitBuilder();
-        builder.setObjectClass(objectClass);
+        builder.setType(POSUMProtos.EntityType.valueOf("TYPE_"+type.name()));
     }
 
     @Override
-    public String getObjectId() {
-        SingleObjectRequestProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getObjectId();
+    public String getId() {
+        SingleEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getId();
     }
 
     @Override
-    public void setObjectId(String objectId) {
+    public void setId(String id) {
         maybeInitBuilder();
-        builder.setObjectId(objectId);
+        builder.setId(id);
     }
+
 }
