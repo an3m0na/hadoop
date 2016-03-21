@@ -1,7 +1,12 @@
 package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.tools.posum.common.POSUMException;
+import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.impl.pb.AppProfilePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectResponse;
+import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleObjectResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleObjectResponseProtoOrBuilder;
 
@@ -70,14 +75,23 @@ public class SingleObjectResponsePBImpl extends SingleObjectResponse {
     }
 
     @Override
-    public Object getResponse() {
+    public AppProfile getObject() {
         SingleObjectResponseProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getResponse();
+        if (p.getObject() != null) {
+            try {
+                AppProfile ret = new AppProfilePBImpl(POSUMProtos.AppProfileProto.parseFrom(p.getObject()));
+                return ret;
+            } catch (Exception e) {
+                throw new POSUMException("Could not read object from byte string " + p.getObject());
+            }
+        }
+        return null;
     }
 
     @Override
-    public void setResponse(String response) {
+    public void setObject(AppProfile object) {
         maybeInitBuilder();
-        builder.setResponse(response);
+        if (object != null)
+            builder.setObject(((AppProfilePBImpl) object).getProto().toByteString());
     }
 }

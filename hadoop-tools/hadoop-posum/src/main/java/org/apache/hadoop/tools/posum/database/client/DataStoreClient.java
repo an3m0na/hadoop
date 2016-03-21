@@ -51,7 +51,7 @@ public class DataStoreClient extends AbstractService implements DataStore {
     @Override
     public <T extends GeneralProfile> T findById(DataCollection collection, String id) {
         try {
-            System.out.println(dmClient.getObject(SingleObjectRequest.newInstance(collection.name(), id)).getResponse());
+            return (T)dmClient.getObject(SingleObjectRequest.newInstance(collection.name(), id)).getObject();
         } catch (IOException | YarnException e) {
             e.printStackTrace();
         }

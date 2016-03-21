@@ -61,7 +61,6 @@ public class StandardClientProxyFactory<T> {
 
     public StandardClientProxyFactory(Configuration conf, Class<T> protocol) {
         this.conf = conf;
-        System.out.println(protocols.entrySet());
         this.protocol = protocols.get(protocol);
         if (this.protocol == null) {
             throw new POSUMException("Protocol not acceptable " + protocol);

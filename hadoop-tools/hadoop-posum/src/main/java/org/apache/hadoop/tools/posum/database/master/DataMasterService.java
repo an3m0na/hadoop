@@ -4,12 +4,17 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.impl.pb.AppProfilePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectRequest;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleObjectResponse;
 import org.apache.hadoop.tools.posum.database.store.DataCollection;
+import org.apache.hadoop.yarn.factories.RecordFactory;
+import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
+import org.apache.hadoop.yarn.util.Records;
 
 import java.net.InetSocketAddress;
 
@@ -68,7 +73,13 @@ public class DataMasterService extends AbstractService implements DataMasterProt
     public SingleObjectResponse getObject(SingleObjectRequest request) {
         GeneralProfile ret = dmContext.getDataStore().findById(DataCollection.valueOf(request.getObjectClass()),
                 request.getObjectId());
-        String responseString = "Response for: " + (ret == null ? "null" : ret.getId());
-        return SingleObjectResponse.newInstance(responseString);
+        AppProfile profile = null;
+        if (ret != null) {
+            profile = Records.newRecord(AppProfile.class);
+            profile.setId(ret.getId());
+        }
+        SingleObjectResponse response = Records.newRecord(SingleObjectResponse.class);
+        response.setObject(profile);
+        return response;
     }
 }

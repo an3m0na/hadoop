@@ -264,7 +264,7 @@ public class JobProfile extends GeneralProfile {
 
     @Override
     public String toString() {
-        return "JobProfile{" +
+        return "JobProfile[" + getId() + "]{" +
                 "jobName='" + jobName + '\'' +
                 ", appId='" + appId + '\'' +
                 ", user='" + user + '\'' +

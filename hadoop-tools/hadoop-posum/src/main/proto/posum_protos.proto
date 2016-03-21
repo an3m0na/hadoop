@@ -1,13 +1,51 @@
 package hadoop.tools.posum;
 
 option java_package = "org.apache.hadoop.yarn.proto";
+
 option java_outer_classname = "POSUMProtos";
 
 message SingleObjectRequestProto {
-  required string objectClass = 1;
-  required string objectId = 2;
+    required string objectClass = 1;
+    required string objectId = 2;
 }
 
 message SingleObjectResponseProto {
-  required string response = 1;
+    required bytes object = 1;
 }
+
+message AppProfileProto {
+    required string id = 1;
+    required int64 startTime = 2;
+    required int64 finishTime = 3;
+    required string user = 4;
+    required string name = 5;
+    required AppState state = 6;
+    required AppStatus status = 7;
+    required AppTrackingUI trackingUI = 8;
+
+    enum AppState {
+        STATE_NEW = 0;
+        STATE_NEW_SAVING = 1;
+        STATE_SUBMITTED = 2;
+        STATE_ACCEPTED = 3;
+        STATE_RUNNING = 4;
+        STATE_FINISHED = 5;
+        STATE_FAILED = 6;
+        STATE_KILLED = 7;
+    }
+
+    enum AppStatus{
+        STATUS_UNDEFINED = 0;
+        STATUS_SUCCEEDED = 1;
+        STATUS_FAILED = 2;
+        STATUS_KILLED = 3;
+    }
+
+    enum AppTrackingUI{
+        UI_RM = 0;
+        UI_AM = 1;
+        UI_HISTORY = 2;
+    }
+}
+
+
