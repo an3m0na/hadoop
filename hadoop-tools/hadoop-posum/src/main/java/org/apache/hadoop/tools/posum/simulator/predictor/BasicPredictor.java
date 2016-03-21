@@ -3,9 +3,9 @@ package org.apache.hadoop.tools.posum.simulator.predictor;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.Utils;
-import org.apache.hadoop.tools.posum.database.store.DataCollection;
+import org.apache.hadoop.tools.posum.database.store.DataEntityType;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
-import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
     @Override
     public Integer predictJobDuration(String jobId) {
         Float duration = 0.0f;
-        JobProfile current = dataStore.findById(DataCollection.JOBS, jobId);
+        JobProfile current = dataStore.findById(DataEntityType.JOB, jobId);
         List<JobProfile> comparable = dataStore.getComparableProfiles(
                 current.getUser(),
                 conf.getInt(POSUMConfiguration.BUFFER,
@@ -39,7 +39,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
     @Override
     public Integer predictTaskDuration(String jobId, TaskType type) {
         Float duration = 0.0f;
-        JobProfile current = dataStore.findById(DataCollection.JOBS, jobId);
+        JobProfile current = dataStore.findById(DataEntityType.JOB, jobId);
         float currentAverage = TaskType.MAP.equals(type) ? current.getAvgMapDuration() : current.getAvgReduceDuration();
         if (currentAverage > 0)
             return new Float(currentAverage).intValue();

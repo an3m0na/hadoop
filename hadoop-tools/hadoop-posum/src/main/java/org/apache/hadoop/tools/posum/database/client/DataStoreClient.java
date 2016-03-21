@@ -5,11 +5,11 @@ import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.tools.posum.common.StandardClientProxyFactory;
-import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
-import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
-import org.apache.hadoop.tools.posum.database.store.DataCollection;
+import org.apache.hadoop.tools.posum.database.store.DataEntityType;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
@@ -48,7 +48,7 @@ public class DataStoreClient extends AbstractService implements DataStore {
     }
 
     @Override
-    public <T extends GeneralProfile> T findById(DataCollection collection, String id) {
+    public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
         try {
             return (T)dmClient.getObject(SingleEntityRequest.newInstance(collection, id)).getEntity();
         } catch (IOException | YarnException e) {
@@ -63,7 +63,7 @@ public class DataStoreClient extends AbstractService implements DataStore {
     }
 
     @Override
-    public <T extends GeneralProfile> void store(DataCollection collection, T toInsert) {
+    public <T extends GeneralDataEntity> void store(DataEntityType collection, T toInsert) {
 
     }
 
@@ -73,22 +73,22 @@ public class DataStoreClient extends AbstractService implements DataStore {
     }
 
     @Override
-    public <T extends GeneralProfile> boolean updateOrStore(DataCollection apps, T toUpdate) {
+    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType apps, T toUpdate) {
         return false;
     }
 
     @Override
-    public void delete(DataCollection collection, String id) {
+    public void delete(DataEntityType collection, String id) {
 
     }
 
     @Override
-    public void delete(DataCollection collection, String field, Object value) {
+    public void delete(DataEntityType collection, String field, Object value) {
 
     }
 
     @Override
-    public void delete(DataCollection collection, Map<String, Object> queryParams) {
+    public void delete(DataEntityType collection, Map<String, Object> queryParams) {
 
     }
 }

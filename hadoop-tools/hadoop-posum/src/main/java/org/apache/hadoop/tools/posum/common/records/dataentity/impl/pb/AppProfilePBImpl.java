@@ -1,9 +1,9 @@
-package org.apache.hadoop.tools.posum.common.records.profile.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.RestClient;
-import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.proto.POSUMProtos.AppProfileProto;

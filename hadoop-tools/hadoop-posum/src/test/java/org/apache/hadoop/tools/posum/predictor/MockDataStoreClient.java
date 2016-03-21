@@ -4,11 +4,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.tools.posum.common.Utils;
-import org.apache.hadoop.tools.posum.common.records.profile.GeneralProfile;
-import org.apache.hadoop.tools.posum.database.store.DataCollection;
+import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
+import org.apache.hadoop.tools.posum.database.store.DataEntityType;
 import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
-import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.profile.TaskProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.rumen.JobTraceReader;
 import org.apache.hadoop.tools.rumen.LoggedJob;
 import org.apache.hadoop.tools.rumen.LoggedTask;
@@ -120,13 +120,13 @@ public class MockDataStoreClient extends DataStoreClient {
     }
 
     @Override
-    public <T extends GeneralProfile> T findById(DataCollection collection, String id) {
-        if (DataCollection.JOBS.equals(collection)) {
+    public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
+        if (DataEntityType.JOB.equals(collection)) {
             for (JobProfile job : jobList)
                 if (job.getId().equals(id))
                     return (T) snapshot(job);
         }
-        if (DataCollection.TASKS.equals(collection)) {
+        if (DataEntityType.TASK.equals(collection)) {
             JobId parent = Utils.parseTaskId(id).getJobId();
             return (T) taskMap.get(parent.toString()).get(id);
         }

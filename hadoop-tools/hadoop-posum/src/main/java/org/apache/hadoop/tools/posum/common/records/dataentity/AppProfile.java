@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records.profile;
+package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
@@ -7,7 +7,7 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 /**
  * Created by ane on 2/24/16.
  */
-public class AppProfile extends GeneralProfile {
+public class AppProfile extends GeneralDataEntity {
 
     private Long startTime = 0L;
     private Long finishTime = 0L;

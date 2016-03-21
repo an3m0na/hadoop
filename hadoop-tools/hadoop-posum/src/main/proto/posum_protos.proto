@@ -5,12 +5,13 @@ option java_package = "org.apache.hadoop.yarn.proto";
 option java_outer_classname = "POSUMProtos";
 
 enum EntityType {
-    TYPE_APPS = 0;
-    TYPE_JOBS = 1;
-    TYPE_TASKS = 2;
-    TYPE_APPS_HISTORY = 3;
-    TYPE_JOBS_HISTORY = 4;
-    TYPE_TASKS_HISTORY = 5;
+    TYPE_APP = 0;
+    TYPE_JOB = 1;
+    TYPE_TASK = 2;
+    TYPE_APP_HISTORY = 3;
+    TYPE_JOB_HISTORY = 4;
+    TYPE_TASK_HISTORY = 5;
+    TYPE_HISTORY = 6;
 }
 
 message SingleEntityRequestProto {

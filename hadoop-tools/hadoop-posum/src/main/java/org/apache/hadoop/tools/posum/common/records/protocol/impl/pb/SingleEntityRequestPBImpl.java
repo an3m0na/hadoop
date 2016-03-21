@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
-import org.apache.hadoop.tools.posum.database.store.DataCollection;
+import org.apache.hadoop.tools.posum.database.store.DataEntityType;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityRequestProtoOrBuilder;
@@ -71,13 +71,13 @@ public class SingleEntityRequestPBImpl extends SingleEntityRequest {
     }
 
     @Override
-    public DataCollection getType() {
+    public DataEntityType getType() {
         SingleEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
-        return DataCollection.valueOf(p.getType().name().substring("TYPE_".length()));
+        return DataEntityType.valueOf(p.getType().name().substring("TYPE_".length()));
     }
 
     @Override
-    public void setType(DataCollection type) {
+    public void setType(DataEntityType type) {
         maybeInitBuilder();
         builder.setType(POSUMProtos.EntityType.valueOf("TYPE_"+type.name()));
     }

@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records.profile;
+package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -8,7 +8,7 @@ import org.mongojack.Id;
  * Created by ane on 3/4/16.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GeneralProfile {
+public class GeneralDataEntity {
 
     @Id
     @JsonProperty("_id")
@@ -34,7 +34,7 @@ public class GeneralProfile {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        GeneralProfile that = (GeneralProfile) o;
+        GeneralDataEntity that = (GeneralDataEntity) o;
 
         return id.equals(that.id);
 

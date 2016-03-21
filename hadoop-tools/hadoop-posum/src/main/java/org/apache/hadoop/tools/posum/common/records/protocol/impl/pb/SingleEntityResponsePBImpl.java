@@ -2,10 +2,10 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.POSUMException;
-import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.profile.impl.pb.AppProfilePBImpl;
+import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityResponse;
-import org.apache.hadoop.tools.posum.database.store.DataCollection;
+import org.apache.hadoop.tools.posum.database.store.DataEntityType;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityResponseProtoOrBuilder;
@@ -73,13 +73,13 @@ public class SingleEntityResponsePBImpl extends SingleEntityResponse {
     }
 
     @Override
-    public DataCollection getType() {
+    public DataEntityType getType() {
         SingleEntityResponseProtoOrBuilder p = viaProto ? proto : builder;
-        return DataCollection.valueOf(p.getType().name().substring("TYPE_".length()));
+        return DataEntityType.valueOf(p.getType().name().substring("TYPE_".length()));
     }
 
     @Override
-    public void setType(DataCollection type) {
+    public void setType(DataEntityType type) {
         maybeInitBuilder();
         builder.setType(POSUMProtos.EntityType.valueOf("TYPE_" + type.name()));
     }

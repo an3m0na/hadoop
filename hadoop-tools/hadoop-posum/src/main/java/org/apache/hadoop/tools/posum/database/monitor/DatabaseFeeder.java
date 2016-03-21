@@ -6,11 +6,11 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.RestClient;
-import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.profile.HistoryProfile;
-import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.profile.TaskProfile;
-import org.apache.hadoop.tools.posum.database.store.DataCollection;
+import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.HistoryProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
+import org.apache.hadoop.tools.posum.database.store.DataEntityType;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 
 import java.util.*;
@@ -66,15 +66,15 @@ public class DatabaseFeeder implements Configurable {
         logger.debug("[" + getClass().getSimpleName() + "] Moving " + app.getId() + " to history");
         running.remove(app.getId());
         finished.add(app.getId());
-        dataStore.delete(DataCollection.APPS, app.getId());
-        dataStore.delete(DataCollection.JOBS, "appId", app.getId());
-        dataStore.delete(DataCollection.TASKS, "appId", app.getId());
+        dataStore.delete(DataEntityType.APP, app.getId());
+        dataStore.delete(DataEntityType.JOB, "appId", app.getId());
+        dataStore.delete(DataEntityType.TASK, "appId", app.getId());
         //TODO fetch job info from history server
         //TODO fetch task info from history server
         //TODO save task info to history
         //TODO save job info to history
-        dataStore.updateOrStore(DataCollection.APPS_HISTORY, app);
-        dataStore.store(DataCollection.HISTORY, new HistoryProfile<>(app));
+        dataStore.updateOrStore(DataEntityType.APP_HISTORY, app);
+        dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(app));
     }
 
     public void updateAppInfo(AppProfile app) {
@@ -108,24 +108,24 @@ public class DatabaseFeeder implements Configurable {
                         if (reduceNo > 0)
                             job.setAvgReduceDuration(reduceDuration / reduceNo);
                     }
-                    dataStore.updateOrStore(DataCollection.TASKS, task);
-                    dataStore.store(DataCollection.HISTORY, new HistoryProfile<>(task));
+                    dataStore.updateOrStore(DataEntityType.TASK, task);
+                    dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(task));
                 }
-                dataStore.updateOrStore(DataCollection.JOBS, job);
-                dataStore.store(DataCollection.HISTORY, new HistoryProfile<>(job));
+                dataStore.updateOrStore(DataEntityType.JOB, job);
+                dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(job));
             }
         } else {
             //app is not yet tracked
             logger.debug("[" + getClass().getSimpleName() + "] App " + app.getId() + " is not tracked");
             try {
                 JobProfile job = collector.getSubmittedJobInfo(app.getId());
-                dataStore.updateOrStore(DataCollection.JOBS, job);
-                dataStore.store(DataCollection.HISTORY, job);
+                dataStore.updateOrStore(DataEntityType.JOB, job);
+                dataStore.store(DataEntityType.HISTORY, job);
             } catch (Exception e) {
                 logger.error("Could not get job info from staging dir!", e);
             }
         }
-        dataStore.updateOrStore(DataCollection.APPS, app);
-        dataStore.store(DataCollection.HISTORY, new HistoryProfile<>(app));
+        dataStore.updateOrStore(DataEntityType.APP, app);
+        dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(app));
     }
 }

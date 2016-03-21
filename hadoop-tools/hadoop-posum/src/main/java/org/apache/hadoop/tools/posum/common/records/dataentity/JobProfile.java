@@ -1,11 +1,11 @@
-package org.apache.hadoop.tools.posum.common.records.profile;
+package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 
 /**
  * Created by ane on 2/8/16.
  */
-public class JobProfile extends GeneralProfile {
+public class JobProfile extends GeneralDataEntity {
     private String jobName;
     private String appId;
     private String user;
