@@ -3,9 +3,11 @@ package org.apache.hadoop.tools.posum.simulator.master;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
 import org.apache.hadoop.tools.posum.database.store.DataCollection;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
+import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 
@@ -51,7 +53,6 @@ public class SimulatorMaster extends CompositeService {
     @Override
     protected void serviceStart() throws Exception {
         super.serviceStart();
-        dataStore.findById(DataCollection.APPS, "1234");
     }
 
     public static void main(String[] args) {

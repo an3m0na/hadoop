@@ -85,7 +85,7 @@ public class AppProfile extends GeneralProfile {
 
     @Override
     public String toString() {
-        return "AppProfile{" +
+        return "AppProfile[" + getId() + "]{" +
                 "startTime=" + startTime +
                 ", finishTime=" + finishTime +
                 ", user='" + user + '\'' +

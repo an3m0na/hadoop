@@ -13,9 +13,6 @@ public class SingleObjectRequestPBImpl extends SingleObjectRequest {
     SingleObjectRequestProto.Builder builder = null;
     boolean viaProto = false;
 
-    String objectId;
-    String objectClass;
-
     public SingleObjectRequestPBImpl() {
         builder = SingleObjectRequestProto.newBuilder();
     }

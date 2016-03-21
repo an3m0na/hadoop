@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
+import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
@@ -7,14 +8,14 @@ import org.apache.hadoop.yarn.util.Records;
  */
 public abstract class SingleObjectResponse {
 
-    public static SingleObjectResponse newInstance(String responseString) {
+    public static SingleObjectResponse newInstance(AppProfile object) {
         SingleObjectResponse response = Records.newRecord(SingleObjectResponse.class);
-        response.setResponse(responseString);
+        response.setObject(object);
         return response;
     }
 
-    public abstract Object getResponse();
+    public abstract AppProfile getObject();
 
-    public abstract void setResponse(String response);
+    public abstract void setObject(AppProfile object);
 
 }

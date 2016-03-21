@@ -144,7 +144,7 @@ public class TaskProfile extends GeneralProfile {
 
     @Override
     public String toString() {
-        return "TaskProfile{" +
+        return "TaskProfile[" + getId() + "]{" +
                 "inputBytes=" + inputBytes +
                 ", inputRecords=" + inputRecords +
                 ", outputBytes=" + outputBytes +
