@@ -4,6 +4,7 @@ import org.apache.hadoop.tools.posum.common.records.profile.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.profile.HistoryProfile;
 import org.apache.hadoop.tools.posum.common.records.profile.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.profile.TaskProfile;
+import org.apache.hadoop.tools.posum.common.records.profile.impl.pb.AppProfilePBImpl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ public enum DataCollection {
     JOBS_HISTORY("jobs_history", JobProfile.class),
     TASKS("tasks", TaskProfile.class),
     TASKS_HISTORY("tasks_history", TaskProfile.class),
-    APPS("apps", AppProfile.class),
+    APPS("apps", AppProfilePBImpl.class),
     APPS_HISTORY("apps_history", AppProfile.class),
     HISTORY("history",HistoryProfile.class);
 

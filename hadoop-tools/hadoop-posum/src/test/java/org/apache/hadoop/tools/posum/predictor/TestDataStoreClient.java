@@ -32,6 +32,8 @@ public class TestDataStoreClient {
         myStore.updateOrStore(DataCollection.APPS, profile);
 
         AppProfile other = dataStore.findById(DataCollection.APPS, id);
+        other.setName("baghipeh");
+        myStore.updateOrStore(DataCollection.APPS, other);
         System.out.println(other);
         assertTrue(profile.getId().equals(other.getId()));
         myStore.delete(DataCollection.APPS, id);

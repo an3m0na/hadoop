@@ -71,15 +71,10 @@ public class DataMasterService extends AbstractService implements DataMasterProt
 
     @Override
     public SingleObjectResponse getObject(SingleObjectRequest request) {
-        GeneralProfile ret = dmContext.getDataStore().findById(DataCollection.valueOf(request.getObjectClass()),
+        AppProfilePBImpl ret = dmContext.getDataStore().findById(DataCollection.valueOf(request.getObjectClass()),
                 request.getObjectId());
-        AppProfile profile = null;
-        if (ret != null) {
-            profile = Records.newRecord(AppProfile.class);
-            profile.setId(ret.getId());
-        }
         SingleObjectResponse response = Records.newRecord(SingleObjectResponse.class);
-        response.setObject(profile);
+        response.setObject(ret);
         return response;
     }
 }
