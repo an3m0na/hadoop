@@ -12,18 +12,19 @@ import java.util.Map;
  */
 public interface DataStore {
 
+    /* Generic accessors */
+
+    <T extends GeneralDataEntity> List<T> list(DataEntityType collection);
 
     <T extends GeneralDataEntity> T findById(DataEntityType collection, String id);
 
     <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value);
 
-    <T extends GeneralDataEntity> List<T> list(DataEntityType collection);
+    <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams);
 
-    JobProfile getJobProfileForApp(String appId);
+    /* Generic modifiers */
 
     <T extends GeneralDataEntity> void store(DataEntityType collection, T toInsert);
-
-    List<JobProfile> getComparableProfiles(String user, int count);
 
     //returns true if an existing object was overwritten
     <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType apps, T toUpdate);
@@ -33,4 +34,12 @@ public interface DataStore {
     void delete(DataEntityType collection, String field, Object value);
 
     void delete(DataEntityType collection, Map<String, Object> queryParams);
+
+    /* Custom accessors */
+
+    JobProfile getJobProfileForApp(String appId);
+
+    List<JobProfile> getComparableProfiles(String user, int count);
+
+
 }

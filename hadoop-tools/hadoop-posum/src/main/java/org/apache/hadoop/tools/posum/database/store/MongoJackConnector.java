@@ -41,7 +41,7 @@ public class MongoJackConnector extends MongoConnector {
         return (JacksonDBCollection<T, String>) collections.get(collection.getId());
     }
 
-    <T> String insertObject(DataEntityType collection, T object) {
+    <T extends GeneralDataEntity> String insertObject(DataEntityType collection, T object) {
         WriteResult<T, String> result = this.<T>getCollection(collection).insert(object);
         return result.getSavedId();
     }
