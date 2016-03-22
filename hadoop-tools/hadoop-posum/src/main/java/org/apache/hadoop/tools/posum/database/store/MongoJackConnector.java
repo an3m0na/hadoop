@@ -24,12 +24,12 @@ public class MongoJackConnector extends MongoConnector {
         this(databaseName, null);
     }
 
-    public MongoJackConnector(String databaseName, String databaseUrl) {
+    MongoJackConnector(String databaseName, String databaseUrl) {
         super(databaseName, databaseUrl);
         deprecatedDb = client.getDB(db.getName());
     }
 
-    public void addCollection(DataEntityType collection) {
+    void addCollection(DataEntityType collection) {
         collections.put(collection.getId(),
                 JacksonDBCollection.wrap(deprecatedDb.getCollection(collection.getLabel()),
                         collection.getMappedClass(),
@@ -37,20 +37,20 @@ public class MongoJackConnector extends MongoConnector {
     }
 
 
-    <T> JacksonDBCollection<T, String> getCollection(DataEntityType collection) {
+    private <T> JacksonDBCollection<T, String> getCollection(DataEntityType collection) {
         return (JacksonDBCollection<T, String>) collections.get(collection.getId());
     }
 
-    public <T> String insertObject(DataEntityType collection, T object) {
+    <T> String insertObject(DataEntityType collection, T object) {
         WriteResult<T, String> result = this.<T>getCollection(collection).insert(object);
         return result.getSavedId();
     }
 
-    public <T extends GeneralDataEntity> boolean updateObject(DataEntityType collection, T object) {
+    <T extends GeneralDataEntity> boolean updateObject(DataEntityType collection, T object) {
         return this.<T>getCollection(collection).updateById(object.getId(), object).getN() == 1;
     }
 
-    public <T extends GeneralDataEntity> boolean upsertObject(DataEntityType collection, T object) {
+    <T extends GeneralDataEntity> boolean upsertObject(DataEntityType collection, T object) {
         Object upsertedId = this.<T>getCollection(collection)
                 .update(DBQuery.is("_id", object.getId()), object, true, false).getUpsertedId();
         if (object.getId() != null)
@@ -59,11 +59,11 @@ public class MongoJackConnector extends MongoConnector {
             return upsertedId != null;
     }
 
-    public <T> void deleteObject(DataEntityType collection, String id) {
+    <T> void deleteObject(DataEntityType collection, String id) {
         this.<T>getCollection(collection).removeById(id);
     }
 
-    public <T> void deleteObjects(DataEntityType collection, String field, Object value) {
+    <T> void deleteObjects(DataEntityType collection, String field, Object value) {
         this.<T>getCollection(collection).remove(DBQuery.is(field, value));
     }
 
@@ -75,23 +75,27 @@ public class MongoJackConnector extends MongoConnector {
         return DBQuery.and(paramList.toArray(new DBQuery.Query[queryParams.size()]));
     }
 
-    public <T> void deleteObject(DataEntityType collection, Map<String, Object> queryParams) {
+    <T> void deleteObject(DataEntityType collection, Map<String, Object> queryParams) {
         this.<T>getCollection(collection).remove(composeQuery(queryParams));
     }
 
-    public <T> T findObjectById(DataEntityType collection, String id) {
+    <T> T findObjectById(DataEntityType collection, String id) {
         return this.<T>getCollection(collection).findOneById(id);
     }
 
-    public <T> List<T> findObjects(DataEntityType collection, String field, Object value) {
+    <T> List<T> findObjects(DataEntityType collection, String field, Object value) {
         return this.<T>getCollection(collection).find(DBQuery.is(field, value)).toArray();
     }
 
-    public <T> List<T> findObjects(DataEntityType collection, DBQuery.Query query) {
+    <T> List<T> findObjects(DataEntityType collection, DBQuery.Query query) {
+        if (query == null)
+            return this.<T>getCollection(collection).find().toArray();
         return this.<T>getCollection(collection).find(query).toArray();
     }
 
-    public <T> List<T> findObjects(DataEntityType collection, Map<String, Object> queryParams) {
+    <T> List<T> findObjects(DataEntityType collection, Map<String, Object> queryParams) {
+        if (queryParams == null || queryParams.size() == 0)
+            return this.<T>getCollection(collection).find().toArray();
         return findObjects(collection, composeQuery(queryParams));
     }
 }

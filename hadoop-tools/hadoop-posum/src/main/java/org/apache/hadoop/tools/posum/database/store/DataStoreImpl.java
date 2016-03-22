@@ -7,6 +7,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
+import org.mongojack.DBQuery;
 
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,16 @@ public class DataStoreImpl implements DataStore, Configurable {
     @Override
     public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
         return conn.findObjectById(collection, id);
+    }
+
+    @Override
+    public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value) {
+        return conn.findObjects(collection, field, value);
+    }
+
+    @Override
+    public <T extends GeneralDataEntity> List<T> list(DataEntityType collection) {
+        return conn.findObjects(collection, (DBQuery.Query)null);
     }
 
     @Override

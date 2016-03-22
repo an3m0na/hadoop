@@ -31,7 +31,7 @@ public class RestClient {
 
     public enum TrackingUI {
         RM("ResourceManager", "http://localhost:8088", "ws/v1/"),
-        HISTORY("History", "http://localhost:8088", "ws/v1/history/mapreduce/"),
+        HISTORY("History", "http://localhost:19888", "ws/v1/history/mapreduce/"),
         AM("ApplicationMaster", "http://localhost:8088", "proxy/%s/ws/v1/mapreduce/");
 
         private static final Map<String, TrackingUI> labelMap = new HashMap<>();
@@ -62,8 +62,8 @@ public class RestClient {
         WebResource resource = client.resource(trackingUI.host).path(String.format(trackingUI.root + path, args));
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
 
-        if (response.getStatus() != 200 || !response.getType().equals(MediaType.APPLICATION_JSON_TYPE)){
-            throw new WebApplicationException();
+        if (response.getStatus() != 200 || !response.getType().equals(MediaType.APPLICATION_JSON_TYPE)) {
+            throw new POSUMException("Error during request to server: " + resource);
         }
 
         try {

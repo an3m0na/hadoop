@@ -9,16 +9,18 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.TypeConverter;
 import org.apache.hadoop.mapreduce.split.JobSplit;
 import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
+import org.apache.hadoop.mapreduce.task.reduce.ExceptionReporter;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.util.MRApps;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.tools.posum.common.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
+import org.apache.hadoop.yarn.util.Records;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -117,7 +119,7 @@ public class SystemInfoCollector implements Configurable {
         });
 
         if (statuses.length != 1)
-            throw new YarnRuntimeException("No job profile directory for: " + appId);
+            throw new POSUMException("No job profile directory for: " + appId);
 
         Path jobConfDir = statuses[0].getPath();
         logger.debug("[" + getClass().getSimpleName() + "] Checking file path: " + jobConfDir);
@@ -129,32 +131,62 @@ public class SystemInfoCollector implements Configurable {
     }
 
     public JobProfile getFinishedJobInfo(String appId) {
-        //TODO finish
+        ApplicationId realAppId = Utils.parseApplicationId(appId);
+        JobId expectedRealJobId = Records.newRecord(JobId.class);
+        expectedRealJobId.setAppId(realAppId);
+        expectedRealJobId.setId(realAppId.getId());
+        String expectedJobId = expectedRealJobId.toString();
         try {
-            JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.HISTORY, "jobs", new String[]{appId});
+            JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.HISTORY, "jobs", new String[]{});
             if (wrapper.isNull("jobs"))
                 return null;
             JSONArray rawJobs = wrapper.getJSONObject("jobs").getJSONArray("job");
-            if (rawJobs.length() != 1)
-                throw new YarnRuntimeException("Unexpected number of jobs for mapreduce app " + appId);
-            JSONObject rawJob = rawJobs.getJSONObject(0);
+            String lastRelatedJobId = null;
+            for (int i = 0; i < rawJobs.length(); i++) {
+                //FIXME not so sure this is the way to make the connection between apps and historical jobs
+                // it chooses the job with its id the same as the appId, and, if none have it,
+                // the one with an identical timestamp with the appId
+                String jobId = rawJobs.getJSONObject(i).getString("id");
+                if (expectedJobId.equals(jobId))
+                    return getFinishedJobInfo(appId, jobId);
+                String[] parts = jobId.split("_");
+                if (realAppId.getClusterTimestamp() == Long.parseLong(parts[1])) {
+                    lastRelatedJobId = jobId;
+                }
+            }
+            return getFinishedJobInfo(appId, lastRelatedJobId);
+        } catch (JSONException e) {
+            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing jobs from HISTORY", e);
+        }
+        return null;
+    }
+
+    public JobProfile getFinishedJobInfo(String appId, String jobId) {
+        try {
+            JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.HISTORY, "jobs/%s", new String[]{jobId});
+            if (wrapper.isNull("job"))
+                return null;
+            JSONObject rawJob = wrapper.getJSONObject("job");
             JobProfile job = new JobProfile(rawJob.getString("id"));
             job.setAppId(appId);
+            job.setSubmitTime(rawJob.getLong("submitTime"));
             job.setStartTime(rawJob.getLong("startTime"));
             job.setFinishTime(rawJob.getLong("finishTime"));
             job.setName(rawJob.getString("name"));
             job.setUser(rawJob.getString("user"));
             job.setState(rawJob.getString("state"));
-            job.setMapProgress(new Double(rawJob.getDouble("mapProgress")).floatValue());
-            job.setReduceProgress(new Double(rawJob.getDouble("reduceProgress")).floatValue());
             job.setCompletedMaps(rawJob.getInt("mapsCompleted"));
             job.setCompletedReduces(rawJob.getInt("reducesCompleted"));
             job.setTotalMapTasks(rawJob.getInt("mapsTotal"));
             job.setTotalReduceTasks(rawJob.getInt("reducesTotal"));
             job.setUberized(rawJob.getBoolean("uberized"));
+            job.setAvgMapDuration(rawJob.getInt("avgMapTime"));
+            job.setAvgReduceDuration(rawJob.getInt("avgReduceTime"));
+            job.setAvgShuffleDuration(rawJob.getInt("avgShuffleTime"));
+            job.setAvgMergeDuration(rawJob.getInt("avgMergeTime"));
             return job;
         } catch (JSONException e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing jobs from AM", e);
+            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing jobs from HISTORY", e);
         }
         return null;
     }
@@ -166,7 +198,7 @@ public class SystemInfoCollector implements Configurable {
                 return null;
             JSONArray rawJobs = wrapper.getJSONObject("jobs").getJSONArray("job");
             if (rawJobs.length() != 1)
-                throw new YarnRuntimeException("Unexpected number of jobs for mapreduce app " + appId);
+                throw new POSUMException("Unexpected number of jobs for mapreduce app " + appId);
             JSONObject rawJob = rawJobs.getJSONObject(0);
             JobProfile job = new JobProfile(rawJob.getString("id"));
             job.setAppId(appId);
@@ -191,6 +223,31 @@ public class SystemInfoCollector implements Configurable {
             logger.debug("[" + getClass().getSimpleName() + "] Exception parsing jobs from AM", e);
         }
         return null;
+    }
+
+    public List<TaskProfile> getFinishedTasksInfo(String appId, String jobId) {
+        List<TaskProfile> tasks = Collections.emptyList();
+        try {
+            JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.HISTORY, "jobs/%s/tasks", new String[]{jobId});
+            if (wrapper.isNull("tasks"))
+                return Collections.emptyList();
+            JSONArray rawTasks = wrapper.getJSONObject("tasks").getJSONArray("task");
+            tasks = new ArrayList<>(rawTasks.length());
+            for (int i = 0; i < rawTasks.length(); i++) {
+                JSONObject rawTask = rawTasks.getJSONObject(i);
+                TaskProfile task = new TaskProfile(rawTask.getString("id"));
+                task.setJobId(jobId);
+                task.setType(rawTask.getString("type"));
+                task.setStartTime(rawTask.getLong("startTime"));
+                task.setFinishTime(rawTask.getLong("finishTime"));
+                task.setReportedProgress(new Double(rawTask.getDouble("progress")).floatValue());
+                task.setSuccessfulAttempt(rawTask.getString("successfulAttempt"));
+                tasks.add(task);
+            }
+        } catch (JSONException e) {
+            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing tasks from HISTORY", e);
+        }
+        return tasks;
     }
 
     public List<TaskProfile> getRunningTasksInfo(JobProfile job) {

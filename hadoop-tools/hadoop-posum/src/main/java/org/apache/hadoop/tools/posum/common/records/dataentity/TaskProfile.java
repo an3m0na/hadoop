@@ -19,6 +19,7 @@ public class TaskProfile extends GeneralDataEntity {
     private TaskType type;
 //    private Counters counters;
     private Float reportedProgress;
+    private String successfulAttempt;
 
 
     public TaskProfile() {
@@ -150,5 +151,13 @@ public class TaskProfile extends GeneralDataEntity {
                 ", appId='" + appId + '\'' +
                 ", jobId='" + jobId + '\'' +
                 '}';
+    }
+
+    public void setSuccessfulAttempt(String successfulAttempt) {
+        this.successfulAttempt = successfulAttempt;
+    }
+
+    public String getSuccessfulAttempt() {
+        return successfulAttempt;
     }
 }

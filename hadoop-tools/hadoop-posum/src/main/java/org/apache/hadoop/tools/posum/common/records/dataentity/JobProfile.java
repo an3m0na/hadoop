@@ -26,8 +26,19 @@ public class JobProfile extends GeneralDataEntity {
     private Integer avgMapDuration;
     private Integer avgReduceDuration;
     private Integer avgTaskDuration;
+    private Integer avgShuffleDuration;
+    private Integer avgMergeDuration;
 
-    public JobProfile(){}
+    //NOT INCLUDED:
+//    <failedReduceAttempts>0</failedReduceAttempts>
+//    <killedReduceAttempts>0</killedReduceAttempts>
+//    <successfulReduceAttempts>1</successfulReduceAttempts>
+//    <failedMapAttempts>0</failedMapAttempts>
+//    <killedMapAttempts>0</killedMapAttempts>
+//    <successfulMapAttempts>30</successfulMapAttempts>
+
+    public JobProfile() {
+    }
 
     public JobProfile(String id) {
         this.id = id;
@@ -286,5 +297,21 @@ public class JobProfile extends GeneralDataEntity {
                 ", avgReduceDuration=" + avgReduceDuration +
                 ", avgTaskDuration=" + avgTaskDuration +
                 '}';
+    }
+
+    public void setAvgShuffleDuration(Integer avgShuffleDuration) {
+        this.avgShuffleDuration = avgShuffleDuration;
+    }
+
+    public Integer getAvgShuffleDuration() {
+        return avgShuffleDuration;
+    }
+
+    public void setAvgMergeDuration(Integer avgMergeDuration) {
+        this.avgMergeDuration = avgMergeDuration;
+    }
+
+    public Integer getAvgMergeDuration() {
+        return avgMergeDuration;
     }
 }

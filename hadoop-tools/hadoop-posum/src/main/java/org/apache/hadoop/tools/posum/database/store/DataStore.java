@@ -15,6 +15,10 @@ public interface DataStore {
 
     <T extends GeneralDataEntity> T findById(DataEntityType collection, String id);
 
+    <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value);
+
+    <T extends GeneralDataEntity> List<T> list(DataEntityType collection);
+
     JobProfile getJobProfileForApp(String appId);
 
     <T extends GeneralDataEntity> void store(DataEntityType collection, T toInsert);
