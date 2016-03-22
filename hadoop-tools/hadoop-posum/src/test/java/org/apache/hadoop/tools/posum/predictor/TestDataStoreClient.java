@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.predictor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
@@ -53,6 +54,24 @@ public class TestDataStoreClient {
         System.out.println(otherJob);
         assertTrue(job.getId().equals(otherJob.getId()));
 
+
+        String taskId = "blabla1_job1_task1";
+        myStore.delete(DataEntityType.TASK, taskId);
+        TaskProfile task = new TaskProfile(taskId);
+        System.out.println(task);
+        task.setAppId(appId);
+        task.setJobId(jobId);
+        task.setStartTime(System.currentTimeMillis());
+        task.setFinishTime(System.currentTimeMillis() + 10000);
+        myStore.updateOrStore(DataEntityType.TASK, task);
+
+        TaskProfile otherTask = dataStore.findById(DataEntityType.TASK, taskId);
+        otherTask.setType("REDUCE");
+        myStore.updateOrStore(DataEntityType.TASK, otherTask);
+        System.out.println(otherTask);
+        assertTrue(task.getId().equals(otherTask.getId()));
+
+        myStore.delete(DataEntityType.TASK, taskId);
         myStore.delete(DataEntityType.JOB, jobId);
         myStore.delete(DataEntityType.APP, appId);
     }

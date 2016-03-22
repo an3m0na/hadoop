@@ -97,4 +97,26 @@ message JobProfileProto {
     }
 }
 
+message TaskProfileProto {
+    required string id = 1;
+    optional string appId = 2;
+    optional string jobId = 3;
+    optional int64 inputBytes = 4;
+    optional int64 inputRecords = 5;
+    optional int64 outputBytes = 6;
+    optional int64 outputRecords = 7;
+    optional int64 expectedInputBytes = 8;
+    optional int64 startTime = 9;
+    optional int64 finishTime = 10;
+    optional TaskType type = 11;
+    optional float reportedProgress = 12;
+    //    optional Counters counters = 14;
+
+    enum TaskType {
+        TYPE_NULL = 0;
+        TYPE_MAP = 1;
+        TYPE_REDUCE = 2;
+    }
+}
+
 

@@ -7,6 +7,8 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
  * Created by ane on 2/8/16.
  */
 public class TaskProfile extends GeneralDataEntity {
+    private String appId;
+    private String jobId;
     private Long inputBytes;
     private Long inputRecords;
     private Long outputBytes;
@@ -14,12 +16,10 @@ public class TaskProfile extends GeneralDataEntity {
     private Long expectedInputBytes;
     private Long startTime = 0L;
     private Long finishTime = 0L;
-    private Integer expectedDuration;
     private TaskType type;
-    private Counters counters;
+//    private Counters counters;
     private Float reportedProgress;
-    private String appId;
-    private String jobId;
+
 
     public TaskProfile() {
     }
@@ -65,13 +65,13 @@ public class TaskProfile extends GeneralDataEntity {
         return finishTime;
     }
 
-    public Counters getCounters() {
-        return counters;
-    }
-
-    public synchronized void setCounters(Counters counters) {
-        this.counters = counters;
-    }
+//    public Counters getCounters() {
+//        return counters;
+//    }
+//
+//    public synchronized void setCounters(Counters counters) {
+//        this.counters = counters;
+//    }
 
     public void setFinishTime(Long finishTime) {
         this.finishTime = finishTime;
@@ -83,14 +83,6 @@ public class TaskProfile extends GeneralDataEntity {
 
     public void setExpectedInputBytes(Long expectedInputBytes) {
         this.expectedInputBytes = expectedInputBytes;
-    }
-
-    public Integer getExpectedDuration() {
-        return expectedDuration;
-    }
-
-    public void setExpectedDuration(Integer expectedDuration) {
-        this.expectedDuration = expectedDuration;
     }
 
     public void setId(String id) {
@@ -152,9 +144,8 @@ public class TaskProfile extends GeneralDataEntity {
                 ", expectedInputBytes=" + expectedInputBytes +
                 ", startTime=" + startTime +
                 ", finishTime=" + finishTime +
-                ", expectedDuration=" + expectedDuration +
                 ", type=" + type +
-                ", counters=" + counters +
+//                ", counters=" + counters +
                 ", reportedProgress=" + reportedProgress +
                 ", appId='" + appId + '\'' +
                 ", jobId='" + jobId + '\'' +
