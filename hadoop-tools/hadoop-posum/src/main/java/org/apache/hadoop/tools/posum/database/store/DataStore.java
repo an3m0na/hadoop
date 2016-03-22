@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
@@ -40,6 +41,8 @@ public interface DataStore {
     JobProfile getJobProfileForApp(String appId);
 
     List<JobProfile> getComparableProfiles(String user, int count);
+
+    void runTransaction(DataTransaction transaction) throws POSUMException;
 
 
 }

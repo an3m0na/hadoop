@@ -11,6 +11,7 @@ import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class DataStoreClient extends AbstractService implements DataStore {
     @Override
     public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
         try {
-            return (T)dmClient.getObject(SingleEntityRequest.newInstance(collection, id)).getEntity();
+            return (T) dmClient.getObject(SingleEntityRequest.newInstance(collection, id)).getEntity();
         } catch (IOException | YarnException e) {
             e.printStackTrace();
         }
@@ -85,6 +86,11 @@ public class DataStoreClient extends AbstractService implements DataStore {
     @Override
     public List<JobProfile> getComparableProfiles(String user, int count) {
         return null;
+    }
+
+    @Override
+    public void runTransaction(DataTransaction transaction) throws POSUMException {
+        throw new POSUMException("Transactions are not supported remotely");
     }
 
     @Override
