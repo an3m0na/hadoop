@@ -1,6 +1,5 @@
 package org.apache.hadoop.tools.posum.database.store;
 
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
@@ -15,29 +14,17 @@ import java.util.Map;
 /**
  * Created by ane on 2/9/16.
  */
-public class DataStoreImpl implements DataStore, Configurable {
+public class DataStoreImpl implements DataStore {
 
-    private Configuration conf = new Configuration(false);
-    MongoJackConnector conn;
+    private MongoJackConnector conn;
 
     public DataStoreImpl(Configuration conf) {
-        setConf(conf);
         String name = conf.get(POSUMConfiguration.DATABASE_NAME, POSUMConfiguration.DATABASE_NAME_DEFAULT);
         String url = conf.get(POSUMConfiguration.DATABASE_URL, POSUMConfiguration.DATABASE_URL_DEFAULT);
         conn = new MongoJackConnector(name, url);
         for (DataEntityType collection : DataEntityType.values()) {
             conn.addCollection(collection);
         }
-    }
-
-    @Override
-    public void setConf(Configuration conf) {
-        this.conf = conf;
-    }
-
-    @Override
-    public Configuration getConf() {
-        return conf;
     }
 
     @Override
@@ -51,8 +38,13 @@ public class DataStoreImpl implements DataStore, Configurable {
     }
 
     @Override
+    public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams) {
+        return conn.findObjects(collection, queryParams);
+    }
+
+    @Override
     public <T extends GeneralDataEntity> List<T> list(DataEntityType collection) {
-        return conn.findObjects(collection, (DBQuery.Query)null);
+        return conn.findObjects(collection, (DBQuery.Query) null);
     }
 
     @Override

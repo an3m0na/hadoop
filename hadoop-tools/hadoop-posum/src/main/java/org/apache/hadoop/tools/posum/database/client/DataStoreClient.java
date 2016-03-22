@@ -63,6 +63,11 @@ public class DataStoreClient extends AbstractService implements DataStore {
     }
 
     @Override
+    public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams) {
+        return null;
+    }
+
+    @Override
     public <T extends GeneralDataEntity> List<T> list(DataEntityType collection) {
         return null;
     }
