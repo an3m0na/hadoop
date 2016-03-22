@@ -172,7 +172,6 @@ class ClusterInfoCollector {
         profile.setUser(conf.getUser());
         profile.setInputBytes(inputLength);
         profile.setInputSplits(taskSplitMetaInfo.length);
-        //TODO continue populating JobProfile
         return profile;
     }
 
