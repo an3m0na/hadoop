@@ -58,6 +58,16 @@ public class DataStoreClient extends AbstractService implements DataStore {
     }
 
     @Override
+    public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value) {
+        return null;
+    }
+
+    @Override
+    public <T extends GeneralDataEntity> List<T> list(DataEntityType collection) {
+        return null;
+    }
+
+    @Override
     public JobProfile getJobProfileForApp(String appId) {
         return null;
     }

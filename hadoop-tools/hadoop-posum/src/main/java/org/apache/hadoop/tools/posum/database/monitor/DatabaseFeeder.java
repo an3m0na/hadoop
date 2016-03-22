@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.HistoryProfile;
@@ -47,6 +48,7 @@ public class DatabaseFeeder implements Configurable {
     public void feedDatabase() {
         List<AppProfile> apps = collector.getAppsInfo();
         logger.debug("[" + getClass().getSimpleName() + "] Found " + apps.size() + " apps");
+        System.out.println("[" + getClass().getSimpleName() + "] Found " + apps.size() + " apps");
         for (AppProfile app : apps) {
             if (!finished.contains(app.getId())) {
                 logger.debug("[" + getClass().getSimpleName() + "] App " + app.getId() + " not finished");
@@ -60,20 +62,40 @@ public class DatabaseFeeder implements Configurable {
                 }
             }
         }
+        System.out.println(finished);
     }
 
     private void moveAppToHistory(AppProfile app) {
-        logger.debug("[" + getClass().getSimpleName() + "] Moving " + app.getId() + " to history");
-        running.remove(app.getId());
-        finished.add(app.getId());
-        dataStore.delete(DataEntityType.APP, app.getId());
-        dataStore.delete(DataEntityType.JOB, "appId", app.getId());
-        dataStore.delete(DataEntityType.TASK, "appId", app.getId());
-        //TODO fetch job info from history server
-        //TODO fetch task info from history server
-        //TODO save task info to history
-        //TODO save job info to history
+        String appId = app.getId();
+        logger.debug("[" + getClass().getSimpleName() + "] Moving " + appId + " to history");
+        running.remove(appId);
+        finished.add(appId);
+
+        List<JobProfile> jobs = dataStore.find(DataEntityType.JOB, "appId", appId);
+
+        dataStore.delete(DataEntityType.APP, appId);
+        dataStore.delete(DataEntityType.JOB, "appId", appId);
+        dataStore.delete(DataEntityType.TASK, "appId", appId);
+
+        JobProfile job;
+        String jobId;
+        if (jobs.size() > 1)
+            throw new POSUMException("Unexpected number of jobs for mapreduce app " + appId);
+        else if (jobs.size() < 1) {
+            job = collector.getFinishedJobInfo(appId);
+            jobId = job.getId();
+        } else {
+            jobId = jobs.get(0).getId();
+            job = collector.getFinishedJobInfo(appId, jobId);
+        }
+
+        List<TaskProfile> tasks = collector.getFinishedTasksInfo(appId, jobId);
         dataStore.updateOrStore(DataEntityType.APP_HISTORY, app);
+        dataStore.updateOrStore(DataEntityType.JOB_HISTORY, job);
+        for (TaskProfile task : tasks) {
+            dataStore.updateOrStore(DataEntityType.TASK_HISTORY, task);
+        }
+
         dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(app));
     }
 
