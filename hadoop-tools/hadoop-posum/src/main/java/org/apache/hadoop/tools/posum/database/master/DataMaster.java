@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.database.master;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.database.monitor.HadoopMonitor;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
@@ -12,15 +13,16 @@ import org.apache.hadoop.yarn.event.Dispatcher;
  */
 public class DataMaster extends CompositeService {
 
-    Dispatcher dispatcher;
+    private Dispatcher dispatcher;
 
     public DataMaster() {
         super(DataMaster.class.getName());
     }
 
-    protected DataMasterContext dmContext;
+    private DataMasterContext dmContext;
     private DataMasterService dmService;
     private DataStore dataStore;
+    private HadoopMonitor hadoopMonitor;
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
@@ -37,18 +39,22 @@ public class DataMaster extends CompositeService {
         dmService.init(conf);
         addIfService(dmService);
 
+        hadoopMonitor = new HadoopMonitor(dmContext);
+        hadoopMonitor.init(conf);
+        addIfService(hadoopMonitor);
+
         super.serviceInit(conf);
     }
 
     @Override
     protected void serviceStop() throws Exception {
-        if(dmService != null)
+        if (dmService != null)
             dmService.stop();
 
         super.serviceStop();
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         Configuration conf = new Configuration();
         conf.addResource("posum-core.xml");
         DataMaster master = new DataMaster();

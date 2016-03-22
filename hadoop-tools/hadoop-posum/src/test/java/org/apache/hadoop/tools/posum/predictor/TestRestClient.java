@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
-import org.apache.hadoop.tools.posum.database.monitor.SystemInfoCollector;
+import org.apache.hadoop.tools.posum.database.monitor.HadoopAPIClient;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class TestRestClient {
 
-    SystemInfoCollector collector = new SystemInfoCollector(TestUtils.getConf());
+    HadoopAPIClient collector = new HadoopAPIClient(TestUtils.getConf());
 
     @Test
     public void testJobInfo() {

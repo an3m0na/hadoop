@@ -2,14 +2,12 @@ package org.apache.hadoop.tools.posum.database.monitor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.TypeConverter;
 import org.apache.hadoop.mapreduce.split.JobSplit;
 import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
-import org.apache.hadoop.mapreduce.task.reduce.ExceptionReporter;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.util.MRApps;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -32,26 +30,16 @@ import java.util.*;
 /**
  * Created by ane on 3/7/16.
  */
-public class SystemInfoCollector implements Configurable {
+public class HadoopAPIClient {
 
-    private static Log logger = LogFactory.getLog(SystemInfoCollector.class);
+    private static Log logger = LogFactory.getLog(HadoopAPIClient.class);
 
     private RestClient restClient;
     private Configuration conf;
 
-    public SystemInfoCollector(Configuration conf) {
+    public HadoopAPIClient(Configuration conf) {
         restClient = new RestClient();
         this.conf = conf;
-    }
-
-    @Override
-    public void setConf(Configuration conf) {
-
-    }
-
-    @Override
-    public Configuration getConf() {
-        return null;
     }
 
     public List<AppProfile> getAppsInfo() {
@@ -78,56 +66,6 @@ public class SystemInfoCollector implements Configurable {
             logger.debug("[" + getClass().getSimpleName() + "] Exception parsing apps", e);
         }
         return apps;
-    }
-
-    private JobProfile readJobConf(String appId, JobId jobId, FileSystem fs, JobConf conf, Path jobSubmitDir) throws IOException {
-        JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = SplitMetaInfoReader.readSplitMetaInfo(
-                TypeConverter.fromYarn(jobId), fs,
-                conf,
-                jobSubmitDir);
-
-        long inputLength = 0;
-        for (JobSplit.TaskSplitMetaInfo aTaskSplitMetaInfo : taskSplitMetaInfo) {
-            inputLength += aTaskSplitMetaInfo.getInputDataLength();
-        }
-
-        logger.debug("[" + getClass().getSimpleName() + "] Input splits: " + taskSplitMetaInfo.length);
-        logger.debug("[" + getClass().getSimpleName() + "] Total input size: " + inputLength);
-
-        JobProfile profile = new JobProfile(jobId.toString());
-        profile.setAppId(appId);
-        profile.setName(conf.getJobName());
-        profile.setUser(conf.getUser());
-        profile.setInputBytes(inputLength);
-        profile.setInputSplits(taskSplitMetaInfo.length);
-        //TODO continue populating JobProfile
-        return profile;
-    }
-
-    public JobProfile getSubmittedJobInfo(String appId) throws IOException {
-        final ApplicationId actualAppId = Utils.parseApplicationId(appId);
-        FileSystem fs = FileSystem.get(conf);
-        Path confPath = MRApps.getStagingAreaDir(conf, UserGroupInformation.getCurrentUser().getUserName());
-        confPath = fs.makeQualified(confPath);
-
-        logger.debug("[" + getClass().getSimpleName() + "] Looking in staging path: " + confPath);
-        FileStatus[] statuses = fs.listStatus(confPath, new PathFilter() {
-            @Override
-            public boolean accept(Path path) {
-                return path.toString().contains("job_" + actualAppId.getClusterTimestamp());
-            }
-        });
-
-        if (statuses.length != 1)
-            throw new POSUMException("No job profile directory for: " + appId);
-
-        Path jobConfDir = statuses[0].getPath();
-        logger.debug("[" + getClass().getSimpleName() + "] Checking file path: " + jobConfDir);
-        String jobId = jobConfDir.getName();
-        JobConf jobConf = new JobConf(new Path(jobConfDir, "job.xml"));
-        //DANGER We assume there can only be one job / application
-        return readJobConf(appId, Utils.parseJobId(appId, jobId), fs, jobConf, jobConfDir);
-
     }
 
     public JobProfile getFinishedJobInfo(String appId) {

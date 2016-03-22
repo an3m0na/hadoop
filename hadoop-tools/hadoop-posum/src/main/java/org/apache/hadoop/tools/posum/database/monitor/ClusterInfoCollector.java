@@ -2,53 +2,55 @@ package org.apache.hadoop.tools.posum.database.monitor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapreduce.TypeConverter;
+import org.apache.hadoop.mapreduce.split.JobSplit;
+import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
+import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.mapreduce.v2.util.MRApps;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.tools.posum.common.RestClient;
+import org.apache.hadoop.tools.posum.common.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.HistoryProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
  * Created by ane on 2/4/16.
  */
-public class DatabaseFeeder implements Configurable {
+class ClusterInfoCollector {
 
-    private static Log logger = LogFactory.getLog(DatabaseFeeder.class);
+    private static Log logger = LogFactory.getLog(ClusterInfoCollector.class);
 
     private Set<String> running = new HashSet<>();
     private Set<String> finished = new HashSet<>();
     private DataStore dataStore;
-    private SystemInfoCollector collector;
+    private HadoopAPIClient collector;
     private Configuration conf;
 
-    public DatabaseFeeder(Configuration conf, DataStore dataStore) {
+    ClusterInfoCollector(Configuration conf, DataStore dataStore) {
         this.dataStore = dataStore;
+        this.collector = new HadoopAPIClient(conf);
         this.conf = conf;
-        this.collector = new SystemInfoCollector(conf);
     }
 
-    @Override
-    public void setConf(Configuration conf) {
-
-    }
-
-    @Override
-    public Configuration getConf() {
-        return null;
-    }
-
-    public void feedDatabase() {
+    void collect() {
         List<AppProfile> apps = collector.getAppsInfo();
         logger.debug("[" + getClass().getSimpleName() + "] Found " + apps.size() + " apps");
-        System.out.println("[" + getClass().getSimpleName() + "] Found " + apps.size() + " apps");
         for (AppProfile app : apps) {
             if (!finished.contains(app.getId())) {
                 logger.debug("[" + getClass().getSimpleName() + "] App " + app.getId() + " not finished");
@@ -62,7 +64,6 @@ public class DatabaseFeeder implements Configurable {
                 }
             }
         }
-        System.out.println(finished);
     }
 
     private void moveAppToHistory(AppProfile app) {
@@ -99,7 +100,7 @@ public class DatabaseFeeder implements Configurable {
         dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(app));
     }
 
-    public void updateAppInfo(AppProfile app) {
+    private void updateAppInfo(AppProfile app) {
         logger.debug("[" + getClass().getSimpleName() + "] Updating " + app.getId() + " info");
         if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
             JobProfile lastJobInfo = dataStore.getJobProfileForApp(app.getId());
@@ -140,7 +141,7 @@ public class DatabaseFeeder implements Configurable {
             //app is not yet tracked
             logger.debug("[" + getClass().getSimpleName() + "] App " + app.getId() + " is not tracked");
             try {
-                JobProfile job = collector.getSubmittedJobInfo(app.getId());
+                JobProfile job = getSubmittedJobInfo(app.getId());
                 dataStore.updateOrStore(DataEntityType.JOB, job);
                 dataStore.store(DataEntityType.HISTORY, job);
             } catch (Exception e) {
@@ -149,5 +150,55 @@ public class DatabaseFeeder implements Configurable {
         }
         dataStore.updateOrStore(DataEntityType.APP, app);
         dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(app));
+    }
+
+    private JobProfile readJobConf(String appId, JobId jobId, FileSystem fs, JobConf conf, Path jobSubmitDir) throws IOException {
+        JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = SplitMetaInfoReader.readSplitMetaInfo(
+                TypeConverter.fromYarn(jobId), fs,
+                conf,
+                jobSubmitDir);
+
+        long inputLength = 0;
+        for (JobSplit.TaskSplitMetaInfo aTaskSplitMetaInfo : taskSplitMetaInfo) {
+            inputLength += aTaskSplitMetaInfo.getInputDataLength();
+        }
+
+        logger.debug("[" + getClass().getSimpleName() + "] Input splits: " + taskSplitMetaInfo.length);
+        logger.debug("[" + getClass().getSimpleName() + "] Total input size: " + inputLength);
+
+        JobProfile profile = new JobProfile(jobId.toString());
+        profile.setAppId(appId);
+        profile.setName(conf.getJobName());
+        profile.setUser(conf.getUser());
+        profile.setInputBytes(inputLength);
+        profile.setInputSplits(taskSplitMetaInfo.length);
+        //TODO continue populating JobProfile
+        return profile;
+    }
+
+    private JobProfile getSubmittedJobInfo(String appId) throws IOException {
+        final ApplicationId actualAppId = Utils.parseApplicationId(appId);
+        FileSystem fs = FileSystem.get(conf);
+        Path confPath = MRApps.getStagingAreaDir(conf, UserGroupInformation.getCurrentUser().getUserName());
+        confPath = fs.makeQualified(confPath);
+
+        logger.debug("[" + getClass().getSimpleName() + "] Looking in staging path: " + confPath);
+        FileStatus[] statuses = fs.listStatus(confPath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return path.toString().contains("job_" + actualAppId.getClusterTimestamp());
+            }
+        });
+
+        if (statuses.length != 1)
+            throw new POSUMException("No job profile directory for: " + appId);
+
+        Path jobConfDir = statuses[0].getPath();
+        logger.debug("[" + getClass().getSimpleName() + "] Checking file path: " + jobConfDir);
+        String jobId = jobConfDir.getName();
+        JobConf jobConf = new JobConf(new Path(jobConfDir, "job.xml"));
+        //DANGER We assume there can only be one job / application
+        return readJobConf(appId, Utils.parseJobId(appId, jobId), fs, jobConf, jobConfDir);
+
     }
 }
