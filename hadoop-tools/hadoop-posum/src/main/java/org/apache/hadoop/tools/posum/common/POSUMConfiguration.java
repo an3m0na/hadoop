@@ -48,4 +48,8 @@ public class POSUMConfiguration {
     public static String CLIENT_FAILOVER_SLEEPTIME_BASE_MS = PREFIX + "failover.sleeptime.base.ms";
     public static String CLIENT_FAILOVER_SLEEPTIME_MAX_MS = PREFIX + "failover.sleeptime.max.ms";
     public static String CLIENT_FAILOVER_MAX_ATTEMPTS = PREFIX + "failover.max.attempts";
+
+    public static final String MONITOR_KEEP_HISTORY = MONITOR_PREFIX + "keep-history";
+    public static final boolean MONITOR_KEEP_HISTORY_DEFAULT = false;
+
 }
