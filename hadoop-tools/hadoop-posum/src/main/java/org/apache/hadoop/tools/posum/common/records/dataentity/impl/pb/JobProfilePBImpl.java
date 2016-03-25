@@ -5,9 +5,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
-import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProtoOrBuilder;
 
@@ -206,7 +204,7 @@ public class JobProfilePBImpl extends JobProfile implements GeneralDataEntityPBI
     @Override
     public JobState getState() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        JobProfileProto.JobState enumValue = p.getState();
+        JobProfileProto.JobStateProto enumValue = p.getState();
         if (enumValue == null || enumValue.name().equals("STATE_NULL"))
             return null;
         return JobState.valueOf(enumValue.name().substring("STATE_".length()));
@@ -216,9 +214,9 @@ public class JobProfilePBImpl extends JobProfile implements GeneralDataEntityPBI
     public void setState(String state) {
         maybeInitBuilder();
         if (state != null)
-            builder.setState(JobProfileProto.JobState.valueOf("STATE_" + state));
+            builder.setState(JobProfileProto.JobStateProto.valueOf("STATE_" + state));
         else
-            builder.setState(JobProfileProto.JobState.STATE_NULL);
+            builder.setState(JobProfileProto.JobStateProto.STATE_NULL);
     }
 
     @Override

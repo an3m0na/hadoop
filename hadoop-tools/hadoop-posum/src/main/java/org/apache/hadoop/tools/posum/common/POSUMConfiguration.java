@@ -5,6 +5,8 @@ package org.apache.hadoop.tools.posum.common;
  */
 public class POSUMConfiguration {
 
+    public static int DEFAULT_BUFFER_SIZE = 1024;
+
     public static final String PREFIX = "tools.posum.";
     public static final String MASTER_PREFIX = PREFIX + "master.";
     public static final String MONITOR_PREFIX = PREFIX + "monitor.";

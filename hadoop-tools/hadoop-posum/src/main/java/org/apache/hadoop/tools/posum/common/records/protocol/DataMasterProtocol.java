@@ -10,5 +10,6 @@ import java.io.IOException;
 public interface DataMasterProtocol {
     long versionID = 1L;
 
-    SingleEntityResponse getObject(SingleEntityRequest request) throws IOException, YarnException;
+    SingleEntityResponse getEntity(SingleEntityRequest request) throws IOException, YarnException;
+    MultiEntityResponse listEntities(MultiEntityRequest request) throws IOException, YarnException;
 }

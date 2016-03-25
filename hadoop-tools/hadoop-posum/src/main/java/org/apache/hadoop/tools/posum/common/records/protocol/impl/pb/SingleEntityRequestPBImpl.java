@@ -11,9 +11,9 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityRequestProtoOrBuilde
  * Created by ane on 3/20/16.
  */
 public class SingleEntityRequestPBImpl extends SingleEntityRequest {
-    SingleEntityRequestProto proto = SingleEntityRequestProto.getDefaultInstance();
-    SingleEntityRequestProto.Builder builder = null;
-    boolean viaProto = false;
+    private SingleEntityRequestProto proto = SingleEntityRequestProto.getDefaultInstance();
+    private SingleEntityRequestProto.Builder builder = null;
+    private boolean viaProto = false;
 
     public SingleEntityRequestPBImpl() {
         builder = SingleEntityRequestProto.newBuilder();
@@ -79,7 +79,7 @@ public class SingleEntityRequestPBImpl extends SingleEntityRequest {
     @Override
     public void setType(DataEntityType type) {
         maybeInitBuilder();
-        builder.setType(POSUMProtos.EntityType.valueOf("TYPE_"+type.name()));
+        builder.setType(POSUMProtos.EntityTypeProto.valueOf("TYPE_"+type.name()));
     }
 
     @Override

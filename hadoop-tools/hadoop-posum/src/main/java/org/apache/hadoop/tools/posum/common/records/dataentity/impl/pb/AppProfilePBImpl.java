@@ -121,7 +121,7 @@ public class AppProfilePBImpl extends AppProfile implements GeneralDataEntityPBI
     @Override
     public YarnApplicationState getState() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
-        AppProfileProto.AppState enumValue = p.getState();
+        AppProfileProto.AppStateProto enumValue = p.getState();
         if (enumValue == null || enumValue.name().equals("STATE_NULL"))
             return null;
         return YarnApplicationState.valueOf(enumValue.name().substring("STATE_".length()));
@@ -131,15 +131,15 @@ public class AppProfilePBImpl extends AppProfile implements GeneralDataEntityPBI
     public void setState(String state) {
         maybeInitBuilder();
         if (state != null)
-            builder.setState(AppProfileProto.AppState.valueOf("STATE_" + state));
+            builder.setState(AppProfileProto.AppStateProto.valueOf("STATE_" + state));
         else
-            builder.setState(AppProfileProto.AppState.STATE_NULL);
+            builder.setState(AppProfileProto.AppStateProto.STATE_NULL);
     }
 
     @Override
     public FinalApplicationStatus getStatus() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
-        AppProfileProto.AppStatus enumValue = p.getStatus();
+        AppProfileProto.AppStatusProto enumValue = p.getStatus();
         if (enumValue == null || enumValue.name().equals("STATUS_NULL"))
             return null;
         return FinalApplicationStatus.valueOf(enumValue.name().substring("STATUS_".length()));
@@ -149,9 +149,9 @@ public class AppProfilePBImpl extends AppProfile implements GeneralDataEntityPBI
     public void setStatus(String status) {
         maybeInitBuilder();
         if (status != null)
-            builder.setStatus(AppProfileProto.AppStatus.valueOf("STATUS_" + status));
+            builder.setStatus(AppProfileProto.AppStatusProto.valueOf("STATUS_" + status));
         else
-            builder.setStatus(AppProfileProto.AppStatus.STATUS_NULL);
+            builder.setStatus(AppProfileProto.AppStatusProto.STATUS_NULL);
     }
 
     @Override
@@ -169,7 +169,7 @@ public class AppProfilePBImpl extends AppProfile implements GeneralDataEntityPBI
     @Override
     public RestClient.TrackingUI getTrackingUI() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
-        AppProfileProto.AppTrackingUI enumValue = p.getTrackingUI();
+        AppProfileProto.AppTrackingUIProto enumValue = p.getTrackingUI();
         if (enumValue == null || enumValue.name().equals("UI_NULL"))
             return null;
         return RestClient.TrackingUI.valueOf(enumValue.name().substring("UI_".length()));
@@ -179,9 +179,9 @@ public class AppProfilePBImpl extends AppProfile implements GeneralDataEntityPBI
     public void setTrackingUI(String trackingUI) {
         maybeInitBuilder();
         if (trackingUI != null)
-            builder.setTrackingUI(AppProfileProto.AppTrackingUI.valueOf("UI_" + trackingUI));
+            builder.setTrackingUI(AppProfileProto.AppTrackingUIProto.valueOf("UI_" + trackingUI));
         else
-            builder.setTrackingUI(AppProfileProto.AppTrackingUI.UI_NULL);
+            builder.setTrackingUI(AppProfileProto.AppTrackingUIProto.UI_NULL);
     }
 
     @Override
