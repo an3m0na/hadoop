@@ -10,6 +10,8 @@ import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 /**
@@ -74,5 +76,17 @@ public class TestDataStoreClient {
         myStore.delete(DataEntityType.TASK, taskId);
         myStore.delete(DataEntityType.JOB, jobId);
         myStore.delete(DataEntityType.APP, appId);
+    }
+
+    @Test
+    public void checkMuliObject() {
+        Configuration conf = TestUtils.getConf();
+        DataStoreClient dataStore = new DataStoreClient();
+        dataStore.init(conf);
+        dataStore.start();
+        DataStore myStore = new DataStoreImpl(conf);
+
+        List<AppProfile> apps = dataStore.list(DataEntityType.APP_HISTORY);
+        System.out.println(apps);
     }
 }

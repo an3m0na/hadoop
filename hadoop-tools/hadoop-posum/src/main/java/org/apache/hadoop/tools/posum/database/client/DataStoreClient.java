@@ -8,6 +8,8 @@ import org.apache.hadoop.tools.posum.common.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.MultiEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.protocol.MultiEntityResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
@@ -15,6 +17,7 @@ import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +54,8 @@ public class DataStoreClient extends AbstractService implements DataStore {
     @Override
     public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
         try {
-            return (T) dmClient.getObject(SingleEntityRequest.newInstance(collection, id)).getEntity();
+            return (T) dmClient.getEntity(SingleEntityRequest.newInstance(collection, id))
+                    .getEntity();
         } catch (IOException | YarnException e) {
             e.printStackTrace();
         }
@@ -70,6 +74,14 @@ public class DataStoreClient extends AbstractService implements DataStore {
 
     @Override
     public <T extends GeneralDataEntity> List<T> list(DataEntityType collection) {
+        try {
+            MultiEntityResponse response = dmClient.listEntities(MultiEntityRequest.newInstance(collection,
+                    new HashMap<String, Object>()));
+            if (response != null)
+                return (List<T>) response.getEntities();
+        } catch (IOException | YarnException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
