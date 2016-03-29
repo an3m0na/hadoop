@@ -78,6 +78,7 @@ public class DataMasterService extends AbstractService implements DataMasterProt
     @Override
     public MultiEntityResponse listEntities(MultiEntityRequest request) throws IOException, YarnException {
         List<GeneralDataEntity> ret = dmContext.getDataStore().find(request.getType(), request.getProperties());
+        System.out.println(ret);
         MultiEntityResponse response = Records.newRecord(MultiEntityResponse.class);
         response.setType(request.getType());
         response.setEntities(ret);

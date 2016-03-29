@@ -25,7 +25,7 @@ public interface DataStore {
 
     /* Generic modifiers */
 
-    <T extends GeneralDataEntity> void store(DataEntityType collection, T toInsert);
+    <T extends GeneralDataEntity> String store(DataEntityType collection, T toInsert);
 
     //returns true if an existing object was overwritten
     <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType apps, T toUpdate);

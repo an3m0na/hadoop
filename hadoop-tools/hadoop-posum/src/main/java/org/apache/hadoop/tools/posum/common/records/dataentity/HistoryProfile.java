@@ -5,14 +5,16 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
  */
 public class HistoryProfile<T extends GeneralDataEntity> extends GeneralDataEntity {
     private T original;
-    private Class<T> tClass;
+    private String originalId;
+    private DataEntityType type;
     private Long timestamp;
 
     public HistoryProfile(){}
 
-    public HistoryProfile(T original) {
+    public HistoryProfile(DataEntityType type, T original) {
         this.original = original;
-        this.tClass = (Class<T>) original.getClass();
+        this.originalId = original.getId();
+        this.type = type;
         this.timestamp = System.currentTimeMillis();
     }
 
@@ -24,19 +26,27 @@ public class HistoryProfile<T extends GeneralDataEntity> extends GeneralDataEnti
         this.original = original;
     }
 
-    public Class<T> gettClass() {
-        return tClass;
-    }
-
-    public void settClass(Class<T> tClass) {
-        this.tClass = tClass;
-    }
-
     public Long getTimestamp() {
         return timestamp;
     }
 
     public void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public DataEntityType getType() {
+        return type;
+    }
+
+    public void setType(DataEntityType type) {
+        this.type = type;
+    }
+
+    public String getOriginalId() {
+        return originalId;
+    }
+
+    public void setOriginalId(String originalId) {
+        this.originalId = originalId;
     }
 }

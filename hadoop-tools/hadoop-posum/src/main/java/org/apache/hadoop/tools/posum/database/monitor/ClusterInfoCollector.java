@@ -114,7 +114,7 @@ class ClusterInfoCollector {
 
         dataStore.updateOrStore(DataEntityType.APP, app);
         if (historyEnabled) {
-            dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(app));
+            dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(DataEntityType.APP, app));
         }
 
         if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
@@ -159,10 +159,10 @@ class ClusterInfoCollector {
                 });
 
                 if (historyEnabled) {
-                    dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(app));
-                    dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(job));
+                    dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(DataEntityType.APP, app));
+                    dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(DataEntityType.JOB, job));
                     for (TaskProfile task : tasks) {
-                        dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(task));
+                        dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(DataEntityType.TASK, task));
                     }
                 }
             }
@@ -173,7 +173,7 @@ class ClusterInfoCollector {
                 final JobProfile job = getSubmittedJobInfo(app.getId());
                 dataStore.updateOrStore(DataEntityType.JOB, job);
                 if (historyEnabled) {
-                    dataStore.store(DataEntityType.HISTORY, job);
+                    dataStore.store(DataEntityType.HISTORY, new HistoryProfile<>(DataEntityType.JOB, job));
                 }
             } catch (Exception e) {
                 logger.error("Could not get job info from staging dir!", e);

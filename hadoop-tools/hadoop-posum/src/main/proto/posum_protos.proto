@@ -113,7 +113,8 @@ message HistoryProfileProto {
     required string id = 1;
     required EntityTypeProto type = 2;
     required int64 timestamp = 3;
-    required bytes entity = 4;
+    required string originalId = 4;
+    required bytes original = 5;
 }
 
 message EntityPropertyProto {
@@ -141,7 +142,7 @@ message SingleEntityResponseProto {
 
 message MultiEntityRequestProto {
     required EntityTypeProto type = 1;
-    repeated EntityPropertyProto properties= 2;
+    repeated EntityPropertyProto properties = 2;
 }
 
 message MultiEntityResponseProto {

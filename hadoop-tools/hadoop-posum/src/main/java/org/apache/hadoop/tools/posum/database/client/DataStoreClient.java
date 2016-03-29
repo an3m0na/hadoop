@@ -64,11 +64,21 @@ public class DataStoreClient extends AbstractService implements DataStore {
 
     @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value) {
-        return null;
+        Map<String, Object> queryParams = new HashMap<>(1);
+        queryParams.put(field, value);
+        return find(collection, queryParams);
     }
 
     @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams) {
+        try {
+            MultiEntityResponse response = dmClient.listEntities(MultiEntityRequest.newInstance(collection,
+                    queryParams));
+            if (response != null)
+                return (List<T>) response.getEntities();
+        } catch (IOException | YarnException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -91,8 +101,8 @@ public class DataStoreClient extends AbstractService implements DataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity> void store(DataEntityType collection, T toInsert) {
-
+    public <T extends GeneralDataEntity> String store(DataEntityType collection, T toInsert) {
+        return null;
     }
 
     @Override
