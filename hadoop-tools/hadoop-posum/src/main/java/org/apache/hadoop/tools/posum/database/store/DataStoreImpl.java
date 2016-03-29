@@ -93,10 +93,10 @@ public class DataStoreImpl implements DataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity> void store(DataEntityType collection, T toInsert) {
+    public <T extends GeneralDataEntity> String store(DataEntityType collection, T toInsert) {
         writeLock.lock();
         try {
-            conn.insertObject(collection, toInsert);
+            return conn.insertObject(collection, toInsert);
         } finally {
             writeLock.unlock();
         }
