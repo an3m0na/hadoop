@@ -1,12 +1,10 @@
-package org.apache.hadoop.tools.posum.common.records;
+package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
 
 import java.io.IOException;
@@ -27,7 +25,7 @@ public class HistoryProfileDeserializer extends JsonDeserializer<HistoryProfileP
         JsonNode originalNode = node.get("original");
         JsonParser parser = originalNode.traverse();
         parser.setCodec(jp.getCodec());
-        GeneralDataEntityPBImpl original = parser.readValueAs(type.getMappedClass());
+        GeneralDataEntity original = parser.readValueAs(type.getMappedClass());
         HistoryProfilePBImpl history = new HistoryProfilePBImpl<>(type, original);
         history.setId(id);
         history.setTimestamp(timestamp);

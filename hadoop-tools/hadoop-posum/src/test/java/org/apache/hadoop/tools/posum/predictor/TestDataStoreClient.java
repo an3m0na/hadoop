@@ -2,7 +2,6 @@ package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
 import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
@@ -98,7 +97,7 @@ public class TestDataStoreClient {
         app.setStartTime(System.currentTimeMillis());
         app.setFinishTime(System.currentTimeMillis() + 10000);
         System.out.println(app);
-        HistoryProfile appHistory = new HistoryProfilePBImpl(DataEntityType.APP, (AppProfilePBImpl)app);
+        HistoryProfile appHistory = new HistoryProfilePBImpl(DataEntityType.APP, app);
         String historyId = myStore.store(DataEntityType.HISTORY, appHistory);
 
         Map<String, Object> properties = new HashMap<>();

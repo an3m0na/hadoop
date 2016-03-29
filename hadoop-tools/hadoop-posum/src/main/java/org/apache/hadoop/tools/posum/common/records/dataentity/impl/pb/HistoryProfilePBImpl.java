@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.HistoryProfile;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.HistoryProfileProto;
@@ -12,7 +13,7 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.HistoryProfileProtoOrBuilder;
 /**
  * Created by ane on 3/21/16.
  */
-public class HistoryProfilePBImpl<T extends GeneralDataEntityPBImpl> extends  GeneralDataEntityPBImpl<HistoryProfile, HistoryProfileProto, HistoryProfileProto.Builder>
+public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends  GeneralDataEntityPBImpl<HistoryProfile, HistoryProfileProto, HistoryProfileProto.Builder>
         implements HistoryProfile<T>{
 
     public HistoryProfilePBImpl(){
@@ -64,7 +65,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntityPBImpl> extends  Ge
         if (p.getOriginal() != null) {
             try {
                 Class eClass = getType().getMappedClass();
-                return (T)((T)eClass.newInstance()).parseToEntity(p.getOriginal());
+                return (T)((GeneralDataEntityPBImpl)eClass.newInstance()).parseToEntity(p.getOriginal());
             } catch (Exception e) {
                 throw new POSUMException("Could not read object from byte string " + p.getOriginal(), e);
             }
@@ -76,7 +77,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntityPBImpl> extends  Ge
     public void setOriginal(T original) {
         maybeInitBuilder();
         if (original != null)
-            builder.setOriginal(original.getProto().toByteString());
+            builder.setOriginal(((GeneralDataEntityPBImpl)original).getProto().toByteString());
     }
 
     @Override
