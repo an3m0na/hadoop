@@ -20,18 +20,13 @@ import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.tools.posum.common.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.HistoryProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.JobProfilePBImpl;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.TaskProfilePBImpl;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.io.IOException;
@@ -121,7 +116,7 @@ class ClusterInfoCollector {
         dataStore.updateOrStore(DataEntityType.APP, app);
         if (historyEnabled) {
             dataStore.store(DataEntityType.HISTORY,
-                    new HistoryProfilePBImpl<>(DataEntityType.APP, (AppProfilePBImpl) app));
+                    new HistoryProfilePBImpl<>(DataEntityType.APP, app));
         }
 
         if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
@@ -167,12 +162,12 @@ class ClusterInfoCollector {
 
                 if (historyEnabled) {
                     dataStore.store(DataEntityType.HISTORY,
-                            new HistoryProfilePBImpl<>(DataEntityType.APP, (AppProfilePBImpl) app));
+                            new HistoryProfilePBImpl<>(DataEntityType.APP, app));
                     dataStore.store(DataEntityType.HISTORY,
-                            new HistoryProfilePBImpl<>(DataEntityType.JOB, (JobProfilePBImpl) job));
+                            new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
                     for (TaskProfile task : tasks) {
                         dataStore.store(DataEntityType.HISTORY,
-                                new HistoryProfilePBImpl<>(DataEntityType.TASK, (TaskProfilePBImpl) task));
+                                new HistoryProfilePBImpl<>(DataEntityType.TASK, task));
                     }
                 }
             }
@@ -184,7 +179,7 @@ class ClusterInfoCollector {
                 dataStore.updateOrStore(DataEntityType.JOB, job);
                 if (historyEnabled) {
                     dataStore.store(DataEntityType.HISTORY,
-                            new HistoryProfilePBImpl<>(DataEntityType.JOB, (JobProfilePBImpl) job));
+                            new HistoryProfilePBImpl<>(DataEntityType.JOB,  job));
                 }
             } catch (Exception e) {
                 logger.error("Could not get job info from staging dir!", e);

@@ -15,9 +15,9 @@ public enum DataEntityType {
     HISTORY("history", HistoryProfilePBImpl.class);
 
     private String label;
-    private Class<? extends GeneralDataEntityPBImpl> mappedClass;
+    private Class<? extends GeneralDataEntity> mappedClass;
 
-    DataEntityType(String label, Class<? extends GeneralDataEntityPBImpl> mappedClass) {
+    DataEntityType(String label, Class<? extends GeneralDataEntity> mappedClass) {
         this.label = label;
         this.mappedClass = mappedClass;
     }
@@ -30,7 +30,7 @@ public enum DataEntityType {
         return label;
     }
 
-    public Class<? extends GeneralDataEntityPBImpl> getMappedClass() {
+    public Class<? extends GeneralDataEntity> getMappedClass() {
         return mappedClass;
     }
 
