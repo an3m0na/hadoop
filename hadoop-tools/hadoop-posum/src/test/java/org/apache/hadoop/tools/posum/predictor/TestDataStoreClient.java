@@ -2,9 +2,12 @@ package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
 import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
+import org.apache.hadoop.yarn.util.Records;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -28,10 +31,11 @@ public class TestDataStoreClient {
 
         String appId = "testApp";
         myStore.delete(DataEntityType.APP, appId);
-        AppProfile app = new AppProfile(appId);
-        System.out.println(app);
+        AppProfile app = Records.newRecord(AppProfile.class);
+        app.setId(appId);
         app.setStartTime(System.currentTimeMillis());
         app.setFinishTime(System.currentTimeMillis() + 10000);
+        System.out.println(app);
         myStore.updateOrStore(DataEntityType.APP, app);
 
         AppProfile otherApp = dataStore.findById(DataEntityType.APP, appId);
@@ -42,11 +46,12 @@ public class TestDataStoreClient {
 
         String jobId = "testApp_job1";
         myStore.delete(DataEntityType.JOB, jobId);
-        JobProfile job = new JobProfile(jobId);
-        System.out.println(job);
+        JobProfile job = Records.newRecord(JobProfile.class);
+        job.setId(jobId);
         job.setAppId(appId);
         job.setStartTime(System.currentTimeMillis());
         job.setFinishTime(System.currentTimeMillis() + 10000);
+        System.out.println(job);
         myStore.updateOrStore(DataEntityType.JOB, job);
 
         JobProfile otherJob = dataStore.findById(DataEntityType.JOB, jobId);
@@ -58,12 +63,13 @@ public class TestDataStoreClient {
 
         String taskId = "testApp_job1_task1";
         myStore.delete(DataEntityType.TASK, taskId);
-        TaskProfile task = new TaskProfile(taskId);
-        System.out.println(task);
+        TaskProfile task = Records.newRecord(TaskProfile.class);
+        task.setId(taskId);
         task.setAppId(appId);
         task.setJobId(jobId);
         task.setStartTime(System.currentTimeMillis());
         task.setFinishTime(System.currentTimeMillis() + 10000);
+        System.out.println(task);
         myStore.updateOrStore(DataEntityType.TASK, task);
 
         TaskProfile otherTask = dataStore.findById(DataEntityType.TASK, taskId);
@@ -87,11 +93,12 @@ public class TestDataStoreClient {
 
         String appId = "testHistoryApp";
         myStore.delete(DataEntityType.HISTORY, "originalId", appId);
-        AppProfile app = new AppProfile(appId);
-        System.out.println(app);
+        AppProfile app = Records.newRecord(AppProfile.class);
+        app.setId(appId);
         app.setStartTime(System.currentTimeMillis());
         app.setFinishTime(System.currentTimeMillis() + 10000);
-        HistoryProfile appHistory = new HistoryProfile<>(DataEntityType.APP, app);
+        System.out.println(app);
+        HistoryProfile appHistory = new HistoryProfilePBImpl(DataEntityType.APP, (AppProfilePBImpl)app);
         String historyId = myStore.store(DataEntityType.HISTORY, appHistory);
 
         Map<String, Object> properties = new HashMap<>();

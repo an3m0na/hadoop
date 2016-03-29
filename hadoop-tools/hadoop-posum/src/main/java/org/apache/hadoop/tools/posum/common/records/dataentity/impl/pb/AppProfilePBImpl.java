@@ -1,9 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.RestClient;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
@@ -14,26 +12,17 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.AppProfileProtoOrBuilder;
 /**
  * Created by ane on 3/21/16.
  */
-public class AppProfilePBImpl extends AppProfile implements GeneralDataEntityPBImpl<AppProfile, AppProfileProto> {
-    private AppProfileProto proto = AppProfileProto.getDefaultInstance();
-    private AppProfileProto.Builder builder = null;
-    private boolean viaProto = false;
+public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppProfileProto, AppProfileProto.Builder>
+        implements AppProfile {
 
-    public AppProfilePBImpl() {
-        builder = AppProfileProto.newBuilder();
+    @Override
+    void initBuilder() {
+        builder = viaProto? AppProfileProto.newBuilder(proto) : AppProfileProto.newBuilder();
     }
 
-    public AppProfilePBImpl(AppProfileProto proto) {
-        this.proto = proto;
-        viaProto = true;
-    }
-
-    @JsonIgnore
-    public AppProfileProto getProto() {
-        mergeLocalToProto();
-        proto = viaProto ? proto : builder.build();
-        viaProto = true;
-        return proto;
+    @Override
+    void buildProto() {
+        proto = builder.build();
     }
 
     @Override
@@ -44,42 +33,15 @@ public class AppProfilePBImpl extends AppProfile implements GeneralDataEntityPBI
     }
 
     @Override
-    public int hashCode() {
-        return getProto().hashCode();
+    public String getId() {
+        AppProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return "".equals(p.getId())? null : p.getId();
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (other == null)
-            return false;
-        if (other.getClass().isAssignableFrom(this.getClass())) {
-            return this.getProto().equals(this.getClass().cast(other).getProto());
-        }
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return TextFormat.shortDebugString(getProto());
-    }
-
-    private void mergeLocalToBuilder() {
-
-    }
-
-    private void mergeLocalToProto() {
-        if (viaProto)
-            maybeInitBuilder();
-        mergeLocalToBuilder();
-        proto = builder.build();
-        viaProto = true;
-    }
-
-    private void maybeInitBuilder() {
-        if (viaProto || builder == null) {
-            builder = AppProfileProto.newBuilder(proto);
-        }
-        viaProto = false;
+    public void setId(String id) {
+        maybeInitBuilder();
+        builder.setId(id);
     }
 
     @Override
@@ -182,17 +144,5 @@ public class AppProfilePBImpl extends AppProfile implements GeneralDataEntityPBI
             builder.setTrackingUI(AppProfileProto.AppTrackingUIProto.valueOf("UI_" + trackingUI));
         else
             builder.setTrackingUI(AppProfileProto.AppTrackingUIProto.UI_NULL);
-    }
-
-    @Override
-    public String getId() {
-        AppProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getId();
-    }
-
-    @Override
-    public void setId(String id) {
-        maybeInitBuilder();
-        builder.setId(id);
     }
 }

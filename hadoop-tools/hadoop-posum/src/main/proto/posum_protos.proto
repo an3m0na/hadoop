@@ -74,6 +74,8 @@ message JobProfileProto {
     optional int32 avgMapDuration = 19;
     optional int32 avgReduceDuration = 20;
     optional int32 avgTaskDuration = 21;
+    optional int32 avgShuffleDuration = 22;
+    optional int32 avgMergeDuration = 23;
 
     enum JobStateProto {
         STATE_NULL = 0;
@@ -100,6 +102,7 @@ message TaskProfileProto {
     optional int64 finishTime = 10;
     optional TaskTypeProto type = 11;
     optional float reportedProgress = 12;
+    optional string successfulAttempt = 13;
     //    optional Counters counters = 14;
 
     enum TaskTypeProto {

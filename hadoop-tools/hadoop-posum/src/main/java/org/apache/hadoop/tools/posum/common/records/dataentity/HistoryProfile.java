@@ -1,52 +1,28 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.apache.hadoop.tools.posum.common.records.HistoryProfileDeserializer;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
+
 /**
  * Created by ane on 3/7/16.
  */
-public class HistoryProfile<T extends GeneralDataEntity> extends GeneralDataEntity {
-    private T original;
-    private String originalId;
-    private DataEntityType type;
-    private Long timestamp;
+@JsonDeserialize(using = HistoryProfileDeserializer.class)
+public interface HistoryProfile<T extends GeneralDataEntityPBImpl> extends GeneralDataEntity {
 
-    public HistoryProfile(){}
+     T getOriginal();
 
-    public HistoryProfile(DataEntityType type, T original) {
-        this.original = original;
-        this.originalId = original.getId();
-        this.type = type;
-        this.timestamp = System.currentTimeMillis();
-    }
+     void setOriginal(T original);
 
-    public T getOriginal() {
-        return original;
-    }
+     Long getTimestamp();
 
-    public void setOriginal(T original) {
-        this.original = original;
-    }
+     void setTimestamp(Long timestamp);
 
-    public Long getTimestamp() {
-        return timestamp;
-    }
+     DataEntityType getType();
 
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
-    }
+     void setType(DataEntityType type);
 
-    public DataEntityType getType() {
-        return type;
-    }
+     String getOriginalId();
 
-    public void setType(DataEntityType type) {
-        this.type = type;
-    }
-
-    public String getOriginalId() {
-        return originalId;
-    }
-
-    public void setOriginalId(String originalId) {
-        this.originalId = originalId;
-    }
+     void setOriginalId(String originalId);
 }
