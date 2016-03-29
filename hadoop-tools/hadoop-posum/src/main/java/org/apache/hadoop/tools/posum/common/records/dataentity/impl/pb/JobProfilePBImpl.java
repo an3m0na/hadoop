@@ -1,9 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.TextFormat;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProto;
@@ -12,21 +10,17 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProtoOrBuilder;
 /**
  * Created by ane on 3/21/16.
  */
-public class JobProfilePBImpl extends JobProfile implements GeneralDataEntityPBImpl<JobProfile, JobProfileProto> {
-    private JobProfileProto proto = JobProfileProto.getDefaultInstance();
-    private JobProfileProto.Builder builder = null;
-    private boolean viaProto = false;
+public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobProfileProto, JobProfileProto.Builder>
+        implements JobProfile{
 
-    public JobProfilePBImpl() {
-        builder = JobProfileProto.newBuilder();
+    @Override
+    void initBuilder() {
+        builder = viaProto? JobProfileProto.newBuilder(proto) : JobProfileProto.newBuilder();
     }
 
-    @JsonIgnore
-    public JobProfileProto getProto() {
-        mergeLocalToProto();
-        proto = viaProto ? proto : builder.build();
-        viaProto = true;
-        return proto;
+    @Override
+    void buildProto() {
+        proto = builder.build();
     }
 
     @Override
@@ -35,44 +29,16 @@ public class JobProfilePBImpl extends JobProfile implements GeneralDataEntityPBI
         viaProto = true;
         return this;
     }
-
     @Override
-    public int hashCode() {
-        return getProto().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other == null)
-            return false;
-        if (other.getClass().isAssignableFrom(this.getClass())) {
-            return this.getProto().equals(this.getClass().cast(other).getProto());
-        }
-        return false;
+    public String getId() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return "".equals(p.getId())? null : p.getId();
     }
 
     @Override
-    public String toString() {
-        return TextFormat.shortDebugString(getProto());
-    }
-
-    private void mergeLocalToBuilder() {
-
-    }
-
-    private void mergeLocalToProto() {
-        if (viaProto)
-            maybeInitBuilder();
-        mergeLocalToBuilder();
-        proto = builder.build();
-        viaProto = true;
-    }
-
-    private void maybeInitBuilder() {
-        if (viaProto || builder == null) {
-            builder = JobProfileProto.newBuilder(proto);
-        }
-        viaProto = false;
+    public void setId(String id) {
+        maybeInitBuilder();
+        builder.setId(id);
     }
 
     @Override
@@ -100,18 +66,6 @@ public class JobProfilePBImpl extends JobProfile implements GeneralDataEntityPBI
     }
 
     @Override
-    public String getId() {
-        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getId();
-    }
-
-    @Override
-    public void setId(String id) {
-        maybeInitBuilder();
-        builder.setId(id);
-    }
-
-    @Override
     public String getName() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getName();
@@ -133,6 +87,11 @@ public class JobProfilePBImpl extends JobProfile implements GeneralDataEntityPBI
     public void setFinishTime(Long finishTime) {
         maybeInitBuilder();
         builder.setFinishTime(finishTime);
+    }
+
+    @Override
+    public Integer getDuration() {
+        return new Long(Math.min(0, getFinishTime()-getStartTime())).intValue();
     }
 
     @Override
@@ -298,6 +257,11 @@ public class JobProfilePBImpl extends JobProfile implements GeneralDataEntityPBI
     }
 
     @Override
+    public Long getAvgSplitSize() {
+        return null;
+    }
+
+    @Override
     public Integer getAvgMapDuration() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getAvgMapDuration();
@@ -331,5 +295,29 @@ public class JobProfilePBImpl extends JobProfile implements GeneralDataEntityPBI
     public void setAvgTaskDuration(Integer avgTaskDuration) {
         maybeInitBuilder();
         builder.setAvgTaskDuration(avgTaskDuration);
+    }
+
+    @Override
+    public void setAvgShuffleDuration(Integer avgShuffleDuration) {
+        maybeInitBuilder();
+        builder.setAvgShuffleDuration(avgShuffleDuration);
+    }
+
+    @Override
+    public Integer getAvgShuffleDuration() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getAvgShuffleDuration();
+    }
+
+    @Override
+    public void setAvgMergeDuration(Integer avgMergeDuration) {
+        maybeInitBuilder();
+        builder.setAvgMergeDuration(avgMergeDuration);
+    }
+
+    @Override
+    public Integer getAvgMergeDuration() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getAvgMergeDuration();
     }
 }

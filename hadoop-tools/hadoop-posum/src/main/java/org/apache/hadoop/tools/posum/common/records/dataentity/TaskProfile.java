@@ -6,158 +6,63 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 /**
  * Created by ane on 2/8/16.
  */
-public class TaskProfile extends GeneralDataEntity {
-    private String appId;
-    private String jobId;
-    private Long inputBytes;
-    private Long inputRecords;
-    private Long outputBytes;
-    private Long outputRecords;
-    private Long expectedInputBytes;
-    private Long startTime = 0L;
-    private Long finishTime = 0L;
-    private TaskType type;
-//    private Counters counters;
-    private Float reportedProgress;
-    private String successfulAttempt;
+ public interface TaskProfile extends GeneralDataEntity {
 
+     Long getInputBytes();
 
-    public TaskProfile() {
-    }
+     void setInputBytes(Long inputBytes);
 
-    public TaskProfile(String id) {
-        this.id = id;
-    }
+     Long getOutputBytes();
 
-    public Long getInputBytes() {
-        return inputBytes;
-    }
+     void setOutputBytes(Long outputBytes);
 
-    public void setInputBytes(Long inputBytes) {
-        this.inputBytes = inputBytes;
-    }
+     Integer getDuration();
 
-    public Long getOutputBytes() {
-        return outputBytes;
-    }
+     TaskType getType();
 
-    public void setOutputBytes(Long outputBytes) {
-        this.outputBytes = outputBytes;
-    }
+     Long getStartTime();
 
-    public Integer getDuration() {
-        if (finishTime == 0) return -1;
-        return new Long(finishTime - startTime).intValue();
-    }
+     void setStartTime(Long startTime);
 
-    public TaskType getType() {
-        return type;
-    }
+     Long getFinishTime();
 
-    public Long getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Long startTime) {
-        this.startTime = startTime;
-    }
-
-    public Long getFinishTime() {
-        return finishTime;
-    }
-
-//    public Counters getCounters() {
+//     Counters getCounters() {
 //        return counters;
 //    }
 //
-//    public synchronized void setCounters(Counters counters) {
+//     synchronized void setCounters(Counters counters) {
 //        this.counters = counters;
 //    }
 
-    public void setFinishTime(Long finishTime) {
-        this.finishTime = finishTime;
-    }
+     void setFinishTime(Long finishTime);
 
-    public Long getExpectedInputBytes() {
-        return expectedInputBytes;
-    }
+     Long getExpectedInputBytes();
 
-    public void setExpectedInputBytes(Long expectedInputBytes) {
-        this.expectedInputBytes = expectedInputBytes;
-    }
+     void setExpectedInputBytes(Long expectedInputBytes);
 
-    public void setId(String id) {
-        this.id = id;
-    }
+     void setType(String type);
 
-    public void setType(String type) {
-        if (type != null)
-            this.type = TaskType.valueOf(type);
-    }
+     void setReportedProgress(Float reportedProgress);
 
-    public void setReportedProgress(Float reportedProgress) {
-        this.reportedProgress = reportedProgress;
-    }
+     Long getInputRecords();
 
-    public Long getInputRecords() {
-        return inputRecords;
-    }
+     void setInputRecords(Long inputRecords);
 
-    public void setInputRecords(Long inputRecords) {
-        this.inputRecords = inputRecords;
-    }
+     Long getOutputRecords();
 
-    public Long getOutputRecords() {
-        return outputRecords;
-    }
+     void setOutputRecords(Long outputRecords);
 
-    public void setOutputRecords(Long outputRecords) {
-        this.outputRecords = outputRecords;
-    }
+     String getAppId();
 
-    public String getAppId() {
-        return appId;
-    }
+     void setAppId(String appId);
 
-    public void setAppId(String appId) {
-        this.appId = appId;
-    }
+     String getJobId();
 
-    public String getJobId() {
-        return jobId;
-    }
+     void setJobId(String jobId);
 
-    public void setJobId(String jobId) {
-        this.jobId = jobId;
-    }
+     Float getReportedProgress();
 
-    public Float getReportedProgress() {
-        return reportedProgress;
-    }
+     void setSuccessfulAttempt(String successfulAttempt);
 
-    @Override
-    public String toString() {
-        return "TaskProfile[" + getId() + "]{" +
-                "inputBytes=" + inputBytes +
-                ", inputRecords=" + inputRecords +
-                ", outputBytes=" + outputBytes +
-                ", outputRecords=" + outputRecords +
-                ", expectedInputBytes=" + expectedInputBytes +
-                ", startTime=" + startTime +
-                ", finishTime=" + finishTime +
-                ", type=" + type +
-//                ", counters=" + counters +
-                ", reportedProgress=" + reportedProgress +
-                ", appId='" + appId + '\'' +
-                ", jobId='" + jobId + '\'' +
-                '}';
-    }
-
-    public void setSuccessfulAttempt(String successfulAttempt) {
-        this.successfulAttempt = successfulAttempt;
-    }
-
-    public String getSuccessfulAttempt() {
-        return successfulAttempt;
-    }
+     String getSuccessfulAttempt();
 }
