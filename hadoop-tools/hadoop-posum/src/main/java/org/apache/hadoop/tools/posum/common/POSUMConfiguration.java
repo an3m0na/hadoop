@@ -8,12 +8,12 @@ public class POSUMConfiguration {
     public static int DEFAULT_BUFFER_SIZE = 1024;
 
     public static final String PREFIX = "tools.posum.";
-    public static final String MASTER_PREFIX = PREFIX + "master.";
+    public static final String CORE_PREFIX = PREFIX + "core.";
     public static final String MONITOR_PREFIX = PREFIX + "monitor.";
     public static final String PREDICTOR_PREFIX = PREFIX + "predictor.";
     public static final String DATABASE_PREFIX = PREFIX + "database.";
 
-    public static final String MASTER_HEARTBEAT_MS = MASTER_PREFIX + "heartbeat.ms";
+    public static final String MASTER_HEARTBEAT_MS = CORE_PREFIX + "heartbeat.ms";
     public static final int MASTER_HEARTBEAT_MS_DEFAULT = 1000;
 
     public static final String MONITOR_HEARTBEAT_MS = MONITOR_PREFIX + "heartbeat.ms";
@@ -42,6 +42,13 @@ public class POSUMConfiguration {
     public static final int DEFAULT_DM_PORT = 7000;
     public static final String DM_SERVICE_THREAD_COUNT = DATABASE_PREFIX + "conn.thread-count";
     public static final int DEFAULT_DM_SERVICE_THREAD_COUNT = 50;
+
+    public static final String PM_BIND_ADDRESS = CORE_PREFIX + "bind-host";
+    public static final String PM_ADDRESS = CORE_PREFIX + "address";
+    public static final String DEFAULT_PM_ADDRESS = "0.0.0.0";
+    public static final int DEFAULT_PM_PORT = 7010;
+    public static final String PM_SERVICE_THREAD_COUNT = CORE_PREFIX + "conn.thread-count";
+    public static final int DEFAULT_PM_SERVICE_THREAD_COUNT = 50;
 
     public static final String POSUM_CONNECT_MAX_WAIT_MS = PREFIX + "conn.max-wait.ms";
     public static final long DEFAULT_POSUM_CONNECT_MAX_WAIT_MS = 15 * 60 * 1000;
