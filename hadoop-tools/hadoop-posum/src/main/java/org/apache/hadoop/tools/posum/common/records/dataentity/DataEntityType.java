@@ -1,25 +1,23 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.JobProfilePBImpl;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.TaskProfilePBImpl;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.*;
 
 /**
  * Created by ane on 3/3/16.
  */
 public enum DataEntityType {
     JOB("jobs", JobProfilePBImpl.class),
-    JOB_HISTORY("jobs_history", JobProfile.class),
+    JOB_HISTORY("jobs_history", JobProfilePBImpl.class),
     TASK("tasks", TaskProfilePBImpl.class),
-    TASK_HISTORY("tasks_history", TaskProfile.class),
+    TASK_HISTORY("tasks_history", TaskProfilePBImpl.class),
     APP("apps", AppProfilePBImpl.class),
-    APP_HISTORY("apps_history", AppProfile.class),
-    HISTORY("history", HistoryProfile.class);
+    APP_HISTORY("apps_history", AppProfilePBImpl.class),
+    HISTORY("history", HistoryProfilePBImpl.class);
 
     private String label;
-    private Class mappedClass;
+    private Class<? extends GeneralDataEntity> mappedClass;
 
-    DataEntityType(String label, Class mappedClass) {
+    DataEntityType(String label, Class<? extends GeneralDataEntity> mappedClass) {
         this.label = label;
         this.mappedClass = mappedClass;
     }
@@ -32,7 +30,7 @@ public enum DataEntityType {
         return label;
     }
 
-    public Class getMappedClass() {
+    public Class<? extends GeneralDataEntity> getMappedClass() {
         return mappedClass;
     }
 

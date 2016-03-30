@@ -4,13 +4,14 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
-import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityResponse;
-import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.*;
+import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.MultiEntityRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.MultiEntityResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.DataMasterProtocolPB;
 import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.SingleEntityRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.SingleEntityResponsePBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityRequestProto;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
 
@@ -41,12 +42,25 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
     }
 
     @Override
-    public SingleEntityResponse getObject(SingleEntityRequest request) throws IOException, YarnException {
+    public SingleEntityResponse getEntity(SingleEntityRequest request) throws IOException, YarnException {
         SingleEntityRequestProto requestProto =
                 ((SingleEntityRequestPBImpl) request).getProto();
         try {
             return new SingleEntityResponsePBImpl(
-                    proxy.getObject(null, requestProto));
+                    proxy.getEntity(null, requestProto));
+        } catch (ServiceException e) {
+            RPCUtil.unwrapAndThrowException(e);
+            return null;
+        }
+    }
+
+    @Override
+    public MultiEntityResponse listEntities(MultiEntityRequest request) throws IOException, YarnException {
+        MultiEntityRequestProto requestProto =
+                ((MultiEntityRequestPBImpl) request).getProto();
+        try {
+            return new MultiEntityResponsePBImpl(
+                    proxy.listEntities(null, requestProto));
         } catch (ServiceException e) {
             RPCUtil.unwrapAndThrowException(e);
             return null;

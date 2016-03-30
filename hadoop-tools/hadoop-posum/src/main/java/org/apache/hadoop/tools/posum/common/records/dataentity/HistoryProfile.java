@@ -1,42 +1,26 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 /**
  * Created by ane on 3/7/16.
  */
-public class HistoryProfile<T extends GeneralDataEntity> extends GeneralDataEntity {
-    private T original;
-    private Class<T> tClass;
-    private Long timestamp;
+@JsonDeserialize(using = HistoryProfileDeserializer.class)
+public interface HistoryProfile<T extends GeneralDataEntity> extends GeneralDataEntity {
 
-    public HistoryProfile(){}
+     T getOriginal();
 
-    public HistoryProfile(T original) {
-        this.original = original;
-        this.tClass = (Class<T>) original.getClass();
-        this.timestamp = System.currentTimeMillis();
-    }
+     void setOriginal(T original);
 
-    public T getOriginal() {
-        return original;
-    }
+     Long getTimestamp();
 
-    public void setOriginal(T original) {
-        this.original = original;
-    }
+     void setTimestamp(Long timestamp);
 
-    public Class<T> gettClass() {
-        return tClass;
-    }
+     DataEntityType getType();
 
-    public void settClass(Class<T> tClass) {
-        this.tClass = tClass;
-    }
+     void setType(DataEntityType type);
 
-    public Long getTimestamp() {
-        return timestamp;
-    }
+     String getOriginalId();
 
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
-    }
+     void setOriginalId(String originalId);
 }

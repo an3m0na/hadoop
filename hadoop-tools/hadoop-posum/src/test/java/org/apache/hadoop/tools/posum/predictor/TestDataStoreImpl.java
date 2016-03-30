@@ -6,6 +6,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
+import org.apache.hadoop.yarn.util.Records;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -19,7 +20,8 @@ public class TestDataStoreImpl {
         DataStore dataStore = new DataStoreImpl(TestUtils.getConf());
         dataStore.delete(DataEntityType.APP, "blabla1");
         dataStore.delete(DataEntityType.APP, "blabla2");
-        AppProfile profile = new AppProfile("blabla1");
+        AppProfile profile = Records.newRecord(AppProfile.class);
+        profile.setId("blabla1");
         dataStore.store(DataEntityType.APP, profile);
         profile.setFinishTime(System.currentTimeMillis());
         dataStore.updateOrStore(DataEntityType.APP, profile);
@@ -33,7 +35,8 @@ public class TestDataStoreImpl {
     public void checkFinder() {
         DataStore dataStore = new DataStoreImpl(TestUtils.getConf());
         long time = System.currentTimeMillis();
-        JobProfile job = new JobProfile("job_" + time + "_0000");
+        JobProfile job = Records.newRecord(JobProfile.class);
+        job.setId("job_" + time + "_0000");
         job.setAppId("application_" + time + "_0000");
         job.setStartTime(time);
         job.setFinishTime(0L);
