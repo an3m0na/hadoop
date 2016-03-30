@@ -12,6 +12,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.rumen.JobTraceReader;
 import org.apache.hadoop.tools.rumen.LoggedJob;
 import org.apache.hadoop.tools.rumen.LoggedTask;
+import org.apache.hadoop.yarn.util.Records;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +45,8 @@ public class MockDataStoreClient extends DataStoreClient {
     }
 
     private TaskProfile buildTaskProfile(LoggedTask task, long startTime) {
-        TaskProfile profile = new TaskProfile(task.getTaskID().toString());
+        TaskProfile profile = Records.newRecord(TaskProfile.class);
+        profile.setId(task.getTaskID().toString());
         profile.setStartTime(task.getStartTime() - startTime);
         profile.setFinishTime(task.getFinishTime() - startTime);
         profile.setInputBytes(task.getInputBytes());
@@ -81,14 +83,14 @@ public class MockDataStoreClient extends DataStoreClient {
                 jobStartTimeMS = 0;
             }
 
-            JobProfile profile = new JobProfile(jobId);
-            profile.populate(job.getJobName().getValue(),
-                    job.getUser() == null ? "default" : job.getUser().getValue(),
-                    job.getTotalMaps(),
-                    job.getTotalReduces(),
-                    jobStartTimeMS,
-                    jobFinishTimeMS
-            );
+            JobProfile profile = Records.newRecord(JobProfile.class);
+            profile.setId(jobId);
+            profile.setName(job.getJobName().getValue());
+            profile.setUser(job.getUser() == null ? "default" : job.getUser().getValue());
+            profile.setTotalMapTasks(job.getTotalMaps());
+            profile.setTotalReduceTasks(job.getTotalReduces());
+            profile.setStartTime(jobStartTimeMS);
+            profile.setFinishTime(jobFinishTimeMS);
             //TODO continue with other job characteristics (look into computonsperbyte)
 
             Map<String, TaskProfile> taskList = new HashMap<>(job.getMapTasks().size() + job.getReduceTasks().size());
@@ -106,15 +108,14 @@ public class MockDataStoreClient extends DataStoreClient {
     }
 
     private JobProfile snapshot(JobProfile original) {
-        JobProfile copy = new JobProfile(original.getId());
-        copy.populate(
-                original.getName(),
-                original.getUser() == null ? "default" : original.getUser(),
-                original.getTotalMapTasks(),
-                original.getTotalReduceTasks(),
-                original.getStartTime() > currentTime ? null : original.getStartTime(),
-                original.getFinishTime() > currentTime ? null : original.getFinishTime()
-        );
+        JobProfile copy = Records.newRecord(JobProfile.class);
+        copy.setId(original.getId());
+        copy.setName(original.getName());
+        copy.setUser(original.getUser() == null ? "default" : original.getUser());
+        copy.setTotalMapTasks(original.getTotalMapTasks());
+        copy.setTotalReduceTasks(original.getTotalReduceTasks());
+        copy.setStartTime(original.getStartTime() > currentTime ? null : original.getStartTime());
+        copy.setFinishTime(original.getFinishTime() > currentTime ? null : original.getFinishTime());
         //TODO copy all tasks with obfuscated times
         return copy;
     }
