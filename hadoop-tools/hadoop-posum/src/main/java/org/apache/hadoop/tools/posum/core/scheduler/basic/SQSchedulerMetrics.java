@@ -1,22 +1,34 @@
-package org.apache.hadoop.tools.posum.core.scheduler.data;
+package org.apache.hadoop.tools.posum.core.scheduler.basic;
 
 import com.codahale.metrics.Gauge;
+import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.sls.scheduler.SchedulerMetrics;
+
+import java.lang.reflect.Constructor;
 
 /**
  * Created by ane on 1/29/16.
  */
-public class DOSchedulerMetrics extends SchedulerMetrics {
+public class SQSchedulerMetrics extends SchedulerMetrics {
 
-        public DOSchedulerMetrics() {
+        public SQSchedulerMetrics() {
             super();
         }
+
+    static <M extends SQSchedulerMetrics> M getInstance(Class<M> mClass) {
+        try {
+            Constructor<M> constructor = mClass.getConstructor();
+            return constructor.newInstance();
+        } catch (Exception e) {
+            throw new POSUMException("Failed to instantiate scheduler queue via default constructor" + e);
+        }
+    }
 
         @Override
         public void trackQueue(String queueName) {
             trackedQueues.add(queueName);
-            DataOrientedScheduler dataOrientedScheduler = (DataOrientedScheduler) scheduler;
+            SingleQueueScheduler dataOrientedScheduler = (SingleQueueScheduler) scheduler;
             // for FifoScheduler, only DEFAULT_QUEUE
             // here the three parameters doesn't affect results
             final QueueInfo queue = dataOrientedScheduler.getQueueInfo(queueName, false, false);
