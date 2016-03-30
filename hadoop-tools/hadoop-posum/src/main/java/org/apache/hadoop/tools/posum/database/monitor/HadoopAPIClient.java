@@ -10,6 +10,7 @@ import org.apache.hadoop.mapreduce.split.JobSplit;
 import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.util.MRApps;
+import org.apache.hadoop.metrics2.util.MetricsCache;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.tools.posum.common.RestClient;
@@ -52,7 +53,8 @@ public class HadoopAPIClient {
             apps = new ArrayList<>(rawApps.length());
             for (int i = 0; i < rawApps.length(); i++) {
                 JSONObject rawApp = rawApps.getJSONObject(i);
-                AppProfile app = new AppProfile(rawApp.getString("id"));
+                AppProfile app = Records.newRecord(AppProfile.class);
+                app.setId(rawApp.getString("id"));
                 app.setStartTime(rawApp.getLong("startedTime"));
                 app.setFinishTime(rawApp.getLong("finishedTime"));
                 app.setName(rawApp.getString("name"));
@@ -105,7 +107,8 @@ public class HadoopAPIClient {
             if (wrapper.isNull("job"))
                 return null;
             JSONObject rawJob = wrapper.getJSONObject("job");
-            JobProfile job = new JobProfile(rawJob.getString("id"));
+            JobProfile job = Records.newRecord(JobProfile.class);
+            job.setId(rawJob.getString("id"));
             job.setAppId(appId);
             job.setSubmitTime(rawJob.getLong("submitTime"));
             job.setStartTime(rawJob.getLong("startTime"));
@@ -138,7 +141,8 @@ public class HadoopAPIClient {
             if (rawJobs.length() != 1)
                 throw new POSUMException("Unexpected number of jobs for mapreduce app " + appId);
             JSONObject rawJob = rawJobs.getJSONObject(0);
-            JobProfile job = new JobProfile(rawJob.getString("id"));
+            JobProfile job = Records.newRecord(JobProfile.class);
+            job.setId(rawJob.getString("id"));
             job.setAppId(appId);
             job.setStartTime(rawJob.getLong("startTime"));
             job.setFinishTime(rawJob.getLong("finishTime"));
@@ -173,7 +177,8 @@ public class HadoopAPIClient {
             tasks = new ArrayList<>(rawTasks.length());
             for (int i = 0; i < rawTasks.length(); i++) {
                 JSONObject rawTask = rawTasks.getJSONObject(i);
-                TaskProfile task = new TaskProfile(rawTask.getString("id"));
+                TaskProfile task = Records.newRecord(TaskProfile.class);
+                task.setId(rawTask.getString("id"));
                 task.setJobId(jobId);
                 task.setType(rawTask.getString("type"));
                 task.setStartTime(rawTask.getLong("startTime"));
@@ -198,7 +203,8 @@ public class HadoopAPIClient {
             tasks = new ArrayList<>(rawTasks.length());
             for (int i = 0; i < rawTasks.length(); i++) {
                 JSONObject rawTask = rawTasks.getJSONObject(i);
-                TaskProfile task = new TaskProfile(rawTask.getString("id"));
+                TaskProfile task = Records.newRecord(TaskProfile.class);
+                task.setId(rawTask.getString("id"));
                 task.setAppId(job.getAppId());
                 task.setType(rawTask.getString("type"));
                 task.setStartTime(rawTask.getLong("startTime"));

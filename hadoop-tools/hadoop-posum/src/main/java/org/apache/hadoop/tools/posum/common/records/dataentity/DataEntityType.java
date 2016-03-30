@@ -1,9 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.JobProfilePBImpl;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.TaskProfilePBImpl;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.*;
 
 /**
  * Created by ane on 3/3/16.
@@ -18,9 +15,9 @@ public enum DataEntityType {
     HISTORY("history", HistoryProfilePBImpl.class);
 
     private String label;
-    private Class mappedClass;
+    private Class<? extends GeneralDataEntity> mappedClass;
 
-    DataEntityType(String label, Class mappedClass) {
+    DataEntityType(String label, Class<? extends GeneralDataEntity> mappedClass) {
         this.label = label;
         this.mappedClass = mappedClass;
     }
@@ -33,7 +30,7 @@ public enum DataEntityType {
         return label;
     }
 
-    public Class getMappedClass() {
+    public Class<? extends GeneralDataEntity> getMappedClass() {
         return mappedClass;
     }
 

@@ -1,9 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
@@ -15,26 +13,31 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.HistoryProfileProtoOrBuilder;
 /**
  * Created by ane on 3/21/16.
  */
-public class HistoryProfilePBImpl extends HistoryProfile implements GeneralDataEntityPBImpl<HistoryProfile, HistoryProfileProto> {
-    private HistoryProfileProto proto = HistoryProfileProto.getDefaultInstance();
-    private HistoryProfileProto.Builder builder = null;
-    private boolean viaProto = false;
+public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends  GeneralDataEntityPBImpl<HistoryProfile, HistoryProfileProto, HistoryProfileProto.Builder>
+        implements HistoryProfile<T>{
 
-    public HistoryProfilePBImpl() {
-        builder = HistoryProfileProto.newBuilder();
+    public HistoryProfilePBImpl(){
+
     }
 
-    public HistoryProfilePBImpl(HistoryProfileProto proto) {
-        this.proto = proto;
-        viaProto = true;
+    public HistoryProfilePBImpl(DataEntityType type, T original){
+        super();
+        long timestamp = System.currentTimeMillis();
+        setId(timestamp + "_"+ original.getId());
+        setType(type);
+        setTimestamp(timestamp);
+        setOriginal(original);
+        setOriginalId(original.getId());
     }
 
-    @JsonIgnore
-    public HistoryProfileProto getProto() {
-        mergeLocalToProto();
-        proto = viaProto ? proto : builder.build();
-        viaProto = true;
-        return proto;
+    @Override
+    void initBuilder() {
+        builder = viaProto? HistoryProfileProto.newBuilder(proto) : HistoryProfileProto.newBuilder();
+    }
+
+    @Override
+    void buildProto() {
+        proto = builder.build();
     }
 
     @Override
@@ -45,51 +48,24 @@ public class HistoryProfilePBImpl extends HistoryProfile implements GeneralDataE
     }
 
     @Override
-    public int hashCode() {
-        return getProto().hashCode();
+    public String getId() {
+        HistoryProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return "".equals(p.getId())? null : p.getId();
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (other == null)
-            return false;
-        if (other.getClass().isAssignableFrom(this.getClass())) {
-            return this.getProto().equals(this.getClass().cast(other).getProto());
-        }
-        return false;
+    public void setId(String id) {
+        maybeInitBuilder();
+        builder.setId(id);
     }
 
     @Override
-    public String toString() {
-        return TextFormat.shortDebugString(getProto());
-    }
-
-    private void mergeLocalToBuilder() {
-
-    }
-
-    private void mergeLocalToProto() {
-        if (viaProto)
-            maybeInitBuilder();
-        mergeLocalToBuilder();
-        proto = builder.build();
-        viaProto = true;
-    }
-
-    private void maybeInitBuilder() {
-        if (viaProto || builder == null) {
-            builder = HistoryProfileProto.newBuilder(proto);
-        }
-        viaProto = false;
-    }
-
-    @Override
-    public GeneralDataEntity getOriginal() {
+    public T getOriginal() {
         HistoryProfileProtoOrBuilder p = viaProto ? proto : builder;
         if (p.getOriginal() != null) {
             try {
                 Class eClass = getType().getMappedClass();
-                return ((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(p.getOriginal());
+                return (T)((GeneralDataEntityPBImpl)eClass.newInstance()).parseToEntity(p.getOriginal());
             } catch (Exception e) {
                 throw new POSUMException("Could not read object from byte string " + p.getOriginal(), e);
             }
@@ -98,10 +74,10 @@ public class HistoryProfilePBImpl extends HistoryProfile implements GeneralDataE
     }
 
     @Override
-    public void setOriginal(GeneralDataEntity original) {
+    public void setOriginal(T original) {
         maybeInitBuilder();
         if (original != null)
-            builder.setOriginal(((GeneralDataEntityPBImpl) original).getProto().toByteString());
+            builder.setOriginal(((GeneralDataEntityPBImpl)original).getProto().toByteString());
     }
 
     @Override
@@ -126,18 +102,6 @@ public class HistoryProfilePBImpl extends HistoryProfile implements GeneralDataE
     public void setTimestamp(Long timestamp) {
         maybeInitBuilder();
         builder.setTimestamp(timestamp);
-    }
-
-    @Override
-    public String getId() {
-        HistoryProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getId();
-    }
-
-    @Override
-    public void setId(String id) {
-        maybeInitBuilder();
-        builder.setId(id);
     }
 
     @Override
