@@ -1,9 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.TextFormat;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.yarn.proto.POSUMProtos.TaskProfileProto;
@@ -12,21 +10,17 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.TaskProfileProtoOrBuilder;
 /**
  * Created by ane on 3/21/16.
  */
-public class TaskProfilePBImpl extends TaskProfile implements GeneralDataEntityPBImpl<TaskProfile, TaskProfileProto> {
-    private TaskProfileProto proto = TaskProfileProto.getDefaultInstance();
-    private TaskProfileProto.Builder builder = null;
-    private boolean viaProto = false;
+public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, TaskProfileProto, TaskProfileProto.Builder>
+        implements TaskProfile{
 
-    public TaskProfilePBImpl() {
-        builder = TaskProfileProto.newBuilder();
+    @Override
+    void initBuilder() {
+        builder = viaProto? TaskProfileProto.newBuilder(proto) : TaskProfileProto.newBuilder();
     }
 
-    @JsonIgnore
-    public TaskProfileProto getProto() {
-        mergeLocalToProto();
-        proto = viaProto ? proto : builder.build();
-        viaProto = true;
-        return proto;
+    @Override
+    void buildProto() {
+        proto = builder.build();
     }
 
     @Override
@@ -37,42 +31,15 @@ public class TaskProfilePBImpl extends TaskProfile implements GeneralDataEntityP
     }
 
     @Override
-    public int hashCode() {
-        return getProto().hashCode();
+    public String getId() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return "".equals(p.getId())? null : p.getId();
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (other == null)
-            return false;
-        if (other.getClass().isAssignableFrom(this.getClass())) {
-            return this.getProto().equals(this.getClass().cast(other).getProto());
-        }
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return TextFormat.shortDebugString(getProto());
-    }
-
-    private void mergeLocalToBuilder() {
-
-    }
-
-    private void mergeLocalToProto() {
-        if (viaProto)
-            maybeInitBuilder();
-        mergeLocalToBuilder();
-        proto = builder.build();
-        viaProto = true;
-    }
-
-    private void maybeInitBuilder() {
-        if (viaProto || builder == null) {
-            builder = TaskProfileProto.newBuilder(proto);
-        }
-        viaProto = false;
+    public void setId(String id) {
+        maybeInitBuilder();
+        builder.setId(id);
     }
 
     @Override
@@ -85,19 +52,6 @@ public class TaskProfilePBImpl extends TaskProfile implements GeneralDataEntityP
     public void setStartTime(Long startTime) {
         maybeInitBuilder();
         builder.setStartTime(startTime);
-    }
-
-
-    @Override
-    public String getId() {
-        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getId();
-    }
-
-    @Override
-    public void setId(String id) {
-        maybeInitBuilder();
-        builder.setId(id);
     }
 
     @Override
@@ -132,6 +86,11 @@ public class TaskProfilePBImpl extends TaskProfile implements GeneralDataEntityP
     }
 
     @Override
+    public Integer getDuration() {
+        return null;
+    }
+
+    @Override
     public String getAppId() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getAppId();
@@ -152,7 +111,7 @@ public class TaskProfilePBImpl extends TaskProfile implements GeneralDataEntityP
     @Override
     public TaskType getType() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        TaskProfileProto.TaskType enumValue = p.getType();
+        TaskProfileProto.TaskTypeProto enumValue = p.getType();
         if (enumValue == null || enumValue.name().equals("TYPE_NULL"))
             return null;
         return TaskType.valueOf(enumValue.name().substring("TYPE_".length()));
@@ -174,9 +133,9 @@ public class TaskProfilePBImpl extends TaskProfile implements GeneralDataEntityP
     public void setType(String type) {
         maybeInitBuilder();
         if (type != null)
-            builder.setType(TaskProfileProto.TaskType.valueOf("TYPE_" + type));
+            builder.setType(TaskProfileProto.TaskTypeProto.valueOf("TYPE_" + type));
         else
-            builder.setType(TaskProfileProto.TaskType.TYPE_NULL);
+            builder.setType(TaskProfileProto.TaskTypeProto.TYPE_NULL);
     }
 
     @Override
@@ -225,5 +184,17 @@ public class TaskProfilePBImpl extends TaskProfile implements GeneralDataEntityP
     public Float getReportedProgress() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getReportedProgress();
+    }
+
+    @Override
+    public void setSuccessfulAttempt(String successfulAttempt) {
+        maybeInitBuilder();
+        builder.setSuccessfulAttempt(successfulAttempt);
+    }
+
+    @Override
+    public String getSuccessfulAttempt() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getSuccessfulAttempt();
     }
 }

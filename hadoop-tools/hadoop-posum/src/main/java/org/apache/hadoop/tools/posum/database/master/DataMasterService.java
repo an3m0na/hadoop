@@ -5,14 +5,14 @@ import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
-import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
-import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityResponse;
+import org.apache.hadoop.tools.posum.common.records.protocol.*;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 import org.apache.hadoop.yarn.util.Records;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * Created by ane on 3/19/16.
@@ -66,11 +66,21 @@ public class DataMasterService extends AbstractService implements DataMasterProt
     }
 
     @Override
-    public SingleEntityResponse getObject(SingleEntityRequest request) {
+    public SingleEntityResponse getEntity(SingleEntityRequest request) {
         GeneralDataEntity ret = dmContext.getDataStore().findById(request.getType(), request.getId());
         SingleEntityResponse response = Records.newRecord(SingleEntityResponse.class);
         response.setType(request.getType());
         response.setEntity(ret);
+        return response;
+    }
+
+    @Override
+    public MultiEntityResponse listEntities(MultiEntityRequest request) throws IOException, YarnException {
+        List<GeneralDataEntity> ret = dmContext.getDataStore().find(request.getType(), request.getProperties());
+        System.out.println(ret);
+        MultiEntityResponse response = Records.newRecord(MultiEntityResponse.class);
+        response.setType(request.getType());
+        response.setEntities(ret);
         return response;
     }
 }

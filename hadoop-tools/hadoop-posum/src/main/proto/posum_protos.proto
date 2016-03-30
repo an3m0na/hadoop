@@ -4,7 +4,7 @@ option java_package = "org.apache.hadoop.yarn.proto";
 
 option java_outer_classname = "POSUMProtos";
 
-enum EntityType {
+enum EntityTypeProto {
     TYPE_APP = 0;
     TYPE_JOB = 1;
     TYPE_TASK = 2;
@@ -14,27 +14,17 @@ enum EntityType {
     TYPE_HISTORY = 6;
 }
 
-message SingleEntityRequestProto {
-    required EntityType type = 1;
-    required string id = 2;
-}
-
-message SingleEntityResponseProto {
-    required EntityType type = 1;
-    optional bytes entity = 2;
-}
-
 message AppProfileProto {
     required string id = 1;
     optional int64 startTime = 2;
     optional int64 finishTime = 3;
     optional string user = 4;
     optional string name = 5;
-    optional AppState state = 6;
-    optional AppStatus status = 7;
-    optional AppTrackingUI trackingUI = 8;
+    optional AppStateProto state = 6;
+    optional AppStatusProto status = 7;
+    optional AppTrackingUIProto trackingUI = 8;
 
-    enum AppState {
+    enum AppStateProto {
         STATE_NULL = 0;
         STATE_NEW = 1;
         STATE_NEW_SAVING = 2;
@@ -46,7 +36,7 @@ message AppProfileProto {
         STATE_KILLED = 8;
     }
 
-    enum AppStatus {
+    enum AppStatusProto {
         STATUS_NULL = 0;
         STATUS_UNDEFINED = 1;
         STATUS_SUCCEEDED = 2;
@@ -54,7 +44,7 @@ message AppProfileProto {
         STATUS_KILLED = 4;
     }
 
-    enum AppTrackingUI {
+    enum AppTrackingUIProto {
         UI_NULL = 0;
         UI_RM = 1;
         UI_AM = 2;
@@ -75,7 +65,7 @@ message JobProfileProto {
     optional int64 submitTime = 10; // only in history
     optional int64 startTime = 11;
     optional int64 finishTime = 12;
-    optional JobState state = 13;
+    optional JobStateProto state = 13;
     optional float mapProgress = 14;
     optional float reduceProgress = 15;
     optional int32 completedMaps = 16;
@@ -84,8 +74,10 @@ message JobProfileProto {
     optional int32 avgMapDuration = 19;
     optional int32 avgReduceDuration = 20;
     optional int32 avgTaskDuration = 21;
+    optional int32 avgShuffleDuration = 22;
+    optional int32 avgMergeDuration = 23;
 
-    enum JobState {
+    enum JobStateProto {
         STATE_NULL = 0;
         STATE_NEW = 1;
         STATE_INITED = 2;
@@ -108,15 +100,55 @@ message TaskProfileProto {
     optional int64 expectedInputBytes = 8;
     optional int64 startTime = 9;
     optional int64 finishTime = 10;
-    optional TaskType type = 11;
+    optional TaskTypeProto type = 11;
     optional float reportedProgress = 12;
+    optional string successfulAttempt = 13;
     //    optional Counters counters = 14;
 
-    enum TaskType {
+    enum TaskTypeProto {
         TYPE_NULL = 0;
         TYPE_MAP = 1;
         TYPE_REDUCE = 2;
     }
 }
 
+message HistoryProfileProto {
+    required string id = 1;
+    required EntityTypeProto type = 2;
+    required int64 timestamp = 3;
+    required string originalId = 4;
+    required bytes original = 5;
+}
 
+message EntityPropertyProto {
+    required PropertyTypeProto type = 1;
+    required string name = 2;
+    required string value = 3;
+
+    enum PropertyTypeProto {
+        PROPERTY_STRING = 0;
+        PROPERTY_LONG = 1;
+        PROPERTY_INT = 2;
+        PROPERTY_BOOL = 3;
+    }
+}
+
+message SingleEntityRequestProto {
+    required EntityTypeProto type = 1;
+    required string id = 2;
+}
+
+message SingleEntityResponseProto {
+    required EntityTypeProto type = 1;
+    optional bytes entity = 2;
+}
+
+message MultiEntityRequestProto {
+    required EntityTypeProto type = 1;
+    repeated EntityPropertyProto properties = 2;
+}
+
+message MultiEntityResponseProto {
+    required EntityTypeProto type = 1;
+    repeated bytes entities = 2;
+}
