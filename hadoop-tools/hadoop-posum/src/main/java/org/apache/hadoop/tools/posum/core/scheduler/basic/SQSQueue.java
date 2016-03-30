@@ -1,6 +1,7 @@
-package org.apache.hadoop.tools.posum.core.scheduler.data;
+package org.apache.hadoop.tools.posum.core.scheduler.basic;
 
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
@@ -12,6 +13,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
+import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -20,10 +22,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by ane on 1/22/16.
  */
-public class DOSQueue implements Queue {
+public class SQSQueue implements Queue {
 
-    private final List<DOSAppAttempt> apps =
-            new ArrayList<DOSAppAttempt>();
+    private final List<SQSAppAttempt> apps = new ArrayList<>();
     // get a lock with fair distribution for app list updates
     private final ReadWriteLock rwl = new ReentrantReadWriteLock(true);
     private final Lock readLock = rwl.readLock();
@@ -35,14 +36,23 @@ public class DOSQueue implements Queue {
 
     private final String name;
     private QueueMetrics metrics;
-    private DataOrientedScheduler scheduler;
+    private SingleQueueScheduler scheduler;
     private ActiveUsersManager activeUsersManager;
 
-    public DOSQueue(String name, DataOrientedScheduler scheduler) {
+    public SQSQueue(String name, SingleQueueScheduler scheduler) {
         this.name = name;
         this.scheduler = scheduler;
         this.metrics = QueueMetrics.forQueue(this.name, null, false, scheduler.getConf());
         this.activeUsersManager = new ActiveUsersManager(metrics);
+    }
+
+    static <Q extends SQSQueue> Q getInstance(Class<Q> qClass, String name, SingleQueueScheduler scheduler) {
+        try {
+            Constructor<Q> constructor = qClass.getConstructor(String.class, SingleQueueScheduler.class);
+            return constructor.newInstance(name, scheduler);
+        } catch (Exception e) {
+            throw new POSUMException("Failed to instantiate scheduler queue via default constructor" + e);
+        }
     }
 
     @Override

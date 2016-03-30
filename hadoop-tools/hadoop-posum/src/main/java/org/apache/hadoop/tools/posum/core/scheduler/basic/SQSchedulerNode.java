@@ -1,23 +1,38 @@
-package org.apache.hadoop.tools.posum.core.scheduler.data;
+package org.apache.hadoop.tools.posum.core.scheduler.basic;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.tools.posum.common.POSUMException;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.Priority;
+import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
+
+import java.lang.reflect.Constructor;
 
 /**
  * Created by ane on 1/22/16.
  */
-public class DOSchedulerNode extends SchedulerNode {
+public class SQSchedulerNode extends SchedulerNode {
 
-    private static Log logger = LogFactory.getLog(DataOrientedScheduler.class);
+    private static Log logger = LogFactory.getLog(SQSchedulerNode.class);
 
-    public DOSchedulerNode(RMNode node, boolean usePortForNodeName) {
+    public SQSchedulerNode(RMNode node, boolean usePortForNodeName) {
         super(node, usePortForNodeName);
+    }
+
+    static <N extends SQSchedulerNode> N getInstance(Class<N> nClass, RMNode node, boolean usePortForNodeName) {
+        try {
+            Constructor<N> constructor = nClass.getConstructor(RMNode.class, boolean.class);
+            return constructor.newInstance(node, usePortForNodeName);
+        } catch (Exception e) {
+            throw new POSUMException("Failed to instantiate scheduler node via default constructor" + e);
+        }
     }
 
     @Override
