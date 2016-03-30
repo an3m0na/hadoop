@@ -22,7 +22,10 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
-            <version>2.7.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -32,7 +35,84 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-sls</artifactId>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver</artifactId>
+            <version>3.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mongojack</groupId>
+            <artifactId>mongojack</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+        </dependency>
+
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-maven-plugins</artifactId>
+                <executions>
+                    <execution>
+                        <id>version-info</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>version-info</goal>
+                        </goals>
+                        <configuration>
+                            <source>
+                                <directory>${basedir}/src/main</directory>
+                                <includes>
+                                    <include>java/**/*.java</include>
+                                    <include>proto/**/*.proto</include>
+                                </includes>
+                            </source>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-protoc</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>protoc</goal>
+                        </goals>
+                        <configuration>
+                            <protocVersion>${protobuf.version}</protocVersion>
+                            <protocCommand>${protoc.path}</protocCommand>
+                            <imports>
+                                <param>${basedir}/src/main/proto</param>
+                            </imports>
+                            <source>
+                                <directory>${basedir}/src/main/proto</directory>
+                                <includes>
+                                    <include>posum_protos.proto</include>
+                                    <include>datamaster_protocol.proto</include>
+                                </includes>
+                            </source>
+                            <output>${project.build.directory}/generated-sources/java</output>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <profiles>
         <profile>
