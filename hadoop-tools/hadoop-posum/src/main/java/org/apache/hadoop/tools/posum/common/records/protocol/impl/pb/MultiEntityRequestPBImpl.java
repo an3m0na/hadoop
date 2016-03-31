@@ -7,8 +7,10 @@ import org.apache.hadoop.tools.posum.common.records.protocol.MultiEntityRequest;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityRequestProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.YarnProtos;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -19,6 +21,8 @@ public class MultiEntityRequestPBImpl extends MultiEntityRequest {
     private MultiEntityRequestProto proto = MultiEntityRequestProto.getDefaultInstance();
     private MultiEntityRequestProto.Builder builder = null;
     private boolean viaProto = false;
+
+    Map<String, Object> properties;
 
     public MultiEntityRequestPBImpl() {
         builder = MultiEntityRequestProto.newBuilder();
@@ -57,7 +61,43 @@ public class MultiEntityRequestPBImpl extends MultiEntityRequest {
     }
 
     private void mergeLocalToBuilder() {
+        maybeInitBuilder();
+        builder.clearProperties();
+        if (properties == null)
+            return;
+        Iterable<POSUMProtos.EntityPropertyProto> iterable =
+                new Iterable<POSUMProtos.EntityPropertyProto>() {
 
+                    @Override
+                    public Iterator<POSUMProtos.EntityPropertyProto> iterator() {
+                        return new Iterator<POSUMProtos.EntityPropertyProto>() {
+
+                            Iterator<String> keyIter = properties.keySet().iterator();
+
+                            @Override
+                            public void remove() {
+                                throw new UnsupportedOperationException();
+                            }
+
+                            @Override
+                            public POSUMProtos.EntityPropertyProto next() {
+                                String key = keyIter.next();
+                                Object value = properties.get(key);
+                                EntityPropertyPBImpl property = new EntityPropertyPBImpl();
+                                property.setName(key);
+                                property.setType(EntityProperty.PropertyType.getByClass(value.getClass()));
+                                property.setValue(value);
+                                return property.getProto();
+                            }
+
+                            @Override
+                            public boolean hasNext() {
+                                return keyIter.hasNext();
+                            }
+                        };
+                    }
+                };
+        builder.addAllProperties(iterable);
     }
 
     private void mergeLocalToProto() {
@@ -89,24 +129,22 @@ public class MultiEntityRequestPBImpl extends MultiEntityRequest {
 
     @Override
     public Map<String, Object> getProperties() {
-        MultiEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
-        Map<String, Object> properties = new HashMap<>(p.getPropertiesCount());
-        for (POSUMProtos.EntityPropertyProto propertyProto : p.getPropertiesList()) {
-            EntityProperty property = new EntityPropertyPBImpl(propertyProto);
-            properties.put(property.getName(), property.getValue());
+        if (this.properties == null) {
+            MultiEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
+            this.properties = new HashMap<>(p.getPropertiesCount());
+            for (POSUMProtos.EntityPropertyProto propertyProto : p.getPropertiesList()) {
+                EntityProperty property = new EntityPropertyPBImpl(propertyProto);
+                properties.put(property.getName(), property.getValue());
+            }
         }
-        return properties;
+        return this.properties;
     }
 
     @Override
     public void setProperties(Map<String, Object> properties) {
-        maybeInitBuilder();
-        for (Map.Entry<String, Object> propertyEntry : properties.entrySet()) {
-            EntityPropertyPBImpl property = new EntityPropertyPBImpl();
-            property.setName(propertyEntry.getKey());
-            property.setType(EntityProperty.PropertyType.getByClass(propertyEntry.getValue().getClass()));
-            property.setValue(propertyEntry.getValue());
-            builder.addProperties(property.getProto());
-        }
+        if (properties == null)
+            return;
+        this.properties = new HashMap<>();
+        this.properties.putAll(properties);
     }
 }

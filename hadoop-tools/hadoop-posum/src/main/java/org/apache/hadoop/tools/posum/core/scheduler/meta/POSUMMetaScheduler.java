@@ -70,9 +70,8 @@ public class POSUMMetaScheduler extends
     }
 
     @Override
-    public synchronized void
-    reinitialize(Configuration conf, RMContext rmContext) throws IOException {
-        setConf(conf);
+    public synchronized void reinitialize(Configuration conf, RMContext rmContext) throws IOException {
+        //TODO forward  (usually setConf(conf));
     }
 
     @Override

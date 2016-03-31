@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.core.master;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PolicyPortfolioService;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
@@ -27,7 +28,7 @@ public class POSUMMaster extends CompositeService {
 
         pmContext.setDispatcher(dispatcher);
 
-        //service to give database access to other POSUM processes
+        //service to allow other processes to communicate with the master
         pmService = new POSUMMasterService(pmContext);
         pmService.init(conf);
         addIfService(pmService);
