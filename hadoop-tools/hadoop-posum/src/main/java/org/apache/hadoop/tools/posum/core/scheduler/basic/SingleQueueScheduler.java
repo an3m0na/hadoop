@@ -40,8 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         N extends SQSchedulerNode,
         Q extends SQSQueue,
-        M extends SQSchedulerMetrics,
-        S extends SingleQueueScheduler<A, N, Q, M, S>>
+        S extends SingleQueueScheduler<A, N, Q, S>>
         extends AbstractYarnScheduler<A, N> implements Configurable {
 
     private static Log logger = LogFactory.getLog(SingleQueueScheduler.class);
