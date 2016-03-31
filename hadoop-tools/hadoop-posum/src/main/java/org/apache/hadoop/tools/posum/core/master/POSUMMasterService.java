@@ -1,10 +1,13 @@
 package org.apache.hadoop.tools.posum.core.master;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PolicyPortfolioService;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -12,20 +15,24 @@ import java.net.InetSocketAddress;
 /**
  * Created by ane on 3/19/16.
  */
-public class POSUMMasterService extends AbstractService implements POSUMMasterProtocol {
+public class POSUMMasterService extends CompositeService implements POSUMMasterProtocol {
 
     POSUMMasterContext pmContext;
     private Server server;
     private InetSocketAddress bindAddress;
+    private PolicyPortfolioService portfolioService;
 
-    /**
-     * Construct the service.
-     *
-     * @param context service pmContext
-     */
     public POSUMMasterService(POSUMMasterContext context) {
         super(POSUMMasterService.class.getName());
         this.pmContext = context;
+    }
+
+    @Override
+    protected void serviceInit(Configuration conf) throws Exception {
+        //service to interpret and respond to metascheduler updates
+        portfolioService = new PolicyPortfolioService(pmContext);
+        portfolioService.init(conf);
+        addIfService(portfolioService);
     }
 
     @Override
@@ -58,5 +65,20 @@ public class POSUMMasterService extends AbstractService implements POSUMMasterPr
             this.server.stop();
         }
         super.serviceStop();
+    }
+
+    @Override
+    public SimpleResponse configureScheduler(ConfigurationRequest request) {
+        return portfolioService.configureScheduler(request);
+    }
+
+    @Override
+    public SimpleResponse initScheduler(ConfigurationRequest request) {
+        return portfolioService.initScheduler(request);
+    }
+
+    @Override
+    public SimpleResponse reinitScheduler(ConfigurationRequest request) {
+        return portfolioService.reinitScheduler(request);
     }
 }

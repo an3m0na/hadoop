@@ -1,8 +1,10 @@
-package hadoop.tools.posum;
+package hadoop.yarn;
 
 option java_package = "org.apache.hadoop.yarn.proto";
 
 option java_outer_classname = "POSUMProtos";
+
+import "yarn_protos.proto";
 
 enum EntityTypeProto {
     TYPE_APP = 0;
@@ -157,4 +159,8 @@ message SimpleResponseProto{
     required bool successful = 1;
     optional string text = 2;
     optional string details = 3;
+}
+
+message ConfigurationRequestProto{
+    repeated StringStringMapProto properties = 1;
 }

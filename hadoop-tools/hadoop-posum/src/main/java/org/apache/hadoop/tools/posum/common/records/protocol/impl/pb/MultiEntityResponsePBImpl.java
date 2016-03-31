@@ -10,8 +10,11 @@ import org.apache.hadoop.tools.posum.common.records.protocol.MultiEntityResponse
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityResponseProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.YarnProtos;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -21,6 +24,7 @@ public class MultiEntityResponsePBImpl extends MultiEntityResponse {
     private MultiEntityResponseProto proto = MultiEntityResponseProto.getDefaultInstance();
     private MultiEntityResponseProto.Builder builder = null;
     private boolean viaProto = false;
+    private List<GeneralDataEntity> entities;
 
     public MultiEntityResponsePBImpl() {
         builder = MultiEntityResponseProto.newBuilder();
@@ -59,6 +63,37 @@ public class MultiEntityResponsePBImpl extends MultiEntityResponse {
     }
 
     private void mergeLocalToBuilder() {
+        maybeInitBuilder();
+        builder.clearEntities();
+        if (entities == null)
+            return;
+        Iterable<ByteString> iterable =
+                new Iterable<ByteString>() {
+
+                    @Override
+                    public Iterator<ByteString> iterator() {
+                        return new Iterator<ByteString>() {
+
+                            Iterator<GeneralDataEntity> entityIterator = entities.iterator();
+
+                            @Override
+                            public void remove() {
+                                throw new UnsupportedOperationException();
+                            }
+
+                            @Override
+                            public ByteString next() {
+                                return ((GeneralDataEntityPBImpl) entityIterator.next()).getProto().toByteString();
+                            }
+
+                            @Override
+                            public boolean hasNext() {
+                                return entityIterator.hasNext();
+                            }
+                        };
+                    }
+                };
+        builder.addAllEntities(iterable);
     }
 
     private void mergeLocalToProto() {
@@ -90,15 +125,17 @@ public class MultiEntityResponsePBImpl extends MultiEntityResponse {
 
     @Override
     public List<GeneralDataEntity> getEntities() {
-        MultiEntityResponseProtoOrBuilder p = viaProto ? proto : builder;
-        List<GeneralDataEntity> entities = new ArrayList<>(p.getEntitiesCount());
-        for (ByteString entityString : p.getEntitiesList()) {
-            if (entityString != null) {
-                try {
-                    Class eClass = getType().getMappedClass();
-                    entities.add(((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(entityString));
-                } catch (Exception e) {
-                    throw new POSUMException("Could not read object from byte string " + entityString, e);
+        if (entities == null) {
+            MultiEntityResponseProtoOrBuilder p = viaProto ? proto : builder;
+            entities = new ArrayList<>(p.getEntitiesCount());
+            for (ByteString entityString : p.getEntitiesList()) {
+                if (entityString != null) {
+                    try {
+                        Class eClass = getType().getMappedClass();
+                        entities.add(((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(entityString));
+                    } catch (Exception e) {
+                        throw new POSUMException("Could not read object from byte string " + entityString, e);
+                    }
                 }
             }
         }
@@ -107,9 +144,9 @@ public class MultiEntityResponsePBImpl extends MultiEntityResponse {
 
     @Override
     public void setEntities(List<GeneralDataEntity> entities) {
-        maybeInitBuilder();
-        for (GeneralDataEntity entity : entities) {
-            builder.addEntities(((GeneralDataEntityPBImpl) entity).getProto().toByteString());
-        }
+        if (entities == null)
+            return;
+        this.entities = new ArrayList<>();
+        this.entities.addAll(entities);
     }
 }
