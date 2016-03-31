@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.core.scheduler.basic;
 
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.common.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;

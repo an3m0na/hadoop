@@ -2,8 +2,8 @@ package org.apache.hadoop.tools.posum.database.master;
 
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.yarn.exceptions.YarnException;

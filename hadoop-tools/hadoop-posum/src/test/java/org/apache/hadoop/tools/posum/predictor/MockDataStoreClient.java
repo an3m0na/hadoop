@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.predictor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
-import org.apache.hadoop.tools.posum.common.Utils;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.database.client.DataStoreClient;

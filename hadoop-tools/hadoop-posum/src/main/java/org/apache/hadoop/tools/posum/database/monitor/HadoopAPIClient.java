@@ -3,18 +3,10 @@ package org.apache.hadoop.tools.posum.database.monitor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapreduce.TypeConverter;
-import org.apache.hadoop.mapreduce.split.JobSplit;
-import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
-import org.apache.hadoop.mapreduce.v2.util.MRApps;
-import org.apache.hadoop.metrics2.util.MetricsCache;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.common.POSUMException;
-import org.apache.hadoop.tools.posum.common.RestClient;
-import org.apache.hadoop.tools.posum.common.Utils;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.RestClient;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
@@ -25,7 +17,6 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 import javax.ws.rs.WebApplicationException;
-import java.io.IOException;
 import java.util.*;
 
 /**

@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.core.scheduler.basic;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.tools.posum.common.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.server.resourcemanager.RMAuditLogger;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;

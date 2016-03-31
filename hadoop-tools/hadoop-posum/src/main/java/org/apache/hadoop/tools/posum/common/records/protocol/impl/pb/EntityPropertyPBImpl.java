@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.protocol.EntityProperty;
 import org.apache.hadoop.yarn.proto.POSUMProtos.EntityPropertyProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.EntityPropertyProtoOrBuilder;

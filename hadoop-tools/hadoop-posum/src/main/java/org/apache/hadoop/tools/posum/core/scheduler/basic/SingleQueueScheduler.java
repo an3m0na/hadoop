@@ -60,17 +60,13 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
     private Class<A> aClass;
     private Class<N> nClass;
     private Class<Q> qClass;
-    private Class<M> mClass;
-    private Class<S> sClass;
 
 
-    public SingleQueueScheduler(Class<A> aClass, Class<N> nClass, Class<Q> qClass, Class<M> mClass, Class<S> sClass) {
+    public SingleQueueScheduler(Class<A> aClass, Class<N> nClass, Class<Q> qClass, Class<S> sClass) {
         super(sClass.getName());
         this.aClass = aClass;
         this.nClass = nClass;
         this.qClass = qClass;
-        this.mClass = mClass;
-        this.sClass = sClass;
     }
 
     public Resource getUsedResource() {
