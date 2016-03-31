@@ -4,7 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
 
 import static java.lang.Thread.sleep;

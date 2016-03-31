@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;

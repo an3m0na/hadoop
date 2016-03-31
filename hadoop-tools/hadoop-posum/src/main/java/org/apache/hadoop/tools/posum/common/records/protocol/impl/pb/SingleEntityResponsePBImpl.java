@@ -1,8 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.POSUMException;
-import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityResponse;
@@ -10,7 +9,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityResponseProtoOrBuilder;
-import org.apache.hadoop.yarn.util.Records;
 
 /**
  * Created by ane on 3/20/16.

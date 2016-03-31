@@ -2,17 +2,12 @@ package org.apache.hadoop.tools.posum.core.master;
 
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
+import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
-import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
-import org.apache.hadoop.yarn.util.Records;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.List;
 
 /**
  * Created by ane on 3/19/16.

@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.core.scheduler.basic;
 
 import com.codahale.metrics.Gauge;
-import org.apache.hadoop.tools.posum.common.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.sls.scheduler.SchedulerMetrics;
 

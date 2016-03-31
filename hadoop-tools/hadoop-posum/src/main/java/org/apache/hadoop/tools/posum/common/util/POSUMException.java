@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common;
+package org.apache.hadoop.tools.posum.common.util;
 
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 

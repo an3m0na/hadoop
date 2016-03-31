@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common;
+package org.apache.hadoop.tools.posum.common.util;
 
 /**
  * Created by ane on 2/9/16.

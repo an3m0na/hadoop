@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common;
+package org.apache.hadoop.tools.posum.common.util;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -10,7 +10,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jettison.json.JSONObject;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 
