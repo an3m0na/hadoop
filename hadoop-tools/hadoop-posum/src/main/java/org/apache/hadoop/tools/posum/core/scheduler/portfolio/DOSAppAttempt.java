@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.core.scheduler.data;
+package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 
 import org.apache.hadoop.tools.posum.core.scheduler.basic.SQSAppAttempt;
 import org.apache.hadoop.yarn.api.records.*;

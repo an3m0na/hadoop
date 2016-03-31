@@ -22,14 +22,25 @@ import java.util.List;
 /**
  * Created by ane on 2/4/16.
  */
-public class MetaScheduler extends
+public class POSUMMetaScheduler extends
         AbstractYarnScheduler<SQSAppAttempt, SQSchedulerNode> implements
         Configurable {
 
     Configuration conf;
 
-    public MetaScheduler() {
-        super(MetaScheduler.class.getName());
+    public POSUMMetaScheduler() {
+        super(POSUMMetaScheduler.class.getName());
+    }
+
+    @Override
+    public Configuration getConf() {
+        return conf;
+    }
+
+    @Override
+    public synchronized void setConf(Configuration conf) {
+        //TODO forward
+        this.conf = conf;
     }
 
     @Override
@@ -46,17 +57,6 @@ public class MetaScheduler extends
     @Override
     public void serviceStop() throws Exception {
         super.serviceStop();
-    }
-
-    @Override
-    public Configuration getConf() {
-        return conf;
-    }
-
-    @Override
-    public synchronized void setConf(Configuration conf) {
-        //TODO forward
-        this.conf = conf;
     }
 
     @Override

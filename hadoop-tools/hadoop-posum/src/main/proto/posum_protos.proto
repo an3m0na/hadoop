@@ -152,3 +152,9 @@ message MultiEntityResponseProto {
     required EntityTypeProto type = 1;
     repeated bytes entities = 2;
 }
+
+message SimpleResponseProto{
+    required bool successful = 1;
+    optional string text = 2;
+    optional string details = 3;
+}

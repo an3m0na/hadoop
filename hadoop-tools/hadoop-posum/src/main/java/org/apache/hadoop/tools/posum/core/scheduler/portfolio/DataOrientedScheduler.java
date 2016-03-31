@@ -1,42 +1,15 @@
-package org.apache.hadoop.tools.posum.core.scheduler.data;
+package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.core.scheduler.basic.SQSQueue;
 import org.apache.hadoop.tools.posum.core.scheduler.basic.SQSchedulerMetrics;
 import org.apache.hadoop.tools.posum.core.scheduler.basic.SQSchedulerNode;
 import org.apache.hadoop.tools.posum.core.scheduler.basic.SingleQueueScheduler;
-import org.apache.hadoop.yarn.api.records.*;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
-import org.apache.hadoop.yarn.factories.RecordFactory;
-import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
-import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
-import org.apache.hadoop.yarn.server.resourcemanager.recovery.RMStateStore;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEvent;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEventType;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptEvent;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptEventType;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
-import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
-import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
-import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerState;
-import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
-import org.apache.hadoop.yarn.server.resourcemanager.rmnode.UpdatedContainerInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.*;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
-import org.apache.hadoop.yarn.server.utils.BuilderUtils;
-import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
-import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
-import org.apache.hadoop.yarn.util.resource.Resources;
 
-import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by ane on 1/22/16.
@@ -45,7 +18,6 @@ public class DataOrientedScheduler extends SingleQueueScheduler<
         DOSAppAttempt,
         SQSchedulerNode,
         SQSQueue,
-        SQSchedulerMetrics,
         DataOrientedScheduler> {
 
     private static Log logger = LogFactory.getLog(DataOrientedScheduler.class);
@@ -73,7 +45,7 @@ public class DataOrientedScheduler extends SingleQueueScheduler<
 
 
     public DataOrientedScheduler() {
-        super(DOSAppAttempt.class, SQSchedulerNode.class, SQSQueue.class, SQSchedulerMetrics.class, DataOrientedScheduler.class);
+        super(DOSAppAttempt.class, SQSchedulerNode.class, SQSQueue.class, DataOrientedScheduler.class);
     }
 
 
