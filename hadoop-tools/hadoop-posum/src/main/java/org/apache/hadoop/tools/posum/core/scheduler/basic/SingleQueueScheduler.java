@@ -5,13 +5,17 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DOSAppAttempt;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginScheduler;
 import org.apache.hadoop.yarn.api.records.*;
+import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.recovery.RMStateStore;
+import org.apache.hadoop.yarn.server.resourcemanager.resource.*;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
@@ -33,6 +37,7 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Created by ane on 1/22/16.
@@ -41,7 +46,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         N extends SQSchedulerNode,
         Q extends SQSQueue,
         S extends SingleQueueScheduler<A, N, Q, S>>
-        extends AbstractYarnScheduler<A, N> implements Configurable {
+        extends PluginScheduler<A, N, S> {
 
     private static Log logger = LogFactory.getLog(SingleQueueScheduler.class);
 
@@ -55,18 +60,14 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
     private final ResourceCalculator resourceCalculator = new DefaultResourceCalculator();
 
     private Q queue;
-
-    private Class<A> aClass;
-    private Class<N> nClass;
     private Class<Q> qClass;
-
+    private ConcurrentSkipListSet<SchedulerApplication<A>> orderedApps;
 
     public SingleQueueScheduler(Class<A> aClass, Class<N> nClass, Class<Q> qClass, Class<S> sClass) {
-        super(sClass.getName());
-        this.aClass = aClass;
-        this.nClass = nClass;
+        super(aClass, nClass, sClass);
         this.qClass = qClass;
     }
+
 
     public Resource getUsedResource() {
         return usedResource;
@@ -93,9 +94,11 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         }
     }
 
+    protected abstract Comparator<SchedulerApplication<A>> initQueueComparator();
+
     protected synchronized void initScheduler(Configuration conf) {
         validateConf(conf);
-
+        this.conf = conf;
         //General allocation configs found in FIFO and FS
         this.minimumAllocation =
                 Resources.createResource(conf.getInt(
@@ -112,7 +115,9 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
                 YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
                 YarnConfiguration.DEFAULT_RM_SCHEDULER_USE_PORT_FOR_NODE_NAME);
         this.applications = new ConcurrentHashMap<>();
+        this.orderedApps = new ConcurrentSkipListSet<>(initQueueComparator());
         this.queue = SQSQueue.getInstance(qClass, DEFAULT_QUEUE_NAME, this);
+
     }
 
     @Override
@@ -407,11 +412,19 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         attempt.stop(finalAttemptState);
     }
 
-    protected abstract void onAppAttemptAdded(SchedulerApplication<A> app);
+    protected abstract void updateAppPriority(SchedulerApplication<A> app);
 
-    protected abstract void onAppAdded(SchedulerApplication<A> app);
+    protected void onAppAttemptAdded(SchedulerApplication<A> app){
+        //Used to update priority if it depends on the application attempt
+    }
 
-    protected abstract void onAppDone(SchedulerApplication<A> app);
+    protected  void onAppAdded(SchedulerApplication<A> app){
+        orderedApps.add(app);
+    }
+
+    protected  void onAppDone(SchedulerApplication<A> app){
+        orderedApps.remove(app);
+    }
 
     private void addApplicationAttempt(ApplicationAttemptId appAttemptId, boolean transferStateFromPreviousAttempt, boolean isAttemptRecovering) {
         SchedulerApplication<A> application =

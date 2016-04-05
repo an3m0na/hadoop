@@ -2,21 +2,31 @@ package org.apache.hadoop.tools.posum.common.records.protocol;
 
 import org.apache.hadoop.yarn.util.Records;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 /**
  * Created by ane on 3/31/16.
  */
 public abstract class SimpleResponse {
 
-    public static SimpleResponse newInstance(boolean successful, String text, String details) {
+    public static SimpleResponse newInstance(boolean successful, String text) {
         SimpleResponse response = Records.newRecord(SimpleResponse.class);
         response.setSuccessful(successful);
         response.setText(text);
-        response.setDetails(details);
         return response;
     }
 
-    public static SimpleResponse newInstance(boolean successful, String text) {
-        return newInstance(successful, text, null);
+    public static SimpleResponse newInstance(boolean successful) {
+        return newInstance(successful, null);
+    }
+
+    public static SimpleResponse newInstance(boolean successful, String text, Throwable e) {
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        SimpleResponse ret = newInstance(successful, text);
+        ret.setDetails(sw.toString());
+        return ret;
     }
 
     public abstract String getText();
