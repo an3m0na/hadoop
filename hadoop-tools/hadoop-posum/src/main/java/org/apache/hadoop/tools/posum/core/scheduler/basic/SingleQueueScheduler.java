@@ -2,10 +2,8 @@ package org.apache.hadoop.tools.posum.core.scheduler.basic;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DOSAppAttempt;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginScheduler;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.Priority;
@@ -15,7 +13,6 @@ import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.recovery.RMStateStore;
-import org.apache.hadoop.yarn.server.resourcemanager.resource.*;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
@@ -28,7 +25,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerStat
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.UpdatedContainerInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.*;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
@@ -296,85 +292,6 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
             return attempts;
         } else {
             return null;
-        }
-    }
-
-    @Override
-    public void handle(SchedulerEvent event) {
-        switch (event.getType()) {
-            case NODE_ADDED: {
-                NodeAddedSchedulerEvent nodeAddedEvent = (NodeAddedSchedulerEvent) event;
-                addNode(nodeAddedEvent.getAddedRMNode());
-                recoverContainersOnNode(nodeAddedEvent.getContainerReports(),
-                        nodeAddedEvent.getAddedRMNode());
-
-            }
-            break;
-            case NODE_REMOVED: {
-                NodeRemovedSchedulerEvent nodeRemovedEvent = (NodeRemovedSchedulerEvent) event;
-                removeNode(nodeRemovedEvent.getRemovedRMNode());
-            }
-            break;
-            case NODE_RESOURCE_UPDATE: {
-                NodeResourceUpdateSchedulerEvent nodeResourceUpdatedEvent =
-                        (NodeResourceUpdateSchedulerEvent) event;
-                updateNodeResource(nodeResourceUpdatedEvent.getRMNode(),
-                        nodeResourceUpdatedEvent.getResourceOption());
-            }
-            break;
-            case NODE_UPDATE: {
-                NodeUpdateSchedulerEvent nodeUpdatedEvent =
-                        (NodeUpdateSchedulerEvent) event;
-                nodeUpdate(nodeUpdatedEvent.getRMNode());
-            }
-            break;
-            case APP_ADDED: {
-                AppAddedSchedulerEvent appAddedEvent = (AppAddedSchedulerEvent) event;
-                addApplication(appAddedEvent.getApplicationId(), appAddedEvent.getUser(),
-                        appAddedEvent.getIsAppRecovering());
-            }
-            break;
-            case APP_REMOVED: {
-                AppRemovedSchedulerEvent appRemovedEvent = (AppRemovedSchedulerEvent) event;
-                doneApplication(appRemovedEvent.getApplicationID(),
-                        appRemovedEvent.getFinalState());
-            }
-            break;
-            case APP_ATTEMPT_ADDED: {
-                AppAttemptAddedSchedulerEvent appAttemptAddedEvent =
-                        (AppAttemptAddedSchedulerEvent) event;
-                addApplicationAttempt(appAttemptAddedEvent.getApplicationAttemptId(),
-                        appAttemptAddedEvent.getTransferStateFromPreviousAttempt(),
-                        appAttemptAddedEvent.getIsAttemptRecovering());
-            }
-            break;
-            case APP_ATTEMPT_REMOVED: {
-                AppAttemptRemovedSchedulerEvent appAttemptRemovedEvent =
-                        (AppAttemptRemovedSchedulerEvent) event;
-                try {
-                    doneApplicationAttempt(
-                            appAttemptRemovedEvent.getApplicationAttemptID(),
-                            appAttemptRemovedEvent.getFinalAttemptState(),
-                            appAttemptRemovedEvent.getKeepContainersAcrossAppAttempts());
-                } catch (IOException ie) {
-                    logger.error("Unable to remove application "
-                            + appAttemptRemovedEvent.getApplicationAttemptID(), ie);
-                }
-            }
-            break;
-            case CONTAINER_EXPIRED: {
-                ContainerExpiredSchedulerEvent containerExpiredEvent =
-                        (ContainerExpiredSchedulerEvent) event;
-                ContainerId containerid = containerExpiredEvent.getContainerId();
-                completedContainer(getRMContainer(containerid),
-                        SchedulerUtils.createAbnormalContainerStatus(
-                                containerid,
-                                SchedulerUtils.EXPIRED_CONTAINER),
-                        RMContainerEventType.EXPIRE);
-            }
-            break;
-            default:
-                logger.error("Invalid eventtype " + event.getType() + ". Ignoring!");
         }
     }
 
