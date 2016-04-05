@@ -1,8 +1,11 @@
 package org.apache.hadoop.tools.posum.core.scheduler.meta;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.core.master.POSUMMaster;
 import org.apache.hadoop.tools.posum.core.scheduler.basic.SQSAppAttempt;
 import org.apache.hadoop.tools.posum.core.scheduler.basic.SQSchedulerNode;
 import org.apache.hadoop.yarn.api.records.*;
@@ -13,7 +16,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEven
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerUtils;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 
 import java.io.IOException;
@@ -25,6 +29,8 @@ import java.util.List;
 public class POSUMMetaScheduler extends
         AbstractYarnScheduler<SQSAppAttempt, SQSchedulerNode> implements
         Configurable {
+
+    private static Log logger = LogFactory.getLog(POSUMMetaScheduler.class);
 
     Configuration conf;
 

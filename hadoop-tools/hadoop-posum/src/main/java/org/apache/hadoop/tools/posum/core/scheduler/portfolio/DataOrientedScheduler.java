@@ -23,31 +23,12 @@ public class DataOrientedScheduler extends SingleQueueScheduler<
     private static Log logger = LogFactory.getLog(DataOrientedScheduler.class);
 
     private TreeSet<SchedulerApplication<DOSAppAttempt>> orderedApps =
-            new TreeSet<>(new Comparator<SchedulerApplication<DOSAppAttempt>>() {
-                @Override
-                public int compare(SchedulerApplication<DOSAppAttempt> a1, SchedulerApplication<DOSAppAttempt> a2) {
-                    if (a1.getCurrentAppAttempt() == null)
-                        return 1;
-                    if (a2.getCurrentAppAttempt() == null)
-                        return -1;
-                    if (a1.getCurrentAppAttempt().getApplicationAttemptId()
-                            .equals(a2.getCurrentAppAttempt().getApplicationAttemptId()))
-                        return 0;
-                    if (a1.getCurrentAppAttempt().getTotalInputSize() == null)
-                        return 1;
-                    if (a2.getCurrentAppAttempt().getTotalInputSize() == null) {
-                        return -1;
-                    }
-                    return new Long(a1.getCurrentAppAttempt().getTotalInputSize() -
-                            a2.getCurrentAppAttempt().getTotalInputSize()).intValue();
-                }
-            });
+            new TreeSet<>();
 
 
     public DataOrientedScheduler() {
         super(DOSAppAttempt.class, SQSchedulerNode.class, SQSQueue.class, DataOrientedScheduler.class);
     }
-
 
     @Override
     protected void validateConf(Configuration conf) {
@@ -56,16 +37,40 @@ public class DataOrientedScheduler extends SingleQueueScheduler<
     }
 
     @Override
+    protected Comparator<SchedulerApplication<DOSAppAttempt>> initQueueComparator() {
+        return new Comparator<SchedulerApplication<DOSAppAttempt>>() {
+            @Override
+            public int compare(SchedulerApplication<DOSAppAttempt> a1, SchedulerApplication<DOSAppAttempt> a2) {
+                if (a1.getCurrentAppAttempt() == null)
+                    return 1;
+                if (a2.getCurrentAppAttempt() == null)
+                    return -1;
+                if (a1.getCurrentAppAttempt().getApplicationId()
+                        .equals(a2.getCurrentAppAttempt().getApplicationId()))
+                    return 0;
+                if (a1.getCurrentAppAttempt().getTotalInputSize() == null)
+                    return 1;
+                if (a2.getCurrentAppAttempt().getTotalInputSize() == null) {
+                    return -1;
+                }
+                return new Long(a1.getCurrentAppAttempt().getTotalInputSize() -
+                        a2.getCurrentAppAttempt().getTotalInputSize()).intValue();
+            }
+        };
+    }
+
+    @Override
     protected synchronized void initScheduler(Configuration conf) {
         super.initScheduler(conf);
         //TODO maybe add smth
     }
 
-    private void readApplicationInfo(DOSAppAttempt attempt) {
+    @Override
+    protected void updateAppPriority(SchedulerApplication<DOSAppAttempt> app) {
         try {
             //TODO access the database and think of a way to make sure the database is populated
         } catch (Exception e) {
-            logger.debug("[DOScheduler] Could not read input size for: " + attempt.getApplicationId(), e);
+            logger.debug("[DOScheduler] Could not read input size for: " + app.getCurrentAppAttempt().getApplicationId(), e);
         }
 
     }
@@ -73,18 +78,8 @@ public class DataOrientedScheduler extends SingleQueueScheduler<
     @Override
     protected void onAppAttemptAdded(SchedulerApplication<DOSAppAttempt> app) {
         orderedApps.remove(app);
-        readApplicationInfo(app.getCurrentAppAttempt());
+        updateAppPriority(app);
         orderedApps.add(app);
-    }
-
-    @Override
-    protected void onAppAdded(SchedulerApplication<DOSAppAttempt> app) {
-        orderedApps.add(app);
-    }
-
-    @Override
-    protected void onAppDone(SchedulerApplication<DOSAppAttempt> app) {
-        orderedApps.remove(app);
     }
 
     @Override
