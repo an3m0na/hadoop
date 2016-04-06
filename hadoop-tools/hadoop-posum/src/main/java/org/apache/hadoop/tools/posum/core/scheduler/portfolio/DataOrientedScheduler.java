@@ -22,10 +22,6 @@ public class DataOrientedScheduler extends SingleQueueScheduler<
 
     private static Log logger = LogFactory.getLog(DataOrientedScheduler.class);
 
-    private TreeSet<SchedulerApplication<DOSAppAttempt>> orderedApps =
-            new TreeSet<>();
-
-
     public DataOrientedScheduler() {
         super(DOSAppAttempt.class, SQSchedulerNode.class, SQSQueue.class, DataOrientedScheduler.class);
     }
@@ -73,13 +69,6 @@ public class DataOrientedScheduler extends SingleQueueScheduler<
             logger.debug("[DOScheduler] Could not read input size for: " + app.getCurrentAppAttempt().getApplicationId(), e);
         }
 
-    }
-
-    @Override
-    protected void onAppAttemptAdded(SchedulerApplication<DOSAppAttempt> app) {
-        orderedApps.remove(app);
-        updateAppPriority(app);
-        orderedApps.add(app);
     }
 
     @Override
