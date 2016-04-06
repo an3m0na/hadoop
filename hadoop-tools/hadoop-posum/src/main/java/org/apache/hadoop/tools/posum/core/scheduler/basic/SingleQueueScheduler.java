@@ -25,6 +25,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerStat
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.UpdatedContainerInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.*;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
@@ -44,7 +45,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         S extends SingleQueueScheduler<A, N, Q, S>>
         extends PluginScheduler<A, N, S> {
 
-    private static Log logger = LogFactory.getLog(SingleQueueScheduler.class);
+    private static Log LOG = LogFactory.getLog(SingleQueueScheduler.class);
 
     Configuration conf;
     private static final String DEFAULT_QUEUE_NAME = "default";
@@ -57,7 +58,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
 
     private Q queue;
     private Class<Q> qClass;
-    private ConcurrentSkipListSet<SchedulerApplication<A>> orderedApps;
+    protected ConcurrentSkipListSet<SchedulerApplication<A>> orderedApps;
 
     public SingleQueueScheduler(Class<A> aClass, Class<N> nClass, Class<Q> qClass, Class<S> sClass) {
         super(aClass, nClass, sClass);
@@ -128,7 +129,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
                                       RMContainerEventType rmContainerEventType) {
 
         if (rmContainer == null) {
-            logger.info("Null container completed...");
+            LOG.info("Null container completed...");
             return;
         }
 
@@ -143,7 +144,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         N node = nodes.get(container.getNodeId());
 
         if (application == null) {
-            logger.trace("Unknown application: " + appId +
+            LOG.trace("Unknown application: " + appId +
                     " released container " + container.getId() +
                     " on node: " + node +
                     " with event: " + rmContainerEventType);
@@ -159,7 +160,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         // Update total usage
         Resources.subtractFrom(usedResource, container.getResource());
 
-        logger.trace("Application attempt " + application.getApplicationAttemptId() +
+        LOG.trace("Application attempt " + application.getApplicationAttemptId() +
                 " released container " + container.getId() +
                 " on node: " + node +
                 " with event: " + rmContainerEventType);
@@ -220,7 +221,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
 
         A application = getApplicationAttempt(applicationAttemptId);
         if (application == null) {
-            logger.error("Calling allocate on removed " +
+            LOG.error("Calling allocate on removed " +
                     "or non existant application " + applicationAttemptId);
             return EMPTY_ALLOCATION;
         }
@@ -237,13 +238,13 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
             // make sure we aren't stopping/removing the application
             // when the allocate comes in
             if (application.isStopped()) {
-                logger.info("Calling allocate on a stopped " +
+                LOG.info("Calling allocate on a stopped " +
                         "application " + applicationAttemptId);
                 return EMPTY_ALLOCATION;
             }
 
             if (!ask.isEmpty()) {
-                logger.trace("allocate: pre-update" +
+                LOG.trace("allocate: pre-update" +
                         " applicationId=" + applicationAttemptId +
                         " application=" + application);
                 application.showRequests();
@@ -251,12 +252,12 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
                 // Update application requests
                 application.updateResourceRequests(ask);
 
-                logger.trace("allocate: post-update" +
+                LOG.trace("allocate: post-update" +
                         " applicationId=" + applicationAttemptId +
                         " application=" + application);
                 application.showRequests();
 
-                logger.trace("allocate:" +
+                LOG.trace("allocate:" +
                         " applicationId=" + applicationAttemptId +
                         " #ask=" + ask.size());
             }
@@ -295,6 +296,104 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         }
     }
 
+    @Override
+    public void handle(SchedulerEvent event) {
+        switch (event.getType()) {
+            case NODE_ADDED:
+                if (!(event instanceof NodeAddedSchedulerEvent)) {
+                    throw new RuntimeException("Unexpected event type: " + event);
+                }
+                NodeAddedSchedulerEvent nodeAddedEvent = (NodeAddedSchedulerEvent)event;
+                addNode(nodeAddedEvent.getAddedRMNode());
+                recoverContainersOnNode(nodeAddedEvent.getContainerReports(),
+                        nodeAddedEvent.getAddedRMNode());
+                break;
+            case NODE_REMOVED:
+                if (!(event instanceof NodeRemovedSchedulerEvent)) {
+                    throw new RuntimeException("Unexpected event type: " + event);
+                }
+                NodeRemovedSchedulerEvent nodeRemovedEvent = (NodeRemovedSchedulerEvent)event;
+                removeNode(nodeRemovedEvent.getRemovedRMNode());
+                break;
+            case NODE_UPDATE:
+                if (!(event instanceof NodeUpdateSchedulerEvent)) {
+                    throw new RuntimeException("Unexpected event type: " + event);
+                }
+                NodeUpdateSchedulerEvent nodeUpdatedEvent = (NodeUpdateSchedulerEvent)event;
+                nodeUpdate(nodeUpdatedEvent.getRMNode());
+                break;
+            case NODE_RESOURCE_UPDATE:
+            {
+                if (!(event instanceof NodeResourceUpdateSchedulerEvent)) {
+                    throw new RuntimeException("Unexpected event type: " + event);
+                }
+                NodeResourceUpdateSchedulerEvent nodeResourceUpdatedEvent =
+                        (NodeResourceUpdateSchedulerEvent)event;
+                updateNodeResource(nodeResourceUpdatedEvent.getRMNode(),
+                        nodeResourceUpdatedEvent.getResourceOption());
+            }
+            break;
+            case APP_ADDED:
+                if (!(event instanceof AppAddedSchedulerEvent)) {
+                    throw new RuntimeException("Unexpected event type: " + event);
+                }
+                AppAddedSchedulerEvent appAddedEvent = (AppAddedSchedulerEvent) event;
+
+                    addApplication(appAddedEvent.getApplicationId(), appAddedEvent.getUser(),
+                            appAddedEvent.getIsAppRecovering());
+                break;
+            case APP_REMOVED:
+                if (!(event instanceof AppRemovedSchedulerEvent)) {
+                    throw new RuntimeException("Unexpected event type: " + event);
+                }
+                AppRemovedSchedulerEvent appRemovedEvent = (AppRemovedSchedulerEvent)event;
+                doneApplication(appRemovedEvent.getApplicationID(),
+                        appRemovedEvent.getFinalState());
+                break;
+            case APP_ATTEMPT_ADDED:
+                if (!(event instanceof AppAttemptAddedSchedulerEvent)) {
+                    throw new RuntimeException("Unexpected event type: " + event);
+                }
+                AppAttemptAddedSchedulerEvent appAttemptAddedEvent =
+                        (AppAttemptAddedSchedulerEvent) event;
+                addApplicationAttempt(appAttemptAddedEvent.getApplicationAttemptId(),
+                        appAttemptAddedEvent.getTransferStateFromPreviousAttempt(),
+                        appAttemptAddedEvent.getIsAttemptRecovering());
+                break;
+            case APP_ATTEMPT_REMOVED:
+                if (!(event instanceof AppAttemptRemovedSchedulerEvent)) {
+                    throw new RuntimeException("Unexpected event type: " + event);
+                }
+                AppAttemptRemovedSchedulerEvent appAttemptRemovedEvent =
+                        (AppAttemptRemovedSchedulerEvent) event;
+                try {
+                    doneApplicationAttempt(
+                            appAttemptRemovedEvent.getApplicationAttemptID(),
+                            appAttemptRemovedEvent.getFinalAttemptState(),
+                            appAttemptRemovedEvent.getKeepContainersAcrossAppAttempts());
+                } catch(IOException ie) {
+                    LOG.error("Unable to remove application "
+                            + appAttemptRemovedEvent.getApplicationAttemptID(), ie);
+                }
+                break;
+            case CONTAINER_EXPIRED:
+                if (!(event instanceof ContainerExpiredSchedulerEvent)) {
+                    throw new RuntimeException("Unexpected event type: " + event);
+                }
+                ContainerExpiredSchedulerEvent containerExpiredEvent =
+                        (ContainerExpiredSchedulerEvent)event;
+                ContainerId containerId = containerExpiredEvent.getContainerId();
+                completedContainer(getRMContainer(containerId),
+                        SchedulerUtils.createAbnormalContainerStatus(
+                                containerId,
+                                SchedulerUtils.EXPIRED_CONTAINER),
+                        RMContainerEventType.EXPIRE);
+                break;
+            default:
+                LOG.error("Unknown event arrived at scheduler:" + event.toString());
+        }
+    }
+
     private void doneApplicationAttempt(ApplicationAttemptId appAttemptId,
                                         RMAppAttemptState finalAttemptState,
                                         boolean keepContainers)
@@ -315,7 +414,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
                     && container.getState().equals(RMContainerState.RUNNING)) {
                 // do not kill the running container in the case of work-preserving AM
                 // restart.
-                logger.info("Skip killing " + container.getContainerId());
+                LOG.info("Skip killing " + container.getContainerId());
                 continue;
             }
             completedContainer(container,
@@ -332,7 +431,9 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
     protected abstract void updateAppPriority(SchedulerApplication<A> app);
 
     protected void onAppAttemptAdded(SchedulerApplication<A> app){
-        //Used to update priority if it depends on the application attempt
+        orderedApps.remove(app);
+        updateAppPriority(app);
+        orderedApps.add(app);
     }
 
     protected  void onAppAdded(SchedulerApplication<A> app){
@@ -361,11 +462,11 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         onAppAttemptAdded(application);
 
         queue.getMetrics().submitAppAttempt(user);
-        logger.info("Added Application Attempt " + appAttemptId
+        LOG.info("Added Application Attempt " + appAttemptId
                 + " to scheduler from user " + application.getUser());
         if (isAttemptRecovering) {
-            if (logger.isDebugEnabled()) {
-                logger.trace(appAttemptId
+            if (LOG.isDebugEnabled()) {
+                LOG.trace(appAttemptId
                         + " is recovering. Skipping notifying ATTEMPT_ADDED");
             }
         } else {
@@ -379,7 +480,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         SchedulerApplication<A> application =
                 applications.get(applicationId);
         if (application == null) {
-            logger.warn("Couldn't find application " + applicationId);
+            LOG.warn("Couldn't find application " + applicationId);
             return;
         }
 
@@ -398,11 +499,11 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         onAppAdded(application);
 
         queue.getMetrics().submitApp(user);
-        logger.info("Accepted application " + applicationId + " from user: " + user
+        LOG.info("Accepted application " + applicationId + " from user: " + user
                 + ", currently num of applications: " + applications.size());
         if (isAppRecovering) {
-            if (logger.isDebugEnabled()) {
-                logger.trace(applicationId + " is recovering. Skip notifying APP_ACCEPTED");
+            if (LOG.isDebugEnabled()) {
+                LOG.trace(applicationId + " is recovering. Skip notifying APP_ACCEPTED");
             }
         } else {
             rmContext.getDispatcher().getEventHandler()
@@ -431,19 +532,19 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
         // Process completed containers
         for (ContainerStatus completedContainer : completedContainers) {
             ContainerId containerId = completedContainer.getContainerId();
-            logger.trace("Container FINISHED: " + containerId);
+            LOG.trace("Container FINISHED: " + containerId);
             completedContainer(getRMContainer(containerId),
                     completedContainer, RMContainerEventType.FINISHED);
         }
 
         if (Resources.greaterThanOrEqual(resourceCalculator, clusterResource,
                 node.getAvailableResource(), minimumAllocation)) {
-            logger.trace("Node heartbeat " + rmNode.getNodeID() +
+            LOG.trace("Node heartbeat " + rmNode.getNodeID() +
                     " available resource = " + node.getAvailableResource());
 
             assignContainers(node);
 
-            logger.trace("Node after allocation " + rmNode.getNodeID() + " resource = "
+            LOG.trace("Node after allocation " + rmNode.getNodeID() + " resource = "
                     + node.getAvailableResource());
         }
 
@@ -457,11 +558,11 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
             return false;
         }
 
-        logger.trace("pre-assignContainers");
+        LOG.trace("pre-assignContainers");
         application.showRequests();
         synchronized (application) {
             // Check if this resource is on the blacklist
-            if (SchedulerAppUtils.isBlacklisted(application, node, logger)) {
+            if (SchedulerAppUtils.isBlacklisted(application, node, LOG)) {
                 return false;
             }
             for (Priority priority : application.getPriorities()) {
@@ -480,7 +581,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
             }
         }
 
-        logger.trace("post-assignContainers");
+        LOG.trace("post-assignContainers");
         application.showRequests();
 
         // Done
@@ -500,7 +601,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
      */
     private void assignContainers(N node) {
 
-        logger.trace("assignContainers:" +
+        LOG.trace("assignContainers:" +
                 " node=" + node.getRMNode().getNodeAddress() +
                 " #applications=" + applications.size());
 
@@ -569,7 +670,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
                 assignOffSwitchContainers(node, application, priority);
 
 
-        logger.debug("assignContainersOnNode:" +
+        LOG.debug("assignContainersOnNode:" +
                 " node=" + node.getRMNode().getNodeAddress() +
                 " application=" + application.getApplicationId().getId() +
                 " priority=" + priority.getPriority() +
@@ -647,7 +748,7 @@ public abstract class SingleQueueScheduler<A extends SQSAppAttempt,
     private int assignContainer(N node, A application,
                                 Priority priority, int assignableContainers,
                                 ResourceRequest request, NodeType type) {
-        logger.trace("assignContainers:" +
+        LOG.trace("assignContainers:" +
                 " node=" + node.getRMNode().getNodeAddress() +
                 " application=" + application.getApplicationId().getId() +
                 " priority=" + priority.getPriority() +
