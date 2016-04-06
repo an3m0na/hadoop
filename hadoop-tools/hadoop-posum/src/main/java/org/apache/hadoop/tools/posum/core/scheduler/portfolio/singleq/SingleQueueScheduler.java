@@ -1,10 +1,10 @@
-package org.apache.hadoop.tools.posum.core.scheduler.basic;
+package org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginScheduler;
+import org.apache.hadoop.tools.posum.core.scheduler.meta.PluginScheduler;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;

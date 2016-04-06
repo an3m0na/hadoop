@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
+package org.apache.hadoop.tools.posum.core.scheduler.meta;
 
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 

@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.core.scheduler.basic;
+package org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq;
 
 import com.codahale.metrics.Gauge;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;

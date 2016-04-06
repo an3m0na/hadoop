@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
+package org.apache.hadoop.tools.posum.core.scheduler.meta;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.AbstractService;
@@ -7,6 +7,7 @@ import org.apache.hadoop.tools.posum.common.records.protocol.PortfolioProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 
 import java.io.IOException;
