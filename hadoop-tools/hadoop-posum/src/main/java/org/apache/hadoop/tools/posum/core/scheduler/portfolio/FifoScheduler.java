@@ -3,9 +3,9 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.core.scheduler.basic.SQSQueue;
-import org.apache.hadoop.tools.posum.core.scheduler.basic.SQSchedulerNode;
-import org.apache.hadoop.tools.posum.core.scheduler.basic.SingleQueueScheduler;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSQueue;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSchedulerNode;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SingleQueueScheduler;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplication;
 

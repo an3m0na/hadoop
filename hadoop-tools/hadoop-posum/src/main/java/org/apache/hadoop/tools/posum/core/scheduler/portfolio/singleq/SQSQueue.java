@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.core.scheduler.basic;
+package org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq;
 
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;

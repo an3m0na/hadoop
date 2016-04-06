@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.core.scheduler.basic;
+package org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

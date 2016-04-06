@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 
-import org.apache.hadoop.tools.posum.core.scheduler.basic.SQSAppAttempt;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSAppAttempt;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;

@@ -5,9 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.core.master.POSUMMaster;
-import org.apache.hadoop.tools.posum.core.scheduler.basic.SQSAppAttempt;
-import org.apache.hadoop.tools.posum.core.scheduler.basic.SQSchedulerNode;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSAppAttempt;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSchedulerNode;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.recovery.RMStateStore;
@@ -16,7 +15,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEven
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 
