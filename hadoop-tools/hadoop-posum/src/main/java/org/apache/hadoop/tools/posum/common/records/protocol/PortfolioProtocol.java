@@ -10,4 +10,5 @@ public interface PortfolioProtocol {
     SimpleResponse initScheduler(ConfigurationRequest request);
     SimpleResponse reinitScheduler(ConfigurationRequest request);
     HandleEventResponse handleSchedulerEvent(HandleEventRequest request);
+    SchedulerAllocateResponse allocateResources(SchedulerAllocateRequest request);
 }

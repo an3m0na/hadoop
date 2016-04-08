@@ -2,7 +2,6 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.protocol.HandleEventRequest;
-import org.apache.hadoop.tools.posum.common.records.protocol.HandleEventResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.POSUMNode;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ReservationId;
@@ -12,13 +11,13 @@ import org.apache.hadoop.yarn.api.records.impl.pb.ReservationIdPBImpl;
 import org.apache.hadoop.yarn.api.records.impl.pb.ResourceOptionPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos.HandleEventRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.HandleEventRequestProtoOrBuilder;
-import org.apache.hadoop.yarn.proto.YarnServerCommonServiceProtos;
+import org.apache.hadoop.yarn.proto.YarnServerCommonServiceProtos.NMContainerStatusProto;
 import org.apache.hadoop.yarn.server.api.protocolrecords.NMContainerStatus;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.NMContainerStatusPBImpl;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -29,7 +28,7 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
     private HandleEventRequestProto.Builder builder = null;
     private boolean viaProto = false;
 
-    List<NMContainerStatus> containerReports;
+    private List<NMContainerStatus> containerReports;
 
     public HandleEventRequestPBImpl() {
         builder = HandleEventRequestProto.newBuilder();
@@ -68,6 +67,37 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
     }
 
     private void mergeLocalToBuilder() {
+        maybeInitBuilder();
+        builder.clearContainerReports();
+        if (containerReports != null) {
+            final Iterable<NMContainerStatusProto> iterable =
+                    new Iterable<NMContainerStatusProto>() {
+
+                        @Override
+                        public Iterator<NMContainerStatusProto> iterator() {
+                            return new Iterator<NMContainerStatusProto>() {
+
+                                Iterator<NMContainerStatus> iterator = containerReports.iterator();
+
+                                @Override
+                                public void remove() {
+                                    throw new UnsupportedOperationException();
+                                }
+
+                                @Override
+                                public NMContainerStatusProto next() {
+                                    return ((NMContainerStatusPBImpl)iterator.next()).getProto();
+                                }
+
+                                @Override
+                                public boolean hasNext() {
+                                    return iterator.hasNext();
+                                }
+                            };
+                        }
+                    };
+            builder.addAllContainerReports(iterable);
+        }
     }
 
     private void mergeLocalToProto() {
@@ -115,7 +145,7 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         if (containerReports == null) {
             HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
             containerReports = new ArrayList<>(p.getContainerReportsCount());
-            for (YarnServerCommonServiceProtos.NMContainerStatusProto status : p.getContainerReportsList()) {
+            for (NMContainerStatusProto status : p.getContainerReportsList()) {
                 containerReports.add(new NMContainerStatusPBImpl(status));
             }
         }
@@ -124,9 +154,7 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
 
     @Override
     public void setContainerReports(List<NMContainerStatus> reports) {
-        if (reports == null)
-            return;
-        this.containerReports = new ArrayList<>(reports);
+        this.containerReports = reports;
     }
 
     @Override

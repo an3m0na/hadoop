@@ -100,13 +100,13 @@ public class POSUMMetaScheduler extends
     public Allocation allocate(
             ApplicationAttemptId applicationAttemptId, List<ResourceRequest> ask,
             List<ContainerId> release, List<String> blacklistAdditions, List<String> blacklistRemovals) {
-        //TODO forward
-        return null;
+        return portfolioClient.allocateResources(applicationAttemptId, ask,
+                release, blacklistAdditions, blacklistRemovals);
     }
 
     @Override
     public void handle(SchedulerEvent event) {
-       portfolioClient.handleSchedulerEvent(event);
+        portfolioClient.handleSchedulerEvent(event);
     }
 
     @Override

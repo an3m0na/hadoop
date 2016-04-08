@@ -11,6 +11,7 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 
 import java.io.IOException;
@@ -133,6 +134,18 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
             return HandleEventResponse.newInstance(false, "Exception handling error", e);
         }
         return HandleEventResponse.newInstance(true);
+    }
+
+    @Override
+    public SchedulerAllocateResponse allocateResources(SchedulerAllocateRequest request) {
+        Allocation allocation = this.currentScheduler.allocate(
+                request.getApplicationAttemptId(),
+                request.getResourceRequests(),
+                request.getReleases(),
+                request.getBlacklistAdditions(),
+                request.getBlacklistRemovals()
+        );
+        return SchedulerAllocateResponse.newInstance(allocation);
     }
 
 }

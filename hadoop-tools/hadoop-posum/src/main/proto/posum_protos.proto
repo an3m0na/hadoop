@@ -5,7 +5,7 @@ option java_package = "org.apache.hadoop.yarn.proto";
 option java_outer_classname = "POSUMProtos";
 
 import "yarn_protos.proto";
-
+import "yarn_service_protos.proto";
 import "yarn_server_common_service_protos.proto";
 
 enum EntityTypeProto {
@@ -215,4 +215,22 @@ message HandleEventResponseProto {
     required bool successful = 1;
     optional string text = 2;
     optional string details = 3;
+}
+
+message SchedulerAllocateRequestProto {
+    required ApplicationAttemptIdProto applicationAttemptId = 1;
+    repeated ResourceRequestProto resourceRequests = 2;
+    repeated ContainerIdProto releases = 3;
+    repeated string blacklistAdditions = 4;
+    repeated string blacklistRemovals = 5;
+}
+
+message SchedulerAllocateResponseProto {
+    repeated ContainerProto containers = 1;
+    optional ResourceProto resourceLimit = 2;
+    repeated ContainerIdProto strictContainers = 3;
+    repeated ContainerIdProto fungibleContainers = 4;
+    repeated ResourceRequestProto fungibleResources = 5;
+    repeated NMTokenProto nmTokens = 6;
+
 }
