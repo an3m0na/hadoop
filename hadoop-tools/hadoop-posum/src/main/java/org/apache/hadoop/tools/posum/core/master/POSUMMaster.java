@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.core.master;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
@@ -44,8 +45,7 @@ public class POSUMMaster extends CompositeService {
     }
 
     public static void main(String[] args) {
-        Configuration conf = new Configuration();
-        conf.addResource("posum-core.xml");
+        Configuration conf = POSUMConfiguration.newInstance();
         POSUMMaster master = new POSUMMaster();
         master.init(conf);
         master.start();

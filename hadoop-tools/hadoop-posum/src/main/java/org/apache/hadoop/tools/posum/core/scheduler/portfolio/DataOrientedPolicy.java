@@ -5,7 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSQueue;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSchedulerNode;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SingleQueueScheduler;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SingleQueuePolicy;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.*;
 
 import java.util.*;
@@ -13,16 +13,16 @@ import java.util.*;
 /**
  * Created by ane on 1/22/16.
  */
-public class DataOrientedScheduler extends SingleQueueScheduler<
+public class DataOrientedPolicy extends SingleQueuePolicy<
         DOSAppAttempt,
         SQSchedulerNode,
         SQSQueue,
-        DataOrientedScheduler> {
+        DataOrientedPolicy> {
 
-    private static Log logger = LogFactory.getLog(DataOrientedScheduler.class);
+    private static Log logger = LogFactory.getLog(DataOrientedPolicy.class);
 
-    public DataOrientedScheduler() {
-        super(DOSAppAttempt.class, SQSchedulerNode.class, SQSQueue.class, DataOrientedScheduler.class);
+    public DataOrientedPolicy() {
+        super(DOSAppAttempt.class, SQSchedulerNode.class, SQSQueue.class, DataOrientedPolicy.class);
     }
 
     @Override

@@ -81,6 +81,16 @@ public abstract class HandleEventRequest {
         return request;
     }
 
+    public static HandleEventRequest newInstance(NodeLabelsUpdateSchedulerEvent event) {
+        HandleEventRequest request = newInstance(event.getType());
+        //TODO UpdatedNodeToLabels
+        return request;
+    }
+
+    public static HandleEventRequest newInstance(SchedulerEvent event) {
+        return newInstance(event.getType());
+    }
+
     public static HandleEventRequest newInstance(SchedulerEventType type) {
         HandleEventRequest request = Records.newRecord(HandleEventRequest.class);
         request.setEventType(type);

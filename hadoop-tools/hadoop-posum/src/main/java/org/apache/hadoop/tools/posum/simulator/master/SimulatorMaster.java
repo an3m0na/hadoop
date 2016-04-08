@@ -53,8 +53,7 @@ public class SimulatorMaster extends CompositeService {
     }
 
     public static void main(String[] args) {
-        Configuration conf = new Configuration();
-        conf.addResource("posum-core.xml");
+        Configuration conf = POSUMConfiguration.newInstance();
         SimulatorMaster master = new SimulatorMaster();
         master.init(conf);
         master.start();

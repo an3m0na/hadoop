@@ -5,7 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSQueue;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSchedulerNode;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SingleQueueScheduler;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SingleQueuePolicy;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplication;
 
@@ -15,18 +15,18 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by ane on 1/22/16.
  */
-public class FifoScheduler extends SingleQueueScheduler<
+public class FifoPolicy extends SingleQueuePolicy<
         FifoAppAttempt,
         SQSchedulerNode,
         SQSQueue,
-        FifoScheduler> {
+        FifoPolicy> {
 
     private ConcurrentHashMap<ApplicationId, Long> submitTimes;
 
-    private static Log logger = LogFactory.getLog(FifoScheduler.class);
+    private static Log logger = LogFactory.getLog(FifoPolicy.class);
 
-    public FifoScheduler() {
-        super(FifoAppAttempt.class, SQSchedulerNode.class, SQSQueue.class, FifoScheduler.class);
+    public FifoPolicy() {
+        super(FifoAppAttempt.class, SQSchedulerNode.class, SQSQueue.class, FifoPolicy.class);
         submitTimes = new ConcurrentHashMap<>();
     }
 

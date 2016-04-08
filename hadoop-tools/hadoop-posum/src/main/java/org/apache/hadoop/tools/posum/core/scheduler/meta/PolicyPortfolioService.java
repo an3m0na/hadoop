@@ -5,7 +5,7 @@ import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedScheduler;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
@@ -23,8 +23,8 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
     POSUMMasterContext pmContext;
     Configuration conf;
     //TODO choose default some other way
-    Class<? extends PluginScheduler> currentSchedulerClass = DataOrientedScheduler.class;
-    PluginScheduler currentScheduler;
+    Class<? extends PluginPolicy> currentSchedulerClass = DataOrientedPolicy.class;
+    PluginPolicy currentScheduler;
 
     public PolicyPortfolioService(POSUMMasterContext context) {
         super(PolicyPortfolioService.class.getName());
