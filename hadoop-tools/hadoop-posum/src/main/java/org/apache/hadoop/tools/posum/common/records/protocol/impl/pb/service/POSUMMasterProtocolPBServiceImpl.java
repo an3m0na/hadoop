@@ -40,4 +40,12 @@ public class POSUMMasterProtocolPBServiceImpl implements POSUMMasterProtocolPB {
         SimpleResponse response = real.reinitScheduler(request);
         return ((SimpleResponsePBImpl) response).getProto();
     }
+
+    @Override
+    public POSUMProtos.HandleEventResponseProto handleSchedulerEvent(RpcController controller,
+                                                           POSUMProtos.HandleEventRequestProto proto) throws ServiceException {
+        HandleEventRequestPBImpl request = new HandleEventRequestPBImpl(proto);
+        HandleEventResponse response = real.handleSchedulerEvent(request);
+        return ((HandleEventResponsePBImpl) response).getProto();
+    }
 }

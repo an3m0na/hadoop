@@ -80,4 +80,9 @@ public class POSUMMasterService extends CompositeService implements POSUMMasterP
     public SimpleResponse reinitScheduler(ConfigurationRequest request) {
         return portfolioService.reinitScheduler(request);
     }
+
+    @Override
+    public HandleEventResponse handleSchedulerEvent(HandleEventRequest request) {
+        return portfolioService.handleSchedulerEvent(request);
+    }
 }

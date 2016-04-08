@@ -6,6 +6,8 @@ option java_outer_classname = "POSUMProtos";
 
 import "yarn_protos.proto";
 
+import "yarn_server_common_service_protos.proto";
+
 enum EntityTypeProto {
     TYPE_APP = 0;
     TYPE_JOB = 1;
@@ -155,12 +157,62 @@ message MultiEntityResponseProto {
     repeated bytes entities = 2;
 }
 
-message SimpleResponseProto{
+message SimpleResponseProto {
     required bool successful = 1;
     optional string text = 2;
     optional string details = 3;
 }
 
-message ConfigurationRequestProto{
+message ConfigurationRequestProto {
     repeated StringStringMapProto properties = 1;
+}
+
+message POSUMNodeProto {
+    required NodeIdProto nodeId = 1;
+    required string hostname = 2;
+    required int32 commandPort = 3;
+    required int32 httpPort = 4;
+    optional ResourceProto totalCapability = 5;
+    optional string rackName = 6;
+    repeated UpdatedContainerInfoProto containerUpdates = 7;
+    repeated string nodeLabels = 8;
+}
+
+message UpdatedContainerInfoProto {
+    repeated ContainerStatusProto newContainers = 7;
+    repeated ContainerStatusProto completedContainers = 8;
+}
+
+message HandleEventRequestProto {
+    required EventTypeProto eventType = 1;
+    optional POSUMNodeProto node = 2;
+    repeated NMContainerStatusProto containerReports = 3;
+    optional ResourceOptionProto resourceOption = 4;
+    optional bool flag = 5;
+    optional ApplicationIdProto applicationId = 6;
+    optional string queue = 7;
+    optional string user = 8;
+    optional string finalState = 9;
+    optional int32 attemptId = 10;
+    optional int64 containerId = 11;
+    optional ReservationIdProto reservationId = 12;
+
+    enum EventTypeProto {
+        EVENT_NODE_ADDED = 0;
+        EVENT_NODE_REMOVED = 1;
+        EVENT_NODE_UPDATE = 2;
+        EVENT_NODE_RESOURCE_UPDATE = 3;
+        EVENT_NODE_LABELS_UPDATE = 4;
+        EVENT_APP_ADDED = 5;
+        EVENT_APP_REMOVED = 6;
+        EVENT_APP_ATTEMPT_ADDED = 7;
+        EVENT_APP_ATTEMPT_REMOVED = 8;
+        EVENT_CONTAINER_EXPIRED = 9;
+    }
+}
+
+message HandleEventResponseProto {
+    required bool successful = 1;
+    optional string text = 2;
+    optional string details = 3;
 }
