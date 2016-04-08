@@ -8,7 +8,7 @@ import java.io.StringWriter;
 /**
  * Created by ane on 4/5/16.
  */
-public abstract class HandleEventResponse {
+public abstract class HandleEventResponse extends SimpleResponse {
 
     public static HandleEventResponse newInstance(boolean successful, String text) {
         HandleEventResponse response = Records.newRecord(HandleEventResponse.class);
@@ -28,16 +28,4 @@ public abstract class HandleEventResponse {
         ret.setDetails(sw.toString());
         return ret;
     }
-
-    public abstract String getText();
-
-    public abstract void setText(String text);
-
-    public abstract String getDetails();
-
-    public abstract void setDetails(String details);
-
-    public abstract boolean getSuccessful();
-
-    public abstract void setSuccessful(boolean successful);
 }

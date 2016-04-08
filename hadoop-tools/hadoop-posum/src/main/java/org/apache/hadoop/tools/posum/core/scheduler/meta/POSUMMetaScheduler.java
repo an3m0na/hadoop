@@ -5,6 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.core.master.client.PolicyPortfolioClient;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSAppAttempt;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSchedulerNode;
 import org.apache.hadoop.yarn.api.records.*;
@@ -30,7 +32,10 @@ public class POSUMMetaScheduler extends
 
     private static Log logger = LogFactory.getLog(POSUMMetaScheduler.class);
 
-    Configuration conf;
+    private Configuration conf;
+    private Configuration posumConf;
+    private PolicyPortfolioClient portfolioClient;
+
 
     public POSUMMetaScheduler() {
         super(POSUMMetaScheduler.class.getName());
@@ -41,15 +46,27 @@ public class POSUMMetaScheduler extends
         return conf;
     }
 
+
+    private void initializePortfolioLink() {
+        posumConf = POSUMConfiguration.newInstance();
+        portfolioClient = new PolicyPortfolioClient();
+        portfolioClient.init(posumConf);
+        portfolioClient.start();
+    }
+
     @Override
     public synchronized void setConf(Configuration conf) {
-        //TODO forward
+        if (portfolioClient == null) {
+            initializePortfolioLink();
+        }
+        setConf(conf);
         this.conf = conf;
     }
 
     @Override
     public void serviceInit(Configuration conf) throws Exception {
-        //TODO initScheduler(conf);
+        initializePortfolioLink();
+        portfolioClient.initScheduler(conf);
         super.serviceInit(conf);
     }
 
@@ -75,7 +92,8 @@ public class POSUMMetaScheduler extends
 
     @Override
     public synchronized void reinitialize(Configuration conf, RMContext rmContext) throws IOException {
-        //TODO forward  (usually setConf(conf));
+        //TODO maybe do something with the context
+        portfolioClient.reinitScheduler(conf);
     }
 
     @Override
@@ -88,7 +106,7 @@ public class POSUMMetaScheduler extends
 
     @Override
     public void handle(SchedulerEvent event) {
-        //TODO forward
+       portfolioClient.handleSchedulerEvent(event);
     }
 
     @Override
@@ -122,7 +140,7 @@ public class POSUMMetaScheduler extends
 
     @Override
     protected void completedContainer(RMContainer rmContainer, ContainerStatus containerStatus, RMContainerEventType event) {
-       //TODO forward
+        //TODO forward
     }
 
     @Override

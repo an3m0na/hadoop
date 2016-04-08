@@ -1,9 +1,17 @@
 package org.apache.hadoop.tools.posum.common.util;
 
+import org.apache.hadoop.conf.Configuration;
+
 /**
  * Created by ane on 2/9/16.
  */
 public class POSUMConfiguration {
+
+    public static Configuration newInstance(){
+        Configuration conf = new Configuration();
+        conf.addResource("posum-core.xml");
+        return conf;
+    }
 
     public static int DEFAULT_BUFFER_SIZE = 1024;
 
@@ -60,5 +68,9 @@ public class POSUMConfiguration {
 
     public static final String MONITOR_KEEP_HISTORY = MONITOR_PREFIX + "keep-history";
     public static final boolean MONITOR_KEEP_HISTORY_DEFAULT = false;
+
+    public static final String RELEVANT_SCHEDULER_CONFIGS = CORE_PREFIX + "conf.relevant";
+    //TODO
+    public static final String DEFAULT_RELEVANT_SCHEDULER_CONFIGS = "";
 
 }

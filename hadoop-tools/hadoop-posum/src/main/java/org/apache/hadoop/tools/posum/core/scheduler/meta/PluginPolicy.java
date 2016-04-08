@@ -9,17 +9,17 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 /**
  * Created by ane on 4/1/16.
  */
-public abstract class PluginScheduler<
+public abstract class PluginPolicy<
         A extends SchedulerApplicationAttempt,
         N extends SchedulerNode,
-        S extends PluginScheduler<A, N, S>>
+        S extends PluginPolicy<A, N, S>>
         extends AbstractYarnScheduler<A, N> implements Configurable {
 
     protected Class<A> aClass;
     protected Class<N> nClass;
     protected Configuration pluginConf;
 
-    public PluginScheduler(Class<A> aClass, Class<N> nClass, Class<S> sClass) {
+    public PluginPolicy(Class<A> aClass, Class<N> nClass, Class<S> sClass) {
         super(sClass.getName());
         this.aClass = aClass;
         this.nClass = nClass;

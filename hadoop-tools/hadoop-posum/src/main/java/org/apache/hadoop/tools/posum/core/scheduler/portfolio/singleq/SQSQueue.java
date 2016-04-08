@@ -36,19 +36,19 @@ public class SQSQueue implements Queue {
 
     private final String name;
     private QueueMetrics metrics;
-    private SingleQueueScheduler scheduler;
+    private SingleQueuePolicy scheduler;
     private ActiveUsersManager activeUsersManager;
 
-    public SQSQueue(String name, SingleQueueScheduler scheduler) {
+    public SQSQueue(String name, SingleQueuePolicy scheduler) {
         this.name = name;
         this.scheduler = scheduler;
         this.metrics = QueueMetrics.forQueue(this.name, null, false, scheduler.getConf());
         this.activeUsersManager = new ActiveUsersManager(metrics);
     }
 
-    static <Q extends SQSQueue> Q getInstance(Class<Q> qClass, String name, SingleQueueScheduler scheduler) {
+    static <Q extends SQSQueue> Q getInstance(Class<Q> qClass, String name, SingleQueuePolicy scheduler) {
         try {
-            Constructor<Q> constructor = qClass.getConstructor(String.class, SingleQueueScheduler.class);
+            Constructor<Q> constructor = qClass.getConstructor(String.class, SingleQueuePolicy.class);
             return constructor.newInstance(name, scheduler);
         } catch (Exception e) {
             throw new POSUMException("Failed to instantiate scheduler queue via default constructor" + e);

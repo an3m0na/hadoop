@@ -28,7 +28,7 @@ public class SQSchedulerMetrics extends SchedulerMetrics {
         @Override
         public void trackQueue(String queueName) {
             trackedQueues.add(queueName);
-            SingleQueueScheduler dataOrientedScheduler = (SingleQueueScheduler) scheduler;
+            SingleQueuePolicy dataOrientedScheduler = (SingleQueuePolicy) scheduler;
             // for FifoScheduler, only DEFAULT_QUEUE
             // here the three parameters doesn't affect results
             final QueueInfo queue = dataOrientedScheduler.getQueueInfo(queueName, false, false);
