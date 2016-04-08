@@ -10,10 +10,8 @@ import org.apache.hadoop.tools.posum.common.records.protocol.MultiEntityResponse
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityResponseProtoOrBuilder;
-import org.apache.hadoop.yarn.proto.YarnProtos;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -144,9 +142,6 @@ public class MultiEntityResponsePBImpl extends MultiEntityResponse {
 
     @Override
     public void setEntities(List<GeneralDataEntity> entities) {
-        if (entities == null)
-            return;
-        this.entities = new ArrayList<>();
-        this.entities.addAll(entities);
+        this.entities = entities;
     }
 }

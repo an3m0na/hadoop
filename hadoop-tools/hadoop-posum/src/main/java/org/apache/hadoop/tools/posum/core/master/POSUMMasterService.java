@@ -85,4 +85,9 @@ public class POSUMMasterService extends CompositeService implements POSUMMasterP
     public HandleEventResponse handleSchedulerEvent(HandleEventRequest request) {
         return portfolioService.handleSchedulerEvent(request);
     }
+
+    @Override
+    public SchedulerAllocateResponse allocateResources(SchedulerAllocateRequest request) {
+        return portfolioService.allocateResources(request);
+    }
 }

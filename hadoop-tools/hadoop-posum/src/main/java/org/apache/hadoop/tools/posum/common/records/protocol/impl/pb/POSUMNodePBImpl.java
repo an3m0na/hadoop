@@ -23,8 +23,8 @@ public class POSUMNodePBImpl extends POSUMNode {
     private boolean viaProto = false;
 
 
-    List<UpdatedContainerInfo> containerUpdates;
-    Set<String> nodeLabels;
+    private List<UpdatedContainerInfo> containerUpdates;
+    private Set<String> nodeLabels;
 
     public POSUMNodePBImpl() {
         builder = POSUMNodeProto.newBuilder();
@@ -68,6 +68,7 @@ public class POSUMNodePBImpl extends POSUMNode {
         if (nodeLabels != null) {
             builder.addAllNodeLabels(nodeLabels);
         }
+        builder.clearContainerUpdates();
         if (containerUpdates != null) {
             final Iterable<UpdatedContainerInfoProto> iterable =
                     new Iterable<UpdatedContainerInfoProto>() {
@@ -281,8 +282,6 @@ public class POSUMNodePBImpl extends POSUMNode {
 
     @Override
     public void setNodeLabels(Set<String> nodeLabels) {
-        if (nodeLabels == null)
-            return;
-        this.nodeLabels = new HashSet<>(nodeLabels);
+        this.nodeLabels = nodeLabels;
     }
 }
