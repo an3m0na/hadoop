@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.api.records.ResourceOption;
 import org.apache.hadoop.yarn.server.api.protocolrecords.NMContainerStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
@@ -110,6 +111,10 @@ public abstract class HandleEventRequest {
 
     public abstract void setApplicationId(ApplicationId appId);
 
+    public abstract String getQueue();
+
+    public abstract void setQueue(String queue);
+
     public abstract String getUser();
 
     public abstract void setUser(String user);
@@ -125,6 +130,10 @@ public abstract class HandleEventRequest {
     public abstract long getContainerId();
 
     public abstract void setContainerId(long containerId);
+
+    public abstract ReservationId getReservationId();
+
+    public abstract void setReservationId(ReservationId reservationId);
 
 }
 
