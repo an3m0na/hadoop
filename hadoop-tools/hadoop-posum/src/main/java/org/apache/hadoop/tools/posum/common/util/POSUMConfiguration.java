@@ -1,13 +1,14 @@
 package org.apache.hadoop.tools.posum.common.util;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 /**
  * Created by ane on 2/9/16.
  */
 public class POSUMConfiguration {
 
-    public static Configuration newInstance(){
+    public static Configuration newInstance() {
         Configuration conf = new Configuration();
         conf.addResource("posum-core.xml");
         return conf;
@@ -71,6 +72,16 @@ public class POSUMConfiguration {
 
     public static final String RELEVANT_SCHEDULER_CONFIGS = CORE_PREFIX + "conf.relevant";
     //TODO
-    public static final String DEFAULT_RELEVANT_SCHEDULER_CONFIGS = "";
+    public static final String DEFAULT_RELEVANT_SCHEDULER_CONFIGS =
+            YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB + "," +
+                    YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB + "," +
+                    YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB + "," +
+                    YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES + "," +
+                    YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES + "," +
+                    YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME + "," +
+                    YarnConfiguration.RM_SCHEDULER_MONITOR_POLICIES + "," +
+                    YarnConfiguration.RM_SCHEDULER_ADDRESS + "," +
+                    YarnConfiguration.RM_SCHEDULER_CLIENT_THREAD_COUNT + "," +
+                    YarnConfiguration.RM_SCHEDULER_ENABLE_MONITORS + ",";
 
 }
