@@ -9,8 +9,10 @@ import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
+import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
+import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
@@ -109,5 +111,15 @@ public class PolicyPortfolioClient extends AbstractService {
                 release,
                 blacklistAdditions,
                 blacklistRemovals)).getAllocation();
+    }
+
+    public QueueInfo getSchedulerQueueInfo(String queueName, boolean includeApplications,
+                                           boolean includeChildQueues, boolean recursive) {
+        return pmClient.getSchedulerQueueInfo(GetQueueInfoRequest.newInstance(
+                queueName,
+                includeApplications,
+                includeChildQueues,
+                recursive)
+        ).getQueueInfo();
     }
 }
