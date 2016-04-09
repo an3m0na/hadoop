@@ -90,9 +90,9 @@ public abstract class HandleEventRequest {
         return request;
     }
 
-    protected abstract Map<NodeId, Set<String>> getUpdatedNodeLabels();
+    public abstract Map<NodeId, Set<String>> getUpdatedNodeLabels();
 
-    protected abstract void setUpdatedNodeLabels(Map<NodeId, Set<String>> updatedNodeToLabels);
+    public abstract void setUpdatedNodeLabels(Map<NodeId, Set<String>> updatedNodeToLabels);
 
     public static HandleEventRequest newInstance(SchedulerEvent event) {
         return newInstance(event.getType());

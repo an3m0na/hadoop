@@ -92,8 +92,7 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
                 event = new NodeResourceUpdateSchedulerEvent(request.getNode(), request.getResourceOption());
                 break;
             case NODE_LABELS_UPDATE:
-                //TODO using NodeIdToLabelsProto because it is used by capacity scheduler
-//                event = new NodeLabelsUpdateSchedulerEvent()
+                event = new NodeLabelsUpdateSchedulerEvent(request.getUpdatedNodeLabels());
                 break;
             case APP_ADDED:
                 event = new AppAddedSchedulerEvent(
