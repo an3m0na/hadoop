@@ -71,7 +71,6 @@ public class POSUMConfiguration {
     public static final boolean MONITOR_KEEP_HISTORY_DEFAULT = false;
 
     public static final String RELEVANT_SCHEDULER_CONFIGS = CORE_PREFIX + "conf.relevant";
-    //TODO
     public static final String DEFAULT_RELEVANT_SCHEDULER_CONFIGS =
             YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB + "," +
                     YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB + "," +
