@@ -112,7 +112,7 @@ public class POSUMMetaScheduler extends
     @Override
     public QueueInfo getQueueInfo(String queueName,
                                   boolean includeChildQueues, boolean recursive) {
-        return null; //TODO DEFAULT_QUEUE.getQueueInfo(false, false);
+        return portfolioClient.getSchedulerQueueInfo(queueName, false, includeChildQueues, recursive);
     }
 
     @Override

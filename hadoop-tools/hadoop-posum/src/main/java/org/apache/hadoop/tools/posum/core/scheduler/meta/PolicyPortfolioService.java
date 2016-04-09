@@ -6,8 +6,12 @@ import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;
+import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetQueueInfoResponsePBImpl;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
+import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
@@ -146,6 +150,21 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
                 request.getBlacklistRemovals()
         );
         return SchedulerAllocateResponse.newInstance(allocation);
+    }
+
+    @Override
+    public GetQueueInfoResponse getSchedulerQueueInfo(GetQueueInfoRequest request) {
+        try {
+            QueueInfo info = this.currentScheduler.getQueueInfo(
+                    request.getQueueName(),
+                    request.getIncludeChildQueues(),
+                    request.getRecursive()
+            );
+            return GetQueueInfoResponse.newInstance(info);
+        } catch (IOException e) {
+            return GetQueueInfoResponse.newInstance(null);
+        }
+
     }
 
 }
