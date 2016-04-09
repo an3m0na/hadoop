@@ -3,7 +3,10 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.protocol.HandleEventRequest;
 import org.apache.hadoop.tools.posum.common.records.protocol.POSUMNode;
+import org.apache.hadoop.yarn.api.protocolrecords.GetNodesToLabelsResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetNodesToLabelsResponsePBImpl;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.api.records.ResourceOption;
 import org.apache.hadoop.yarn.api.records.impl.pb.ApplicationIdPBImpl;
@@ -16,9 +19,7 @@ import org.apache.hadoop.yarn.server.api.protocolrecords.NMContainerStatus;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.NMContainerStatusPBImpl;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by ane on 3/20/16.
@@ -86,7 +87,7 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
 
                                 @Override
                                 public NMContainerStatusProto next() {
-                                    return ((NMContainerStatusPBImpl)iterator.next()).getProto();
+                                    return ((NMContainerStatusPBImpl) iterator.next()).getProto();
                                 }
 
                                 @Override
@@ -115,6 +116,22 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         viaProto = false;
     }
 
+
+    @Override
+    protected Map<NodeId, Set<String>> getUpdatedNodeLabels() {
+        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        return new GetNodesToLabelsResponsePBImpl(p.getUpdatedNodeLabels()).getNodeToLabels();
+    }
+
+    @Override
+    protected void setUpdatedNodeLabels(Map<NodeId, Set<String>> updatedNodeToLabels) {
+        maybeInitBuilder();
+        builder.clearUpdatedNodeLabels();
+        if (updatedNodeToLabels != null) {
+            GetNodesToLabelsResponse wrapper = GetNodesToLabelsResponse.newInstance(updatedNodeToLabels);
+            builder.setUpdatedNodeLabels(((GetNodesToLabelsResponsePBImpl) wrapper).getProto());
+        }
+    }
 
     @Override
     public SchedulerEventType getEventType() {

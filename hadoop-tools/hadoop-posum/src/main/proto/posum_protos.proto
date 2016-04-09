@@ -196,6 +196,7 @@ message HandleEventRequestProto {
     optional int32 attemptId = 10;
     optional int64 containerId = 11;
     optional ReservationIdProto reservationId = 12;
+    optional GetNodesToLabelsResponseProto updatedNodeLabels = 13;
 
     enum EventTypeProto {
         EVENT_NODE_ADDED = 0;

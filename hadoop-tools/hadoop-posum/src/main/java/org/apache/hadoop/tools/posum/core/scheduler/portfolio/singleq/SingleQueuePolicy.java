@@ -389,6 +389,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
                                 SchedulerUtils.EXPIRED_CONTAINER),
                         RMContainerEventType.EXPIRE);
                 break;
+            //TODO (only if preemptable capacity scheduler) case NODE_LABELS_UPDATE:
             default:
                 LOG.error("Unknown event arrived at scheduler:" + event.toString());
         }
