@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.api.records.ResourceOption;
 import org.apache.hadoop.yarn.server.api.protocolrecords.NMContainerStatus;
@@ -9,6 +10,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by ane on 4/5/16.
@@ -83,9 +86,13 @@ public abstract class HandleEventRequest {
 
     public static HandleEventRequest newInstance(NodeLabelsUpdateSchedulerEvent event) {
         HandleEventRequest request = newInstance(event.getType());
-        //TODO UpdatedNodeToLabels
+        request.setUpdatedNodeLabels(event.getUpdatedNodeToLabels());
         return request;
     }
+
+    protected abstract Map<NodeId, Set<String>> getUpdatedNodeLabels();
+
+    protected abstract void setUpdatedNodeLabels(Map<NodeId, Set<String>> updatedNodeToLabels);
 
     public static HandleEventRequest newInstance(SchedulerEvent event) {
         return newInstance(event.getType());
