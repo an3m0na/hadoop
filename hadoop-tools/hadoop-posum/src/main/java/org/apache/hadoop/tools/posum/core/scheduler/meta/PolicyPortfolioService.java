@@ -2,8 +2,11 @@ package org.apache.hadoop.tools.posum.core.scheduler.meta;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.tools.posum.common.records.message.*;
+import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
-import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.ConfigurationRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.ConfigurationRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;

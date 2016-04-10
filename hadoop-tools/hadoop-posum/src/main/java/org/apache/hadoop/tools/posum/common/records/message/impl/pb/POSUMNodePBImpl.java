@@ -1,7 +1,7 @@
-package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.message.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.protocol.POSUMNode;
+import org.apache.hadoop.tools.posum.common.records.message.POSUMNode;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.impl.pb.ContainerStatusPBImpl;
 import org.apache.hadoop.yarn.api.records.impl.pb.NodeIdPBImpl;

@@ -1,5 +1,8 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
+import org.apache.hadoop.tools.posum.common.records.message.*;
+import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoResponse;
 

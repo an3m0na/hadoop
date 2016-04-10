@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records.protocol;
+package org.apache.hadoop.tools.posum.common.records.message;
 
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;

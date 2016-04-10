@@ -1,5 +1,9 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
+import org.apache.hadoop.tools.posum.common.records.message.MultiEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.message.MultiEntityResponse;
+import org.apache.hadoop.tools.posum.common.records.message.SingleEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.message.SingleEntityResponse;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;

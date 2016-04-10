@@ -1,8 +1,8 @@
-package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.message.impl.pb;
 
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.protocol.HandleRMEventRequest;
+import org.apache.hadoop.tools.posum.common.records.message.HandleRMEventRequest;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.impl.pb.ApplicationIdPBImpl;

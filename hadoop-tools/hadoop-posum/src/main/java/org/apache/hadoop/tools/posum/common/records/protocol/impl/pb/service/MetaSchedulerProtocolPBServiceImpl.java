@@ -2,9 +2,10 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service;
 
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
+import org.apache.hadoop.tools.posum.common.records.message.impl.pb.HandleRMEventRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
-import org.apache.hadoop.tools.posum.common.records.protocol.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.*;
+import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleResponse;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 
 /**

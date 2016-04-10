@@ -1,9 +1,6 @@
-package org.apache.hadoop.tools.posum.common.records.protocol;
+package org.apache.hadoop.tools.posum.common.records.message.simple;
 
 import org.apache.hadoop.yarn.util.Records;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 /**
  * Created by ane on 3/31/16.
