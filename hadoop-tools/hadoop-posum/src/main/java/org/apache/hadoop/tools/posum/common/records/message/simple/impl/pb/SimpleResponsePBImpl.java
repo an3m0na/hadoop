@@ -1,7 +1,10 @@
 package org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.api.records.SerializedException;
 import org.apache.hadoop.yarn.api.records.impl.pb.SerializedExceptionPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
@@ -10,10 +13,12 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProtoOrBuilder;
 /**
  * Created by ane on 3/20/16.
  */
-public class SimpleResponsePBImpl extends SimpleResponse {
+public abstract class SimpleResponsePBImpl<T> extends SimpleResponse<T> {
     private SimpleResponseProto proto = SimpleResponseProto.getDefaultInstance();
     private SimpleResponseProto.Builder builder = null;
     private boolean viaProto = false;
+
+    private T payload;
 
     public SimpleResponsePBImpl() {
         builder = SimpleResponseProto.newBuilder();
@@ -107,4 +112,37 @@ public class SimpleResponsePBImpl extends SimpleResponse {
         maybeInitBuilder();
         builder.setSuccessful(successful);
     }
+
+    @Override
+    public Type getType() {
+        return null;
+    }
+
+    @Override
+    public void setType(Type type) {
+
+    }
+
+    @Override
+    public T getPayload() {
+        if (this.payload == null) {
+            SimpleResponseProtoOrBuilder p = viaProto ? proto : builder;
+            if (p.hasPayload())
+                try {
+                    this.payload = bytesToPayload(p.getPayload());
+                } catch (InvalidProtocolBufferException e) {
+                    throw new POSUMException("Could not read message payload", e);
+                }
+        }
+        return payload;
+    }
+
+    @Override
+    public void setPayload(T payload) {
+        this.payload = payload;
+    }
+
+    public abstract ByteString payloadToBytes(T payload);
+
+    public abstract T bytesToPayload(ByteString data) throws InvalidProtocolBufferException;
 }
