@@ -61,16 +61,8 @@ public abstract class EntityProperty {
             return mappedClass;
         }
 
-        public void setMappedClass(Class mappedClass) {
-            this.mappedClass = mappedClass;
-        }
-
         public ValueReader getReader() {
             return reader;
-        }
-
-        public void setReader(ValueReader reader) {
-            this.reader = reader;
         }
 
         public static PropertyType getByClass(Class type) {

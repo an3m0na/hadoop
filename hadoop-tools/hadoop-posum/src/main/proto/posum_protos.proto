@@ -179,7 +179,13 @@ message ConfigurationPropertiesProto{
 message SimpleResponseProto {
     required bool successful = 1;
     optional string text = 2;
-    optional SerializedExceptionProto exception = 3;
+    required SimpleResponseTypeProto type = 3;
+    optional bytes payload = 4;
+    optional SerializedExceptionProto exception = 5;
+
+    enum SimpleResponseTypeProto {
+        RESP_NUM_NODES = 0;
+    }
 }
 
 message ConfigurationRequestProto {
