@@ -21,6 +21,7 @@ public class POSUMConfiguration {
     public static final String MONITOR_PREFIX = PREFIX + "monitor.";
     public static final String PREDICTOR_PREFIX = PREFIX + "predictor.";
     public static final String DATABASE_PREFIX = PREFIX + "database.";
+    public static final String META_PREFIX = CORE_PREFIX + "meta.";
 
     public static final String MASTER_HEARTBEAT_MS = CORE_PREFIX + "heartbeat.ms";
     public static final int MASTER_HEARTBEAT_MS_DEFAULT = 1000;
@@ -83,4 +84,10 @@ public class POSUMConfiguration {
                     YarnConfiguration.RM_SCHEDULER_CLIENT_THREAD_COUNT + "," +
                     YarnConfiguration.RM_SCHEDULER_ENABLE_MONITORS + ",";
 
+    public static final String META_BIND_ADDRESS = META_PREFIX + "bind-host";
+    public static final String META_ADDRESS = META_PREFIX + "address";
+    public static final String DEFAULT_META_ADDRESS = "0.0.0.0";
+    public static final int DEFAULT_META_PORT = 7020;
+    public static final String META_SERVICE_THREAD_COUNT = META_PREFIX + "conn.thread-count";
+    public static final int DEFAULT_META_SERVICE_THREAD_COUNT = 10;
 }

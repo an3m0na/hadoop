@@ -22,10 +22,8 @@ public abstract class SimpleResponse {
     }
 
     public static SimpleResponse newInstance(boolean successful, String text, Throwable e) {
-        StringWriter sw = new StringWriter();
-        e.printStackTrace(new PrintWriter(sw));
         SimpleResponse ret = newInstance(successful, text);
-        ret.setDetails(sw.toString());
+        ret.setException(e);
         return ret;
     }
 
@@ -33,9 +31,9 @@ public abstract class SimpleResponse {
 
     public abstract void setText(String text);
 
-    public abstract String getDetails();
+    public abstract Throwable getException();
 
-    public abstract void setDetails(String details);
+    public abstract void setException(Throwable exception);
 
     public abstract boolean getSuccessful();
 

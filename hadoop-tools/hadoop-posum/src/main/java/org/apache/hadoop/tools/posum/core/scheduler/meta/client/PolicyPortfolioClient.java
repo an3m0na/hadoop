@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.core.master.client;
+package org.apache.hadoop.tools.posum.core.scheduler.meta.client;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,7 +28,7 @@ public class PolicyPortfolioClient extends AbstractService {
     private static Log logger = LogFactory.getLog(PolicyPortfolioClient.class);
 
     private Configuration posumConf;
-    Set<String> relevantProps;
+    private Set<String> relevantProps;
 
     public PolicyPortfolioClient() {
         super(PolicyPortfolioClient.class.getName());
@@ -70,7 +70,7 @@ public class PolicyPortfolioClient extends AbstractService {
 
     private void logIfError(SimpleResponse response, String message) {
         if (!response.getSuccessful()) {
-            logger.error(message + "\n" + response.getText() + "\n" + response.getDetails());
+            logger.error(message + "\n" + response.getText() + "\n" + response.getException());
         }
     }
 
@@ -96,7 +96,7 @@ public class PolicyPortfolioClient extends AbstractService {
     }
 
     public void handleSchedulerEvent(SchedulerEvent event) {
-        HandleEventRequest request = HandleEventRequest.newInstance(event);
+        HandleSchedulerEventRequest request = HandleSchedulerEventRequest.newInstance(event);
         logIfError(pmClient.handleSchedulerEvent(request), "Event handling unsuccessful");
     }
 

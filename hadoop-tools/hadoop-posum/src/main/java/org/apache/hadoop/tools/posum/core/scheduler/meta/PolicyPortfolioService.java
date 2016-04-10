@@ -8,15 +8,9 @@ import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetQueueInfoResponsePBImpl;
-import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
-import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 
 import java.io.IOException;
 
@@ -25,11 +19,11 @@ import java.io.IOException;
  */
 public class PolicyPortfolioService extends AbstractService implements PortfolioProtocol {
 
-    POSUMMasterContext pmContext;
-    Configuration conf;
+    private POSUMMasterContext pmContext;
+    private Configuration posumConf;
     //TODO choose default some other way
-    Class<? extends PluginPolicy> currentSchedulerClass = DataOrientedPolicy.class;
-    PluginPolicy currentScheduler;
+    private Class<? extends PluginPolicy> currentSchedulerClass = DataOrientedPolicy.class;
+    private PluginPolicy currentScheduler;
 
     public PolicyPortfolioService(POSUMMasterContext context) {
         super(PolicyPortfolioService.class.getName());
@@ -46,8 +40,8 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         super.serviceInit(conf);
-        this.conf = conf;
-        this.currentScheduler.initializePlugin(conf);
+        this.posumConf = conf;
+        this.currentScheduler.initializePlugin(posumConf);
     }
 
     @Override
@@ -66,7 +60,7 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
     public SimpleResponse reinitScheduler(ConfigurationRequest request) {
         try {
             Configuration yarnConf = new DummyYarnConfiguration(request.getProperties());
-            RMContext rmContext = new DummyRMContext(yarnConf);
+            RMContext rmContext = new DummyRMContext(posumConf, yarnConf);
 
             this.currentScheduler.reinitialize(yarnConf, rmContext);
         } catch (IOException e) {
@@ -76,67 +70,14 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
     }
 
     @Override
-    public HandleEventResponse handleSchedulerEvent(HandleEventRequest request) {
-        SchedulerEvent event = null;
-        switch (request.getEventType()) {
-            case NODE_ADDED:
-                event = new NodeAddedSchedulerEvent(request.getNode(), request.getContainerReports());
-                break;
-            case NODE_REMOVED:
-                event = new NodeRemovedSchedulerEvent(request.getNode());
-                break;
-            case NODE_UPDATE:
-                event = new NodeUpdateSchedulerEvent(request.getNode());
-                break;
-            case NODE_RESOURCE_UPDATE:
-                event = new NodeResourceUpdateSchedulerEvent(request.getNode(), request.getResourceOption());
-                break;
-            case NODE_LABELS_UPDATE:
-                event = new NodeLabelsUpdateSchedulerEvent(request.getUpdatedNodeLabels());
-                break;
-            case APP_ADDED:
-                event = new AppAddedSchedulerEvent(
-                        request.getApplicationId(),
-                        request.getQueue(),
-                        request.getUser(),
-                        request.getFlag(),
-                        request.getReservationId()
-                );
-                break;
-            case APP_REMOVED:
-                event = new AppRemovedSchedulerEvent(request.getApplicationId(),
-                        RMAppState.valueOf(request.getFinalState()));
-                break;
-            case APP_ATTEMPT_ADDED:
-                event = new AppAttemptAddedSchedulerEvent(
-                        ApplicationAttemptId.newInstance(request.getApplicationId(), request.getAttemptId()),
-                        request.getFlag()
-                );
-                break;
-            case APP_ATTEMPT_REMOVED:
-                event = new AppAttemptRemovedSchedulerEvent(
-                        ApplicationAttemptId.newInstance(request.getApplicationId(), request.getAttemptId()),
-                        RMAppAttemptState.valueOf(request.getFinalState()),
-                        request.getFlag()
-                );
-                break;
-            case CONTAINER_EXPIRED:
-                ApplicationAttemptId attemptId =
-                        ApplicationAttemptId.newInstance(request.getApplicationId(), request.getAttemptId());
-                ContainerId id = ContainerId.newContainerId(attemptId, request.getContainerId());
-                event = new ContainerExpiredSchedulerEvent(id);
-                break;
-            default:
-                return HandleEventResponse.newInstance(false,
-                        "Unrecognized event type reached POSUM Scheduler " + request.getEventType());
-        }
+    public SimpleResponse handleSchedulerEvent(HandleSchedulerEventRequest request) {
         //TODO handle dispatch response
         try {
-            this.currentScheduler.handle(event);
+            this.currentScheduler.handle(request.getInterpretedEvent());
         } catch (Exception e) {
-            return HandleEventResponse.newInstance(false, "Exception handling error", e);
+            return SimpleResponse.newInstance(false, "Exception in handling event", e);
         }
-        return HandleEventResponse.newInstance(true);
+        return SimpleResponse.newInstance(true);
     }
 
     @Override
