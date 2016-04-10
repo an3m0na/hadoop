@@ -159,6 +159,23 @@ message MultiEntityResponseProto {
     repeated bytes entities = 2;
 }
 
+message SimpleRequestProto {
+    required SimpleRequestTypeProto type = 1;
+    optional bytes payload = 2;
+
+    enum SimpleRequestTypeProto {
+        REQ_CONFIG = 0;
+        REQ_INIT = 1;
+        REQ_REINIT = 2;
+        REQ_START = 3;
+        REQ_STOP = 4;
+    }
+}
+
+message ConfigurationPropertiesProto{
+    repeated StringStringMapProto properties = 1;
+}
+
 message SimpleResponseProto {
     required bool successful = 1;
     optional string text = 2;
@@ -186,7 +203,7 @@ message UpdatedContainerInfoProto {
 }
 
 message HandleSchedulerEventRequestProto {
-    required EventTypeProto eventType = 1;
+    required SchedulerEventTypeProto eventType = 1;
     optional POSUMNodeProto node = 2;
     repeated NMContainerStatusProto containerReports = 3;
     optional ResourceOptionProto resourceOption = 4;
@@ -200,7 +217,7 @@ message HandleSchedulerEventRequestProto {
     optional ReservationIdProto reservationId = 12;
     optional GetNodesToLabelsResponseProto updatedNodeLabels = 13;
 
-    enum EventTypeProto {
+    enum SchedulerEventTypeProto {
         EVENT_NODE_ADDED = 0;
         EVENT_NODE_REMOVED = 1;
         EVENT_NODE_UPDATE = 2;

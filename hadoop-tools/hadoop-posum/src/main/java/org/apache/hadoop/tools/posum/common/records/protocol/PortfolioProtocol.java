@@ -9,9 +9,7 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoResponse;
 public interface PortfolioProtocol {
     long versionID = 1L;
 
-    SimpleResponse configureScheduler(ConfigurationRequest request);
-    SimpleResponse initScheduler(ConfigurationRequest request);
-    SimpleResponse reinitScheduler(ConfigurationRequest request);
+    SimpleResponse forwardToScheduler(SimpleRequest request);
     SimpleResponse handleSchedulerEvent(HandleSchedulerEventRequest request);
     SchedulerAllocateResponse allocateResources(SchedulerAllocateRequest request);
     GetQueueInfoResponse getSchedulerQueueInfo(GetQueueInfoRequest request);

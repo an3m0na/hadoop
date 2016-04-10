@@ -8,9 +8,7 @@ import "posum_protos.proto";
 import "yarn_service_protos.proto";
 
 service POSUMMasterProtocolService {
-    rpc configureScheduler (ConfigurationRequestProto) returns (SimpleResponseProto);
-    rpc initScheduler (ConfigurationRequestProto) returns (SimpleResponseProto);
-    rpc reinitScheduler (ConfigurationRequestProto) returns (SimpleResponseProto);
+    rpc forwardToScheduler (SimpleRequestProto) returns (SimpleResponseProto);
     rpc handleSchedulerEvent (HandleSchedulerEventRequestProto) returns (SimpleResponseProto);
     rpc allocateResources (SchedulerAllocateRequestProto) returns (SchedulerAllocateResponseProto);
     rpc getSchedulerQueueInfo (GetQueueInfoRequestProto) returns (GetQueueInfoResponseProto);

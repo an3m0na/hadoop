@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
+import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.ConfigurationRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
@@ -70,29 +71,46 @@ public class PolicyPortfolioClient extends AbstractService {
 
     private void logIfError(SimpleResponse response, String message) {
         if (!response.getSuccessful()) {
-            logger.error(message + "\n" + response.getText() + "\n" + response.getException());
+            logger.error(message + "\n" + response.getText(), response.getException());
         }
     }
 
-    private ConfigurationRequest composeConfRequest(Configuration conf) {
+    private SimpleRequest composeConfRequest(SimpleRequest.Type type, Configuration conf) {
         Map<String, String> properties = new HashMap<>();
         for (String prop : relevantProps) {
             properties.put(prop, conf.get(prop));
         }
-        return ConfigurationRequest.newInstance(properties);
+        try {
+            return SimpleRequest.newInstance(type, properties, ConfigurationRequestPBImpl.class);
+        } catch (IllegalAccessException | InstantiationException e) {
+            throw new POSUMException("Could not instantiate request", e);
+        }
     }
 
     public void setConf(Configuration conf) {
-        logIfError(pmClient.configureScheduler(composeConfRequest(conf)), "Configuration unsuccessful");
+        logIfError(pmClient.forwardToScheduler(composeConfRequest(SimpleRequest.Type.CONFIG, conf)),
+                "Configuration unsuccessful");
     }
 
     public void reinitScheduler(Configuration conf) {
-        logIfError(pmClient.reinitScheduler(composeConfRequest(conf)), "Reinitialization unsuccessful");
+        logIfError(pmClient.forwardToScheduler(composeConfRequest(SimpleRequest.Type.REINIT, conf)),
+                "Reinitialization unsuccessful");
 
     }
 
     public void initScheduler(Configuration conf) {
-        logIfError(pmClient.initScheduler(composeConfRequest(conf)), "Initialization unsuccessful");
+        logIfError(pmClient.forwardToScheduler(composeConfRequest(SimpleRequest.Type.INIT, conf)),
+                "Initialization unsuccessful");
+    }
+
+    public void startScheduler() {
+        logIfError(pmClient.forwardToScheduler(SimpleRequest.newInstance(SimpleRequest.Type.START)),
+                "Scheduler start unsuccessful");
+    }
+
+    public void stopScheduler() {
+        logIfError(pmClient.forwardToScheduler(SimpleRequest.newInstance(SimpleRequest.Type.STOP)),
+                "Scheduler start unsuccessful");
     }
 
     public void handleSchedulerEvent(SchedulerEvent event) {

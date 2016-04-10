@@ -69,18 +69,8 @@ public class POSUMMasterService extends CompositeService implements POSUMMasterP
     }
 
     @Override
-    public SimpleResponse configureScheduler(ConfigurationRequest request) {
-        return portfolioService.configureScheduler(request);
-    }
-
-    @Override
-    public SimpleResponse initScheduler(ConfigurationRequest request) {
-        return portfolioService.initScheduler(request);
-    }
-
-    @Override
-    public SimpleResponse reinitScheduler(ConfigurationRequest request) {
-        return portfolioService.reinitScheduler(request);
+    public SimpleResponse forwardToScheduler(SimpleRequest request) {
+        return portfolioService.forwardToScheduler(request);
     }
 
     @Override
