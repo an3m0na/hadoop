@@ -1,7 +1,10 @@
 package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
+import org.apache.commons.lang.SerializationException;
 import org.apache.hadoop.tools.posum.common.records.protocol.SimpleResponse;
+import org.apache.hadoop.yarn.api.records.SerializedException;
+import org.apache.hadoop.yarn.api.records.impl.pb.SerializedExceptionPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProtoOrBuilder;
 
@@ -80,15 +83,18 @@ public class SimpleResponsePBImpl extends SimpleResponse {
     }
 
     @Override
-    public String getDetails() {
+    public Throwable getException() {
         SimpleResponseProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getDetails();
+        if(!p.hasException())
+            return null;
+        return new SerializedExceptionPBImpl(p.getException()).deSerialize();
     }
 
     @Override
-    public void setDetails(String details) {
+    public void setException(Throwable exception) {
         maybeInitBuilder();
-        builder.setDetails(details);
+        if(exception != null)
+        builder.setException(((SerializedExceptionPBImpl)SerializedException.newInstance(exception)).getProto());
     }
 
     @Override

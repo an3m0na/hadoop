@@ -5,7 +5,9 @@ option java_package = "org.apache.hadoop.yarn.proto";
 option java_outer_classname = "POSUMProtos";
 
 import "yarn_protos.proto";
+
 import "yarn_service_protos.proto";
+
 import "yarn_server_common_service_protos.proto";
 
 enum EntityTypeProto {
@@ -160,7 +162,7 @@ message MultiEntityResponseProto {
 message SimpleResponseProto {
     required bool successful = 1;
     optional string text = 2;
-    optional string details = 3;
+    optional SerializedExceptionProto exception = 3;
 }
 
 message ConfigurationRequestProto {
@@ -183,7 +185,7 @@ message UpdatedContainerInfoProto {
     repeated ContainerStatusProto completedContainers = 8;
 }
 
-message HandleEventRequestProto {
+message HandleSchedulerEventRequestProto {
     required EventTypeProto eventType = 1;
     optional POSUMNodeProto node = 2;
     repeated NMContainerStatusProto containerReports = 3;
@@ -212,10 +214,21 @@ message HandleEventRequestProto {
     }
 }
 
-message HandleEventResponseProto {
-    required bool successful = 1;
-    optional string text = 2;
-    optional string details = 3;
+message HandleRMEventRequestProto {
+    required RMEventClassProto eventClass = 1;
+    required string eventType = 2;
+    optional ApplicationIdProto applicationId = 3;
+    optional string queue = 4;
+    optional int32 attemptId = 5;
+    optional int64 containerId = 6;
+    optional NodeIdProto nodeId = 7;
+
+    enum RMEventClassProto {
+        RMEVENT_RMNodeCleanContainerEvent = 0;
+        RMEVENT_RMAppEvent = 1;
+        RMEVENT_RMAppMoveEvent = 2;
+    }
+
 }
 
 message SchedulerAllocateRequestProto {

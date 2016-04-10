@@ -1,46 +1,47 @@
 package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.protocol.HandleEventRequest;
+import org.apache.hadoop.tools.posum.common.records.protocol.HandleSchedulerEventRequest;
 import org.apache.hadoop.tools.posum.common.records.protocol.POSUMNode;
+import org.apache.hadoop.tools.posum.common.records.protocol.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNodesToLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetNodesToLabelsResponsePBImpl;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.NodeId;
-import org.apache.hadoop.yarn.api.records.ReservationId;
-import org.apache.hadoop.yarn.api.records.ResourceOption;
+import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.impl.pb.ApplicationIdPBImpl;
 import org.apache.hadoop.yarn.api.records.impl.pb.ReservationIdPBImpl;
 import org.apache.hadoop.yarn.api.records.impl.pb.ResourceOptionPBImpl;
-import org.apache.hadoop.yarn.proto.POSUMProtos.HandleEventRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.HandleEventRequestProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.POSUMProtos.HandleSchedulerEventRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.HandleSchedulerEventRequestProtoOrBuilder;
 import org.apache.hadoop.yarn.proto.YarnServerCommonServiceProtos.NMContainerStatusProto;
 import org.apache.hadoop.yarn.server.api.protocolrecords.NMContainerStatus;
 import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.NMContainerStatusPBImpl;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;
+import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
+import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 
 import java.util.*;
 
 /**
  * Created by ane on 3/20/16.
  */
-public class HandleEventRequestPBImpl extends HandleEventRequest {
-    private HandleEventRequestProto proto = HandleEventRequestProto.getDefaultInstance();
-    private HandleEventRequestProto.Builder builder = null;
+public class HandleSchedulerEventRequestPBImpl extends HandleSchedulerEventRequest {
+    private HandleSchedulerEventRequestProto proto = HandleSchedulerEventRequestProto.getDefaultInstance();
+    private HandleSchedulerEventRequestProto.Builder builder = null;
     private boolean viaProto = false;
 
     private List<NMContainerStatus> containerReports;
 
-    public HandleEventRequestPBImpl() {
-        builder = HandleEventRequestProto.newBuilder();
+    public HandleSchedulerEventRequestPBImpl() {
+        builder = HandleSchedulerEventRequestProto.newBuilder();
     }
 
-    public HandleEventRequestPBImpl(HandleEventRequestProto proto) {
+    public HandleSchedulerEventRequestPBImpl(HandleSchedulerEventRequestProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public HandleEventRequestProto getProto() {
+    public HandleSchedulerEventRequestProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -111,20 +112,19 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = HandleEventRequestProto.newBuilder(proto);
+            builder = HandleSchedulerEventRequestProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
-
     @Override
-    protected Map<NodeId, Set<String>> getUpdatedNodeLabels() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+    public Map<NodeId, Set<String>> getUpdatedNodeLabels() {
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
         return new GetNodesToLabelsResponsePBImpl(p.getUpdatedNodeLabels()).getNodeToLabels();
     }
 
     @Override
-    protected void setUpdatedNodeLabels(Map<NodeId, Set<String>> updatedNodeToLabels) {
+    public void setUpdatedNodeLabels(Map<NodeId, Set<String>> updatedNodeToLabels) {
         maybeInitBuilder();
         builder.clearUpdatedNodeLabels();
         if (updatedNodeToLabels != null) {
@@ -133,21 +133,19 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         }
     }
 
-    @Override
     public SchedulerEventType getEventType() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
         return SchedulerEventType.valueOf(p.getEventType().name().substring("EVENT_".length()));
     }
 
     @Override
     public void setEventType(SchedulerEventType type) {
         maybeInitBuilder();
-        builder.setEventType(HandleEventRequestProto.EventTypeProto.valueOf("EVENT_" + type.name()));
+        builder.setEventType(HandleSchedulerEventRequestProto.EventTypeProto.valueOf("EVENT_" + type.name()));
     }
 
-    @Override
     public POSUMNode getNode() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
         return new POSUMNodePBImpl(p.getNode());
     }
 
@@ -157,10 +155,9 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         builder.setNode(((POSUMNodePBImpl) node).getProto());
     }
 
-    @Override
     public List<NMContainerStatus> getContainerReports() {
         if (containerReports == null) {
-            HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+            HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
             containerReports = new ArrayList<>(p.getContainerReportsCount());
             for (NMContainerStatusProto status : p.getContainerReportsList()) {
                 containerReports.add(new NMContainerStatusPBImpl(status));
@@ -174,9 +171,8 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         this.containerReports = reports;
     }
 
-    @Override
     public ResourceOption getResourceOption() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
         return new ResourceOptionPBImpl(p.getResourceOption());
     }
 
@@ -186,9 +182,8 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         builder.setResourceOption(((ResourceOptionPBImpl) option).getProto());
     }
 
-    @Override
     public boolean getFlag() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
         return p.getFlag();
     }
 
@@ -198,9 +193,8 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         builder.setFlag(flag);
     }
 
-    @Override
     public ApplicationId getApplicationId() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
         return new ApplicationIdPBImpl(p.getApplicationId());
     }
 
@@ -210,9 +204,8 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         builder.setApplicationId(((ApplicationIdPBImpl) appId).getProto());
     }
 
-    @Override
     public String getQueue() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
         return builder.getQueue();
     }
 
@@ -222,9 +215,8 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         builder.setQueue(queue);
     }
 
-    @Override
     public String getUser() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
         return builder.getUser();
     }
 
@@ -234,9 +226,8 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         builder.setUser(user);
     }
 
-    @Override
     public String getFinalState() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
         return p.getFinalState();
     }
 
@@ -246,10 +237,9 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         builder.setFinalState(state);
     }
 
-    @Override
-    public int getAttemptId() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getAttemptId();
+    public ApplicationAttemptId getAttemptId() {
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        return ApplicationAttemptId.newInstance(getApplicationId(), p.getAttemptId());
     }
 
     @Override
@@ -258,10 +248,9 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         builder.setAttemptId(attemptId);
     }
 
-    @Override
-    public long getContainerId() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getContainerId();
+    public ContainerId getContainerId() {
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        return ContainerId.newContainerId(getAttemptId(), p.getContainerId());
     }
 
     @Override
@@ -270,9 +259,8 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
         builder.setContainerId(containerId);
     }
 
-    @Override
     public ReservationId getReservationId() {
-        HandleEventRequestProtoOrBuilder p = viaProto ? proto : builder;
+        HandleSchedulerEventRequestProtoOrBuilder p = viaProto ? proto : builder;
         return new ReservationIdPBImpl(p.getReservationId());
     }
 
@@ -280,5 +268,47 @@ public class HandleEventRequestPBImpl extends HandleEventRequest {
     public void setReservationId(ReservationId reservationId) {
         maybeInitBuilder();
         builder.setReservationId(((ReservationIdPBImpl) reservationId).getProto());
+    }
+
+    @Override
+    public SchedulerEvent getInterpretedEvent() {
+        SchedulerEventType type = getEventType();
+        switch (type) {
+            case NODE_ADDED:
+                return new NodeAddedSchedulerEvent(getNode(), getContainerReports());
+            case NODE_REMOVED:
+                new NodeRemovedSchedulerEvent(getNode());
+            case NODE_UPDATE:
+                return new NodeUpdateSchedulerEvent(getNode());
+            case NODE_RESOURCE_UPDATE:
+                return new NodeResourceUpdateSchedulerEvent(getNode(), getResourceOption());
+            case NODE_LABELS_UPDATE:
+                return new NodeLabelsUpdateSchedulerEvent(getUpdatedNodeLabels());
+            case APP_ADDED:
+                return new AppAddedSchedulerEvent(
+                        getApplicationId(),
+                        getQueue(),
+                        getUser(),
+                        getFlag(),
+                        getReservationId()
+                );
+            case APP_REMOVED:
+                return new AppRemovedSchedulerEvent(getApplicationId(),
+                        RMAppState.valueOf(getFinalState()));
+            case APP_ATTEMPT_ADDED:
+                return new AppAttemptAddedSchedulerEvent(
+                        getAttemptId(),
+                        getFlag()
+                );
+            case APP_ATTEMPT_REMOVED:
+                return new AppAttemptRemovedSchedulerEvent(
+                        getAttemptId(),
+                        RMAppAttemptState.valueOf(getFinalState()),
+                        getFlag()
+                );
+            case CONTAINER_EXPIRED:
+                return new ContainerExpiredSchedulerEvent(getContainerId());
+        }
+        throw new POSUMException("Unrecognized event type reached POSUM Scheduler " + type);
     }
 }

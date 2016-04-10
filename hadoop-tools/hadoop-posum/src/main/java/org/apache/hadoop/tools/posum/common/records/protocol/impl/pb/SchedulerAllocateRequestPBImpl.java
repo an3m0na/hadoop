@@ -1,20 +1,12 @@
 package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.protocol.HandleEventRequest;
-import org.apache.hadoop.tools.posum.common.records.protocol.POSUMNode;
 import org.apache.hadoop.tools.posum.common.records.protocol.SchedulerAllocateRequest;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.impl.pb.*;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SchedulerAllocateRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SchedulerAllocateRequestProtoOrBuilder;
 import org.apache.hadoop.yarn.proto.YarnProtos;
-import org.apache.hadoop.yarn.proto.YarnServerCommonServiceProtos;
-import org.apache.hadoop.yarn.server.api.protocolrecords.NMContainerStatus;
-import org.apache.hadoop.yarn.server.api.protocolrecords.impl.pb.NMContainerStatusPBImpl;
-import org.apache.hadoop.yarn.server.resourcemanager.rmnode.UpdatedContainerInfo;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;
 
 import java.util.ArrayList;
 import java.util.Iterator;
