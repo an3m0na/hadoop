@@ -141,7 +141,7 @@ public class HandleSchedulerEventRequestPBImpl extends HandleSchedulerEventReque
     @Override
     public void setEventType(SchedulerEventType type) {
         maybeInitBuilder();
-        builder.setEventType(HandleSchedulerEventRequestProto.EventTypeProto.valueOf("EVENT_" + type.name()));
+        builder.setEventType(HandleSchedulerEventRequestProto.SchedulerEventTypeProto.valueOf("EVENT_" + type.name()));
     }
 
     public POSUMNode getNode() {

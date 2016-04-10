@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.core.scheduler.meta;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
+import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.ConfigurationRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;
@@ -30,7 +31,7 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
         this.pmContext = context;
         //TODO move somewhere else
         try {
-            this.currentScheduler = currentSchedulerClass.newInstance();
+            currentScheduler = currentSchedulerClass.newInstance();
 
         } catch (InstantiationException | IllegalAccessException e) {
             throw new POSUMException("Could not initialize plugin scheduler", e);
@@ -41,48 +42,65 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
     protected void serviceInit(Configuration conf) throws Exception {
         super.serviceInit(conf);
         this.posumConf = conf;
-        this.currentScheduler.initializePlugin(posumConf);
+        currentScheduler.initializePlugin(posumConf);
     }
 
-    @Override
-    public SimpleResponse configureScheduler(ConfigurationRequest request) {
-        this.currentScheduler.setConf(new DummyYarnConfiguration(request.getProperties()));
-        return SimpleResponse.newInstance(true);
-    }
-
-    @Override
-    public SimpleResponse initScheduler(ConfigurationRequest request) {
-        this.currentScheduler.init(new DummyYarnConfiguration(request.getProperties()));
-        return SimpleResponse.newInstance(true);
-    }
-
-    @Override
-    public SimpleResponse reinitScheduler(ConfigurationRequest request) {
+    public SimpleResponse forwardToScheduler(ConfigurationRequestPBImpl request) {
         try {
-            Configuration yarnConf = new DummyYarnConfiguration(request.getProperties());
-            RMContext rmContext = new DummyRMContext(posumConf, yarnConf);
+            Configuration yarnConf =
+                    new DummyYarnConfiguration(request.getPayload());
+            switch (request.getType()) {
+                case CONFIG:
+                    currentScheduler.setConf(yarnConf);
+                    break;
+                case INIT:
+                    currentScheduler.init(yarnConf);
+                    break;
+                case REINIT:
+                    RMContext rmContext = new DummyRMContext(posumConf, yarnConf);
+                    currentScheduler.reinitialize(yarnConf, rmContext);
+                    break;
+                default:
+                    return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
+            }
+        } catch (Exception e) {
+            return SimpleResponse.newInstance(false, "Exception when forwarding message type " + request.getType(), e);
+        }
+        return SimpleResponse.newInstance(true);
+    }
 
-            this.currentScheduler.reinitialize(yarnConf, rmContext);
-        } catch (IOException e) {
-            return SimpleResponse.newInstance(false, "Reinitialization exception", e);
+    @Override
+    public SimpleResponse forwardToScheduler(SimpleRequest request) {
+        try {
+            switch (request.getType()) {
+                case START:
+                    currentScheduler.start();
+                    break;
+                case STOP:
+                    currentScheduler.stop();
+                    break;
+                default:
+                    return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
+            }
+        } catch (Exception e) {
+            return SimpleResponse.newInstance(false, "Exception when forwarding message type " + request.getType(), e);
         }
         return SimpleResponse.newInstance(true);
     }
 
     @Override
     public SimpleResponse handleSchedulerEvent(HandleSchedulerEventRequest request) {
-        //TODO handle dispatch response
         try {
-            this.currentScheduler.handle(request.getInterpretedEvent());
+            currentScheduler.handle(request.getInterpretedEvent());
         } catch (Exception e) {
-            return SimpleResponse.newInstance(false, "Exception in handling event", e);
+            return SimpleResponse.newInstance(false, "Exception when handling event", e);
         }
         return SimpleResponse.newInstance(true);
     }
 
     @Override
     public SchedulerAllocateResponse allocateResources(SchedulerAllocateRequest request) {
-        Allocation allocation = this.currentScheduler.allocate(
+        Allocation allocation = currentScheduler.allocate(
                 request.getApplicationAttemptId(),
                 request.getResourceRequests(),
                 request.getReleases(),
@@ -95,7 +113,7 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
     @Override
     public GetQueueInfoResponse getSchedulerQueueInfo(GetQueueInfoRequest request) {
         try {
-            QueueInfo info = this.currentScheduler.getQueueInfo(
+            QueueInfo info = currentScheduler.getQueueInfo(
                     request.getQueueName(),
                     request.getIncludeChildQueues(),
                     request.getRecursive()

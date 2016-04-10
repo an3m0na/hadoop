@@ -55,7 +55,7 @@ public class MetaSchedulerClient extends AbstractService {
 
     private void logIfError(SimpleResponse response, String message) {
         if (!response.getSuccessful()) {
-            logger.error(message + "\n" + response.getText() + "\n" + response.getException());
+            logger.error(message + "\n" + response.getText(), response.getException());
         }
     }
 
