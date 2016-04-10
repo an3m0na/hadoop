@@ -111,13 +111,13 @@ public class POSUMMetaSchedulerService extends
 
     @Override
     public void serviceStart() throws Exception {
-        //TODO forward
+        portfolioClient.startScheduler();
         super.serviceStart();
     }
 
     @Override
     public void serviceStop() throws Exception {
-        //TODO forward
+        portfolioClient.stopScheduler();
         if (this.server != null) {
             this.server.stop();
         }
