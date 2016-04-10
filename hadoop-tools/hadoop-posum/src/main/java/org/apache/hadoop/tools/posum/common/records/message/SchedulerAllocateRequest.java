@@ -1,8 +1,6 @@
-package org.apache.hadoop.tools.posum.common.records.protocol;
+package org.apache.hadoop.tools.posum.common.records.message;
 
 import org.apache.hadoop.yarn.api.records.*;
-import org.apache.hadoop.yarn.server.api.protocolrecords.NMContainerStatus;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;

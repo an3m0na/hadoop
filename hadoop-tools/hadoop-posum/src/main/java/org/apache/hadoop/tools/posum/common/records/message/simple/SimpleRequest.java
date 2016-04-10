@@ -1,9 +1,9 @@
-package org.apache.hadoop.tools.posum.common.records.protocol;
+package org.apache.hadoop.tools.posum.common.records.message.simple;
 
 
-import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.ConfigurationRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.SimpleRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.VoidRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.ConfigurationRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.SimpleRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.VoidRequestPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto.SimpleRequestTypeProto;
 
 /**

@@ -1,7 +1,7 @@
-package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.message.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.protocol.SingleEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.message.SingleEntityRequest;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityRequestProto;

@@ -1,8 +1,7 @@
-package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.message.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.protocol.SchedulerAllocateRequest;
-import org.apache.hadoop.tools.posum.common.records.protocol.SchedulerAllocateResponse;
+import org.apache.hadoop.tools.posum.common.records.message.SchedulerAllocateResponse;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.impl.pb.*;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SchedulerAllocateResponseProto;

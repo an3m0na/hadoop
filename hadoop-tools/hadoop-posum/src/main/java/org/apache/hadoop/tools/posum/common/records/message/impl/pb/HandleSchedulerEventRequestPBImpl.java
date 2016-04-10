@@ -1,9 +1,8 @@
-package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.message.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.protocol.HandleSchedulerEventRequest;
-import org.apache.hadoop.tools.posum.common.records.protocol.POSUMNode;
-import org.apache.hadoop.tools.posum.common.records.protocol.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.message.HandleSchedulerEventRequest;
+import org.apache.hadoop.tools.posum.common.records.message.POSUMNode;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNodesToLabelsResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetNodesToLabelsResponsePBImpl;

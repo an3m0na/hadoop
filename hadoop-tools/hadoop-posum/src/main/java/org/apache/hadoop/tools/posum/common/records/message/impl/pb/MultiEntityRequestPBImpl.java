@@ -1,13 +1,12 @@
-package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.message.impl.pb;
 
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.common.records.protocol.EntityProperty;
-import org.apache.hadoop.tools.posum.common.records.protocol.MultiEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.message.EntityProperty;
+import org.apache.hadoop.tools.posum.common.records.message.MultiEntityRequest;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityRequestProtoOrBuilder;
-import org.apache.hadoop.yarn.proto.YarnProtos;
 
 import java.util.HashMap;
 import java.util.Iterator;
