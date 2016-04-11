@@ -82,6 +82,8 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
                 case STOP:
                     currentScheduler.stop();
                     break;
+                case NUM_NODES:
+                    return SimpleResponse.newInstance(true, Integer.toString(currentScheduler.getNumClusterNodes()));
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
             }
