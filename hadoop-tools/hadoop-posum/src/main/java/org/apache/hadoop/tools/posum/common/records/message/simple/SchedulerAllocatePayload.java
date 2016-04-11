@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records.message;
+package org.apache.hadoop.tools.posum.common.records.message.simple;
 
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
 import org.apache.hadoop.yarn.util.Records;
@@ -6,10 +6,10 @@ import org.apache.hadoop.yarn.util.Records;
 /**
  * Created by ane on 4/5/16.
  */
-public abstract class SchedulerAllocateResponse {
+public abstract class SchedulerAllocatePayload {
 
-    public static SchedulerAllocateResponse newInstance(Allocation allocation) {
-        SchedulerAllocateResponse response = Records.newRecord(SchedulerAllocateResponse.class);
+    public static SchedulerAllocatePayload newInstance(Allocation allocation) {
+        SchedulerAllocatePayload response = Records.newRecord(SchedulerAllocatePayload.class);
         response.setAllocation(allocation);
         return response;
     }

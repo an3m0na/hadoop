@@ -67,7 +67,7 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
             }
         } catch (Exception e) {
-            return SimpleResponse.newInstance(false, "Exception when forwarding message type " + request.getType(), e);
+            return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
         }
         return SimpleResponse.newInstance(true);
     }
@@ -88,7 +88,7 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
             }
         } catch (Exception e) {
-            return SimpleResponse.newInstance(false, "Exception when forwarding message type " + request.getType(), e);
+            return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
         }
         return SimpleResponse.newInstance(true);
     }
@@ -98,21 +98,24 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
         try {
             currentScheduler.handle(request.getInterpretedEvent());
         } catch (Exception e) {
-            return SimpleResponse.newInstance(false, "Exception when handling event", e);
+            return SimpleResponse.newInstance("Exception when handling event", e);
         }
         return SimpleResponse.newInstance(true);
     }
 
     @Override
-    public SchedulerAllocateResponse allocateResources(SchedulerAllocateRequest request) {
-        Allocation allocation = currentScheduler.allocate(
-                request.getApplicationAttemptId(),
-                request.getResourceRequests(),
-                request.getReleases(),
-                request.getBlacklistAdditions(),
-                request.getBlacklistRemovals()
-        );
-        return SchedulerAllocateResponse.newInstance(allocation);
+    public SimpleResponse<Allocation> allocateResources(SchedulerAllocateRequest request) {
+        try {
+            return SimpleResponse.newInstance(SimpleResponse.Type.ALLOCATE, currentScheduler.allocate(
+                    request.getApplicationAttemptId(),
+                    request.getResourceRequests(),
+                    request.getReleases(),
+                    request.getBlacklistAdditions(),
+                    request.getBlacklistRemovals()
+            ));
+        }catch (Exception e){
+            return SimpleResponse.newInstance(SimpleResponse.Type.ALLOCATE, "Exception allocating resources ", e);
+        }
     }
 
     @Override

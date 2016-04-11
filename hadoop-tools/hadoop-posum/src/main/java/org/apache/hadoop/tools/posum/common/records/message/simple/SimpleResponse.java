@@ -1,7 +1,9 @@
 package org.apache.hadoop.tools.posum.common.records.message.simple;
 
+import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.SchedulerAllocateResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.VoidResponsePBImpl;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto.SimpleResponseTypeProto;
 
 /**
@@ -10,7 +12,8 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto.SimpleRespon
 public abstract class SimpleResponse<T> {
 
     public enum Type {
-        VOID_TYPE(VoidResponsePBImpl.class);
+        VOID(VoidResponsePBImpl.class),
+        ALLOCATE(SchedulerAllocateResponsePBImpl.class);
 
         private Class<? extends SimpleResponsePBImpl> implClass;
         private static final String prefix = "RESP_";
@@ -34,7 +37,7 @@ public abstract class SimpleResponse<T> {
 
     public static SimpleResponse newInstance(boolean successful, String text) {
         SimpleResponse response = new VoidResponsePBImpl();
-        response.setType(Type.VOID_TYPE);
+        response.setType(Type.VOID);
         response.setSuccessful(successful);
         response.setText(text);
         return response;
@@ -44,10 +47,38 @@ public abstract class SimpleResponse<T> {
         return newInstance(successful, null);
     }
 
-    public static SimpleResponse newInstance(boolean successful, String text, Throwable e) {
-        SimpleResponse ret = newInstance(successful, text);
+    public static SimpleResponse newInstance(String text, Throwable e) {
+        SimpleResponse ret = newInstance(false, text);
         ret.setException(e);
         return ret;
+    }
+
+    public static <T> SimpleResponse<T> newInstance(Type type,
+                                                    T payload) {
+        SimpleResponse<T> response;
+        try {
+            response = type.getImplClass().newInstance();
+        } catch (InstantiationException | IllegalAccessException ex) {
+            throw new POSUMException("Could not instantiate response of type " + type, ex);
+        }
+        response.setSuccessful(true);
+        response.setType(type);
+        response.setPayload(payload);
+        return response;
+    }
+
+    public static <T> SimpleResponse<T> newInstance(Type type, String text, Throwable e) {
+        SimpleResponse<T> response;
+        try {
+            response = type.getImplClass().newInstance();
+        } catch (InstantiationException | IllegalAccessException ex) {
+            throw new POSUMException("Could not instantiate response of type " + type, ex);
+        }
+        response.setSuccessful(false);
+        response.setType(type);
+        response.setText(text);
+        response.setException(e);
+        return response;
     }
 
     public abstract String getText();

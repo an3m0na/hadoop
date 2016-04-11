@@ -262,7 +262,7 @@ message SchedulerAllocateRequestProto {
     repeated string blacklistRemovals = 5;
 }
 
-message SchedulerAllocateResponseProto {
+message SchedulerAllocatePayloadProto {
     repeated ContainerProto containers = 1;
     optional ResourceProto resourceLimit = 2;
     repeated ContainerIdProto strictContainers = 3;

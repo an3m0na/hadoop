@@ -9,9 +9,7 @@ import org.apache.hadoop.tools.posum.common.records.message.HandleSchedulerEvent
 import org.apache.hadoop.tools.posum.common.records.message.SchedulerAllocateRequest;
 import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.VoidResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
-import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.ConfigurationRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
@@ -87,12 +85,8 @@ public class PolicyPortfolioClient extends AbstractService {
         for (String prop : relevantProps) {
             properties.put(prop, conf.get(prop));
         }
-        try {
-            return handleError(type.name(), pmClient.forwardToScheduler(
-                    SimpleRequest.newInstance(type, properties, ConfigurationRequestPBImpl.class)));
-        } catch (IllegalAccessException | InstantiationException e) {
-            throw new POSUMException("Could not instantiate request", e);
-        }
+        return handleError(type.name(), pmClient.forwardToScheduler(
+                SimpleRequest.newInstance(type, properties)));
     }
 
     private SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
@@ -134,12 +128,12 @@ public class PolicyPortfolioClient extends AbstractService {
                                         List<ContainerId> release,
                                         List<String> blacklistAdditions,
                                         List<String> blacklistRemovals) {
-        return pmClient.allocateResources(SchedulerAllocateRequest.newInstance(
+        return handleError("allocateResources", pmClient.allocateResources(SchedulerAllocateRequest.newInstance(
                 applicationAttemptId,
                 ask,
                 release,
                 blacklistAdditions,
-                blacklistRemovals)).getAllocation();
+                blacklistRemovals))).getPayload();
     }
 
     public QueueInfo getSchedulerQueueInfo(String queueName, boolean includeApplications,
