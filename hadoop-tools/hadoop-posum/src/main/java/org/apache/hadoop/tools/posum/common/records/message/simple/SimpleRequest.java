@@ -4,6 +4,7 @@ package org.apache.hadoop.tools.posum.common.records.message.simple;
 import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.ConfigurationRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.VoidRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto.SimpleRequestTypeProto;
 
 /**
@@ -41,10 +42,13 @@ public abstract class SimpleRequest<T> {
     }
 
     public static <T> SimpleRequest<T> newInstance(Type type,
-                                                   T payload,
-                                                   Class<? extends SimpleRequest<T>> implClass)
-            throws IllegalAccessException, InstantiationException {
-        SimpleRequest<T> request = implClass.newInstance();
+                                                   T payload) {
+        SimpleRequest<T> request;
+        try {
+            request = type.getImplClass().newInstance();
+        } catch (InstantiationException | IllegalAccessException ex) {
+            throw new POSUMException("Could not instantiate request of type " + type, ex);
+        }
         request.setType(type);
         request.setPayload(payload);
         return request;

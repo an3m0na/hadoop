@@ -1,11 +1,11 @@
-package org.apache.hadoop.tools.posum.common.records.message.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.message.SchedulerAllocateResponse;
+import org.apache.hadoop.tools.posum.common.records.message.simple.SchedulerAllocatePayload;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.impl.pb.*;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SchedulerAllocateResponseProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SchedulerAllocateResponseProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SchedulerAllocatePayloadProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SchedulerAllocatePayloadProtoOrBuilder;
 import org.apache.hadoop.yarn.proto.YarnProtos;
 import org.apache.hadoop.yarn.proto.YarnServiceProtos;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
@@ -15,24 +15,24 @@ import java.util.*;
 /**
  * Created by ane on 3/20/16.
  */
-public class SchedulerAllocateResponsePBImpl extends SchedulerAllocateResponse {
-    private SchedulerAllocateResponseProto proto = SchedulerAllocateResponseProto.getDefaultInstance();
-    private SchedulerAllocateResponseProto.Builder builder = null;
+public class SchedulerAllocatePayloadPBImpl extends SchedulerAllocatePayload {
+    private SchedulerAllocatePayloadProto proto = SchedulerAllocatePayloadProto.getDefaultInstance();
+    private SchedulerAllocatePayloadProto.Builder builder = null;
     private boolean viaProto = false;
 
     private Allocation allocation;
 
 
-    public SchedulerAllocateResponsePBImpl() {
-        builder = SchedulerAllocateResponseProto.newBuilder();
+    public SchedulerAllocatePayloadPBImpl() {
+        builder = SchedulerAllocatePayloadProto.newBuilder();
     }
 
-    public SchedulerAllocateResponsePBImpl(SchedulerAllocateResponseProto proto) {
+    public SchedulerAllocatePayloadPBImpl(SchedulerAllocatePayloadProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public SchedulerAllocateResponseProto getProto() {
+    public SchedulerAllocatePayloadProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -209,7 +209,7 @@ public class SchedulerAllocateResponsePBImpl extends SchedulerAllocateResponse {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = SchedulerAllocateResponseProto.newBuilder(proto);
+            builder = SchedulerAllocatePayloadProto.newBuilder(proto);
         }
         viaProto = false;
     }
@@ -217,7 +217,7 @@ public class SchedulerAllocateResponsePBImpl extends SchedulerAllocateResponse {
     @Override
     public Allocation getAllocation() {
         if (allocation == null) {
-            SchedulerAllocateResponseProtoOrBuilder p = viaProto ? proto : builder;
+            SchedulerAllocatePayloadProtoOrBuilder p = viaProto ? proto : builder;
             List<Container> containers = new ArrayList<>(p.getContainersCount());
             for (YarnProtos.ContainerProto element : p.getContainersList()) {
                 containers.add(new ContainerPBImpl(element));

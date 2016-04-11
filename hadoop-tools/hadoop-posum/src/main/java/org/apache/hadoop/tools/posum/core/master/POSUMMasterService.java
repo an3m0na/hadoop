@@ -82,7 +82,7 @@ public class POSUMMasterService extends CompositeService implements POSUMMasterP
     }
 
     @Override
-    public SchedulerAllocateResponse allocateResources(SchedulerAllocateRequest request) {
+    public SimpleResponse allocateResources(SchedulerAllocateRequest request) {
         return portfolioService.allocateResources(request);
     }
 

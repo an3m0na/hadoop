@@ -2,7 +2,6 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service;
 
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
-import org.apache.hadoop.tools.posum.common.records.message.SchedulerAllocateResponse;
 import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.message.impl.pb.*;
@@ -50,11 +49,11 @@ public class POSUMMasterProtocolPBServiceImpl implements POSUMMasterProtocolPB {
     }
 
     @Override
-    public POSUMProtos.SchedulerAllocateResponseProto allocateResources(RpcController controller,
+    public POSUMProtos.SimpleResponseProto allocateResources(RpcController controller,
                                                                         POSUMProtos.SchedulerAllocateRequestProto proto) throws ServiceException {
         SchedulerAllocateRequestPBImpl request = new SchedulerAllocateRequestPBImpl(proto);
-        SchedulerAllocateResponse response = real.allocateResources(request);
-        return ((SchedulerAllocateResponsePBImpl) response).getProto();
+        SimpleResponse response = real.allocateResources(request);
+        return ((SimpleResponsePBImpl) response).getProto();
     }
 
     @Override

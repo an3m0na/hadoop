@@ -5,6 +5,7 @@ import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleRequest
 import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoResponse;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
 
 /**
  * Created by ane on 3/31/16.
@@ -14,6 +15,6 @@ public interface PortfolioProtocol {
 
     SimpleResponse forwardToScheduler(SimpleRequest request);
     SimpleResponse handleSchedulerEvent(HandleSchedulerEventRequest request);
-    SchedulerAllocateResponse allocateResources(SchedulerAllocateRequest request);
+    SimpleResponse<Allocation> allocateResources(SchedulerAllocateRequest request);
     GetQueueInfoResponse getSchedulerQueueInfo(GetQueueInfoRequest request);
 }
