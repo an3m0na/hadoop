@@ -12,6 +12,7 @@ import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.PolicyPortfolioService;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoResponse;
+import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -87,7 +88,7 @@ public class POSUMMasterService extends CompositeService implements POSUMMasterP
     }
 
     @Override
-    public GetQueueInfoResponse getSchedulerQueueInfo(GetQueueInfoRequest request) {
+    public SimpleResponse<QueueInfo> getSchedulerQueueInfo(GetQueueInfoRequest request) {
         return portfolioService.getSchedulerQueueInfo(request);
     }
 }

@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.message.simple;
 
+import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.QueueInfoResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.SchedulerAllocateResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.VoidResponsePBImpl;
@@ -13,7 +14,7 @@ public abstract class SimpleResponse<T> {
 
     public enum Type {
         VOID(VoidResponsePBImpl.class),
-        ALLOCATE(SchedulerAllocateResponsePBImpl.class);
+        ALLOCATE(SchedulerAllocateResponsePBImpl.class), QUEUE_INFO(QueueInfoResponsePBImpl.class);
 
         private Class<? extends SimpleResponsePBImpl> implClass;
         private static final String prefix = "RESP_";

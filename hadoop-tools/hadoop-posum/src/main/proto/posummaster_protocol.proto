@@ -11,5 +11,5 @@ service POSUMMasterProtocolService {
     rpc forwardToScheduler (SimpleRequestProto) returns (SimpleResponseProto);
     rpc handleSchedulerEvent (HandleSchedulerEventRequestProto) returns (SimpleResponseProto);
     rpc allocateResources (SchedulerAllocateRequestProto) returns (SimpleResponseProto);
-    rpc getSchedulerQueueInfo (GetQueueInfoRequestProto) returns (GetQueueInfoResponseProto);
+    rpc getSchedulerQueueInfo (GetQueueInfoRequestProto) returns (SimpleResponseProto);
 }

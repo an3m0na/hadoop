@@ -119,16 +119,16 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
     }
 
     @Override
-    public GetQueueInfoResponse getSchedulerQueueInfo(GetQueueInfoRequest request) {
+    public SimpleResponse<QueueInfo> getSchedulerQueueInfo(GetQueueInfoRequest request) {
         try {
             QueueInfo info = currentScheduler.getQueueInfo(
                     request.getQueueName(),
                     request.getIncludeChildQueues(),
                     request.getRecursive()
             );
-            return GetQueueInfoResponse.newInstance(info);
+            return SimpleResponse.newInstance(SimpleResponse.Type.QUEUE_INFO, info);
         } catch (IOException e) {
-            return GetQueueInfoResponse.newInstance(null);
+            return SimpleResponse.newInstance(SimpleResponse.Type.QUEUE_INFO, "Exception getting queue info ", e);
         }
 
     }

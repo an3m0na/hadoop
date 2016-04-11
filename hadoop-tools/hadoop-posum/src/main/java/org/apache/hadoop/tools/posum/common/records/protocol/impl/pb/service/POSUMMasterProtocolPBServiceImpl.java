@@ -50,17 +50,17 @@ public class POSUMMasterProtocolPBServiceImpl implements POSUMMasterProtocolPB {
 
     @Override
     public POSUMProtos.SimpleResponseProto allocateResources(RpcController controller,
-                                                                        POSUMProtos.SchedulerAllocateRequestProto proto) throws ServiceException {
+                                                             POSUMProtos.SchedulerAllocateRequestProto proto) throws ServiceException {
         SchedulerAllocateRequestPBImpl request = new SchedulerAllocateRequestPBImpl(proto);
         SimpleResponse response = real.allocateResources(request);
         return ((SimpleResponsePBImpl) response).getProto();
     }
 
     @Override
-    public YarnServiceProtos.GetQueueInfoResponseProto getSchedulerQueueInfo(RpcController
-                                                                                     controller, YarnServiceProtos.GetQueueInfoRequestProto proto) throws ServiceException {
+    public POSUMProtos.SimpleResponseProto getSchedulerQueueInfo(RpcController controller,
+                                                                 YarnServiceProtos.GetQueueInfoRequestProto proto) throws ServiceException {
         GetQueueInfoRequestPBImpl request = new GetQueueInfoRequestPBImpl(proto);
-        GetQueueInfoResponse response = real.getSchedulerQueueInfo(request);
-        return ((GetQueueInfoResponsePBImpl) response).getProto();
+        SimpleResponse response = real.getSchedulerQueueInfo(request);
+        return ((SimpleResponsePBImpl) response).getProto();
     }
 }
