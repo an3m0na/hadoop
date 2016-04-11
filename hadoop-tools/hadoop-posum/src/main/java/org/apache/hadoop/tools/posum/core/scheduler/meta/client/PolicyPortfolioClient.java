@@ -138,12 +138,11 @@ public class PolicyPortfolioClient extends AbstractService {
 
     public QueueInfo getSchedulerQueueInfo(String queueName, boolean includeApplications,
                                            boolean includeChildQueues, boolean recursive) {
-        return pmClient.getSchedulerQueueInfo(GetQueueInfoRequest.newInstance(
+        return handleError("getSchedulerQueueInfo", pmClient.getSchedulerQueueInfo(GetQueueInfoRequest.newInstance(
                 queueName,
                 includeApplications,
                 includeChildQueues,
-                recursive)
-        ).getQueueInfo();
+                recursive))).getPayload();
     }
 
     public int getNumClusterNodes() {
