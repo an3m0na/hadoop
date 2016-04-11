@@ -9,6 +9,7 @@ import org.apache.hadoop.tools.posum.common.records.message.HandleSchedulerEvent
 import org.apache.hadoop.tools.posum.common.records.message.SchedulerAllocateRequest;
 import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.VoidResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.ConfigurationRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
@@ -73,53 +74,59 @@ public class PolicyPortfolioClient extends AbstractService {
         super.serviceStop();
     }
 
-    private void logIfError(SimpleResponse response, String message) {
+    private <T> SimpleResponse<T> handleError(String type, SimpleResponse<T> response) {
         if (!response.getSuccessful()) {
-            logger.error(message + "\n" + response.getText(), response.getException());
+            throw new POSUMException("Request type " + type + " returned with error: " + "\n" + response.getText(),
+                    response.getException());
         }
+        return response;
     }
 
-    private SimpleRequest composeConfRequest(SimpleRequest.Type type, Configuration conf) {
+    private SimpleResponse sendConfRequest(SimpleRequest.Type type, Configuration conf) {
         Map<String, String> properties = new HashMap<>();
         for (String prop : relevantProps) {
             properties.put(prop, conf.get(prop));
         }
         try {
-            return SimpleRequest.newInstance(type, properties, ConfigurationRequestPBImpl.class);
+            return handleError(type.name(), pmClient.forwardToScheduler(
+                    SimpleRequest.newInstance(type, properties, ConfigurationRequestPBImpl.class)));
         } catch (IllegalAccessException | InstantiationException e) {
             throw new POSUMException("Could not instantiate request", e);
         }
     }
 
+    private SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
+        return sendSimpleRequest(type, SimpleRequest.newInstance(type));
+    }
+
+    private SimpleResponse sendSimpleRequest(SimpleRequest.Type type, SimpleRequest request) {
+        return handleError(type.name(), pmClient.forwardToScheduler(request));
+    }
+
     public void setConf(Configuration conf) {
-        logIfError(pmClient.forwardToScheduler(composeConfRequest(SimpleRequest.Type.CONFIG, conf)),
-                "Configuration unsuccessful");
+        sendConfRequest(SimpleRequest.Type.CONFIG, conf);
     }
 
     public void reinitScheduler(Configuration conf) {
-        logIfError(pmClient.forwardToScheduler(composeConfRequest(SimpleRequest.Type.REINIT, conf)),
-                "Reinitialization unsuccessful");
+        sendConfRequest(SimpleRequest.Type.REINIT, conf);
 
     }
 
     public void initScheduler(Configuration conf) {
-        logIfError(pmClient.forwardToScheduler(composeConfRequest(SimpleRequest.Type.INIT, conf)),
-                "Initialization unsuccessful");
+        sendConfRequest(SimpleRequest.Type.INIT, conf);
     }
 
     public void startScheduler() {
-        logIfError(pmClient.forwardToScheduler(SimpleRequest.newInstance(SimpleRequest.Type.START)),
-                "Scheduler start unsuccessful");
+        sendSimpleRequest(SimpleRequest.Type.START);
     }
 
     public void stopScheduler() {
-        logIfError(pmClient.forwardToScheduler(SimpleRequest.newInstance(SimpleRequest.Type.STOP)),
-                "Scheduler start unsuccessful");
+        sendSimpleRequest(SimpleRequest.Type.STOP);
     }
 
     public void handleSchedulerEvent(SchedulerEvent event) {
         HandleSchedulerEventRequest request = HandleSchedulerEventRequest.newInstance(event);
-        logIfError(pmClient.handleSchedulerEvent(request), "Event handling unsuccessful");
+        handleError("handleSchedulerEvent", pmClient.handleSchedulerEvent(request));
     }
 
     public Allocation allocateResources(ApplicationAttemptId applicationAttemptId,
@@ -143,5 +150,9 @@ public class PolicyPortfolioClient extends AbstractService {
                 includeChildQueues,
                 recursive)
         ).getQueueInfo();
+    }
+
+    public int getNumClusterNodes() {
+        return Integer.valueOf(sendSimpleRequest(SimpleRequest.Type.NUM_NODES).getText());
     }
 }

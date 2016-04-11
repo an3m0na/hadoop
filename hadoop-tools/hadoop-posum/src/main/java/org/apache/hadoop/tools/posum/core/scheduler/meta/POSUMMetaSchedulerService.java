@@ -126,8 +126,7 @@ public class POSUMMetaSchedulerService extends
 
     @Override
     public int getNumClusterNodes() {
-        //TODO forward
-        return 0;
+        return portfolioClient.getNumClusterNodes();
     }
 
     @Override
