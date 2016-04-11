@@ -2,16 +2,15 @@ package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service;
 
 import com.google.protobuf.RpcController;
 import com.google.protobuf.ServiceException;
-import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleRequest;
-import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.message.impl.pb.*;
-import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.SimpleRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.message.simple.impl.pb.SimpleResponsePBImpl;
+import org.apache.hadoop.tools.posum.common.records.message.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.message.request.impl.pb.HandleSchedulerEventRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.message.request.impl.pb.SchedulerAllocateRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.message.reponse.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.message.request.impl.pb.SimpleRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.message.reponse.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
-import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetQueueInfoRequestPBImpl;
-import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetQueueInfoResponsePBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.YarnServiceProtos;
 
