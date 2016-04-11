@@ -2,10 +2,10 @@ package org.apache.hadoop.tools.posum.database.master;
 
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.records.message.MultiEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.message.MultiEntityResponse;
-import org.apache.hadoop.tools.posum.common.records.message.SingleEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.message.SingleEntityResponse;
+import org.apache.hadoop.tools.posum.common.records.message.request.MultiEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.message.reponse.MultiEntityResponse;
+import org.apache.hadoop.tools.posum.common.records.message.request.SingleEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.message.reponse.SingleEntityResponse;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;

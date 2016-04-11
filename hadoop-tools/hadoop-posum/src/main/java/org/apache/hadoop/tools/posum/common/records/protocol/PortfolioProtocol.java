@@ -1,10 +1,10 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
-import org.apache.hadoop.tools.posum.common.records.message.*;
-import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleRequest;
-import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.message.request.HandleSchedulerEventRequest;
+import org.apache.hadoop.tools.posum.common.records.message.request.SchedulerAllocateRequest;
+import org.apache.hadoop.tools.posum.common.records.message.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.message.reponse.SimpleResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoResponse;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
 

@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
-import org.apache.hadoop.tools.posum.common.records.message.HandleRMEventRequest;
-import org.apache.hadoop.tools.posum.common.records.message.simple.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.message.request.HandleRMEventRequest;
+import org.apache.hadoop.tools.posum.common.records.message.reponse.SimpleResponse;
 
 /**
  * Created by ane on 3/31/16.
