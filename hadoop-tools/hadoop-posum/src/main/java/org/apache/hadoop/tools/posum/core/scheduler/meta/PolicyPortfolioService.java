@@ -2,12 +2,12 @@ package org.apache.hadoop.tools.posum.core.scheduler.meta;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.records.message.request.HandleSchedulerEventRequest;
-import org.apache.hadoop.tools.posum.common.records.message.request.SchedulerAllocateRequest;
-import org.apache.hadoop.tools.posum.common.records.message.request.SimpleRequest;
-import org.apache.hadoop.tools.posum.common.records.message.reponse.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.request.HandleSchedulerEventRequest;
+import org.apache.hadoop.tools.posum.common.records.request.SchedulerAllocateRequest;
+import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
-import org.apache.hadoop.tools.posum.common.records.message.request.impl.pb.ConfigurationRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.request.impl.pb.ConfigurationRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;
