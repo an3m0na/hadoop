@@ -84,6 +84,8 @@ public class PolicyPortfolioService extends AbstractService implements Portfolio
                     break;
                 case NUM_NODES:
                     return SimpleResponse.newInstance(true, Integer.toString(currentScheduler.getNumClusterNodes()));
+                case ACL:
+                    return SimpleResponse.newInstance(SimpleResponse.Type.ACL, currentScheduler.getQueueUserAclInfo());
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
             }

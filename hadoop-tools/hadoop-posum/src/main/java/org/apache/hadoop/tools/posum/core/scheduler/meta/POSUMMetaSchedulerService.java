@@ -162,7 +162,7 @@ public class POSUMMetaSchedulerService extends
 
     @Override
     public List<QueueUserACLInfo> getQueueUserAclInfo() {
-        return null; //TODO DEFAULT_QUEUE.getQueueUserAclInfo(null);
+        return portfolioClient.getQueueUserAclInfo();
     }
 
     @Override
