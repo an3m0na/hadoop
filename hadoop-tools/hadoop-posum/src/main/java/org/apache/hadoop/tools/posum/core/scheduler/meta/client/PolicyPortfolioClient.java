@@ -5,10 +5,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.records.message.request.HandleSchedulerEventRequest;
-import org.apache.hadoop.tools.posum.common.records.message.request.SchedulerAllocateRequest;
-import org.apache.hadoop.tools.posum.common.records.message.request.SimpleRequest;
-import org.apache.hadoop.tools.posum.common.records.message.reponse.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.request.HandleSchedulerEventRequest;
+import org.apache.hadoop.tools.posum.common.records.request.SchedulerAllocateRequest;
+import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
@@ -18,6 +18,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
 
@@ -85,8 +86,12 @@ public class PolicyPortfolioClient extends AbstractService {
         for (String prop : relevantProps) {
             properties.put(prop, conf.get(prop));
         }
-        return handleError(type.name(), pmClient.forwardToScheduler(
-                SimpleRequest.newInstance(type, properties)));
+        try {
+            return handleError(type.name(), pmClient.forwardToScheduler(
+                    SimpleRequest.newInstance(type, properties)));
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
     }
 
     private SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
@@ -94,7 +99,11 @@ public class PolicyPortfolioClient extends AbstractService {
     }
 
     private SimpleResponse sendSimpleRequest(SimpleRequest.Type type, SimpleRequest request) {
-        return handleError(type.name(), pmClient.forwardToScheduler(request));
+        try {
+            return handleError(type.name(), pmClient.forwardToScheduler(request));
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
     }
 
     public void setConf(Configuration conf) {
@@ -120,7 +129,11 @@ public class PolicyPortfolioClient extends AbstractService {
 
     public void handleSchedulerEvent(SchedulerEvent event) {
         HandleSchedulerEventRequest request = HandleSchedulerEventRequest.newInstance(event);
-        handleError("handleSchedulerEvent", pmClient.handleSchedulerEvent(request));
+        try {
+            handleError("handleSchedulerEvent", pmClient.handleSchedulerEvent(request));
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
     }
 
     public Allocation allocateResources(ApplicationAttemptId applicationAttemptId,
@@ -128,21 +141,29 @@ public class PolicyPortfolioClient extends AbstractService {
                                         List<ContainerId> release,
                                         List<String> blacklistAdditions,
                                         List<String> blacklistRemovals) {
-        return handleError("allocateResources", pmClient.allocateResources(SchedulerAllocateRequest.newInstance(
-                applicationAttemptId,
-                ask,
-                release,
-                blacklistAdditions,
-                blacklistRemovals))).getPayload();
+        try {
+            return handleError("allocateResources", pmClient.allocateResources(SchedulerAllocateRequest.newInstance(
+                    applicationAttemptId,
+                    ask,
+                    release,
+                    blacklistAdditions,
+                    blacklistRemovals))).getPayload();
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
     }
 
     public QueueInfo getSchedulerQueueInfo(String queueName, boolean includeApplications,
                                            boolean includeChildQueues, boolean recursive) {
-        return handleError("getSchedulerQueueInfo", pmClient.getSchedulerQueueInfo(GetQueueInfoRequest.newInstance(
-                queueName,
-                includeApplications,
-                includeChildQueues,
-                recursive))).getPayload();
+        try {
+            return handleError("getSchedulerQueueInfo", pmClient.getSchedulerQueueInfo(GetQueueInfoRequest.newInstance(
+                    queueName,
+                    includeApplications,
+                    includeChildQueues,
+                    recursive))).getPayload();
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
     }
 
     public int getNumClusterNodes() {

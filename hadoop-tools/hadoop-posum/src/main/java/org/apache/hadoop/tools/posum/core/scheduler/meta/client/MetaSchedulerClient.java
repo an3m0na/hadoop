@@ -5,12 +5,13 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.records.message.request.HandleRMEventRequest;
-import org.apache.hadoop.tools.posum.common.records.message.reponse.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.request.HandleRMEventRequest;
+import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.yarn.event.Event;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
 
@@ -54,14 +55,20 @@ public class MetaSchedulerClient extends AbstractService {
         super.serviceStop();
     }
 
-    private void logIfError(SimpleResponse response, String message) {
+    private <T> SimpleResponse<T> handleError(String type, SimpleResponse<T> response) {
         if (!response.getSuccessful()) {
-            logger.error(message + "\n" + response.getText(), response.getException());
+            throw new POSUMException("Request type " + type + " returned with error: " + "\n" + response.getText(),
+                    response.getException());
         }
+        return response;
     }
 
     public void handleRMEvent(Event event) {
         HandleRMEventRequest request = HandleRMEventRequest.newInstance(event);
-        logIfError(metaClient.handleRMEvent(request), "Event handling unsuccessful");
+        try {
+            handleError("handleRMEvent", metaClient.handleRMEvent(request));
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call");
+        }
     }
 }
