@@ -19,7 +19,9 @@ public abstract class SimpleRequest<T> {
         INIT(ConfigurationRequestPBImpl.class),
         REINIT(ConfigurationRequestPBImpl.class),
         START(VoidRequestPBImpl.class),
-        STOP(VoidRequestPBImpl.class), NUM_NODES(VoidRequestPBImpl.class);
+        STOP(VoidRequestPBImpl.class),
+        NUM_NODES(VoidRequestPBImpl.class),
+        ACL(VoidRequestPBImpl.class);
 
         private Class<? extends SimpleRequestPBImpl> implClass;
         private static final String prefix = "REQ_";

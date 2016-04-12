@@ -1,9 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.reponse;
 
-import org.apache.hadoop.tools.posum.common.records.reponse.impl.pb.QueueInfoResponsePBImpl;
-import org.apache.hadoop.tools.posum.common.records.reponse.impl.pb.SchedulerAllocateResponsePBImpl;
-import org.apache.hadoop.tools.posum.common.records.reponse.impl.pb.SimpleResponsePBImpl;
-import org.apache.hadoop.tools.posum.common.records.reponse.impl.pb.VoidResponsePBImpl;
+import org.apache.hadoop.tools.posum.common.records.reponse.impl.pb.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto.SimpleResponseTypeProto;
 
@@ -15,7 +12,8 @@ public abstract class SimpleResponse<T> {
     public enum Type {
         VOID(VoidResponsePBImpl.class),
         ALLOCATE(SchedulerAllocateResponsePBImpl.class),
-        QUEUE_INFO(QueueInfoResponsePBImpl.class);
+        QUEUE_INFO(QueueInfoResponsePBImpl.class),
+        ACL(QueueUserACLInfoResponsePBImpl.class);
 
         private Class<? extends SimpleResponsePBImpl> implClass;
         private static final String prefix = "RESP_";

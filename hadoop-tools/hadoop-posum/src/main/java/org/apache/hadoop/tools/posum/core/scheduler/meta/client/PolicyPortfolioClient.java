@@ -14,10 +14,7 @@ import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
-import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
-import org.apache.hadoop.yarn.api.records.ContainerId;
-import org.apache.hadoop.yarn.api.records.QueueInfo;
-import org.apache.hadoop.yarn.api.records.ResourceRequest;
+import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
@@ -168,5 +165,14 @@ public class PolicyPortfolioClient extends AbstractService {
 
     public int getNumClusterNodes() {
         return Integer.valueOf(sendSimpleRequest(SimpleRequest.Type.NUM_NODES).getText());
+    }
+
+    public List<QueueUserACLInfo> getQueueUserAclInfo() {
+        try {
+            return handleError("getQueueUserAclInfo", (SimpleResponse<List<QueueUserACLInfo>>)
+                    pmClient.forwardToScheduler(SimpleRequest.newInstance(SimpleRequest.Type.ACL))).getPayload();
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
     }
 }
