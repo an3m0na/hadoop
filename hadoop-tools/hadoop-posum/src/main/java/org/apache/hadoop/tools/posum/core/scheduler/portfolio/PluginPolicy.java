@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSAppAttempt;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;

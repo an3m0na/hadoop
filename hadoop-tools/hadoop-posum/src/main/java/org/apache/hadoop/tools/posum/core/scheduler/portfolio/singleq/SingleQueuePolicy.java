@@ -95,6 +95,8 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
 
     protected synchronized void initScheduler(Configuration conf) {
         validateConf(conf);
+        LOG.debug("Configuration valid");
+
         this.conf = conf;
         //General allocation configs found in FIFO and FS
         this.minimumAllocation =

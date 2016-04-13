@@ -44,7 +44,7 @@ public class POSUMMasterService extends CompositeService implements POSUMMasterP
                 POSUMConfiguration.DEFAULT_PM_PORT);
         pmContext.setTokenSecretManager(new DummyTokenSecretManager());
         this.server =
-                rpc.getServer(DataMasterProtocol.class, this, masterServiceAddress,
+                rpc.getServer(POSUMMasterProtocol.class, this, masterServiceAddress,
                         getConfig(), pmContext.getTokenSecretManager(),
                         getConfig().getInt(POSUMConfiguration.PM_SERVICE_THREAD_COUNT,
                                 POSUMConfiguration.DEFAULT_PM_SERVICE_THREAD_COUNT));
