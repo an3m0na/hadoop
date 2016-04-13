@@ -38,7 +38,7 @@ public class HadoopAPIClient {
         List<AppProfile> apps = Collections.emptyList();
         try {
             JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.RM, "cluster/apps", new String[]{});
-            if (wrapper.isNull("apps"))
+            if(wrapper == null || wrapper.isNull("apps"))
                 return Collections.emptyList();
             JSONArray rawApps = wrapper.getJSONObject("apps").getJSONArray("app");
             apps = new ArrayList<>(rawApps.length());
@@ -69,7 +69,7 @@ public class HadoopAPIClient {
         String expectedJobId = expectedRealJobId.toString();
         try {
             JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.HISTORY, "jobs", new String[]{});
-            if (wrapper.isNull("jobs"))
+            if (wrapper == null || wrapper.isNull("jobs"))
                 return null;
             JSONArray rawJobs = wrapper.getJSONObject("jobs").getJSONArray("job");
             String lastRelatedJobId = null;
@@ -95,7 +95,7 @@ public class HadoopAPIClient {
     public JobProfile getFinishedJobInfo(String appId, String jobId) {
         try {
             JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.HISTORY, "jobs/%s", new String[]{jobId});
-            if (wrapper.isNull("job"))
+            if (wrapper == null || wrapper.isNull("job"))
                 return null;
             JSONObject rawJob = wrapper.getJSONObject("job");
             JobProfile job = Records.newRecord(JobProfile.class);
@@ -126,7 +126,7 @@ public class HadoopAPIClient {
     public JobProfile getRunningJobInfo(String appId, JobProfile previousJob) {
         try {
             JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.AM, "jobs", new String[]{appId});
-            if (wrapper.isNull("jobs"))
+            if (wrapper == null || wrapper.isNull("jobs"))
                 return null;
             JSONArray rawJobs = wrapper.getJSONObject("jobs").getJSONArray("job");
             if (rawJobs.length() != 1)
@@ -162,7 +162,7 @@ public class HadoopAPIClient {
         List<TaskProfile> tasks = Collections.emptyList();
         try {
             JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.HISTORY, "jobs/%s/tasks", new String[]{jobId});
-            if (wrapper.isNull("tasks"))
+            if (wrapper == null || wrapper.isNull("tasks"))
                 return Collections.emptyList();
             JSONArray rawTasks = wrapper.getJSONObject("tasks").getJSONArray("task");
             tasks = new ArrayList<>(rawTasks.length());
@@ -188,7 +188,7 @@ public class HadoopAPIClient {
         List<TaskProfile> tasks = Collections.emptyList();
         try {
             JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.AM, "jobs/%s/tasks", new String[]{job.getAppId(), job.getId()});
-            if (wrapper.isNull("tasks"))
+            if (wrapper == null || wrapper.isNull("tasks"))
                 return Collections.emptyList();
             JSONArray rawTasks = wrapper.getJSONObject("tasks").getJSONArray("task");
             tasks = new ArrayList<>(rawTasks.length());
