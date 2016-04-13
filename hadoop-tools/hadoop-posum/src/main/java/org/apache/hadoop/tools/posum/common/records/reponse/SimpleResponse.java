@@ -10,10 +10,7 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto.SimpleRespon
 public abstract class SimpleResponse<T> {
 
     public enum Type {
-        VOID(VoidResponsePBImpl.class),
-        ALLOCATE(SchedulerAllocateResponsePBImpl.class),
-        QUEUE_INFO(QueueInfoResponsePBImpl.class),
-        ACL(QueueUserACLInfoResponsePBImpl.class);
+        VOID(VoidResponsePBImpl.class);
 
         private Class<? extends SimpleResponsePBImpl> implClass;
         private static final String prefix = "RESP_";

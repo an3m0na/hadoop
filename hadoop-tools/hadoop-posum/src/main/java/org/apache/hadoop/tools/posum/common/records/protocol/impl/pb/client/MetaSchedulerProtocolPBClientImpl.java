@@ -8,12 +8,12 @@ import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtoc
 import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.MetaSchedulerProtocolPB;
 import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.reponse.impl.pb.SimpleResponsePBImpl;
-import org.apache.hadoop.tools.posum.common.records.request.HandleRMEventRequest;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.HandleRMEventRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
-import org.apache.hadoop.yarn.proto.POSUMProtos.HandleRMEventRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
 
 import java.io.Closeable;
@@ -53,11 +53,11 @@ public class MetaSchedulerProtocolPBClientImpl implements MetaSchedulerProtocol,
     }
 
     @Override
-    public SimpleResponse handleRMEvent(HandleRMEventRequest request) throws IOException, YarnException {
-        HandleRMEventRequestProto requestProto =
-                ((HandleRMEventRequestPBImpl) request).getProto();
+    public SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException {
+        SimpleRequestProto requestProto =
+                ((SimpleRequestPBImpl) request).getProto();
         try {
-            return wrapSimpleResponse(proxy.handleRMEvent(null, requestProto));
+            return wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
         } catch (ServiceException e) {
             RPCUtil.unwrapAndThrowException(e);
             return null;

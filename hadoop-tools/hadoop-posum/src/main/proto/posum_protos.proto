@@ -172,10 +172,6 @@ message SimpleRequestProto {
     }
 }
 
-message ConfigurationPropertiesProto{
-    repeated StringStringMapProto properties = 1;
-}
-
 message SimpleResponseProto {
     required bool successful = 1;
     optional string text = 2;
@@ -186,88 +182,4 @@ message SimpleResponseProto {
     enum SimpleResponseTypeProto {
         RESP_NUM_NODES = 0;
     }
-}
-
-message ConfigurationRequestProto {
-    repeated StringStringMapProto properties = 1;
-}
-
-message POSUMNodeProto {
-    required NodeIdProto nodeId = 1;
-    required string hostname = 2;
-    required int32 commandPort = 3;
-    required int32 httpPort = 4;
-    optional ResourceProto totalCapability = 5;
-    optional string rackName = 6;
-    repeated UpdatedContainerInfoProto containerUpdates = 7;
-    repeated string nodeLabels = 8;
-}
-
-message UpdatedContainerInfoProto {
-    repeated ContainerStatusProto newContainers = 7;
-    repeated ContainerStatusProto completedContainers = 8;
-}
-
-message HandleSchedulerEventRequestProto {
-    required SchedulerEventTypeProto eventType = 1;
-    optional POSUMNodeProto node = 2;
-    repeated NMContainerStatusProto containerReports = 3;
-    optional ResourceOptionProto resourceOption = 4;
-    optional bool flag = 5;
-    optional ApplicationIdProto applicationId = 6;
-    optional string queue = 7;
-    optional string user = 8;
-    optional string finalState = 9;
-    optional int32 attemptId = 10;
-    optional int64 containerId = 11;
-    optional ReservationIdProto reservationId = 12;
-    optional GetNodesToLabelsResponseProto updatedNodeLabels = 13;
-
-    enum SchedulerEventTypeProto {
-        EVENT_NODE_ADDED = 0;
-        EVENT_NODE_REMOVED = 1;
-        EVENT_NODE_UPDATE = 2;
-        EVENT_NODE_RESOURCE_UPDATE = 3;
-        EVENT_NODE_LABELS_UPDATE = 4;
-        EVENT_APP_ADDED = 5;
-        EVENT_APP_REMOVED = 6;
-        EVENT_APP_ATTEMPT_ADDED = 7;
-        EVENT_APP_ATTEMPT_REMOVED = 8;
-        EVENT_CONTAINER_EXPIRED = 9;
-    }
-}
-
-message HandleRMEventRequestProto {
-    required RMEventClassProto eventClass = 1;
-    required string eventType = 2;
-    optional ApplicationIdProto applicationId = 3;
-    optional string queue = 4;
-    optional int32 attemptId = 5;
-    optional int64 containerId = 6;
-    optional NodeIdProto nodeId = 7;
-
-    enum RMEventClassProto {
-        RMEVENT_RMNodeCleanContainerEvent = 0;
-        RMEVENT_RMAppEvent = 1;
-        RMEVENT_RMAppMoveEvent = 2;
-    }
-
-}
-
-message SchedulerAllocateRequestProto {
-    required ApplicationAttemptIdProto applicationAttemptId = 1;
-    repeated ResourceRequestProto resourceRequests = 2;
-    repeated ContainerIdProto releases = 3;
-    repeated string blacklistAdditions = 4;
-    repeated string blacklistRemovals = 5;
-}
-
-message SchedulerAllocatePayloadProto {
-    repeated ContainerProto containers = 1;
-    optional ResourceProto resourceLimit = 2;
-    repeated ContainerIdProto strictContainers = 3;
-    repeated ContainerIdProto fungibleContainers = 4;
-    repeated ResourceRequestProto fungibleResources = 5;
-    repeated NMTokenProto nmTokens = 6;
-
 }

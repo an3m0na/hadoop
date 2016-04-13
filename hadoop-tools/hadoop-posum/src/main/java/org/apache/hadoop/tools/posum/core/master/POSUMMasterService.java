@@ -1,18 +1,15 @@
 package org.apache.hadoop.tools.posum.core.master;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.CompositeService;
-import org.apache.hadoop.tools.posum.common.records.request.HandleSchedulerEventRequest;
-import org.apache.hadoop.tools.posum.common.records.request.SchedulerAllocateRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
-import org.apache.hadoop.tools.posum.core.scheduler.meta.PolicyPortfolioService;
-import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
-import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -22,10 +19,11 @@ import java.net.InetSocketAddress;
  */
 public class POSUMMasterService extends CompositeService implements POSUMMasterProtocol {
 
+    private static Log logger = LogFactory.getLog(POSUMMasterService.class);
+
     POSUMMasterContext pmContext;
     private Server server;
     private InetSocketAddress bindAddress;
-    private PolicyPortfolioService portfolioService;
 
     public POSUMMasterService(POSUMMasterContext context) {
         super(POSUMMasterService.class.getName());
@@ -34,10 +32,6 @@ public class POSUMMasterService extends CompositeService implements POSUMMasterP
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        //service to interpret and respond to metascheduler updates
-        portfolioService = new PolicyPortfolioService(pmContext);
-        portfolioService.init(conf);
-        addIfService(portfolioService);
     }
 
     @Override
@@ -73,22 +67,18 @@ public class POSUMMasterService extends CompositeService implements POSUMMasterP
     }
 
     @Override
-    public SimpleResponse forwardToScheduler(SimpleRequest request) {
-        return portfolioService.forwardToScheduler(request);
-    }
-
-    @Override
-    public SimpleResponse handleSchedulerEvent(HandleSchedulerEventRequest request) {
-        return portfolioService.handleSchedulerEvent(request);
-    }
-
-    @Override
-    public SimpleResponse allocateResources(SchedulerAllocateRequest request) {
-        return portfolioService.allocateResources(request);
-    }
-
-    @Override
-    public SimpleResponse<QueueInfo> getSchedulerQueueInfo(GetQueueInfoRequest request) {
-        return portfolioService.getSchedulerQueueInfo(request);
+    public SimpleResponse handleSimpleRequest(SimpleRequest request) {
+        try {
+            switch (request.getType()) {
+                case PING:
+                    logger.info("Received ping with message: " + request.getPayload());
+                    break;
+                default:
+                    return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
+            }
+        } catch (Exception e) {
+            return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
+        }
+        return SimpleResponse.newInstance(true);
     }
 }

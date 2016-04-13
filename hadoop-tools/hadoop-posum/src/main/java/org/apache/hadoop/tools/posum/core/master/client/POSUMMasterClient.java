@@ -1,12 +1,12 @@
-package org.apache.hadoop.tools.posum.core.scheduler.meta.client;
+package org.apache.hadoop.tools.posum.core.master.client;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.tools.posum.common.records.protocol.POSUMMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
@@ -15,19 +15,19 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import java.io.IOException;
 
 /**
- * Created by ane on 2/9/16.
+ * Created by ane on 4/13/16.
  */
-public class MetaSchedulerClient extends AbstractService {
+public class POSUMMasterClient extends AbstractService {
 
-    private static Log logger = LogFactory.getLog(MetaSchedulerClient.class);
+    private static Log logger = LogFactory.getLog(POSUMMasterClient.class);
 
     private Configuration posumConf;
 
-    public MetaSchedulerClient() {
-        super(MetaSchedulerClient.class.getName());
+    public POSUMMasterClient() {
+        super(POSUMMasterClient.class.getName());
     }
 
-    private MetaSchedulerProtocol metaClient;
+    private POSUMMasterProtocol pmClient;
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
@@ -39,7 +39,7 @@ public class MetaSchedulerClient extends AbstractService {
     protected void serviceStart() throws Exception {
         final Configuration conf = getConfig();
         try {
-            metaClient = new StandardClientProxyFactory<>(conf, MetaSchedulerProtocol.class).createProxy();
+            pmClient = new StandardClientProxyFactory<>(conf, POSUMMasterProtocol.class).createProxy();
         } catch (IOException e) {
             throw new POSUMException("Could not init POSUMMaster client", e);
         }
@@ -48,8 +48,8 @@ public class MetaSchedulerClient extends AbstractService {
 
     @Override
     protected void serviceStop() throws Exception {
-        if (this.metaClient != null) {
-            RPC.stopProxy(this.metaClient);
+        if (this.pmClient != null) {
+            RPC.stopProxy(this.pmClient);
         }
         super.serviceStop();
     }
@@ -68,7 +68,7 @@ public class MetaSchedulerClient extends AbstractService {
 
     private SimpleResponse sendSimpleRequest(SimpleRequest.Type type, SimpleRequest request) {
         try {
-            return handleError(type.name(), metaClient.handleSimpleRequest(request));
+            return handleError(type.name(), pmClient.handleSimpleRequest(request));
         } catch (IOException | YarnException e) {
             throw new POSUMException("Error during RPC call", e);
         }
