@@ -10,6 +10,7 @@ import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
@@ -54,23 +55,20 @@ public class POSUMMasterClient extends AbstractService {
         super.serviceStop();
     }
 
-    private <T> SimpleResponse<T> handleError(String type, SimpleResponse<T> response) {
-        if (!response.getSuccessful()) {
-            throw new POSUMException("Request type " + type + " returned with error: " + "\n" + response.getText(),
-                    response.getException());
-        }
-        return response;
+    public SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
+        return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type));
     }
 
-    private SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
-        return sendSimpleRequest(type, SimpleRequest.newInstance(type));
-    }
-
-    private SimpleResponse sendSimpleRequest(SimpleRequest.Type type, SimpleRequest request) {
+    public SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
         try {
-            return handleError(type.name(), pmClient.handleSimpleRequest(request));
+            return Utils.handleError(kind, pmClient.handleSimpleRequest(request));
         } catch (IOException | YarnException e) {
             throw new POSUMException("Error during RPC call", e);
         }
+    }
+
+    public void checkPing(){
+        sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
+        logger.info("Successfully connected to POSUMMaster");
     }
 }

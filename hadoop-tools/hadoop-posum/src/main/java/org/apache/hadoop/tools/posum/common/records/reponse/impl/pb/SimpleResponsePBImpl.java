@@ -57,6 +57,9 @@ public abstract class SimpleResponsePBImpl<T> extends SimpleResponse<T> {
     }
 
     private void mergeLocalToBuilder() {
+        maybeInitBuilder();
+        if (this.payload != null)
+            builder.setPayload(payloadToBytes(payload));
     }
 
     private void mergeLocalToProto() {
@@ -83,13 +86,14 @@ public abstract class SimpleResponsePBImpl<T> extends SimpleResponse<T> {
     @Override
     public void setText(String text) {
         maybeInitBuilder();
-        builder.setText(text);
+        if (text != null)
+            builder.setText(text);
     }
 
     @Override
     public Throwable getException() {
         SimpleResponseProtoOrBuilder p = viaProto ? proto : builder;
-        if(!p.hasException())
+        if (!p.hasException())
             return null;
         return new SerializedExceptionPBImpl(p.getException()).deSerialize();
     }
@@ -97,8 +101,8 @@ public abstract class SimpleResponsePBImpl<T> extends SimpleResponse<T> {
     @Override
     public void setException(Throwable exception) {
         maybeInitBuilder();
-        if(exception != null)
-        builder.setException(((SerializedExceptionPBImpl)SerializedException.newInstance(exception)).getProto());
+        if (exception != null)
+            builder.setException(((SerializedExceptionPBImpl) SerializedException.newInstance(exception)).getProto());
     }
 
     @Override
@@ -115,12 +119,15 @@ public abstract class SimpleResponsePBImpl<T> extends SimpleResponse<T> {
 
     @Override
     public Type getType() {
-        return null;
+        SimpleResponseProtoOrBuilder p = viaProto ? proto : builder;
+        return Type.fromProto(p.getType());
     }
 
     @Override
     public void setType(Type type) {
-
+        maybeInitBuilder();
+        if (type != null)
+            builder.setType(type.toProto());
     }
 
     @Override

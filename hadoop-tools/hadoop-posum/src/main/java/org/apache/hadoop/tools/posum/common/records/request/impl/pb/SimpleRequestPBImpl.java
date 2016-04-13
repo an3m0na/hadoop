@@ -88,7 +88,8 @@ public abstract class SimpleRequestPBImpl<T> extends SimpleRequest<T> {
     @Override
     public void setType(Type type) {
         maybeInitBuilder();
-        builder.setType(type.toProto());
+        if (type != null)
+            builder.setType(type.toProto());
     }
 
     @Override

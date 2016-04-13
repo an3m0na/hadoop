@@ -10,21 +10,23 @@ import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.FifoPolicy;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSAppAttempt;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSchedulerNode;
 import org.apache.hadoop.yarn.api.records.*;
+import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.proto.YarnServiceProtos;
+import org.apache.hadoop.yarn.server.api.protocolrecords.NMContainerStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.recovery.RMStateStore;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
+import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.*;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.QueueEntitlement;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -33,7 +35,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Created by ane on 2/4/16.
  */
 public class PortfolioMetaScheduler extends
-        AbstractYarnScheduler<SQSAppAttempt, SQSchedulerNode> implements
+        AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode> implements
         Configurable {
 
     private static Log logger = LogFactory.getLog(PortfolioMetaScheduler.class);
@@ -44,7 +46,7 @@ public class PortfolioMetaScheduler extends
     private Map<String, Class<? extends PluginPolicy>> policies;
 
     private Class<? extends PluginPolicy> currentPolicyClass = DefaultPolicy.FIFO.implClass;
-    private PluginPolicy currentPolicy;
+    private PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode, ?> currentPolicy;
     private ReadWriteLock lock = new ReentrantReadWriteLock();
     private Lock readLock = lock.readLock();
     private Lock writeLock = lock.writeLock();
@@ -92,16 +94,22 @@ public class PortfolioMetaScheduler extends
             throw new POSUMException("Could not instantiate scheduler for class " + currentPolicyClass, e);
         }
         currentPolicy.initializePlugin(posumConf);
+        if (rmContext != null)
+            currentPolicy.setRMContext(rmContext);
+        logger.debug("Initializing current policy");
         currentPolicy.init(conf);
     }
 
     private void transferState(PluginPolicy oldPolicy) {
         //TODO transfer everything
-        if (isInState(STATE.STARTED))
+        if (isInState(STATE.STARTED)) {
+            logger.debug("Starting current policy");
             currentPolicy.start();
+        }
     }
 
     protected void changeToPolicy(String policyName) {
+        logger.debug("Changing policy to " + policyName);
         Class<? extends PluginPolicy> newClass = policies.get(policyName);
         if (newClass == null)
             throw new POSUMException("Target policy does not exist: " + policyName);
@@ -115,6 +123,7 @@ public class PortfolioMetaScheduler extends
                     transferState(oldPolicy);
             }
             writeLock.unlock();
+            logger.debug("Policy changed successfully");
         }
 
     }
@@ -124,6 +133,10 @@ public class PortfolioMetaScheduler extends
         commService.init(posumConf);
         commService.start();
     }
+
+    /**
+     * Methods that all schedulers seem to override
+     */
 
     @Override
     public Configuration getConf() {
@@ -137,6 +150,7 @@ public class PortfolioMetaScheduler extends
 
     @Override
     public void serviceInit(Configuration conf) throws Exception {
+        logger.debug("Service init called for meta");
         this.posumConf = POSUMConfiguration.newInstance();
         setConf(conf);
         preparePolicies();
@@ -147,6 +161,8 @@ public class PortfolioMetaScheduler extends
 
     @Override
     public void serviceStart() throws Exception {
+        logger.debug("Starting meta");
+
         readLock.lock();
         try {
             currentPolicy.start();
@@ -158,6 +174,7 @@ public class PortfolioMetaScheduler extends
 
     @Override
     public void serviceStop() throws Exception {
+        logger.debug("Stopping meta");
         readLock.lock();
         try {
             if (this.commService != null) {
@@ -322,4 +339,246 @@ public class PortfolioMetaScheduler extends
         }
     }
 
+    /**
+     * Methods that the MetaScheduler must override because it is a dummy scheduler
+     */
+
+    @Override
+    public synchronized List<Container> getTransferredContainers(ApplicationAttemptId currentAttempt) {
+        readLock.lock();
+        try {
+            return currentPolicy.getTransferredContainers(currentAttempt);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>> getSchedulerApplications() {
+        readLock.lock();
+        try {
+            // explicit conversion required due to currentPolicy outputting SchedulerApplication<? extends SchedulerApplicationAttempt>>
+            Map<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> apps =
+                    currentPolicy.getSchedulerApplications();
+            Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>> ret = new HashMap<>(apps.size());
+
+            for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> entry :
+                    apps.entrySet()) {
+                ret.put(entry.getKey(), (SchedulerApplication<SchedulerApplicationAttempt>) entry.getValue());
+            }
+            return ret;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public Resource getClusterResource() {
+        readLock.lock();
+        try {
+            return currentPolicy.getClusterResource();
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public Resource getMinimumResourceCapability() {
+        readLock.lock();
+        try {
+            return currentPolicy.getMinimumResourceCapability();
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public Resource getMaximumResourceCapability() {
+        readLock.lock();
+        try {
+            return currentPolicy.getMaximumResourceCapability();
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public Resource getMaximumResourceCapability(String queueName) {
+        readLock.lock();
+        try {
+            return currentPolicy.getMaximumResourceCapability(queueName);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public SchedulerApplicationAttempt getApplicationAttempt(ApplicationAttemptId applicationAttemptId) {
+        readLock.lock();
+        try {
+            return currentPolicy.getApplicationAttempt(applicationAttemptId);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public SchedulerAppReport getSchedulerAppInfo(ApplicationAttemptId appAttemptId) {
+        readLock.lock();
+        try {
+            return currentPolicy.getSchedulerAppInfo(appAttemptId);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public ApplicationResourceUsageReport getAppResourceUsageReport(ApplicationAttemptId appAttemptId) {
+        readLock.lock();
+        try {
+            return currentPolicy.getAppResourceUsageReport(appAttemptId);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public SchedulerApplicationAttempt getCurrentAttemptForContainer(ContainerId containerId) {
+        readLock.lock();
+        try {
+            return currentPolicy.getCurrentAttemptForContainer(containerId);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public SchedulerNodeReport getNodeReport(NodeId nodeId) {
+        readLock.lock();
+        try {
+            return currentPolicy.getNodeReport(nodeId);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public String moveApplication(ApplicationId appId, String newQueue) throws YarnException {
+        readLock.lock();
+        try {
+            return currentPolicy.moveApplication(appId, newQueue);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public void removeQueue(String queueName) throws YarnException {
+        readLock.lock();
+        try {
+            currentPolicy.removeQueue(queueName);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public void addQueue(Queue newQueue) throws YarnException {
+        readLock.lock();
+        try {
+            currentPolicy.addQueue(newQueue);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public void setEntitlement(String queue, QueueEntitlement entitlement) throws YarnException {
+        readLock.lock();
+        try {
+            currentPolicy.setEntitlement(queue, entitlement);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public synchronized void recoverContainersOnNode(List<NMContainerStatus> containerReports, RMNode nm) {
+        readLock.lock();
+        try {
+            currentPolicy.recoverContainersOnNode(containerReports, nm);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public SchedulerNode getSchedulerNode(NodeId nodeId) {
+        readLock.lock();
+        try {
+            return currentPolicy.getSchedulerNode(nodeId);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public synchronized void moveAllApps(String sourceQueue, String destQueue) throws YarnException {
+        readLock.lock();
+        try {
+            currentPolicy.moveAllApps(sourceQueue, destQueue);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public synchronized void killAllAppsInQueue(String queueName) throws YarnException {
+        readLock.lock();
+        try {
+            currentPolicy.killAllAppsInQueue(queueName);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public synchronized void updateNodeResource(RMNode nm, ResourceOption resourceOption) {
+        readLock.lock();
+        try {
+            currentPolicy.updateNodeResource(nm, resourceOption);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public EnumSet<YarnServiceProtos.SchedulerResourceTypes> getSchedulingResourceTypes() {
+        readLock.lock();
+        try {
+            return currentPolicy.getSchedulingResourceTypes();
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public Set<String> getPlanQueues() throws YarnException {
+        readLock.lock();
+        try {
+            return currentPolicy.getPlanQueues();
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public List<ResourceRequest> getPendingResourceRequestsForAttempt(ApplicationAttemptId attemptId) {
+        readLock.lock();
+        try {
+            return currentPolicy.getPendingResourceRequestsForAttempt(attemptId);
+        } finally {
+            readLock.unlock();
+        }
+    }
 }

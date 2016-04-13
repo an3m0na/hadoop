@@ -63,14 +63,19 @@ public class MetaSchedulerClient extends AbstractService {
     }
 
     private SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
-        return sendSimpleRequest(type, SimpleRequest.newInstance(type));
+        return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type));
     }
 
-    private SimpleResponse sendSimpleRequest(SimpleRequest.Type type, SimpleRequest request) {
+    private SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
         try {
-            return handleError(type.name(), metaClient.handleSimpleRequest(request));
+            return handleError(kind, metaClient.handleSimpleRequest(request));
         } catch (IOException | YarnException e) {
             throw new POSUMException("Error during RPC call", e);
         }
+    }
+
+    public void checkPing() {
+        sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
+        logger.info("Successfully connected to MetaScheduler");
     }
 }

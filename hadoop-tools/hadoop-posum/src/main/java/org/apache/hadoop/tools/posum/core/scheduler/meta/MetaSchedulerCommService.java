@@ -5,7 +5,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -26,7 +25,7 @@ public class MetaSchedulerCommService extends AbstractService implements MetaSch
     private POSUMMasterClient masterClient;
     private Configuration posumConf;
 
-    private Server portfolioServer;
+    private Server metaServer;
     private InetSocketAddress bindAddress;
     private PortfolioMetaScheduler metaScheduler;
 
@@ -39,33 +38,35 @@ public class MetaSchedulerCommService extends AbstractService implements MetaSch
     protected void serviceInit(Configuration conf) throws Exception {
         super.serviceInit(conf);
         posumConf = conf;
-        masterClient = new POSUMMasterClient();
-        masterClient.init(posumConf);
-        masterClient.start();
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 POSUMConfiguration.SCHEDULER_BIND_ADDRESS,
                 POSUMConfiguration.SCHEDULER_ADDRESS,
                 POSUMConfiguration.DEFAULT_SCHEDULER_ADDRESS,
                 POSUMConfiguration.DEFAULT_SCHEDULER_PORT);
-        this.portfolioServer =
-                rpc.getServer(DataMasterProtocol.class, this, masterServiceAddress,
+        this.metaServer =
+                rpc.getServer(MetaSchedulerProtocol.class, this, masterServiceAddress,
                         getConfig(), new DummyTokenSecretManager(),
                         getConfig().getInt(POSUMConfiguration.SCHEDULER_SERVICE_THREAD_COUNT,
                                 POSUMConfiguration.DEFAULT_SCHEDULER_SERVICE_THREAD_COUNT));
 
-        this.portfolioServer.start();
+        this.metaServer.start();
         this.bindAddress = getConfig().updateConnectAddr(
                 POSUMConfiguration.SCHEDULER_BIND_ADDRESS,
                 POSUMConfiguration.SCHEDULER_ADDRESS,
                 POSUMConfiguration.DEFAULT_SCHEDULER_ADDRESS,
-                portfolioServer.getListenerAddress());
+                metaServer.getListenerAddress());
+
+        masterClient = new POSUMMasterClient();
+        masterClient.init(posumConf);
+        masterClient.start();
+        masterClient.checkPing();
     }
 
     @Override
     protected void serviceStop() throws Exception {
-        if (this.portfolioServer != null) {
-            this.portfolioServer.stop();
+        if (this.metaServer != null) {
+            this.metaServer.stop();
         }
         super.serviceStop();
     }

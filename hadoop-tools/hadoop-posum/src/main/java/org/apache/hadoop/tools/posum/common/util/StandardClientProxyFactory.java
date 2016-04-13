@@ -60,13 +60,13 @@ public class StandardClientProxyFactory<T> {
                 POSUMConfiguration.DEFAULT_DM_PORT
         ));
         protocols.put(POSUMMasterProtocol.class, new AcceptableProtocol<>(
-                DataMasterProtocol.class,
+                POSUMMasterProtocol.class,
                 POSUMConfiguration.PM_ADDRESS,
                 POSUMConfiguration.DEFAULT_PM_ADDRESS,
                 POSUMConfiguration.DEFAULT_PM_PORT
         ));
         protocols.put(MetaSchedulerProtocol.class, new AcceptableProtocol<>(
-                DataMasterProtocol.class,
+                MetaSchedulerProtocol.class,
                 POSUMConfiguration.SCHEDULER_ADDRESS,
                 POSUMConfiguration.DEFAULT_SCHEDULER_ADDRESS,
                 POSUMConfiguration.DEFAULT_SCHEDULER_PORT
