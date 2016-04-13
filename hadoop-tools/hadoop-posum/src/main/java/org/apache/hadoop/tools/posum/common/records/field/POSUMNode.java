@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.field;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.net.Node;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.api.records.*;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created by ane on 4/5/16.
+ * Only a shell of the RMNode with the methods that are used outside the scheduler
  */
 public abstract class POSUMNode implements RMNode {
     public static POSUMNode newInstance(RMNode original) {
@@ -56,17 +57,17 @@ public abstract class POSUMNode implements RMNode {
 
     @Override
     public String getHealthReport() {
-        throw new POSUMException("Method not implemented in POSUMNode");
+        throw new NotImplementedException();
     }
 
     @Override
     public long getLastHealthReportTime() {
-        throw new POSUMException("Method not implemented in POSUMNode");
+        throw new NotImplementedException();
     }
 
     @Override
     public String getNodeManagerVersion() {
-        throw new POSUMException("Method not implemented in POSUMNode");
+        throw new NotImplementedException();
     }
 
     @Override
@@ -81,32 +82,32 @@ public abstract class POSUMNode implements RMNode {
 
     @Override
     public Node getNode() {
-        throw new POSUMException("Method not implemented in POSUMNode");
+        throw new NotImplementedException();
     }
 
     @Override
     public NodeState getState() {
-        throw new POSUMException("Method not implemented in POSUMNode");
+        throw new NotImplementedException();
     }
 
     @Override
     public List<ContainerId> getContainersToCleanUp() {
-        throw new POSUMException("Method not implemented in POSUMNode");
+        throw new NotImplementedException();
     }
 
     @Override
     public List<ApplicationId> getAppsToCleanup() {
-        throw new POSUMException("Method not implemented in POSUMNode");
+        throw new NotImplementedException();
     }
 
     @Override
     public void updateNodeHeartbeatResponseForCleanup(NodeHeartbeatResponse response) {
-        throw new POSUMException("Method not implemented in POSUMNode");
+        throw new NotImplementedException();
     }
 
     @Override
     public NodeHeartbeatResponse getLastNodeHeartBeatResponse() {
-        throw new POSUMException("Method not implemented in POSUMNode");
+        throw new NotImplementedException();
     }
 
     @Override
@@ -117,5 +118,6 @@ public abstract class POSUMNode implements RMNode {
 
     @Override
     public abstract Set<String> getNodeLabels();
+
     public abstract void setNodeLabels(Set<String> nodeLabels);
 }
