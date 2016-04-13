@@ -21,7 +21,7 @@ public class POSUMConfiguration {
     public static final String MONITOR_PREFIX = PREFIX + "monitor.";
     public static final String PREDICTOR_PREFIX = PREFIX + "predictor.";
     public static final String DATABASE_PREFIX = PREFIX + "database.";
-    public static final String META_PREFIX = CORE_PREFIX + "meta.";
+    public static final String SCHEDULER_PREFIX = CORE_PREFIX + "scheduler.";
 
     public static final String MASTER_HEARTBEAT_MS = CORE_PREFIX + "heartbeat.ms";
     public static final int MASTER_HEARTBEAT_MS_DEFAULT = 1000;
@@ -71,23 +71,12 @@ public class POSUMConfiguration {
     public static final String MONITOR_KEEP_HISTORY = MONITOR_PREFIX + "keep-history";
     public static final boolean MONITOR_KEEP_HISTORY_DEFAULT = false;
 
-    public static final String RELEVANT_SCHEDULER_CONFIGS = CORE_PREFIX + "conf.relevant";
-    public static final String DEFAULT_RELEVANT_SCHEDULER_CONFIGS =
-            YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB + "," +
-                    YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB + "," +
-                    YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB + "," +
-                    YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES + "," +
-                    YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES + "," +
-                    YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME + "," +
-                    YarnConfiguration.RM_SCHEDULER_MONITOR_POLICIES + "," +
-                    YarnConfiguration.RM_SCHEDULER_ADDRESS + "," +
-                    YarnConfiguration.RM_SCHEDULER_CLIENT_THREAD_COUNT + "," +
-                    YarnConfiguration.RM_SCHEDULER_ENABLE_MONITORS + ",";
+    public static final String SCHEDULER_BIND_ADDRESS = SCHEDULER_PREFIX + "bind-host";
+    public static final String SCHEDULER_ADDRESS = SCHEDULER_PREFIX + "address";
+    public static final String DEFAULT_SCHEDULER_ADDRESS = "0.0.0.0";
+    public static final int DEFAULT_SCHEDULER_PORT = 7020;
+    public static final String SCHEDULER_SERVICE_THREAD_COUNT = SCHEDULER_PREFIX + "conn.thread-count";
+    public static final int DEFAULT_SCHEDULER_SERVICE_THREAD_COUNT = 10;
 
-    public static final String META_BIND_ADDRESS = META_PREFIX + "bind-host";
-    public static final String META_ADDRESS = META_PREFIX + "address";
-    public static final String DEFAULT_META_ADDRESS = "0.0.0.0";
-    public static final int DEFAULT_META_PORT = 7020;
-    public static final String META_SERVICE_THREAD_COUNT = META_PREFIX + "conn.thread-count";
-    public static final int DEFAULT_META_SERVICE_THREAD_COUNT = 10;
+    public static final String SCHEDULER_POLICY_MAP = SCHEDULER_PREFIX + "policies";
 }

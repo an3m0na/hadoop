@@ -28,10 +28,11 @@ public class MetaSchedulerCommService extends AbstractService implements MetaSch
 
     private Server portfolioServer;
     private InetSocketAddress bindAddress;
+    private PortfolioMetaScheduler metaScheduler;
 
-
-    public MetaSchedulerCommService() {
+    public MetaSchedulerCommService(PortfolioMetaScheduler metaScheduler) {
         super(MetaSchedulerCommService.class.getName());
+        this.metaScheduler = metaScheduler;
     }
 
     @Override
@@ -43,21 +44,21 @@ public class MetaSchedulerCommService extends AbstractService implements MetaSch
         masterClient.start();
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
-                POSUMConfiguration.META_BIND_ADDRESS,
-                POSUMConfiguration.META_ADDRESS,
-                POSUMConfiguration.DEFAULT_META_ADDRESS,
-                POSUMConfiguration.DEFAULT_META_PORT);
+                POSUMConfiguration.SCHEDULER_BIND_ADDRESS,
+                POSUMConfiguration.SCHEDULER_ADDRESS,
+                POSUMConfiguration.DEFAULT_SCHEDULER_ADDRESS,
+                POSUMConfiguration.DEFAULT_SCHEDULER_PORT);
         this.portfolioServer =
                 rpc.getServer(DataMasterProtocol.class, this, masterServiceAddress,
                         getConfig(), new DummyTokenSecretManager(),
-                        getConfig().getInt(POSUMConfiguration.META_SERVICE_THREAD_COUNT,
-                                POSUMConfiguration.DEFAULT_META_SERVICE_THREAD_COUNT));
+                        getConfig().getInt(POSUMConfiguration.SCHEDULER_SERVICE_THREAD_COUNT,
+                                POSUMConfiguration.DEFAULT_SCHEDULER_SERVICE_THREAD_COUNT));
 
         this.portfolioServer.start();
         this.bindAddress = getConfig().updateConnectAddr(
-                POSUMConfiguration.META_BIND_ADDRESS,
-                POSUMConfiguration.META_ADDRESS,
-                POSUMConfiguration.DEFAULT_META_ADDRESS,
+                POSUMConfiguration.SCHEDULER_BIND_ADDRESS,
+                POSUMConfiguration.SCHEDULER_ADDRESS,
+                POSUMConfiguration.DEFAULT_SCHEDULER_ADDRESS,
                 portfolioServer.getListenerAddress());
     }
 
@@ -75,6 +76,10 @@ public class MetaSchedulerCommService extends AbstractService implements MetaSch
             switch (request.getType()) {
                 case PING:
                     logger.info("Received ping with message: " + request.getPayload());
+                    break;
+                case CHANGE_POLICY:
+                    logger.info("Changing policy to: " + request.getPayload());
+                    metaScheduler.changeToPolicy((String)request.getPayload());
                     break;
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
