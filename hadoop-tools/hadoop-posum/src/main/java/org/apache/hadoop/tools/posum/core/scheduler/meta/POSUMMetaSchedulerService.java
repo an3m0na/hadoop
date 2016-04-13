@@ -29,6 +29,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.*;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.QueueEntitlement;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
+import org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 
 import java.io.IOException;
@@ -167,7 +168,8 @@ public class POSUMMetaSchedulerService extends
 
     @Override
     public ResourceCalculator getResourceCalculator() {
-        return null; //TODO resourceCalculator;
+        //no one uses anything else and it is not stateful
+        return new DefaultResourceCalculator();
     }
 
     @Override
