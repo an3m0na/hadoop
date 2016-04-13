@@ -10,6 +10,8 @@ import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.net.ConnectTimeoutException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.POSUMMasterProtocol;
 import org.apache.hadoop.yarn.conf.HAUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
@@ -56,6 +58,18 @@ public class StandardClientProxyFactory<T> {
                 POSUMConfiguration.DM_ADDRESS,
                 POSUMConfiguration.DEFAULT_DM_ADDRESS,
                 POSUMConfiguration.DEFAULT_DM_PORT
+        ));
+        protocols.put(POSUMMasterProtocol.class, new AcceptableProtocol<>(
+                DataMasterProtocol.class,
+                POSUMConfiguration.PM_ADDRESS,
+                POSUMConfiguration.DEFAULT_PM_ADDRESS,
+                POSUMConfiguration.DEFAULT_PM_PORT
+        ));
+        protocols.put(MetaSchedulerProtocol.class, new AcceptableProtocol<>(
+                DataMasterProtocol.class,
+                POSUMConfiguration.SCHEDULER_ADDRESS,
+                POSUMConfiguration.DEFAULT_SCHEDULER_ADDRESS,
+                POSUMConfiguration.DEFAULT_SCHEDULER_PORT
         ));
     }
 
