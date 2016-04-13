@@ -5,11 +5,7 @@ option java_generate_equals_and_hash = true;
 package hadoop.yarn;
 
 import "posum_protos.proto";
-import "yarn_service_protos.proto";
 
 service POSUMMasterProtocolService {
-    rpc forwardToScheduler (SimpleRequestProto) returns (SimpleResponseProto);
-    rpc handleSchedulerEvent (HandleSchedulerEventRequestProto) returns (SimpleResponseProto);
-    rpc allocateResources (SchedulerAllocateRequestProto) returns (SimpleResponseProto);
-    rpc getSchedulerQueueInfo (GetQueueInfoRequestProto) returns (SimpleResponseProto);
+    rpc handleSimpleRequest (SimpleRequestProto) returns (SimpleResponseProto);
 }

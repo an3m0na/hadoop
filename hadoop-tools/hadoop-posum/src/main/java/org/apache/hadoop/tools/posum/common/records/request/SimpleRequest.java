@@ -1,7 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.request;
 
 
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.ConfigurationRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.VoidRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
@@ -15,13 +14,7 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto.SimpleRequest
 public abstract class SimpleRequest<T> {
 
     public enum Type {
-        CONFIG(ConfigurationRequestPBImpl.class),
-        INIT(ConfigurationRequestPBImpl.class),
-        REINIT(ConfigurationRequestPBImpl.class),
-        START(VoidRequestPBImpl.class),
-        STOP(VoidRequestPBImpl.class),
-        NUM_NODES(VoidRequestPBImpl.class),
-        ACL(VoidRequestPBImpl.class);
+        PING(VoidRequestPBImpl.class);
 
         private Class<? extends SimpleRequestPBImpl> implClass;
         private static final String prefix = "REQ_";

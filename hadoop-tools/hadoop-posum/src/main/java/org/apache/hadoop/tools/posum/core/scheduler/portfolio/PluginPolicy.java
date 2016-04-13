@@ -1,7 +1,10 @@
-package org.apache.hadoop.tools.posum.core.scheduler.meta;
+package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.api.records.ContainerStatus;
+import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
+import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
@@ -25,8 +28,12 @@ public abstract class PluginPolicy<
         this.nClass = nClass;
     }
 
-    protected void initializePlugin(Configuration conf) {
+    public void initializePlugin(Configuration conf) {
         this.pluginConf = conf;
+    }
+
+    public void forwardCompletedContainer(RMContainer rmContainer, ContainerStatus containerStatus, RMContainerEventType event){
+        completedContainer(rmContainer, containerStatus, event);
     }
 
 }

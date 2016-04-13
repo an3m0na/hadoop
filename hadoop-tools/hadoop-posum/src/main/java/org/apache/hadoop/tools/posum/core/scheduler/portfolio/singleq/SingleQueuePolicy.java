@@ -4,7 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.core.scheduler.meta.PluginPolicy;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;

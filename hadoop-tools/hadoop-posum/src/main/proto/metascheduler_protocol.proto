@@ -7,5 +7,5 @@ package hadoop.yarn;
 import "posum_protos.proto";
 
 service MetaSchedulerProtocolService {
-    rpc handleRMEvent (HandleRMEventRequestProto) returns (SimpleResponseProto);
+    rpc handleSimpleRequest (SimpleRequestProto) returns (SimpleResponseProto);
 }

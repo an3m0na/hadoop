@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
-import org.apache.hadoop.tools.posum.common.records.request.HandleRMEventRequest;
 import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
@@ -12,5 +12,5 @@ import java.io.IOException;
 public interface MetaSchedulerProtocol {
     long versionID = 1L;
 
-    SimpleResponse handleRMEvent(HandleRMEventRequest request) throws IOException, YarnException;
+    SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException;
 }

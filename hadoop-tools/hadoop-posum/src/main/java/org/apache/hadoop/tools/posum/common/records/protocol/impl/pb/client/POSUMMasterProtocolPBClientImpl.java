@@ -9,25 +9,15 @@ import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.POS
 import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.reponse.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.*;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.HandleSchedulerEventRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SchedulerAllocateRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
-import org.apache.hadoop.yarn.api.protocolrecords.GetQueueInfoRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.impl.pb.GetQueueInfoRequestPBImpl;
-import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SchedulerAllocateRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.HandleSchedulerEventRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
-import org.apache.hadoop.yarn.proto.YarnServiceProtos;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 
 /**
@@ -63,50 +53,15 @@ public class POSUMMasterProtocolPBClientImpl implements POSUMMasterProtocol, Clo
     }
 
     @Override
-    public SimpleResponse forwardToScheduler(SimpleRequest request) throws IOException, YarnException {
+    public SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException {
         SimpleRequestProto requestProto =
                 ((SimpleRequestPBImpl) request).getProto();
         try {
-            return wrapSimpleResponse(proxy.forwardToScheduler(null, requestProto));
+            return wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
         } catch (ServiceException e) {
             RPCUtil.unwrapAndThrowException(e);
             return null;
         }
     }
 
-    @Override
-    public SimpleResponse handleSchedulerEvent(HandleSchedulerEventRequest request) throws IOException, YarnException {
-        HandleSchedulerEventRequestProto requestProto =
-                ((HandleSchedulerEventRequestPBImpl) request).getProto();
-        try {
-            return wrapSimpleResponse(proxy.handleSchedulerEvent(null, requestProto));
-        } catch (ServiceException e) {
-            RPCUtil.unwrapAndThrowException(e);
-            return null;
-        }
-    }
-
-    @Override
-    public SimpleResponse<Allocation> allocateResources(SchedulerAllocateRequest request) throws IOException, YarnException {
-        SchedulerAllocateRequestProto requestProto =
-                ((SchedulerAllocateRequestPBImpl) request).getProto();
-        try {
-            return wrapSimpleResponse(proxy.allocateResources(null, requestProto));
-        } catch (ServiceException e) {
-            RPCUtil.unwrapAndThrowException(e);
-            return null;
-        }
-    }
-
-    @Override
-    public SimpleResponse<QueueInfo> getSchedulerQueueInfo(GetQueueInfoRequest request) throws IOException, YarnException {
-        YarnServiceProtos.GetQueueInfoRequestProto requestProto =
-                ((GetQueueInfoRequestPBImpl) request).getProto();
-        try {
-            return wrapSimpleResponse(proxy.getSchedulerQueueInfo(null, requestProto));
-        } catch (ServiceException e) {
-            RPCUtil.unwrapAndThrowException(e);
-            return null;
-        }
-    }
 }
