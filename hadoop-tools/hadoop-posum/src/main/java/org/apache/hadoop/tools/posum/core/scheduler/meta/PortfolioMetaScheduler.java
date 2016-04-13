@@ -187,7 +187,8 @@ public class PortfolioMetaScheduler extends
         this.rmContext = rmContext;
         readLock.lock();
         try {
-            currentPolicy.setRMContext(rmContext);
+            if (currentPolicy != null)
+                currentPolicy.setRMContext(rmContext);
         } finally {
             readLock.unlock();
         }
@@ -199,7 +200,8 @@ public class PortfolioMetaScheduler extends
         this.conf = conf;
         readLock.lock();
         try {
-            currentPolicy.reinitialize(conf, rmContext);
+            if (currentPolicy != null)
+                currentPolicy.reinitialize(conf, rmContext);
         } finally {
             readLock.unlock();
         }
