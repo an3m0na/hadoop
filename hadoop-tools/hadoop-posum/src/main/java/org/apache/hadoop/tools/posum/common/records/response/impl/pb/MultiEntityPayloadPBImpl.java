@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records.reponse.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.response.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
@@ -6,10 +6,10 @@ import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
-import org.apache.hadoop.tools.posum.common.records.reponse.MultiEntityResponse;
+import org.apache.hadoop.tools.posum.common.records.response.MultiEntityPayload;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityResponseProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityResponseProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityPayloadProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityPayloadProtoOrBuilder;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -18,22 +18,22 @@ import java.util.List;
 /**
  * Created by ane on 3/20/16.
  */
-public class MultiEntityResponsePBImpl extends MultiEntityResponse {
-    private MultiEntityResponseProto proto = MultiEntityResponseProto.getDefaultInstance();
-    private MultiEntityResponseProto.Builder builder = null;
+public class MultiEntityPayloadPBImpl extends MultiEntityPayload {
+    private MultiEntityPayloadProto proto = MultiEntityPayloadProto.getDefaultInstance();
+    private MultiEntityPayloadProto.Builder builder = null;
     private boolean viaProto = false;
     private List<GeneralDataEntity> entities;
 
-    public MultiEntityResponsePBImpl() {
-        builder = MultiEntityResponseProto.newBuilder();
+    public MultiEntityPayloadPBImpl() {
+        builder = MultiEntityPayloadProto.newBuilder();
     }
 
-    public MultiEntityResponsePBImpl(MultiEntityResponseProto proto) {
+    public MultiEntityPayloadPBImpl(MultiEntityPayloadProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public MultiEntityResponseProto getProto() {
+    public MultiEntityPayloadProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -104,32 +104,32 @@ public class MultiEntityResponsePBImpl extends MultiEntityResponse {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = MultiEntityResponseProto.newBuilder(proto);
+            builder = MultiEntityPayloadProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
-    public DataEntityType getType() {
-        MultiEntityResponseProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityType.valueOf(p.getType().name().substring("TYPE_".length()));
+    public DataEntityType getEntityType() {
+        MultiEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
+        return DataEntityType.valueOf(p.getEntityType().name().substring("TYPE_".length()));
     }
 
     @Override
-    public void setType(DataEntityType type) {
+    public void setEntityType(DataEntityType type) {
         maybeInitBuilder();
-        builder.setType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
+        builder.setEntityType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
     }
 
     @Override
     public List<GeneralDataEntity> getEntities() {
         if (entities == null) {
-            MultiEntityResponseProtoOrBuilder p = viaProto ? proto : builder;
+            MultiEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
             entities = new ArrayList<>(p.getEntitiesCount());
             for (ByteString entityString : p.getEntitiesList()) {
                 if (entityString != null) {
                     try {
-                        Class eClass = getType().getMappedClass();
+                        Class eClass = getEntityType().getMappedClass();
                         entities.add(((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(entityString));
                     } catch (Exception e) {
                         throw new POSUMException("Could not read object from byte string " + entityString, e);

@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.predictor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
-import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
+import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.yarn.util.Records;
@@ -23,7 +23,7 @@ public class TestDataStoreClient {
     @Test
     public void checkOneObject() {
         Configuration conf = TestUtils.getConf();
-        DataStoreClient dataStore = new DataStoreClient();
+        DataMasterClient dataStore = new DataMasterClient();
         dataStore.init(conf);
         dataStore.start();
         DataStore myStore = new DataStoreImpl(conf);
@@ -85,7 +85,7 @@ public class TestDataStoreClient {
     @Test
     public void checkMuliObject() {
         Configuration conf = TestUtils.getConf();
-        DataStoreClient dataStore = new DataStoreClient();
+        DataMasterClient dataStore = new DataMasterClient();
         dataStore.init(conf);
         dataStore.start();
         DataStore myStore = new DataStoreImpl(conf);

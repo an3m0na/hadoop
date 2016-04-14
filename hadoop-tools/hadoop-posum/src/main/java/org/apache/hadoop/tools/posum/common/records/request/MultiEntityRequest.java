@@ -15,14 +15,14 @@ public abstract class MultiEntityRequest {
 
     public static MultiEntityRequest newInstance(DataEntityType type, Map<String, Object>  properties) {
         MultiEntityRequest request = Records.newRecord(MultiEntityRequest.class);
-        request.setType(type);
+        request.setEntityType(type);
         request.setProperties(properties);
         return request;
     }
 
-    public abstract DataEntityType getType();
+    public abstract DataEntityType getEntityType();
 
-    public abstract void setType(DataEntityType type);
+    public abstract void setEntityType(DataEntityType type);
 
     public abstract Map<String, Object> getProperties();
 

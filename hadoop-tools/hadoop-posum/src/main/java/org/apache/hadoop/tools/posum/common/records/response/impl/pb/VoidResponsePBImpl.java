@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records.reponse.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.response.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;

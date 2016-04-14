@@ -4,16 +4,15 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.response.impl.pb.MultiEntityResponsePBImpl;
+import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SingleEntityResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.reponse.MultiEntityResponse;
 import org.apache.hadoop.tools.posum.common.records.request.SingleEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.reponse.SingleEntityResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.MultiEntityRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.reponse.impl.pb.MultiEntityResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.DataMasterProtocolPB;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SingleEntityRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.reponse.impl.pb.SingleEntityResponsePBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityRequestProto;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -46,7 +45,7 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
     }
 
     @Override
-    public SingleEntityResponse getEntity(SingleEntityRequest request) throws IOException, YarnException {
+    public SimpleResponse getEntity(SingleEntityRequest request) throws IOException, YarnException {
         SingleEntityRequestProto requestProto =
                 ((SingleEntityRequestPBImpl) request).getProto();
         try {
@@ -59,7 +58,7 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
     }
 
     @Override
-    public MultiEntityResponse listEntities(MultiEntityRequest request) throws IOException, YarnException {
+    public SimpleResponse listEntities(MultiEntityRequest request) throws IOException, YarnException {
         MultiEntityRequestProto requestProto =
                 ((MultiEntityRequestPBImpl) request).getProto();
         try {

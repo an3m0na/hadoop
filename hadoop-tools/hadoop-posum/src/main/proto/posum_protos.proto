@@ -140,22 +140,22 @@ message EntityPropertyProto {
 }
 
 message SingleEntityRequestProto {
-    required EntityTypeProto type = 1;
+    required EntityTypeProto entityType = 1;
     required string id = 2;
 }
 
-message SingleEntityResponseProto {
-    required EntityTypeProto type = 1;
+message SingleEntityPayloadProto {
+    required EntityTypeProto entityType = 1;
     optional bytes entity = 2;
 }
 
 message MultiEntityRequestProto {
-    required EntityTypeProto type = 1;
+    required EntityTypeProto entityType = 1;
     repeated EntityPropertyProto properties = 2;
 }
 
-message MultiEntityResponseProto {
-    required EntityTypeProto type = 1;
+message MultiEntityPayloadProto {
+    required EntityTypeProto entityType = 1;
     repeated bytes entities = 2;
 }
 

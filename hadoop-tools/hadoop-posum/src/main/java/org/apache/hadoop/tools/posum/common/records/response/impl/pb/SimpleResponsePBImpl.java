@@ -1,9 +1,9 @@
-package org.apache.hadoop.tools.posum.common.records.reponse.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.response.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.api.records.SerializedException;
 import org.apache.hadoop.yarn.api.records.impl.pb.SerializedExceptionPBImpl;

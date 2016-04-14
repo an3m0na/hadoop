@@ -6,7 +6,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
+import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.rumen.JobTraceReader;
@@ -21,7 +21,7 @@ import java.util.*;
 /**
  * Created by ane on 2/10/16.
  */
-public class MockDataStoreClient extends DataStoreClient {
+public class MockDataMasterClient extends DataMasterClient {
 
     private List<JobProfile> jobList = new ArrayList<>();
     private Map<String, Map<String, TaskProfile>> taskMap = new HashMap<>();
