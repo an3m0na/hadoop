@@ -116,15 +116,15 @@ public class MultiEntityRequestPBImpl extends MultiEntityRequest {
     }
 
     @Override
-    public DataEntityType getType() {
+    public DataEntityType getEntityType() {
         MultiEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityType.valueOf(p.getType().name().substring("TYPE_".length()));
+        return DataEntityType.valueOf(p.getEntityType().name().substring("TYPE_".length()));
     }
 
     @Override
-    public void setType(DataEntityType type) {
+    public void setEntityType(DataEntityType type) {
         maybeInitBuilder();
-        builder.setType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
+        builder.setEntityType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
     }
 
     @Override

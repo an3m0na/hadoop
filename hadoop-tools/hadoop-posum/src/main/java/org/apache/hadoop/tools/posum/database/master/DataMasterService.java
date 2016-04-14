@@ -2,10 +2,11 @@ package org.apache.hadoop.tools.posum.database.master;
 
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.reponse.MultiEntityResponse;
+import org.apache.hadoop.tools.posum.common.records.response.MultiEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SingleEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.reponse.SingleEntityResponse;
+import org.apache.hadoop.tools.posum.common.records.response.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
@@ -70,21 +71,26 @@ public class DataMasterService extends AbstractService implements DataMasterProt
     }
 
     @Override
-    public SingleEntityResponse getEntity(SingleEntityRequest request) {
-        GeneralDataEntity ret = dmContext.getDataStore().findById(request.getType(), request.getId());
-        SingleEntityResponse response = Records.newRecord(SingleEntityResponse.class);
-        response.setType(request.getType());
-        response.setEntity(ret);
-        return response;
+    public SimpleResponse<SingleEntityPayload> getEntity(SingleEntityRequest request) {
+        try {
+            GeneralDataEntity ret = dmContext.getDataStore().findById(request.getEntityType(), request.getId());
+            SingleEntityPayload payload = SingleEntityPayload.newInstance(request.getEntityType(), ret);
+            return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, payload);
+        } catch (Exception e) {
+            return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY,
+                    "Exception resolving request" + request, e);
+        }
     }
 
     @Override
-    public MultiEntityResponse listEntities(MultiEntityRequest request) throws IOException, YarnException {
-        List<GeneralDataEntity> ret = dmContext.getDataStore().find(request.getType(), request.getProperties());
-        System.out.println(ret);
-        MultiEntityResponse response = Records.newRecord(MultiEntityResponse.class);
-        response.setType(request.getType());
-        response.setEntities(ret);
-        return response;
+    public SimpleResponse<MultiEntityPayload> listEntities(MultiEntityRequest request) throws IOException, YarnException {
+        try {
+            List<GeneralDataEntity> ret = dmContext.getDataStore().find(request.getEntityType(), request.getProperties());
+            MultiEntityPayload payload = MultiEntityPayload.newInstance(request.getEntityType(), ret);
+            return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY, payload);
+        } catch (Exception e) {
+            return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY,
+                    "Exception resolving request " + request, e);
+        }
     }
 }

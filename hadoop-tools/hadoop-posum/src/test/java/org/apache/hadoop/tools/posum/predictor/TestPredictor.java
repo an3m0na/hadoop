@@ -45,7 +45,7 @@ public class TestPredictor {
 
     @Test
     public void testPredictorAccuracy() {
-        MockDataStoreClient dataStore = new MockDataStoreClient();
+        MockDataMasterClient dataStore = new MockDataMasterClient();
         try {
             URL traceUrl = getClass().getClassLoader().getResource("2jobs2min-rumen-jh.json");
             if (traceUrl == null)

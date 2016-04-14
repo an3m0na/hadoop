@@ -1,6 +1,6 @@
-package org.apache.hadoop.tools.posum.common.records.reponse;
+package org.apache.hadoop.tools.posum.common.records.response;
 
-import org.apache.hadoop.tools.posum.common.records.reponse.impl.pb.*;
+import org.apache.hadoop.tools.posum.common.records.response.impl.pb.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto.SimpleResponseTypeProto;
 
@@ -10,7 +10,9 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto.SimpleRespon
 public abstract class SimpleResponse<T> {
 
     public enum Type {
-        VOID(VoidResponsePBImpl.class);
+        VOID(VoidResponsePBImpl.class),
+        SINGLE_ENTITY(SingleEntityResponsePBImpl.class),
+        MULTI_ENTITY(MultiEntityResponsePBImpl.class);
 
         private Class<? extends SimpleResponsePBImpl> implClass;
         private static final String prefix = "RESP_";

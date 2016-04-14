@@ -4,7 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
-import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
+import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 
@@ -15,7 +15,7 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class SimulatorMaster extends CompositeService {
 
-    DataStoreClient dataStore;
+    DataMasterClient dataStore;
 
 
     public SimulatorMaster() {
@@ -24,7 +24,7 @@ public class SimulatorMaster extends CompositeService {
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        dataStore = new DataStoreClient();
+        dataStore = new DataMasterClient();
         dataStore.init(conf);
         addIfService(dataStore);
 

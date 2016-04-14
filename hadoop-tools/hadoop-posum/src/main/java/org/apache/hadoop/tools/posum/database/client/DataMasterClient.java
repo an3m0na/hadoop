@@ -9,9 +9,9 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.reponse.MultiEntityResponse;
 import org.apache.hadoop.tools.posum.common.records.request.SingleEntityRequest;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -24,10 +24,10 @@ import java.util.Map;
 /**
  * Created by ane on 2/9/16.
  */
-public class DataStoreClient extends AbstractService implements DataStore {
+public class DataMasterClient extends AbstractService implements DataStore {
 
-    public DataStoreClient() {
-        super(DataStoreClient.class.getName());
+    public DataMasterClient() {
+        super(DataMasterClient.class.getName());
     }
 
     DataMasterProtocol dmClient;
@@ -54,12 +54,12 @@ public class DataStoreClient extends AbstractService implements DataStore {
     @Override
     public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
         try {
-            return (T) dmClient.getEntity(SingleEntityRequest.newInstance(collection, id))
-                    .getEntity();
+            return (T) Utils.handleError("findById",
+                    dmClient.getEntity(SingleEntityRequest.newInstance(collection, id))
+            ).getPayload().getEntity();
         } catch (IOException | YarnException e) {
-            e.printStackTrace();
+            throw new POSUMException("Error during RPC call", e);
         }
-        return null;
     }
 
     @Override
@@ -72,27 +72,17 @@ public class DataStoreClient extends AbstractService implements DataStore {
     @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams) {
         try {
-            MultiEntityResponse response = dmClient.listEntities(MultiEntityRequest.newInstance(collection,
-                    queryParams));
-            if (response != null)
-                return (List<T>) response.getEntities();
+            return (List<T>) Utils.handleError("findById",
+                    dmClient.listEntities(MultiEntityRequest.newInstance(collection, queryParams))
+            ).getPayload().getEntities();
         } catch (IOException | YarnException e) {
-            e.printStackTrace();
+            throw new POSUMException("Error during RPC call", e);
         }
-        return null;
     }
 
     @Override
     public <T extends GeneralDataEntity> List<T> list(DataEntityType collection) {
-        try {
-            MultiEntityResponse response = dmClient.listEntities(MultiEntityRequest.newInstance(collection,
-                    new HashMap<String, Object>()));
-            if (response != null)
-                return (List<T>) response.getEntities();
-        } catch (IOException | YarnException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return find(collection, new HashMap<String, Object>());
     }
 
     @Override

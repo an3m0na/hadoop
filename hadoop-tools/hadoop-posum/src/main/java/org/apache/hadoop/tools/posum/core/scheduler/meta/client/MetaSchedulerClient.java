@@ -5,11 +5,12 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
@@ -54,21 +55,13 @@ public class MetaSchedulerClient extends AbstractService {
         super.serviceStop();
     }
 
-    private <T> SimpleResponse<T> handleError(String type, SimpleResponse<T> response) {
-        if (!response.getSuccessful()) {
-            throw new POSUMException("Request type " + type + " returned with error: " + "\n" + response.getText(),
-                    response.getException());
-        }
-        return response;
-    }
-
     private SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
         return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type));
     }
 
     private SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
         try {
-            return handleError(kind, metaClient.handleSimpleRequest(request));
+            return Utils.handleError(kind, metaClient.handleSimpleRequest(request));
         } catch (IOException | YarnException e) {
             throw new POSUMException("Error during RPC call", e);
         }
