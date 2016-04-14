@@ -90,10 +90,10 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     }
 
     @Override
-    public void setState(String state) {
+    public void setState(YarnApplicationState state) {
         maybeInitBuilder();
         if (state != null)
-            builder.setState(AppProfileProto.AppStateProto.valueOf("STATE_" + state));
+            builder.setState(AppProfileProto.AppStateProto.valueOf("STATE_" + state.name()));
         else
             builder.setState(AppProfileProto.AppStateProto.STATE_NULL);
     }
@@ -108,10 +108,10 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     }
 
     @Override
-    public void setStatus(String status) {
+    public void setStatus(FinalApplicationStatus status) {
         maybeInitBuilder();
         if (status != null)
-            builder.setStatus(AppProfileProto.AppStatusProto.valueOf("STATUS_" + status));
+            builder.setStatus(AppProfileProto.AppStatusProto.valueOf("STATUS_" + status.name()));
         else
             builder.setStatus(AppProfileProto.AppStatusProto.STATUS_NULL);
     }
@@ -138,10 +138,10 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     }
 
     @Override
-    public void setTrackingUI(String trackingUI) {
+    public void setTrackingUI(RestClient.TrackingUI trackingUI) {
         maybeInitBuilder();
         if (trackingUI != null)
-            builder.setTrackingUI(AppProfileProto.AppTrackingUIProto.valueOf("UI_" + trackingUI));
+            builder.setTrackingUI(AppProfileProto.AppTrackingUIProto.valueOf("UI_" + trackingUI.name()));
         else
             builder.setTrackingUI(AppProfileProto.AppTrackingUIProto.UI_NULL);
     }

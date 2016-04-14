@@ -7,7 +7,6 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
@@ -22,7 +21,7 @@ public class Utils {
             String[] parts = id.split("_");
             return "m".equals(parts[parts.length - 2]) ? TaskType.MAP : TaskType.REDUCE;
         } catch (Exception e) {
-            throw new YarnRuntimeException("Id parse exception for " + id, e);
+            throw new POSUMException("Id parse exception for " + id, e);
         }
     }
 
@@ -32,7 +31,7 @@ public class Utils {
             return ApplicationId.newInstance(Long.parseLong(parts[1]),
                     Integer.parseInt(parts[2]));
         } catch (Exception e) {
-            throw new YarnRuntimeException("Id parse exception for " + id, e);
+            throw new POSUMException("Id parse exception for " + id, e);
         }
     }
 
@@ -44,7 +43,7 @@ public class Utils {
             jobId.setId(Integer.parseInt(parts[parts.length - 1]));
             return jobId;
         } catch (Exception e) {
-            throw new YarnRuntimeException("Id parse exception for " + id, e);
+            throw new POSUMException("Id parse exception for " + id, e);
         }
     }
 
@@ -57,7 +56,7 @@ public class Utils {
             taskId.setId(Integer.parseInt(parts[4]));
             return taskId;
         } catch (Exception e) {
-            throw new YarnRuntimeException("Id parse exception for " + id, e);
+            throw new POSUMException("Id parse exception for " + id, e);
         }
     }
 
@@ -70,7 +69,7 @@ public class Utils {
             taskId.setId(Integer.parseInt(parts[4]));
             return taskId;
         } catch (Exception e) {
-            throw new YarnRuntimeException("Id parse exception for " + id, e);
+            throw new POSUMException("Id parse exception for " + id, e);
         }
     }
 

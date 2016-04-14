@@ -3,6 +3,8 @@ package org.apache.hadoop.tools.posum.database.client;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.tools.posum.common.records.response.MultiEntityPayload;
+import org.apache.hadoop.tools.posum.common.records.response.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
@@ -54,9 +56,12 @@ public class DataMasterClient extends AbstractService implements DataStore {
     @Override
     public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
         try {
-            return (T) Utils.handleError("findById",
+            SingleEntityPayload payload = Utils.handleError("findById",
                     dmClient.getEntity(SingleEntityRequest.newInstance(collection, id))
-            ).getPayload().getEntity();
+            ).getPayload();
+            if (payload != null)
+                return (T) payload.getEntity();
+            return null;
         } catch (IOException | YarnException e) {
             throw new POSUMException("Error during RPC call", e);
         }
@@ -72,9 +77,11 @@ public class DataMasterClient extends AbstractService implements DataStore {
     @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams) {
         try {
-            return (List<T>) Utils.handleError("findById",
-                    dmClient.listEntities(MultiEntityRequest.newInstance(collection, queryParams))
-            ).getPayload().getEntities();
+            MultiEntityPayload payload = Utils.handleError("findById",
+                    dmClient.listEntities(MultiEntityRequest.newInstance(collection, queryParams))).getPayload();
+            if (payload != null)
+                return (List<T>) payload.getEntities();
+            return null;
         } catch (IOException | YarnException e) {
             throw new POSUMException("Error during RPC call", e);
         }

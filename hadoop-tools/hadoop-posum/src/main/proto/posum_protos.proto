@@ -178,5 +178,7 @@ message SimpleResponseProto {
 
     enum SimpleResponseTypeProto {
         RESP_VOID = 0;
+        RESP_SINGLE_ENTITY = 1;
+        RESP_MULTI_ENTITY = 2;
     }
 }

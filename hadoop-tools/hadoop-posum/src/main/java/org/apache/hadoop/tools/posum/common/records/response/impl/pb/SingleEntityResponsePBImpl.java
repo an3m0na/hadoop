@@ -25,6 +25,6 @@ public class SingleEntityResponsePBImpl extends SimpleResponsePBImpl<SingleEntit
 
     @Override
     public SingleEntityPayload bytesToPayload(ByteString data) throws InvalidProtocolBufferException {
-       return null;
+        return new SingleEntityPayloadPBImpl(POSUMProtos.SingleEntityPayloadProto.parseFrom(data));
     }
 }

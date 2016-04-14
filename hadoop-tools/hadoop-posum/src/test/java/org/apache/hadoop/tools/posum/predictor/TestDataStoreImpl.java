@@ -42,7 +42,7 @@ public class TestDataStoreImpl {
         job.setFinishTime(0L);
         job.setName("test job");
         job.setUser("THE user");
-        job.setState(JobState.RUNNING.toString());
+        job.setState(JobState.RUNNING);
         job.setMapProgress(0.44f);
         job.setReduceProgress(0.12f);
         job.setCompletedMaps(7);
