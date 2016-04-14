@@ -190,7 +190,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
 
     @Override
     public void recover(RMStateStore.RMState rmState) throws Exception {
-// not implemented anywhere
+        // not implemented anywhere
     }
 
     @Override
