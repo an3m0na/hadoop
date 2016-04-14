@@ -170,10 +170,10 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
-    public void setState(String state) {
+    public void setState(JobState state) {
         maybeInitBuilder();
         if (state != null)
-            builder.setState(JobProfileProto.JobStateProto.valueOf("STATE_" + state));
+            builder.setState(JobProfileProto.JobStateProto.valueOf("STATE_" + state.name()));
         else
             builder.setState(JobProfileProto.JobStateProto.STATE_NULL);
     }

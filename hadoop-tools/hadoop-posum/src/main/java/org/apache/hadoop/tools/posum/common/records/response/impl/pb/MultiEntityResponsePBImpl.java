@@ -20,11 +20,11 @@ public class MultiEntityResponsePBImpl extends SimpleResponsePBImpl<MultiEntityP
 
     @Override
     public ByteString payloadToBytes(MultiEntityPayload payload) {
-        return ((MultiEntityPayloadPBImpl)payload).getProto().toByteString();
+        return ((MultiEntityPayloadPBImpl) payload).getProto().toByteString();
     }
 
     @Override
     public MultiEntityPayload bytesToPayload(ByteString data) throws InvalidProtocolBufferException {
-       return null;
+        return new MultiEntityPayloadPBImpl(POSUMProtos.MultiEntityPayloadProto.parseFrom(data));
     }
 }
