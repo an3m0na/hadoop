@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 
 /**
  * Created by ane on 3/3/16.
@@ -8,8 +9,6 @@ import org.apache.hadoop.conf.Configuration;
 public class TestUtils {
 
     static Configuration getConf() {
-        Configuration conf = new Configuration();
-        conf.addResource("posum-core.xml");
-        return conf;
+        return POSUMConfiguration.newInstance();
     }
 }

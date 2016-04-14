@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.database.master;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.monitor.HadoopMonitor;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
@@ -55,8 +56,7 @@ public class DataMaster extends CompositeService {
     }
 
     public static void main(String[] args) {
-        Configuration conf = new Configuration();
-        conf.addResource("posum-core.xml");
+        Configuration conf = POSUMConfiguration.newInstance();
         DataMaster master = new DataMaster();
         master.init(conf);
         master.start();

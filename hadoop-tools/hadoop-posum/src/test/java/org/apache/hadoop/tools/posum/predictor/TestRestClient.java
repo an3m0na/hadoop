@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.predictor;
 
-import org.apache.hadoop.tools.posum.common.RestClient;
+import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.database.monitor.HadoopAPIClient;
 import org.junit.Test;
