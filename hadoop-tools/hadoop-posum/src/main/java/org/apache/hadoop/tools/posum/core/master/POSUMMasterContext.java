@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.core.master;
 
-import org.apache.hadoop.tools.posum.common.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
 /**

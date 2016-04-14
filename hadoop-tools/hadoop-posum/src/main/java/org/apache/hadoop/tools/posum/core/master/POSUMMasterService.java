@@ -1,36 +1,37 @@
 package org.apache.hadoop.tools.posum.core.master;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
-import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
+import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
-import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
-import org.apache.hadoop.yarn.util.Records;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.List;
 
 /**
  * Created by ane on 3/19/16.
  */
-public class POSUMMasterService extends AbstractService implements POSUMMasterProtocol {
+public class POSUMMasterService extends CompositeService implements POSUMMasterProtocol {
+
+    private static Log logger = LogFactory.getLog(POSUMMasterService.class);
 
     POSUMMasterContext pmContext;
     private Server server;
     private InetSocketAddress bindAddress;
 
-    /**
-     * Construct the service.
-     *
-     * @param context service pmContext
-     */
     public POSUMMasterService(POSUMMasterContext context) {
         super(POSUMMasterService.class.getName());
         this.pmContext = context;
+    }
+
+    @Override
+    protected void serviceInit(Configuration conf) throws Exception {
     }
 
     @Override
@@ -43,7 +44,7 @@ public class POSUMMasterService extends AbstractService implements POSUMMasterPr
                 POSUMConfiguration.DEFAULT_PM_PORT);
         pmContext.setTokenSecretManager(new DummyTokenSecretManager());
         this.server =
-                rpc.getServer(DataMasterProtocol.class, this, masterServiceAddress,
+                rpc.getServer(POSUMMasterProtocol.class, this, masterServiceAddress,
                         getConfig(), pmContext.getTokenSecretManager(),
                         getConfig().getInt(POSUMConfiguration.PM_SERVICE_THREAD_COUNT,
                                 POSUMConfiguration.DEFAULT_PM_SERVICE_THREAD_COUNT));
@@ -63,5 +64,21 @@ public class POSUMMasterService extends AbstractService implements POSUMMasterPr
             this.server.stop();
         }
         super.serviceStop();
+    }
+
+    @Override
+    public SimpleResponse handleSimpleRequest(SimpleRequest request) {
+        try {
+            switch (request.getType()) {
+                case PING:
+                    logger.info("Received ping with message: " + request.getPayload());
+                    break;
+                default:
+                    return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
+            }
+        } catch (Exception e) {
+            return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
+        }
+        return SimpleResponse.newInstance(true);
     }
 }

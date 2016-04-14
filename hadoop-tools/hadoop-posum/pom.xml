@@ -97,6 +97,9 @@
                             <protocVersion>${protobuf.version}</protocVersion>
                             <protocCommand>${protoc.path}</protocCommand>
                             <imports>
+                                <param>${basedir}/../../hadoop-common-project/hadoop-common/src/main/proto</param>
+                                <param>${basedir}/../../hadoop-yarn-project/hadoop-yarn/hadoop-yarn-api/src/main/proto</param>
+                                <param>${basedir}/../../hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-common/src/main/proto</param>
                                 <param>${basedir}/src/main/proto</param>
                             </imports>
                             <source>
@@ -104,6 +107,8 @@
                                 <includes>
                                     <include>posum_protos.proto</include>
                                     <include>datamaster_protocol.proto</include>
+                                    <include>posummaster_protocol.proto</include>
+                                    <include>metascheduler_protocol.proto</include>
                                 </includes>
                             </source>
                             <output>${project.build.directory}/generated-sources/java</output>

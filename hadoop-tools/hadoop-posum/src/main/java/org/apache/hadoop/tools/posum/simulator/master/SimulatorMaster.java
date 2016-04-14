@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.simulator.master;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
-import org.apache.hadoop.tools.posum.common.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
@@ -53,8 +53,7 @@ public class SimulatorMaster extends CompositeService {
     }
 
     public static void main(String[] args) {
-        Configuration conf = new Configuration();
-        conf.addResource("posum-core.xml");
+        Configuration conf = POSUMConfiguration.newInstance();
         SimulatorMaster master = new SimulatorMaster();
         master.init(conf);
         master.start();
