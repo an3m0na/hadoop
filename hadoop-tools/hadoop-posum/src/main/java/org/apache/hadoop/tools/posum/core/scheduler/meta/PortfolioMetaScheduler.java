@@ -156,7 +156,6 @@ public class PortfolioMetaScheduler extends
         preparePolicies();
         initComm();
         initPolicy();
-        super.serviceInit(conf);
     }
 
     @Override
@@ -169,7 +168,6 @@ public class PortfolioMetaScheduler extends
         } finally {
             readLock.unlock();
         }
-        super.serviceStart();
     }
 
     @Override
@@ -186,7 +184,6 @@ public class PortfolioMetaScheduler extends
         } finally {
             readLock.unlock();
         }
-        super.serviceStop();
     }
 
     @Override
@@ -577,6 +574,76 @@ public class PortfolioMetaScheduler extends
         readLock.lock();
         try {
             return currentPolicy.getPendingResourceRequestsForAttempt(attemptId);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    protected void initMaximumResourceCapability(Resource maximumAllocation) {
+        readLock.lock();
+        try {
+            currentPolicy.forwardInitMaximumResourceCapability(maximumAllocation);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    protected synchronized void containerLaunchedOnNode(ContainerId containerId, SchedulerNode node) {
+        readLock.lock();
+        try {
+            currentPolicy.forwardContainerLaunchedOnNode(containerId, node);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    protected void recoverResourceRequestForContainer(RMContainer rmContainer) {
+        readLock.lock();
+        try {
+            currentPolicy.forwardRecoverResourceRequestForContainer(rmContainer);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    protected void createReleaseCache() {
+        readLock.lock();
+        try {
+            currentPolicy.forwardCreateReleaseCache();
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    protected void releaseContainers(List<ContainerId> containers, SchedulerApplicationAttempt attempt) {
+        readLock.lock();
+        try {
+            currentPolicy.forwardReleaseContainers(containers, attempt);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    protected void updateMaximumAllocation(SchedulerNode node, boolean add) {
+        readLock.lock();
+        try {
+            currentPolicy.forwardUpdateMaximumAllocation(node, add);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    protected void refreshMaximumAllocation(Resource newMaxAlloc) {
+        readLock.lock();
+        try {
+            currentPolicy.forwardRefreshMaximumAllocation(newMaxAlloc);
         } finally {
             readLock.unlock();
         }
