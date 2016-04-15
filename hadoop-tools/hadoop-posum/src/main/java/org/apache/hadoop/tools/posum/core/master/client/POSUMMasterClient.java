@@ -18,7 +18,7 @@ import java.io.IOException;
 /**
  * Created by ane on 4/13/16.
  */
-public class POSUMMasterClient extends AbstractService {
+public class POSUMMasterClient extends AbstractService implements POSUMMasterInterface{
 
     private static Log logger = LogFactory.getLog(POSUMMasterClient.class);
 

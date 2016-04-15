@@ -4,7 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.DataStoreInterface;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.yarn.util.Records;
 import org.junit.Test;
@@ -26,7 +26,7 @@ public class TestDataStoreClient {
         DataMasterClient dataStore = new DataMasterClient();
         dataStore.init(conf);
         dataStore.start();
-        DataStore myStore = new DataStoreImpl(conf);
+        DataStoreInterface myStore = new DataStoreImpl(conf);
 
         String appId = "testApp";
         myStore.delete(DataEntityType.APP, appId);
@@ -88,7 +88,7 @@ public class TestDataStoreClient {
         DataMasterClient dataStore = new DataMasterClient();
         dataStore.init(conf);
         dataStore.start();
-        DataStore myStore = new DataStoreImpl(conf);
+        DataStoreInterface myStore = new DataStoreImpl(conf);
 
         String appId = "testHistoryApp";
         myStore.delete(DataEntityType.HISTORY, "originalId", appId);

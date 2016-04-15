@@ -7,13 +7,11 @@ import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.tools.posum.common.records.protocol.POSUMMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.POSUMMasterProtocolPB;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.*;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
 
 import java.io.Closeable;
@@ -42,22 +40,12 @@ public class POSUMMasterProtocolPBClientImpl implements POSUMMasterProtocol, Clo
         }
     }
 
-    private static SimpleResponse wrapSimpleResponse(SimpleResponseProto proto) {
-        try {
-            Class<? extends SimpleResponsePBImpl> implClass =
-                    SimpleResponse.Type.fromProto(proto.getType()).getImplClass();
-            return implClass.getConstructor(SimpleResponseProto.class).newInstance(proto);
-        } catch (Exception e) {
-            throw new POSUMException("Could not construct response object", e);
-        }
-    }
-
     @Override
     public SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException {
         SimpleRequestProto requestProto =
                 ((SimpleRequestPBImpl) request).getProto();
         try {
-            return wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
+            return Utils.wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
         } catch (ServiceException e) {
             RPCUtil.unwrapAndThrowException(e);
             return null;

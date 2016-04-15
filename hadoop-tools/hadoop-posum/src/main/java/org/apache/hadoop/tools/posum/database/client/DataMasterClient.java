@@ -1,20 +1,24 @@
 package org.apache.hadoop.tools.posum.database.client;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.records.response.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.response.SingleEntityPayload;
+import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
+import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.request.SingleEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.request.EntityByIdPayload;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.DataStoreInterface;
 import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
@@ -26,11 +30,13 @@ import java.util.Map;
 /**
  * Created by ane on 2/9/16.
  */
-public class DataMasterClient extends AbstractService implements DataStore {
+public class DataMasterClient extends AbstractService implements DataStoreInterface {
 
     public DataMasterClient() {
         super(DataMasterClient.class.getName());
     }
+
+    private static Log logger = LogFactory.getLog(DataMasterClient.class);
 
     DataMasterProtocol dmClient;
 
@@ -57,7 +63,8 @@ public class DataMasterClient extends AbstractService implements DataStore {
     public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
         try {
             SingleEntityPayload payload = Utils.handleError("findById",
-                    dmClient.getEntity(SingleEntityRequest.newInstance(collection, id))
+                    dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.ENTITY_BY_ID,
+                            EntityByIdPayload.newInstance(collection, id)))
             ).getPayload();
             if (payload != null)
                 return (T) payload.getEntity();
@@ -94,7 +101,16 @@ public class DataMasterClient extends AbstractService implements DataStore {
 
     @Override
     public JobProfile getJobProfileForApp(String appId) {
+//        try {
+//            SingleEntityPayload payload = Utils.handleError("findById",
+//                    dmClient.getEntity(EntityByIdPayload.newInstance(DataEntityType.JOB, id))
+//            ).getPayload();
+//            if (payload != null)
+//                return (JobProfile) payload.getEntity();
         return null;
+//        } catch (IOException | YarnException e) {
+//            throw new POSUMException("Error during RPC call", e);
+//        }
     }
 
     @Override
@@ -130,5 +146,22 @@ public class DataMasterClient extends AbstractService implements DataStore {
     @Override
     public void delete(DataEntityType collection, Map<String, Object> queryParams) {
 
+    }
+
+    public SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
+        return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type));
+    }
+
+    public SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
+        try {
+            return Utils.handleError(kind, dmClient.handleSimpleRequest(request));
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
+    }
+
+    public void checkPing() {
+        sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
+        logger.info("Successfully connected to Data Master");
     }
 }

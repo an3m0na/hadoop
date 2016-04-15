@@ -1,30 +1,30 @@
 package org.apache.hadoop.tools.posum.common.records.request.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.request.SingleEntityRequest;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.request.EntityByIdPayload;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityRequestProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.POSUMProtos.EntityByIdPayloadProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.EntityByIdPayloadProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
  */
-public class SingleEntityRequestPBImpl extends SingleEntityRequest {
-    private SingleEntityRequestProto proto = SingleEntityRequestProto.getDefaultInstance();
-    private SingleEntityRequestProto.Builder builder = null;
+public class EntityByIdPayloadPBImpl extends EntityByIdPayload {
+    private EntityByIdPayloadProto proto = EntityByIdPayloadProto.getDefaultInstance();
+    private EntityByIdPayloadProto.Builder builder = null;
     private boolean viaProto = false;
 
-    public SingleEntityRequestPBImpl() {
-        builder = SingleEntityRequestProto.newBuilder();
+    public EntityByIdPayloadPBImpl() {
+        builder = EntityByIdPayloadProto.newBuilder();
     }
 
-    public SingleEntityRequestPBImpl(SingleEntityRequestProto proto) {
+    public EntityByIdPayloadPBImpl(EntityByIdPayloadProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public SingleEntityRequestProto getProto() {
+    public EntityByIdPayloadProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -65,14 +65,14 @@ public class SingleEntityRequestPBImpl extends SingleEntityRequest {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = SingleEntityRequestProto.newBuilder(proto);
+            builder = EntityByIdPayloadProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
     public DataEntityType getEntityType() {
-        SingleEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
+        EntityByIdPayloadProtoOrBuilder p = viaProto ? proto : builder;
         return DataEntityType.valueOf(p.getEntityType().name().substring("TYPE_".length()));
     }
 
@@ -84,7 +84,7 @@ public class SingleEntityRequestPBImpl extends SingleEntityRequest {
 
     @Override
     public String getId() {
-        SingleEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
+        EntityByIdPayloadProtoOrBuilder p = viaProto ? proto : builder;
         return p.getId();
     }
 

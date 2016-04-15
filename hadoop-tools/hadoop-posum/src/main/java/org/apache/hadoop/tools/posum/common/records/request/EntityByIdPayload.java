@@ -6,10 +6,10 @@ import org.apache.hadoop.yarn.util.Records;
 /**
  * Created by ane on 3/20/16.
  */
-public abstract class SingleEntityRequest {
+public abstract class EntityByIdPayload {
 
-    public static SingleEntityRequest newInstance(DataEntityType type, String id) {
-        SingleEntityRequest request = Records.newRecord(SingleEntityRequest.class);
+    public static EntityByIdPayload newInstance(DataEntityType type, String id) {
+        EntityByIdPayload request = Records.newRecord(EntityByIdPayload.class);
         request.setEntityType(type);
         request.setId(id);
         return request;

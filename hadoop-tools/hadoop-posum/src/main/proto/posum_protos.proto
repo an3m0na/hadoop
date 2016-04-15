@@ -139,7 +139,7 @@ message EntityPropertyProto {
     }
 }
 
-message SingleEntityRequestProto {
+message EntityByIdPayloadProto {
     required EntityTypeProto entityType = 1;
     required string id = 2;
 }
@@ -165,7 +165,8 @@ message SimpleRequestProto {
 
     enum SimpleRequestTypeProto {
         REQ_PING = 0;
-        REQ_CHANGE_POLICY=1;
+        REQ_CHANGE_POLICY = 1;
+        REQ_ENTITY_BY_ID = 2;
     }
 }
 

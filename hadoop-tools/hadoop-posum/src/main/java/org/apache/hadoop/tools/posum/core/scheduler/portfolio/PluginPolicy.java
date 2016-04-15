@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.core.scheduler.meta.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSAppAttempt;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
@@ -28,6 +29,7 @@ public abstract class PluginPolicy<
     protected Class<A> aClass;
     protected Class<N> nClass;
     protected Configuration pluginConf;
+    protected MetaSchedulerCommService commService;
 
     public PluginPolicy(Class<A> aClass, Class<N> nClass, Class<S> sClass) {
         super(sClass.getName());
@@ -35,8 +37,9 @@ public abstract class PluginPolicy<
         this.nClass = nClass;
     }
 
-    public void initializePlugin(Configuration conf) {
+    public void initializePlugin(Configuration conf, MetaSchedulerCommService commService) {
         this.pluginConf = conf;
+        this.commService = commService;
     }
 
     public void forwardCompletedContainer(RMContainer rmContainer, ContainerStatus containerStatus, RMContainerEventType event) {

@@ -76,7 +76,8 @@ public abstract class SimpleResponse<T> {
         response.setSuccessful(false);
         response.setType(type);
         response.setText(text);
-        response.setException(e);
+        if (e != null)
+            response.setException(e);
         return response;
     }
 

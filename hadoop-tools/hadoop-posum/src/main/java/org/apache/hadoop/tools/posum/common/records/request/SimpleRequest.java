@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.request;
 
 
+import org.apache.hadoop.tools.posum.common.records.request.impl.pb.EntityByIdRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.StringRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.VoidRequestPBImpl;
@@ -16,7 +17,8 @@ public abstract class SimpleRequest<T> {
 
     public enum Type {
         PING(VoidRequestPBImpl.class),
-        CHANGE_POLICY(StringRequestPBImpl.class);
+        CHANGE_POLICY(StringRequestPBImpl.class),
+        ENTITY_BY_ID(EntityByIdRequestPBImpl.class);
 
         private Class<? extends SimpleRequestPBImpl> implClass;
         private static final String prefix = "REQ_";
