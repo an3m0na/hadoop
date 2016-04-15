@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records.response;
+package org.apache.hadoop.tools.posum.common.records.field;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;

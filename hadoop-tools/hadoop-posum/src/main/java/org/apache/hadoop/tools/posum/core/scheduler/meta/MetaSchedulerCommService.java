@@ -11,6 +11,9 @@ import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
+import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterInterface;
+import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
+import org.apache.hadoop.tools.posum.database.store.DataStoreInterface;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -23,6 +26,7 @@ public class MetaSchedulerCommService extends AbstractService implements MetaSch
     private static Log logger = LogFactory.getLog(MetaSchedulerCommService.class);
 
     private POSUMMasterClient masterClient;
+    private DataMasterClient dataClient;
     private Configuration posumConf;
 
     private Server metaServer;
@@ -61,6 +65,11 @@ public class MetaSchedulerCommService extends AbstractService implements MetaSch
         masterClient.init(posumConf);
         masterClient.start();
         masterClient.checkPing();
+
+        dataClient = new DataMasterClient();
+        dataClient.init(posumConf);
+        dataClient.start();
+        dataClient.checkPing();
     }
 
     @Override
@@ -80,7 +89,7 @@ public class MetaSchedulerCommService extends AbstractService implements MetaSch
                     break;
                 case CHANGE_POLICY:
                     logger.info("Changing policy to: " + request.getPayload());
-                    metaScheduler.changeToPolicy((String)request.getPayload());
+                    metaScheduler.changeToPolicy((String) request.getPayload());
                     break;
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
@@ -90,4 +99,14 @@ public class MetaSchedulerCommService extends AbstractService implements MetaSch
         }
         return SimpleResponse.newInstance(true);
     }
+
+    public DataStoreInterface getDataStore() {
+        return dataClient;
+    }
+
+    public POSUMMasterInterface getMaster() {
+        return masterClient;
+    }
+
+
 }

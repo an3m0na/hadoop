@@ -53,7 +53,7 @@ public class HadoopMonitor extends AbstractService {
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         this.conf = conf;
-        this.collector = new ClusterInfoCollector(conf, context.getDataStore());
+        this.collector = new ClusterInfoCollector(conf, context.getDataStoreInterface());
     }
 
     @Override

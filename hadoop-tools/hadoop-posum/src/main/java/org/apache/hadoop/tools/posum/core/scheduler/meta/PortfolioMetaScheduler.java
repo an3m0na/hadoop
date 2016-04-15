@@ -93,7 +93,7 @@ public class PortfolioMetaScheduler extends
         } catch (InstantiationException | IllegalAccessException e) {
             throw new POSUMException("Could not instantiate scheduler for class " + currentPolicyClass, e);
         }
-        currentPolicy.initializePlugin(posumConf);
+        currentPolicy.initializePlugin(posumConf, commService);
         if (rmContext != null)
             currentPolicy.setRMContext(rmContext);
         logger.debug("Initializing current policy");
@@ -128,7 +128,7 @@ public class PortfolioMetaScheduler extends
 
     }
 
-    private void initComm() {
+    private void initComms() {
         commService = new MetaSchedulerCommService(this);
         commService.init(posumConf);
         commService.start();
@@ -154,7 +154,7 @@ public class PortfolioMetaScheduler extends
         this.posumConf = POSUMConfiguration.newInstance();
         setConf(conf);
         preparePolicies();
-        initComm();
+        initComms();
         initPolicy();
     }
 

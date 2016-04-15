@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * Created by ane on 2/9/16.
  */
-public interface DataStore {
+public interface DataStoreInterface {
 
     /* Generic accessors */
 

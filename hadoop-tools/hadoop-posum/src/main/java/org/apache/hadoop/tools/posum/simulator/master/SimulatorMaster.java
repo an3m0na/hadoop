@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.simulator.master;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.DataStoreInterface;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
@@ -37,7 +37,7 @@ public class SimulatorMaster extends CompositeService {
 
         JobBehaviorPredictor predictor;
         try {
-            predictor = predictorClass.getConstructor(DataStore.class).newInstance(dataStore);
+            predictor = predictorClass.getConstructor(DataStoreInterface.class).newInstance(dataStore);
             predictor.setConf(conf);
         } catch (NoSuchMethodException |
                 InvocationTargetException |

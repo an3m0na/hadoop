@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by ane on 2/9/16.
  */
-public class DataStoreImpl implements DataStore {
+public class DataStoreImpl implements DataStoreInterface {
 
     private MongoJackConnector conn;
     private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();

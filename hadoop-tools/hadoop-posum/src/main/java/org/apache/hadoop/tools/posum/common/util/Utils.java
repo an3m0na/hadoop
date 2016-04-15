@@ -5,8 +5,12 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
@@ -79,5 +83,25 @@ public class Utils {
                     response.getException());
         }
         return response;
+    }
+
+    public static <T> SimpleRequest<T> wrapSimpleRequest(POSUMProtos.SimpleRequestProto proto) {
+        try {
+            Class<? extends SimpleRequestPBImpl> implClass =
+                    SimpleRequest.Type.fromProto(proto.getType()).getImplClass();
+            return implClass.getConstructor(POSUMProtos.SimpleRequestProto.class).newInstance(proto);
+        } catch (Exception e) {
+            throw new POSUMException("Could not construct request object for " + proto.getType(), e);
+        }
+    }
+
+    public static SimpleResponse wrapSimpleResponse(POSUMProtos.SimpleResponseProto proto) {
+        try {
+            Class<? extends SimpleResponsePBImpl> implClass =
+                    SimpleResponse.Type.fromProto(proto.getType()).getImplClass();
+            return implClass.getConstructor(POSUMProtos.SimpleResponseProto.class).newInstance(proto);
+        } catch (Exception e) {
+            throw new POSUMException("Could not construct response object", e);
+        }
     }
 }

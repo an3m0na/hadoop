@@ -63,7 +63,8 @@ public class DataOrientedPolicy extends SingleQueuePolicy<
     @Override
     protected void updateAppPriority(SchedulerApplication<DOSAppAttempt> app) {
         try {
-            //TODO access the database and think of a way to make sure the database is populated
+            //TODO make sure the database is populated
+            commService.getDataStore().getJobProfileForApp(app.getCurrentAppAttempt().getApplicationId().toString());
         } catch (Exception e) {
             logger.debug("[DOScheduler] Could not read input size for: " + app.getCurrentAppAttempt().getApplicationId(), e);
         }
