@@ -305,7 +305,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
                 if (!(event instanceof NodeAddedSchedulerEvent)) {
                     throw new RuntimeException("Unexpected event type: " + event);
                 }
-                NodeAddedSchedulerEvent nodeAddedEvent = (NodeAddedSchedulerEvent)event;
+                NodeAddedSchedulerEvent nodeAddedEvent = (NodeAddedSchedulerEvent) event;
                 addNode(nodeAddedEvent.getAddedRMNode());
                 recoverContainersOnNode(nodeAddedEvent.getContainerReports(),
                         nodeAddedEvent.getAddedRMNode());
@@ -314,23 +314,22 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
                 if (!(event instanceof NodeRemovedSchedulerEvent)) {
                     throw new RuntimeException("Unexpected event type: " + event);
                 }
-                NodeRemovedSchedulerEvent nodeRemovedEvent = (NodeRemovedSchedulerEvent)event;
+                NodeRemovedSchedulerEvent nodeRemovedEvent = (NodeRemovedSchedulerEvent) event;
                 removeNode(nodeRemovedEvent.getRemovedRMNode());
                 break;
             case NODE_UPDATE:
                 if (!(event instanceof NodeUpdateSchedulerEvent)) {
                     throw new RuntimeException("Unexpected event type: " + event);
                 }
-                NodeUpdateSchedulerEvent nodeUpdatedEvent = (NodeUpdateSchedulerEvent)event;
+                NodeUpdateSchedulerEvent nodeUpdatedEvent = (NodeUpdateSchedulerEvent) event;
                 nodeUpdate(nodeUpdatedEvent.getRMNode());
                 break;
-            case NODE_RESOURCE_UPDATE:
-            {
+            case NODE_RESOURCE_UPDATE: {
                 if (!(event instanceof NodeResourceUpdateSchedulerEvent)) {
                     throw new RuntimeException("Unexpected event type: " + event);
                 }
                 NodeResourceUpdateSchedulerEvent nodeResourceUpdatedEvent =
-                        (NodeResourceUpdateSchedulerEvent)event;
+                        (NodeResourceUpdateSchedulerEvent) event;
                 updateNodeResource(nodeResourceUpdatedEvent.getRMNode(),
                         nodeResourceUpdatedEvent.getResourceOption());
             }
@@ -341,14 +340,14 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
                 }
                 AppAddedSchedulerEvent appAddedEvent = (AppAddedSchedulerEvent) event;
 
-                    addApplication(appAddedEvent.getApplicationId(), appAddedEvent.getUser(),
-                            appAddedEvent.getIsAppRecovering());
+                addApplication(appAddedEvent.getApplicationId(), appAddedEvent.getUser(),
+                        appAddedEvent.getIsAppRecovering());
                 break;
             case APP_REMOVED:
                 if (!(event instanceof AppRemovedSchedulerEvent)) {
                     throw new RuntimeException("Unexpected event type: " + event);
                 }
-                AppRemovedSchedulerEvent appRemovedEvent = (AppRemovedSchedulerEvent)event;
+                AppRemovedSchedulerEvent appRemovedEvent = (AppRemovedSchedulerEvent) event;
                 doneApplication(appRemovedEvent.getApplicationID(),
                         appRemovedEvent.getFinalState());
                 break;
@@ -373,7 +372,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
                             appAttemptRemovedEvent.getApplicationAttemptID(),
                             appAttemptRemovedEvent.getFinalAttemptState(),
                             appAttemptRemovedEvent.getKeepContainersAcrossAppAttempts());
-                } catch(IOException ie) {
+                } catch (IOException ie) {
                     LOG.error("Unable to remove application "
                             + appAttemptRemovedEvent.getApplicationAttemptID(), ie);
                 }
@@ -383,7 +382,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
                     throw new RuntimeException("Unexpected event type: " + event);
                 }
                 ContainerExpiredSchedulerEvent containerExpiredEvent =
-                        (ContainerExpiredSchedulerEvent)event;
+                        (ContainerExpiredSchedulerEvent) event;
                 ContainerId containerId = containerExpiredEvent.getContainerId();
                 completedContainer(getRMContainer(containerId),
                         SchedulerUtils.createAbnormalContainerStatus(
@@ -433,17 +432,18 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
 
     protected abstract void updateAppPriority(SchedulerApplication<A> app);
 
-    protected void onAppAttemptAdded(SchedulerApplication<A> app){
+    protected void onAppAttemptAdded(SchedulerApplication<A> app) {
         orderedApps.remove(app);
         updateAppPriority(app);
         orderedApps.add(app);
+        LOG.debug("Apps are now " + orderedApps);
     }
 
-    protected  void onAppAdded(SchedulerApplication<A> app){
+    protected void onAppAdded(SchedulerApplication<A> app) {
         orderedApps.add(app);
     }
 
-    protected  void onAppDone(SchedulerApplication<A> app){
+    protected void onAppDone(SchedulerApplication<A> app) {
         orderedApps.remove(app);
     }
 

@@ -18,7 +18,8 @@ public abstract class SimpleRequest<T> {
     public enum Type {
         PING(VoidRequestPBImpl.class),
         CHANGE_POLICY(StringRequestPBImpl.class),
-        ENTITY_BY_ID(EntityByIdRequestPBImpl.class);
+        ENTITY_BY_ID(EntityByIdRequestPBImpl.class),
+        JOB_FOR_APP(StringRequestPBImpl.class);
 
         private Class<? extends SimpleRequestPBImpl> implClass;
         private static final String prefix = "REQ_";

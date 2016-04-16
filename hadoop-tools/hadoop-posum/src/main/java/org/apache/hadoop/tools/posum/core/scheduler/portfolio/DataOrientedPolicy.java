@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSQueue;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSchedulerNode;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SingleQueuePolicy;
@@ -63,12 +64,19 @@ public class DataOrientedPolicy extends SingleQueuePolicy<
     @Override
     protected void updateAppPriority(SchedulerApplication<DOSAppAttempt> app) {
         try {
-            //TODO make sure the database is populated
-            commService.getDataStore().getJobProfileForApp(app.getCurrentAppAttempt().getApplicationId().toString());
+            String appId = app.getCurrentAppAttempt().getApplicationId().toString();
+            JobProfile job = commService.getDataStore().getJobProfileForApp(appId);
+            if (job != null) {
+                Long size = job.getInputBytes();
+                if (size != null && size > 0) {
+                    logger.debug("Read input size for " + appId + ": " + size);
+                    app.getCurrentAppAttempt().setInputSplits(job.getInputSplits());
+                    app.getCurrentAppAttempt().setTotalInputSize(size);
+                }
+            }
         } catch (Exception e) {
-            logger.debug("[DOScheduler] Could not read input size for: " + app.getCurrentAppAttempt().getApplicationId(), e);
+            logger.debug("Could not read input size for: " + app.getCurrentAppAttempt().getApplicationId(), e);
         }
-
     }
 
     @Override
