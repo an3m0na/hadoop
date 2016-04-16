@@ -32,7 +32,7 @@ public class DataMasterContext {
         this.dataStoreInterface = dataStoreInterface;
     }
 
-    public DataStoreInterface getDataStoreInterface() {
+    public DataStoreInterface getDataStore() {
         return dataStoreInterface;
     }
 }

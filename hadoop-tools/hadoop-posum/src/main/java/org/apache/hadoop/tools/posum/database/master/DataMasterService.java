@@ -4,6 +4,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
@@ -14,7 +16,6 @@ import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
@@ -81,23 +82,32 @@ public class DataMasterService extends AbstractService implements DataMasterProt
         try {
             switch (request.getType()) {
                 case ENTITY_BY_ID:
-                    EntityByIdPayload payload = (EntityByIdPayload) request.getPayload();
-                    GeneralDataEntity ret = dmContext.getDataStoreInterface().findById(payload.getEntityType(), payload.getId());
-                    SingleEntityPayload retPayload = SingleEntityPayload.newInstance(payload.getEntityType(), ret);
-                    return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, retPayload);
+                    EntityByIdPayload idPayload = (EntityByIdPayload) request.getPayload();
+                    GeneralDataEntity ret =
+                            dmContext.getDataStore().findById(idPayload.getEntityType(), idPayload.getId());
+                    SingleEntityPayload entityPayload = SingleEntityPayload.newInstance(idPayload.getEntityType(), ret);
+                    return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
+                case JOB_FOR_APP:
+                    String appId = (String) request.getPayload();
+                    JobProfile jobProfile = dmContext.getDataStore().getJobProfileForApp(appId);
+                    entityPayload = SingleEntityPayload.newInstance(DataEntityType.JOB, jobProfile);
+                    return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
                 default:
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY,
                             "Could not recognize message type " + request.getType(), null);
             }
         } catch (Exception e) {
-            return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, "Exception resolving request" + request, e);
+            return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY,
+                    "Exception resolving request " + request, e);
         }
     }
 
     @Override
-    public SimpleResponse<MultiEntityPayload> listEntities(MultiEntityRequest request) throws IOException, YarnException {
+    public SimpleResponse<MultiEntityPayload> listEntities(MultiEntityRequest request)
+            throws IOException, YarnException {
         try {
-            List<GeneralDataEntity> ret = dmContext.getDataStoreInterface().find(request.getEntityType(), request.getProperties());
+            List<GeneralDataEntity> ret =
+                    dmContext.getDataStore().find(request.getEntityType(), request.getProperties());
             MultiEntityPayload payload = MultiEntityPayload.newInstance(request.getEntityType(), ret);
             return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY, payload);
         } catch (Exception e) {

@@ -101,16 +101,16 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
 
     @Override
     public JobProfile getJobProfileForApp(String appId) {
-//        try {
-//            SingleEntityPayload payload = Utils.handleError("findById",
-//                    dmClient.getEntity(EntityByIdPayload.newInstance(DataEntityType.JOB, id))
-//            ).getPayload();
-//            if (payload != null)
-//                return (JobProfile) payload.getEntity();
-        return null;
-//        } catch (IOException | YarnException e) {
-//            throw new POSUMException("Error during RPC call", e);
-//        }
+        try {
+            SingleEntityPayload payload = Utils.handleError("getJobProfileForApp",
+                    dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.JOB_FOR_APP, appId))
+            ).getPayload();
+            if (payload != null)
+                return (JobProfile) payload.getEntity();
+            return null;
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
     }
 
     @Override

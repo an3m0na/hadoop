@@ -35,7 +35,7 @@ import java.util.*;
 /**
  * Created by ane on 2/4/16.
  */
-class ClusterInfoCollector {
+public class ClusterInfoCollector {
 
     private static Log logger = LogFactory.getLog(ClusterInfoCollector.class);
 
@@ -56,15 +56,15 @@ class ClusterInfoCollector {
 
     void collect() {
         List<AppProfile> apps = collector.getAppsInfo();
-        logger.debug("[" + getClass().getSimpleName() + "] Found " + apps.size() + " apps");
+        logger.debug("Found " + apps.size() + " apps");
         for (AppProfile app : apps) {
             if (!finished.contains(app.getId())) {
-                logger.debug("[" + getClass().getSimpleName() + "] App " + app.getId() + " not finished");
+                logger.debug("App " + app.getId() + " not finished");
                 if (RestClient.TrackingUI.HISTORY.equals(app.getTrackingUI())) {
-                    logger.debug("[" + getClass().getSimpleName() + "] App " + app.getId() + " finished just now");
+                    logger.debug("App " + app.getId() + " finished just now");
                     moveAppToHistory(app);
                 } else {
-                    logger.debug("[" + getClass().getSimpleName() + "] App " + app.getId() + " is running");
+                    logger.debug("App " + app.getId() + " is running");
                     running.add(app.getId());
                     updateAppInfo(app);
                 }
@@ -74,7 +74,7 @@ class ClusterInfoCollector {
 
     private void moveAppToHistory(final AppProfile app) {
         final String appId = app.getId();
-        logger.debug("[" + getClass().getSimpleName() + "] Moving " + appId + " to history");
+        logger.debug("Moving " + appId + " to history");
         running.remove(appId);
         finished.add(appId);
 
@@ -123,7 +123,7 @@ class ClusterInfoCollector {
             JobProfile lastJobInfo = dataStoreInterface.getJobProfileForApp(app.getId());
             final JobProfile job = collector.getRunningJobInfo(app.getId(), lastJobInfo);
             if (job == null)
-                logger.debug("[" + getClass().getSimpleName() + "] Could not find job for " + app.getId());
+                logger.debug("Could not find job for " + app.getId());
             else {
                 final List<TaskProfile> tasks = collector.getRunningTasksInfo(job);
                 Integer mapDuration = 0, reduceDuration = 0, avgDuration = 0, mapNo = 0, reduceNo = 0, avgNo = 0;
@@ -173,9 +173,9 @@ class ClusterInfoCollector {
             }
         } else {
             //app is not yet tracked
-            logger.debug("[" + getClass().getSimpleName() + "] App " + app.getId() + " is not tracked");
+            logger.debug(" pp " + app.getId() + " is not tracked");
             try {
-                final JobProfile job = getSubmittedJobInfo(app.getId());
+                final JobProfile job = getSubmittedJobInfo(conf, app.getId());
                 dataStoreInterface.updateOrStore(DataEntityType.JOB, job);
                 if (historyEnabled) {
                     dataStoreInterface.store(DataEntityType.HISTORY,
@@ -187,7 +187,7 @@ class ClusterInfoCollector {
         }
     }
 
-    private JobProfile readJobConf(String appId, JobId jobId, FileSystem fs, JobConf conf, Path jobSubmitDir) throws IOException {
+    private static JobProfile readJobConf(String appId, JobId jobId, FileSystem fs, JobConf conf, Path jobSubmitDir) throws IOException {
         JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = SplitMetaInfoReader.readSplitMetaInfo(
                 TypeConverter.fromYarn(jobId), fs,
                 conf,
@@ -198,8 +198,8 @@ class ClusterInfoCollector {
             inputLength += aTaskSplitMetaInfo.getInputDataLength();
         }
 
-        logger.debug("[" + getClass().getSimpleName() + "] Input splits: " + taskSplitMetaInfo.length);
-        logger.debug("[" + getClass().getSimpleName() + "] Total input size: " + inputLength);
+        logger.debug("Input splits: " + taskSplitMetaInfo.length);
+        logger.debug("Total input size: " + inputLength);
 
         JobProfile profile = Records.newRecord(JobProfile.class);
         profile.setId(jobId.toString());
@@ -211,13 +211,13 @@ class ClusterInfoCollector {
         return profile;
     }
 
-    private JobProfile getSubmittedJobInfo(String appId) throws IOException {
+    public static JobProfile getSubmittedJobInfo(Configuration conf, String appId) throws IOException {
         final ApplicationId actualAppId = Utils.parseApplicationId(appId);
         FileSystem fs = FileSystem.get(conf);
         Path confPath = MRApps.getStagingAreaDir(conf, UserGroupInformation.getCurrentUser().getUserName());
         confPath = fs.makeQualified(confPath);
 
-        logger.debug("[" + getClass().getSimpleName() + "] Looking in staging path: " + confPath);
+        logger.debug("Looking in staging path: " + confPath);
         FileStatus[] statuses = fs.listStatus(confPath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
@@ -229,7 +229,7 @@ class ClusterInfoCollector {
             throw new POSUMException("Wrong number of job profile directories for: " + appId);
 
         Path jobConfDir = statuses[0].getPath();
-        logger.debug("[" + getClass().getSimpleName() + "] Checking file path: " + jobConfDir);
+        logger.debug("Checking file path: " + jobConfDir);
         String jobId = jobConfDir.getName();
         JobConf jobConf = new JobConf(new Path(jobConfDir, "job.xml"));
         //DANGER We assume there can only be one job / application
