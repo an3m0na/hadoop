@@ -85,6 +85,13 @@ public class PortfolioMetaScheduler extends
                 policies.put(policy.name(), policy.implClass);
             }
         }
+        String className = posumConf.get(POSUMConfiguration.DEFAULT_POLICY, POSUMConfiguration.DEFAULT_DEFAULT_POLICY);
+        if (className != null)
+            try {
+                currentPolicyClass = (Class<? extends PluginPolicy>) getClass().getClassLoader().loadClass(className);
+            } catch (ClassNotFoundException e) {
+                logger.error("Could not load default policy " + className);
+            }
     }
 
     private void initPolicy() {

@@ -69,7 +69,7 @@ public class POSUMConfiguration {
     public static String CLIENT_FAILOVER_MAX_ATTEMPTS = PREFIX + "failover.max.attempts";
 
     public static final String MONITOR_KEEP_HISTORY = MONITOR_PREFIX + "keep-history";
-    public static final boolean MONITOR_KEEP_HISTORY_DEFAULT = false;
+    public static final boolean MONITOR_KEEP_HISTORY_DEFAULT = true;
 
     public static final String SCHEDULER_BIND_ADDRESS = SCHEDULER_PREFIX + "bind-host";
     public static final String SCHEDULER_ADDRESS = SCHEDULER_PREFIX + "address";
@@ -79,4 +79,7 @@ public class POSUMConfiguration {
     public static final int DEFAULT_SCHEDULER_SERVICE_THREAD_COUNT = 10;
 
     public static final String SCHEDULER_POLICY_MAP = SCHEDULER_PREFIX + "policies";
+    public static final String DEFAULT_POLICY = SCHEDULER_PREFIX + "defualt";
+    public static final String DEFAULT_DEFAULT_POLICY =
+            "org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy";
 }

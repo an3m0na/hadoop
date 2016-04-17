@@ -63,6 +63,7 @@ public class DataOrientedPolicy extends SingleQueuePolicy<
 
     @Override
     protected void updateAppPriority(SchedulerApplication<DOSAppAttempt> app) {
+        logger.debug("Updating app priority");
         try {
             String appId = app.getCurrentAppAttempt().getApplicationId().toString();
             JobProfile job = commService.getDataStore().getJobProfileForApp(appId);

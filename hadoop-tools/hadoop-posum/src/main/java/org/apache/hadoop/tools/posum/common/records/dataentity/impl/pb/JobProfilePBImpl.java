@@ -11,11 +11,11 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProtoOrBuilder;
  * Created by ane on 3/21/16.
  */
 public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobProfileProto, JobProfileProto.Builder>
-        implements JobProfile{
+        implements JobProfile {
 
     @Override
     void initBuilder() {
-        builder = viaProto? JobProfileProto.newBuilder(proto) : JobProfileProto.newBuilder();
+        builder = viaProto ? JobProfileProto.newBuilder(proto) : JobProfileProto.newBuilder();
     }
 
     @Override
@@ -29,16 +29,18 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
         viaProto = true;
         return this;
     }
+
     @Override
     public String getId() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return "".equals(p.getId())? null : p.getId();
+        return "".equals(p.getId()) ? null : p.getId();
     }
 
     @Override
     public void setId(String id) {
         maybeInitBuilder();
-        builder.setId(id);
+        if (id != null)
+            builder.setId(id);
     }
 
     @Override
@@ -50,7 +52,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setStartTime(Long startTime) {
         maybeInitBuilder();
-        builder.setStartTime(startTime);
+        if (startTime != null)
+            builder.setStartTime(startTime);
     }
 
     @Override
@@ -62,7 +65,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setUser(String user) {
         maybeInitBuilder();
-        builder.setUser(user);
+        if (user != null)
+            builder.setUser(user);
     }
 
     @Override
@@ -74,7 +78,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setName(String name) {
         maybeInitBuilder();
-        builder.setName(name);
+        if (name != null)
+            builder.setName(name);
     }
 
     @Override
@@ -86,30 +91,34 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setFinishTime(Long finishTime) {
         maybeInitBuilder();
-        builder.setFinishTime(finishTime);
+        if (finishTime != null)
+            builder.setFinishTime(finishTime);
     }
 
     @Override
     public Integer getDuration() {
-        return new Long(Math.min(0, getFinishTime()-getStartTime())).intValue();
+        return new Long(Math.min(0, getFinishTime() - getStartTime())).intValue();
     }
 
     @Override
     public void setTotalMapTasks(Integer totalMapTasks) {
         maybeInitBuilder();
-        builder.setTotalMapTasks(totalMapTasks);
+        if (totalMapTasks != null)
+            builder.setTotalMapTasks(totalMapTasks);
     }
 
     @Override
     public void setTotalReduceTasks(Integer totalReduceTasks) {
         maybeInitBuilder();
-        builder.setTotalReduceTasks(totalReduceTasks);
+        if (totalReduceTasks != null)
+            builder.setTotalReduceTasks(totalReduceTasks);
     }
 
     @Override
     public void setInputBytes(Long inputBytes) {
         maybeInitBuilder();
-        builder.setInputBytes(inputBytes);
+        if (inputBytes != null)
+            builder.setInputBytes(inputBytes);
     }
 
     @Override
@@ -121,7 +130,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setOutputBytes(Long outputBytes) {
         maybeInitBuilder();
-        builder.setOutputBytes(outputBytes);
+        if (outputBytes != null)
+            builder.setOutputBytes(outputBytes);
     }
 
     @Override
@@ -133,7 +143,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setSubmitTime(Long submitTime) {
         maybeInitBuilder();
-        builder.setSubmitTime(submitTime);
+        if (submitTime != null)
+            builder.setSubmitTime(submitTime);
     }
 
     @Override
@@ -157,7 +168,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setAppId(String appId) {
         maybeInitBuilder();
-        builder.setAppId(appId);
+        if (appId != null)
+            builder.setAppId(appId);
     }
 
     @Override
@@ -187,7 +199,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setMapProgress(Float mapProgress) {
         maybeInitBuilder();
-        builder.setMapProgress(mapProgress);
+        if (mapProgress != null)
+            builder.setMapProgress(mapProgress);
     }
 
     @Override
@@ -199,7 +212,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setReduceProgress(Float reduceProgress) {
         maybeInitBuilder();
-        builder.setReduceProgress(reduceProgress);
+        if (reduceProgress != null)
+            builder.setReduceProgress(reduceProgress);
     }
 
     @Override
@@ -211,7 +225,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setCompletedMaps(Integer completedMaps) {
         maybeInitBuilder();
-        builder.setCompletedMaps(completedMaps);
+        if (completedMaps != null)
+            builder.setCompletedMaps(completedMaps);
     }
 
     @Override
@@ -223,7 +238,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setCompletedReduces(Integer completedReduces) {
         maybeInitBuilder();
-        builder.setCompletedReduces(completedReduces);
+        if (completedReduces != null)
+            builder.setCompletedReduces(completedReduces);
     }
 
     @Override
@@ -235,7 +251,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setUberized(Boolean uberized) {
         maybeInitBuilder();
-        builder.setUberized(uberized);
+        if (uberized != null)
+            builder.setUberized(uberized);
     }
 
     @Override
@@ -247,7 +264,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setInputSplits(Integer inputSplits) {
         maybeInitBuilder();
-        builder.setInputSplits(inputSplits);
+        if (inputSplits != null)
+            builder.setInputSplits(inputSplits);
     }
 
     @Override
@@ -270,7 +288,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setAvgMapDuration(Integer avgMapDuration) {
         maybeInitBuilder();
-        builder.setAvgMapDuration(avgMapDuration);
+        if (avgMapDuration != null)
+            builder.setAvgMapDuration(avgMapDuration);
     }
 
     @Override
@@ -282,7 +301,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setAvgReduceDuration(Integer avgReduceDuration) {
         maybeInitBuilder();
-        builder.setAvgReduceDuration(avgReduceDuration);
+        if (avgReduceDuration != null)
+            builder.setAvgReduceDuration(avgReduceDuration);
     }
 
     @Override
@@ -294,13 +314,15 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setAvgTaskDuration(Integer avgTaskDuration) {
         maybeInitBuilder();
-        builder.setAvgTaskDuration(avgTaskDuration);
+        if (avgTaskDuration != null)
+            builder.setAvgTaskDuration(avgTaskDuration);
     }
 
     @Override
     public void setAvgShuffleDuration(Integer avgShuffleDuration) {
         maybeInitBuilder();
-        builder.setAvgShuffleDuration(avgShuffleDuration);
+        if (avgShuffleDuration != null)
+            builder.setAvgShuffleDuration(avgShuffleDuration);
     }
 
     @Override
@@ -312,7 +334,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public void setAvgMergeDuration(Integer avgMergeDuration) {
         maybeInitBuilder();
-        builder.setAvgMergeDuration(avgMergeDuration);
+        if (avgMergeDuration != null)
+            builder.setAvgMergeDuration(avgMergeDuration);
     }
 
     @Override

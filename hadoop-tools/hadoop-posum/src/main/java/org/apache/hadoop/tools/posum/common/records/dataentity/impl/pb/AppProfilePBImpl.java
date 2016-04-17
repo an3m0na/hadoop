@@ -41,6 +41,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setId(String id) {
         maybeInitBuilder();
+        if(id != null)
         builder.setId(id);
     }
 
@@ -53,6 +54,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setStartTime(Long startTime) {
         maybeInitBuilder();
+        if(startTime != null)
         builder.setStartTime(startTime);
     }
 
@@ -65,6 +67,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setUser(String user) {
         maybeInitBuilder();
+        if(user != null)
         builder.setUser(user);
     }
 
@@ -77,6 +80,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setName(String name) {
         maybeInitBuilder();
+        if(name != null)
         builder.setName(name);
     }
 
@@ -125,6 +129,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setFinishTime(Long finishTime) {
         maybeInitBuilder();
+        if(finishTime != null)
         builder.setFinishTime(finishTime);
     }
 

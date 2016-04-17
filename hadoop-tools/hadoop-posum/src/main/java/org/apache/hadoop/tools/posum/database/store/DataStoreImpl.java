@@ -91,18 +91,18 @@ public class DataStoreImpl implements DataStoreInterface {
         } finally {
             readLock.unlock();
         }
+        if (profiles.size() == 1)
+            return profiles.get(0);
         if (profiles.size() > 1)
             throw new YarnRuntimeException("Found too many profiles in database for app " + appId);
-        if (profiles.size() < 1) {
-            //force the reading of the configuration
-            try {
-                return ClusterInfoCollector.getSubmittedJobInfo(conf, appId);
-            } catch (Exception e) {
-                logger.debug("Could not retrieve job info for app " + appId, e);
-            }
-            return null;
+
+        //if not found, force the reading of the configuration
+        try {
+            return ClusterInfoCollector.getSubmittedJobInfo(conf, appId);
+        } catch (Exception e) {
+            logger.debug("Could not retrieve job info for app " + appId, e);
         }
-        return profiles.get(0);
+        return null;
 
     }
 
