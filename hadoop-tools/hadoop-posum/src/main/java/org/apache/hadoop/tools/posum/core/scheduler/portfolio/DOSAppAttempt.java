@@ -33,4 +33,9 @@ public class DOSAppAttempt extends SQSAppAttempt {
     public void setInputSplits(Integer inputSplits) {
         this.inputSplits = inputSplits;
     }
+
+    @Override
+    public String toString() {
+        return "DOSAttempt_" + getApplicationId() + "=" + totalInputSize;
+    }
 }

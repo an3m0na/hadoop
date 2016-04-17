@@ -68,7 +68,8 @@ public class POSUMMasterClient extends AbstractService implements POSUMMasterInt
     }
 
     public void checkPing(){
-        sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
+        Utils.handleError("checkPing",
+                sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!")));
         logger.info("Successfully connected to POSUMMaster");
     }
 }

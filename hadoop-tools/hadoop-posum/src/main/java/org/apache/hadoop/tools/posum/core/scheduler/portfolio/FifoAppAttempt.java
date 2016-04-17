@@ -24,4 +24,9 @@ public class FifoAppAttempt extends SQSAppAttempt {
     public void setSubmitTime(Long submitTime) {
         this.submitTime = submitTime;
     }
+
+    @Override
+    public String toString() {
+        return "FifoAttempt_" + getApplicationId() + "=" + submitTime;
+    }
 }

@@ -430,21 +430,37 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
         attempt.stop(finalAttemptState);
     }
 
+    protected void printQueue() {
+        StringBuilder builder = new StringBuilder("Apps are now [ ");
+        for (SchedulerApplication<A> orderedApp : orderedApps) {
+            A attempt = orderedApp.getCurrentAppAttempt();
+            if (attempt != null)
+                builder.append(attempt.toString());
+            else
+                builder.append("unknown");
+            builder.append(" ");
+        }
+        builder.append("]");
+        LOG.debug(builder.toString());
+    }
+
     protected abstract void updateAppPriority(SchedulerApplication<A> app);
 
     protected void onAppAttemptAdded(SchedulerApplication<A> app) {
         orderedApps.remove(app);
         updateAppPriority(app);
         orderedApps.add(app);
-        LOG.debug("Apps are now " + orderedApps);
+        printQueue();
     }
 
     protected void onAppAdded(SchedulerApplication<A> app) {
         orderedApps.add(app);
+        printQueue();
     }
 
     protected void onAppDone(SchedulerApplication<A> app) {
         orderedApps.remove(app);
+        printQueue();
     }
 
     private void addApplicationAttempt(ApplicationAttemptId appAttemptId, boolean transferStateFromPreviousAttempt, boolean isAttemptRecovering) {

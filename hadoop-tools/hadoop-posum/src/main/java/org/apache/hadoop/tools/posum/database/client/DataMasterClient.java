@@ -101,6 +101,7 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
 
     @Override
     public JobProfile getJobProfileForApp(String appId) {
+        logger.debug("Getting job profile for app "+appId);
         try {
             SingleEntityPayload payload = Utils.handleError("getJobProfileForApp",
                     dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.JOB_FOR_APP, appId))
@@ -161,7 +162,8 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
     }
 
     public void checkPing() {
-        sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
+        Utils.handleError("checkPing",
+                sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!")));
         logger.info("Successfully connected to Data Master");
     }
 }

@@ -76,7 +76,6 @@ public class FifoPolicy extends SingleQueuePolicy<
 
     @Override
     protected void assignFromQueue(SQSchedulerNode node) {
-        logger.debug("Apps in queue " + orderedApps);
         for (SchedulerApplication<FifoAppAttempt> app : orderedApps) {
             assignToApp(node, app);
         }

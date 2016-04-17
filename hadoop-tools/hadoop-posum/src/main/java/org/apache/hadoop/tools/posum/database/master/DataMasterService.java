@@ -78,7 +78,7 @@ public class DataMasterService extends AbstractService implements DataMasterProt
 
     @Override
     public SimpleResponse<SingleEntityPayload> getEntity(SimpleRequest request) {
-
+        logger.debug("Got request for entity " + request.getType());
         try {
             switch (request.getType()) {
                 case ENTITY_BY_ID:
@@ -91,6 +91,7 @@ public class DataMasterService extends AbstractService implements DataMasterProt
                     String appId = (String) request.getPayload();
                     JobProfile jobProfile = dmContext.getDataStore().getJobProfileForApp(appId);
                     entityPayload = SingleEntityPayload.newInstance(DataEntityType.JOB, jobProfile);
+                    logger.debug("Returning profile" + jobProfile);
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
                 default:
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY,
