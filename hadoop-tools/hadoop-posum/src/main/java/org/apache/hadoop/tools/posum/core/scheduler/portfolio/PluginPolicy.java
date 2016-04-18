@@ -4,18 +4,18 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSAppAttempt;
-import org.apache.hadoop.yarn.api.records.ContainerId;
-import org.apache.hadoop.yarn.api.records.ContainerStatus;
-import org.apache.hadoop.yarn.api.records.Resource;
-import org.apache.hadoop.yarn.api.records.ResourceOption;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSQueue;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSchedulerNode;
+import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
-import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplication;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by ane on 4/1/16.
@@ -35,6 +35,23 @@ public abstract class PluginPolicy<
         super(sClass.getName());
         this.aClass = aClass;
         this.nClass = nClass;
+    }
+
+    public static class PluginPolicyState {
+        public Resource usedResource;
+        public SQSQueue queue;
+        public Map<NodeId, ? extends SQSchedulerNode> nodes;
+        public Map<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> applications;
+
+        public PluginPolicyState(Resource usedResource,
+                                 SQSQueue queue,
+                                 Map<NodeId, ? extends SQSchedulerNode> nodes,
+                                 Map<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> applications) {
+            this.usedResource = usedResource;
+            this.queue = queue;
+            this.nodes = nodes;
+            this.applications = applications;
+        }
     }
 
     public void initializePlugin(Configuration conf, MetaSchedulerCommService commService) {
@@ -73,5 +90,9 @@ public abstract class PluginPolicy<
     public void forwardRefreshMaximumAllocation(Resource newMaxAlloc) {
         refreshMaximumAllocation(newMaxAlloc);
     }
+
+    public abstract void assumeState(PluginPolicyState state);
+
+    public abstract PluginPolicyState exportState();
 
 }
