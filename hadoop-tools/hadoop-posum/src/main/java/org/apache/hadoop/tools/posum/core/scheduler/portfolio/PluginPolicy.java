@@ -37,7 +37,7 @@ public abstract class PluginPolicy<
         this.nClass = nClass;
     }
 
-    public static class PluginPolicyState {
+    protected static class PluginPolicyState {
         public Resource usedResource;
         public SQSQueue queue;
         public Map<NodeId, ? extends SQSchedulerNode> nodes;
@@ -91,8 +91,13 @@ public abstract class PluginPolicy<
         refreshMaximumAllocation(newMaxAlloc);
     }
 
-    public abstract void assumeState(PluginPolicyState state);
+    protected abstract void assumeState(PluginPolicyState state);
 
-    public abstract PluginPolicyState exportState();
+    protected abstract PluginPolicyState exportState();
+
+    public void transferStateFromPolicy(PluginPolicy other){
+        PluginPolicyState state = other.exportState();
+        assumeState(state);
+    }
 
 }

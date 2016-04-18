@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by ane on 2/4/16.
  */
-public class PortfolioMetaScheduler extends
+class PortfolioMetaScheduler extends
         AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode> implements
         Configurable {
 
@@ -107,16 +107,7 @@ public class PortfolioMetaScheduler extends
         currentPolicy.init(conf);
     }
 
-    private void transferState(PluginPolicy oldPolicy) {
-        PluginPolicy.PluginPolicyState oldState = oldPolicy.exportState();
-        currentPolicy.assumeState(oldState);
-        if (isInState(STATE.STARTED)) {
-            logger.debug("Starting current policy");
-            currentPolicy.start();
-        }
-    }
-
-    protected void changeToPolicy(String policyName) {
+    void changeToPolicy(String policyName) {
         logger.debug("Changing policy to " + policyName);
         Class<? extends PluginPolicy> newClass = policies.get(policyName);
         if (newClass == null)
@@ -127,8 +118,13 @@ public class PortfolioMetaScheduler extends
             if (isInState(STATE.INITED) || isInState(STATE.STARTED)) {
                 PluginPolicy oldPolicy = currentPolicy;
                 initPolicy();
-                if (oldPolicy != null)
-                    transferState(oldPolicy);
+                if (oldPolicy != null) {
+                    currentPolicy.transferStateFromPolicy(oldPolicy);
+                    if (isInState(STATE.STARTED)) {
+                        logger.debug("Starting current policy");
+                        currentPolicy.start();
+                    }
+                }
             }
             writeLock.unlock();
             logger.debug("Policy changed successfully");
