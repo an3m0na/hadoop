@@ -108,7 +108,8 @@ public class PortfolioMetaScheduler extends
     }
 
     private void transferState(PluginPolicy oldPolicy) {
-        //TODO transfer everything
+        PluginPolicy.PluginPolicyState oldState = oldPolicy.exportState();
+        currentPolicy.assumeState(oldState);
         if (isInState(STATE.STARTED)) {
             logger.debug("Starting current policy");
             currentPolicy.start();

@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DOSAppAttempt;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.Priority;
@@ -52,11 +53,11 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     private static final RecordFactory recordFactory =
             RecordFactoryProvider.getRecordFactory(null);
 
-    private Resource usedResource = recordFactory.newRecordInstance(Resource.class);
+    protected Resource usedResource = recordFactory.newRecordInstance(Resource.class);
     private boolean usePortForNodeName;
     private final ResourceCalculator resourceCalculator = new DefaultResourceCalculator();
 
-    private Q queue;
+    protected Q queue;
     private Class<Q> qClass;
     protected ConcurrentSkipListSet<SchedulerApplication<A>> orderedApps;
 
@@ -430,39 +431,6 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
         attempt.stop(finalAttemptState);
     }
 
-    protected void printQueue() {
-        StringBuilder builder = new StringBuilder("Apps are now [ ");
-        for (SchedulerApplication<A> orderedApp : orderedApps) {
-            A attempt = orderedApp.getCurrentAppAttempt();
-            if (attempt != null)
-                builder.append(attempt.toString());
-            else
-                builder.append("unknown");
-            builder.append(" ");
-        }
-        builder.append("]");
-        LOG.debug(builder.toString());
-    }
-
-    protected abstract void updateAppPriority(SchedulerApplication<A> app);
-
-    protected void onAppAttemptAdded(SchedulerApplication<A> app) {
-        orderedApps.remove(app);
-        updateAppPriority(app);
-        orderedApps.add(app);
-        printQueue();
-    }
-
-    protected void onAppAdded(SchedulerApplication<A> app) {
-        orderedApps.add(app);
-        printQueue();
-    }
-
-    protected void onAppDone(SchedulerApplication<A> app) {
-        orderedApps.remove(app);
-        printQueue();
-    }
-
     private void addApplicationAttempt(ApplicationAttemptId appAttemptId, boolean transferStateFromPreviousAttempt, boolean isAttemptRecovering) {
         SchedulerApplication<A> application =
                 applications.get(appAttemptId.getApplicationId());
@@ -815,7 +783,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
         return assignedContainers;
     }
 
-    private void addNode(RMNode rmNode) {
+    protected void addNode(RMNode rmNode) {
         N schedulerNode = SQSchedulerNode.getInstance(nClass, rmNode, usePortForNodeName);
         this.nodes.put(rmNode.getNodeID(), schedulerNode);
         Resources.addTo(clusterResource, rmNode.getTotalCapability());
@@ -866,6 +834,76 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     protected void updateAppHeadRoom(SchedulerApplicationAttempt schedulerAttempt) {
         schedulerAttempt.setHeadroom(Resources.subtract(clusterResource,
                 usedResource));
+    }
+
+    protected void printQueue() {
+        StringBuilder builder = new StringBuilder("Apps are now [ ");
+        for (SchedulerApplication<A> orderedApp : orderedApps) {
+            A attempt = orderedApp.getCurrentAppAttempt();
+            if (attempt != null)
+                builder.append(attempt.toString());
+            else
+                builder.append("unknown");
+            builder.append(" ");
+        }
+        builder.append("]");
+        LOG.debug(builder.toString());
+    }
+
+    protected abstract void updateAppPriority(SchedulerApplication<A> app);
+
+    protected void onAppAttemptAdded(SchedulerApplication<A> app) {
+        orderedApps.remove(app);
+        updateAppPriority(app);
+        orderedApps.add(app);
+        printQueue();
+    }
+
+    protected void onAppAdded(SchedulerApplication<A> app) {
+        orderedApps.add(app);
+        printQueue();
+    }
+
+    protected void onAppDone(SchedulerApplication<A> app) {
+        orderedApps.remove(app);
+        printQueue();
+    }
+
+    @Override
+    public void assumeState(PluginPolicyState state) {
+        this.usedResource = state.usedResource;
+        for (SQSchedulerNode node : state.nodes.values()) {
+            addNode(node.getRMNode());
+        }
+        queue.setAvailableResourcesToQueue(Resources.subtract(clusterResource,
+                usedResource));
+        getMaximumResourceCapability(); //to update useConfiguredMaximumAllocationOnly
+        for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> appEntry :
+                state.applications.entrySet()) {
+            SchedulerApplication<? extends SQSAppAttempt> app = appEntry.getValue();
+            SchedulerApplication<A> newApp = new SchedulerApplication<>(app.getQueue(), app.getUser());
+            this.applications.put(appEntry.getKey(), newApp);
+            queue.getMetrics().submitApp(app.getUser());
+            onAppAdded(newApp);
+            SQSAppAttempt attempt = app.getCurrentAppAttempt();
+            if (attempt != null) {
+                newApp.setCurrentAppAttempt(SQSAppAttempt.getInstance(
+                        aClass,
+                        attempt.getApplicationAttemptId(),
+                        app.getUser(),
+                        app.getQueue(),
+                        new ActiveUsersManager(app.getQueue().getMetrics()),
+                        this.rmContext)
+                );
+                queue.getMetrics().submitAppAttempt(app.getUser());
+                onAppAttemptAdded(newApp);
+            }
+        }
+    }
+
+    @Override
+    public PluginPolicyState exportState() {
+        return new PluginPolicyState(this.usedResource, this.queue, this.nodes, this.applications);
     }
 
 }
