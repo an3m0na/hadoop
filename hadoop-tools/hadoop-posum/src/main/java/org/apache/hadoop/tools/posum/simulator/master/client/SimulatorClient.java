@@ -8,6 +8,7 @@ import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -22,25 +23,27 @@ public class SimulatorClient extends AbstractService implements SimulatorInterfa
 
     private static Log logger = LogFactory.getLog(SimulatorClient.class);
 
-    private Configuration posumConf;
+    private SimulatorProtocol simClient;
+    private String connectAddress;
 
-    public SimulatorClient() {
+    public SimulatorClient(String connectAddress) {
         super(SimulatorClient.class.getName());
+        this.connectAddress = connectAddress;
     }
 
-    private SimulatorProtocol simClient;
-
-    @Override
-    protected void serviceInit(Configuration conf) throws Exception {
-        super.serviceInit(conf);
-        this.posumConf = conf;
+    public String getConnectAddress() {
+        return connectAddress;
     }
 
     @Override
     protected void serviceStart() throws Exception {
         final Configuration conf = getConfig();
         try {
-            simClient = new StandardClientProxyFactory<>(conf, SimulatorProtocol.class).createProxy();
+            simClient = new StandardClientProxyFactory<>(conf,
+                    connectAddress,
+                    POSUMConfiguration.SIMULATOR_ADDRESS_DEFAULT,
+                    POSUMConfiguration.SIMULATOR_PORT_DEFAULT,
+                    SimulatorProtocol.class).createProxy();
             checkPing();
         } catch (IOException e) {
             throw new POSUMException("Could not init POSUMMaster client", e);

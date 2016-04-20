@@ -2,8 +2,10 @@ package org.apache.hadoop.tools.posum.database.master;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -16,6 +18,8 @@ import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
+import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
@@ -26,22 +30,32 @@ import java.util.List;
 /**
  * Created by ane on 3/19/16.
  */
-public class DataMasterService extends AbstractService implements DataMasterProtocol {
+public class DataMasterCommService extends CompositeService implements DataMasterProtocol {
 
-    private static Log logger = LogFactory.getLog(DataMasterService.class);
+    private static Log logger = LogFactory.getLog(DataMasterCommService.class);
 
     DataMasterContext dmContext;
-    private Server server;
+    private Server dmServer;
     private InetSocketAddress bindAddress;
+    private POSUMMasterClient masterClient;
 
     /**
      * Construct the service.
      *
      * @param context service dmContext
      */
-    public DataMasterService(DataMasterContext context) {
-        super(DataMasterService.class.getName());
+    public DataMasterCommService(DataMasterContext context) {
+        super(DataMasterCommService.class.getName());
         this.dmContext = context;
+    }
+
+    @Override
+    protected void serviceInit(Configuration conf) throws Exception {
+        masterClient = new POSUMMasterClient();
+        masterClient.init(conf);
+        addIfService(masterClient);
+
+        super.serviceInit(conf);
     }
 
     @Override
@@ -49,30 +63,27 @@ public class DataMasterService extends AbstractService implements DataMasterProt
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 POSUMConfiguration.DM_BIND_ADDRESS,
-                POSUMConfiguration.DM_ADDRESS,
                 POSUMConfiguration.DM_ADDRESS_DEFAULT,
                 POSUMConfiguration.DM_PORT_DEFAULT);
         dmContext.setTokenSecretManager(new DummyTokenSecretManager());
-        this.server =
+        this.dmServer =
                 rpc.getServer(DataMasterProtocol.class, this, masterServiceAddress,
                         getConfig(), dmContext.getTokenSecretManager(),
                         getConfig().getInt(POSUMConfiguration.DM_SERVICE_THREAD_COUNT,
                                 POSUMConfiguration.DM_SERVICE_THREAD_COUNT_DEFAULT));
 
-        this.server.start();
-        this.bindAddress = getConfig().updateConnectAddr(
-                POSUMConfiguration.DM_BIND_ADDRESS,
-                POSUMConfiguration.DM_ADDRESS,
-                POSUMConfiguration.DM_ADDRESS_DEFAULT,
-                server.getListenerAddress());
+        this.dmServer.start();
+        this.bindAddress = dmServer.getListenerAddress();
 
         super.serviceStart();
+        masterClient.register(Utils.POSUMProcess.DM,
+                this.dmServer.getListenerAddress().toString());
     }
 
     @Override
     protected void serviceStop() throws Exception {
-        if (this.server != null) {
-            this.server.stop();
+        if (this.dmServer != null) {
+            this.dmServer.stop();
         }
         super.serviceStop();
     }

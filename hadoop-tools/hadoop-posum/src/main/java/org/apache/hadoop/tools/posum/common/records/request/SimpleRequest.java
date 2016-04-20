@@ -1,10 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.request;
 
 
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.EntityByIdRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.StringRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.VoidRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.request.impl.pb.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto.SimpleRequestTypeProto;
 

@@ -199,3 +199,15 @@ message CompoundScoreProto{
 message HandleSimResultRequestProto{
     repeated SimulationResultProto results = 1;
 }
+
+message RegistrationRequestProto{
+    required POSUMProcessProto process = 1;
+    required string connectAddress = 2;
+
+    enum POSUMProcessProto{
+        PROCESS_PM = 0;
+        PROCESS_DM = 1;
+        PROCESS_SIMULATOR = 2;
+        PROCESS_SCHEDULER = 3;
+    }
+}

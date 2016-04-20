@@ -28,6 +28,10 @@ public class MockDataMasterClient extends DataMasterClient {
     private long simulationTime = 0;
     private long currentTime = 0;
 
+    public MockDataMasterClient() {
+        super(null);
+    }
+
     public List<JobProfile> getJobList() {
         return jobList;
     }

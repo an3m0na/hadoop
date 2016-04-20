@@ -48,7 +48,6 @@ public class POSUMConfiguration {
     public static final String DATABASE_NAME_DEFAULT = "posum";
 
     public static final String DM_BIND_ADDRESS = DATABASE_PREFIX + "bind-host";
-    public static final String DM_ADDRESS = DATABASE_PREFIX + "address";
     public static final String DM_ADDRESS_DEFAULT = "0.0.0.0";
     public static final int DM_PORT_DEFAULT = 7000;
     public static final String DM_SERVICE_THREAD_COUNT = DATABASE_PREFIX + "conn.thread-count";
@@ -73,7 +72,6 @@ public class POSUMConfiguration {
     public static final boolean MONITOR_KEEP_HISTORY_DEFAULT = true;
 
     public static final String SCHEDULER_BIND_ADDRESS = SCHEDULER_PREFIX + "bind-host";
-    public static final String SCHEDULER_ADDRESS = SCHEDULER_PREFIX + "address";
     public static final String SCHEDULER_ADDRESS_DEFAULT = "0.0.0.0";
     public static final int SCHEDULER_PORT_DEFAULT = 7020;
     public static final String SCHEDULER_SERVICE_THREAD_COUNT = SCHEDULER_PREFIX + "conn.thread-count";
@@ -88,7 +86,6 @@ public class POSUMConfiguration {
     public static final long SIMULATION_INTERVAL_DEFAULT = 10000;
 
     public static final String SIMULATOR_BIND_ADDRESS = SIMULTATOR_PREFIX + "bind-host";
-    public static final String SIMULATOR_ADDRESS = SIMULTATOR_PREFIX + "address";
     public static final String SIMULATOR_ADDRESS_DEFAULT = "0.0.0.0";
     public static final int SIMULATOR_PORT_DEFAULT = 7030;
     public static final String SIMULATOR_SERVICE_THREAD_COUNT = SIMULTATOR_PREFIX + "conn.thread-count";

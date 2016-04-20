@@ -59,7 +59,7 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
                 SimulationResult bestResult = results.last();
                 if (bestResult != null) {
                     logger.info("Switching to best policy: " + bestResult.getPolicyName());
-                    pmContext.getCommService().getMetaScheduler().changeToPolicy(bestResult.getPolicyName());
+                    pmContext.getCommService().getScheduler().changeToPolicy(bestResult.getPolicyName());
                 }
                 break;
             default:

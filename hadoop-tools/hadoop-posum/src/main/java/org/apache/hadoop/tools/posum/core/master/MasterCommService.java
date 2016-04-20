@@ -6,11 +6,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
+import org.apache.hadoop.tools.posum.common.records.request.RegistrationRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.master.management.POSUMEvent;
 import org.apache.hadoop.tools.posum.core.master.management.POSUMEventType;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerClient;
@@ -34,8 +36,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
 
     POSUMMasterContext pmContext;
     private Server server;
-    private InetSocketAddress bindAddress;
-    private MetaSchedulerClient metaClient;
+    private MetaSchedulerClient schedulerClient;
     private DataMasterClient dataClient;
     private SimulatorClient simulatorClient;
 
@@ -46,18 +47,6 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        dataClient = new DataMasterClient();
-        dataClient.init(conf);
-        addIfService(dataClient);
-
-        simulatorClient = new SimulatorClient();
-        simulatorClient.init(conf);
-        addIfService(simulatorClient);
-
-        metaClient = new MetaSchedulerClient();
-        metaClient.init(conf);
-        addIfService(metaClient);
-
         super.serviceInit(conf);
     }
 
@@ -77,11 +66,6 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
                                 POSUMConfiguration.PM_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.server.start();
-        this.bindAddress = getConfig().updateConnectAddr(
-                POSUMConfiguration.PM_BIND_ADDRESS,
-                POSUMConfiguration.PM_ADDRESS,
-                POSUMConfiguration.PM_ADDRESS_DEFAULT,
-                server.getListenerAddress());
 
         super.serviceStart();
     }
@@ -121,8 +105,40 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
         return SimpleResponse.newInstance(true);
     }
 
-    public MetaSchedulerInterface getMetaScheduler() {
-        return metaClient;
+    @Override
+    public SimpleResponse registerProcess(RegistrationRequest request) throws IOException, YarnException {
+        try {
+            switch (request.getProcess()) {
+                case PM:
+                    throw new POSUMException("Now that's just absurd!");
+                case DM:
+                    dataClient = new DataMasterClient(request.getConnectAddress());
+                    dataClient.init(getConfig());
+                    addIfService(dataClient);
+                    dataClient.start();
+                    break;
+                case SIMULATOR:
+                    simulatorClient = new SimulatorClient(request.getConnectAddress());
+                    simulatorClient.init(getConfig());
+                    addIfService(simulatorClient);
+                    simulatorClient.start();
+                    break;
+                case SCHEDULER:
+                    schedulerClient = new MetaSchedulerClient(request.getConnectAddress());
+                    schedulerClient.init(getConfig());
+                    addIfService(schedulerClient);
+                    simulatorClient.start();
+                    break;
+            }
+
+        } catch (Exception e) {
+            return SimpleResponse.newInstance("Exception resolving request ", e);
+        }
+        return SimpleResponse.newInstance(true, dataClient == null ? null : dataClient.getConnectAddress());
+    }
+
+    public MetaSchedulerInterface getScheduler() {
+        return schedulerClient;
     }
 
     public DataStoreInterface getDataStore() {

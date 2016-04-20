@@ -8,12 +8,9 @@ import org.apache.hadoop.io.retry.RetryPolicy;
 import org.apache.hadoop.io.retry.RetryProxy;
 import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.net.ConnectTimeoutException;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
-import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
-import org.apache.hadoop.tools.posum.common.records.protocol.POSUMMasterProtocol;
 import org.apache.hadoop.yarn.conf.HAUtil;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
@@ -33,64 +30,32 @@ public class StandardClientProxyFactory<T> {
     private static final Log LOG = LogFactory.getLog(StandardClientProxyFactory.class);
 
     private final Configuration conf;
-    private final AcceptableProtocol<T> protocol;
+    private final Class<T> protocol;
+    private final String address;
+    private final String defaultAddress;
+    private final int port;
 
-    private static class AcceptableProtocol<P> {
-        public Class<P> pClass;
-        public String address;
-        public String default_address;
-        public int port;
 
-        public AcceptableProtocol(Class<P> pClass, String address, String default_address, int port) {
-            this.pClass = pClass;
-            this.address = address;
-            this.default_address = default_address;
-            this.port = port;
-        }
-    }
-
-    private static Map<Class, AcceptableProtocol> protocols;
-
-    static {
-        protocols = new HashMap<>();
-        protocols.put(DataMasterProtocol.class, new AcceptableProtocol<>(
-                DataMasterProtocol.class,
-                POSUMConfiguration.DM_ADDRESS,
-                POSUMConfiguration.DM_ADDRESS_DEFAULT,
-                POSUMConfiguration.DM_PORT_DEFAULT
-        ));
-        protocols.put(POSUMMasterProtocol.class, new AcceptableProtocol<>(
-                POSUMMasterProtocol.class,
-                POSUMConfiguration.PM_ADDRESS,
-                POSUMConfiguration.PM_ADDRESS_DEFAULT,
-                POSUMConfiguration.PM_PORT_DEFAULT
-        ));
-        protocols.put(MetaSchedulerProtocol.class, new AcceptableProtocol<>(
-                MetaSchedulerProtocol.class,
-                POSUMConfiguration.SCHEDULER_ADDRESS,
-                POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT,
-                POSUMConfiguration.SCHEDULER_PORT_DEFAULT
-        ));
-    }
-
-    public StandardClientProxyFactory(Configuration conf, Class<T> protocol) {
+    public StandardClientProxyFactory(Configuration conf,
+                                      String address,
+                                      String defaultAddress,
+                                      int port,
+                                      Class<T> protocol) {
         this.conf = conf;
-        this.protocol = protocols.get(protocol);
-        if (this.protocol == null) {
-            throw new POSUMException("Protocol not acceptable " + protocol);
-        }
+        this.address = address;
+        this.defaultAddress = defaultAddress;
+        this.port = port;
+        this.protocol = protocol;
     }
 
     public T createProxy() throws IOException {
-        YarnConfiguration conf = (this.conf instanceof YarnConfiguration)
-                ? (YarnConfiguration) this.conf
-                : new YarnConfiguration(this.conf);
         RetryPolicy retryPolicy = createRetryPolicy(conf);
 
-        InetSocketAddress remoteAddress = getRemoteAddress(conf);
-        LOG.info("Connecting via" + protocol.pClass.getName() + " at " + remoteAddress);
+        String target = address != null ? address : defaultAddress;
+        InetSocketAddress remoteAddress = NetUtils.createSocketAddr(target, port);
+        LOG.info("Connecting via" + protocol.getName() + " at " + remoteAddress);
         T proxy = getProxy(remoteAddress);
-        return (T) RetryProxy.create(protocol.pClass, proxy, retryPolicy);
+        return (T) RetryProxy.create(protocol, proxy, retryPolicy);
     }
 
     private T getProxy(final InetSocketAddress address) throws IOException {
@@ -98,13 +63,9 @@ public class StandardClientProxyFactory<T> {
                 new PrivilegedAction<T>() {
                     @Override
                     public T run() {
-                        return (T) YarnRPC.create(conf).getProxy(protocol.pClass, address, conf);
+                        return (T) YarnRPC.create(conf).getProxy(protocol, address, conf);
                     }
                 });
-    }
-
-    protected InetSocketAddress getRemoteAddress(YarnConfiguration conf) throws IOException {
-        return conf.getSocketAddr(protocol.address, protocol.default_address, protocol.port);
     }
 
     protected static RetryPolicy createRetryPolicy(Configuration conf) {

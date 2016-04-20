@@ -5,6 +5,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.POSUMMasterProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -102,6 +106,21 @@ public class Utils {
             return implClass.getConstructor(POSUMProtos.SimpleResponseProto.class).newInstance(proto);
         } catch (Exception e) {
             throw new POSUMException("Could not construct response object", e);
+        }
+    }
+
+    public enum POSUMProcess{
+        PM("POSUMMaster", POSUMMasterProtocol.class),
+        DM("DataMaster", DataMasterProtocol.class),
+        SIMULATOR("SimulationMaster", SimulatorProtocol.class),
+        SCHEDULER("PortfolioMetaScheduler", MetaSchedulerProtocol.class);
+
+        private final String longName;
+        private final Class<? extends StandardProtocol> accessorProtocol;
+
+        POSUMProcess(String longName, Class<? extends StandardProtocol> accessorProtocol) {
+            this.longName = longName;
+            this.accessorProtocol = accessorProtocol;
         }
     }
 }

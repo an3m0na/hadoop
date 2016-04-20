@@ -12,6 +12,7 @@ import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterInterface;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
@@ -30,10 +31,8 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
 
     SimulatorInterface simulator;
     private Server simulatorServer;
-    private InetSocketAddress bindAddress;
     private POSUMMasterClient masterClient;
     private DataMasterClient dataClient;
-    private HandleSimResultRequest resultRequest;
 
     SimulatorCommService(SimulatorInterface simulator) {
         super(SimulatorCommService.class.getName());
@@ -46,10 +45,6 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
         masterClient.init(conf);
         addIfService(masterClient);
 
-        dataClient = new DataMasterClient();
-        dataClient.init(conf);
-        addIfService(dataClient);
-
         super.serviceInit(conf);
     }
 
@@ -58,7 +53,6 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 POSUMConfiguration.SIMULATOR_BIND_ADDRESS,
-                POSUMConfiguration.SIMULATOR_ADDRESS,
                 POSUMConfiguration.SIMULATOR_ADDRESS_DEFAULT,
                 POSUMConfiguration.SIMULATOR_PORT_DEFAULT);
         this.simulatorServer =
@@ -68,21 +62,16 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
                                 POSUMConfiguration.SIMULATOR_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.simulatorServer.start();
-        this.bindAddress = getConfig().updateConnectAddr(
-                POSUMConfiguration.SIMULATOR_BIND_ADDRESS,
-                POSUMConfiguration.SIMULATOR_ADDRESS,
-                POSUMConfiguration.SIMULATOR_ADDRESS_DEFAULT,
-                simulatorServer.getListenerAddress());
-
-        masterClient = new POSUMMasterClient();
-        masterClient.init(getConfig());
-        addIfService(masterClient);
-
-        dataClient = new DataMasterClient();
-        dataClient.init(getConfig());
-        addIfService(dataClient);
 
         super.serviceStart();
+
+        String dmAddress = masterClient.register(Utils.POSUMProcess.SIMULATOR,
+                this.simulatorServer.getListenerAddress().toString());
+        dataClient = new DataMasterClient(dmAddress);
+        dataClient.init(getConfig());
+        addIfService(dataClient);
+        dataClient.start();
+
     }
 
     @Override
