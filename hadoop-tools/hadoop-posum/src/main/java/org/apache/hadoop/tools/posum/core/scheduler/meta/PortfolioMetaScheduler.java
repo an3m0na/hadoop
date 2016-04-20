@@ -7,9 +7,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.FifoPolicy;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -44,7 +43,7 @@ class PortfolioMetaScheduler extends
     private Configuration conf;
     private Configuration posumConf;
     private MetaSchedulerCommService commService;
-    private Map<String, Class<? extends PluginPolicy>> policies;
+    private PolicyMap policies;
 
     private Class<? extends PluginPolicy> currentPolicyClass;
     private PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode, ?> currentPolicy;
@@ -52,43 +51,9 @@ class PortfolioMetaScheduler extends
     private Lock readLock = lock.readLock();
     private Lock writeLock = lock.writeLock();
 
-    private enum DefaultPolicy {
-        FIFO(FifoPolicy.class),
-        DATA(DataOrientedPolicy.class);
-
-        Class<? extends PluginPolicy> implClass;
-
-        DefaultPolicy(Class<? extends PluginPolicy> implClass) {
-            this.implClass = implClass;
-        }
-    }
 
     public PortfolioMetaScheduler() {
         super(PortfolioMetaScheduler.class.getName());
-    }
-
-    private void preparePolicies() {
-        String policyMap = posumConf.get(POSUMConfiguration.SCHEDULER_POLICY_MAP);
-        policies = new HashMap<>(DefaultPolicy.values().length);
-        if (policyMap != null) {
-            try {
-                for (String entry : policyMap.split(",")) {
-                    String[] entryParts = entry.split("=");
-                    if (entryParts.length != 2)
-                        policies.put(entryParts[0],
-                                (Class<? extends PluginPolicy>) getClass().getClassLoader().loadClass(entryParts[1]));
-                }
-            } catch (Exception e) {
-                throw new POSUMException("Could not parse policy map");
-            }
-        } else {
-            for (DefaultPolicy policy : DefaultPolicy.values()) {
-                policies.put(policy.name(), policy.implClass);
-            }
-        }
-        String className = posumConf.get(POSUMConfiguration.DEFAULT_POLICY, POSUMConfiguration.DEFAULT_POLICY_DEFAULT);
-        if (className != null)
-            currentPolicyClass = posumConf.getClass(className, DefaultPolicy.FIFO.implClass, PluginPolicy.class);
     }
 
     private void initPolicy() {
@@ -149,7 +114,7 @@ class PortfolioMetaScheduler extends
         logger.debug("Service init called for meta");
         this.posumConf = POSUMConfiguration.newInstance();
         setConf(conf);
-        preparePolicies();
+        policies = new PolicyMap(posumConf);
         commService = new MetaSchedulerCommService(this);
         commService.init(posumConf);
         initPolicy();
