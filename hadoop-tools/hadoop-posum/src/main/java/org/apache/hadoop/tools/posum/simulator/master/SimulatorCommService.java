@@ -56,7 +56,7 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
                 POSUMConfiguration.SIMULATOR_ADDRESS_DEFAULT,
                 POSUMConfiguration.SIMULATOR_PORT_DEFAULT);
         this.simulatorServer =
-                rpc.getServer(POSUMMasterProtocol.class, this, masterServiceAddress,
+                rpc.getServer(SimulatorProtocol.class, this, masterServiceAddress,
                         getConfig(), new DummyTokenSecretManager(),
                         getConfig().getInt(POSUMConfiguration.SIMULATOR_SERVICE_THREAD_COUNT,
                                 POSUMConfiguration.SIMULATOR_SERVICE_THREAD_COUNT_DEFAULT));
