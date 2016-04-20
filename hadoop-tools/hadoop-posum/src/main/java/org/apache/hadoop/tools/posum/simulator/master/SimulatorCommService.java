@@ -66,7 +66,7 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
         super.serviceStart();
 
         String dmAddress = masterClient.register(Utils.POSUMProcess.SIMULATOR,
-                this.simulatorServer.getListenerAddress().toString());
+                this.simulatorServer.getListenerAddress().getHostName());
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);

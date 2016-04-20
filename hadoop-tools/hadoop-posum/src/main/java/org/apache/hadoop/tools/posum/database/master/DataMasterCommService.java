@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
@@ -76,8 +77,8 @@ public class DataMasterCommService extends CompositeService implements DataMaste
         this.bindAddress = dmServer.getListenerAddress();
 
         super.serviceStart();
-        masterClient.register(Utils.POSUMProcess.DM,
-                this.dmServer.getListenerAddress().toString());
+
+        masterClient.register(Utils.POSUMProcess.DM, this.dmServer.getListenerAddress().getHostName());
     }
 
     @Override
