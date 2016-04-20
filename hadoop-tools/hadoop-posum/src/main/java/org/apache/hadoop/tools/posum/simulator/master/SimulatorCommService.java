@@ -7,6 +7,7 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.protocol.POSUMMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorProtocol;
+import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
@@ -32,6 +33,7 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
     private InetSocketAddress bindAddress;
     private POSUMMasterClient masterClient;
     private DataMasterClient dataClient;
+    private HandleSimResultRequest resultRequest;
 
     SimulatorCommService(SimulatorInterface simulator) {
         super(SimulatorCommService.class.getName());

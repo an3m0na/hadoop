@@ -1,8 +1,8 @@
-package org.apache.hadoop.tools.posum.common.records.request.impl.pb;
+package org.apache.hadoop.tools.posum.common.records.field.impl.pb;
 
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.common.records.request.EntityByIdPayload;
+import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.EntityByIdPayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.EntityByIdPayloadProtoOrBuilder;

@@ -3,6 +3,9 @@ package org.apache.hadoop.tools.posum.core.master;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.core.master.management.Orchestrator;
+import org.apache.hadoop.tools.posum.core.master.management.POSUMEventType;
+import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerClient;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
@@ -11,38 +14,37 @@ import org.apache.hadoop.yarn.event.Dispatcher;
  */
 public class POSUMMaster extends CompositeService {
 
+    private Dispatcher dispatcher;
+    private MetaSchedulerClient metaClient;
+
     public POSUMMaster() {
         super(POSUMMaster.class.getName());
     }
 
     private POSUMMasterContext pmContext;
-    private POSUMMasterService pmService;
-    private SimulationMonitor simulator;
+    private MasterCommService commService;
+    private Orchestrator orchestrator;
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         pmContext = new POSUMMasterContext();
+        dispatcher = new AsyncDispatcher();
+        addIfService(dispatcher);
+        pmContext.setDispatcher(dispatcher);
 
-        //service to allow other processes to communicate with the master
-        pmService = new POSUMMasterService(pmContext);
-        pmService.init(conf);
-        addIfService(pmService);
+        //service to communicate with other processes
+        commService = new MasterCommService(pmContext);
+        commService.init(conf);
+        addIfService(commService);
+        pmContext.setCommService(commService);
 
-        //service that starts simulations and gathers information from them
-        simulator = new SimulationMonitor(pmContext);
-        simulator.init(conf);
-        addIfService(simulator);
+        // service that handles events and applies master logic
+        orchestrator = new Orchestrator(pmContext);
+        orchestrator.init(conf);
+        addIfService(orchestrator);
+        dispatcher.register(POSUMEventType.class, orchestrator);
 
         super.serviceInit(conf);
-    }
-
-    @Override
-    protected void serviceStop() throws Exception {
-        if (pmService != null)
-            pmService.stop();
-        if (simulator != null)
-            simulator.stop();
-        super.serviceStop();
     }
 
     public static void main(String[] args) {

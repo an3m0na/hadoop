@@ -2,7 +2,8 @@ package org.apache.hadoop.tools.posum.common.records.request.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.hadoop.tools.posum.common.records.request.EntityByIdPayload;
+import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
+import org.apache.hadoop.tools.posum.common.records.field.impl.pb.EntityByIdPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 
 /**

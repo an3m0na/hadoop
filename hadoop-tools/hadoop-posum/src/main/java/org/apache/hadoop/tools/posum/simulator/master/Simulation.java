@@ -8,7 +8,7 @@ import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 public class Simulation extends Thread{
     private boolean exit = false;
 
-    public Simulation(String policy, JobBehaviorPredictor predictor){
+    public Simulation(SimulatorImpl simulator, String policy, JobBehaviorPredictor predictor){
         //TODO set up simulation
     }
 

@@ -4,7 +4,6 @@ import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
 import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.request.EntityByIdPayload;
 import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 

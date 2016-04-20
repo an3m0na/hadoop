@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.protocol.POSUMMasterProtocol;
+import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
@@ -18,7 +19,7 @@ import java.io.IOException;
 /**
  * Created by ane on 4/13/16.
  */
-public class POSUMMasterClient extends AbstractService implements POSUMMasterInterface{
+public class POSUMMasterClient extends AbstractService implements POSUMMasterInterface {
 
     private static Log logger = LogFactory.getLog(POSUMMasterClient.class);
 
@@ -60,7 +61,7 @@ public class POSUMMasterClient extends AbstractService implements POSUMMasterInt
         return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type));
     }
 
-    public SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
+    private SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
         try {
             return Utils.handleError(kind, pmClient.handleSimpleRequest(request));
         } catch (IOException | YarnException e) {
@@ -68,9 +69,17 @@ public class POSUMMasterClient extends AbstractService implements POSUMMasterInt
         }
     }
 
-    public void checkPing(){
-        Utils.handleError("checkPing",
-                sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!")));
+    private void checkPing() {
+        sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
         logger.info("Successfully connected to POSUMMaster");
+    }
+
+    @Override
+    public void handleSimulationResult(HandleSimResultRequest resultRequest) {
+        try {
+            Utils.handleError("handleSimulationResult", pmClient.handleSimulationResult(resultRequest));
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
     }
 }

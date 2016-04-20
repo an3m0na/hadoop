@@ -5,29 +5,60 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
+import org.apache.hadoop.tools.posum.core.master.management.POSUMEvent;
+import org.apache.hadoop.tools.posum.core.master.management.POSUMEventType;
+import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerClient;
+import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
+import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
+import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorClient;
+import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 
 /**
  * Created by ane on 3/19/16.
  */
-public class POSUMMasterService extends CompositeService implements POSUMMasterProtocol {
+public class MasterCommService extends CompositeService implements POSUMMasterProtocol {
 
-    private static Log logger = LogFactory.getLog(POSUMMasterService.class);
+    private static Log logger = LogFactory.getLog(MasterCommService.class);
 
     POSUMMasterContext pmContext;
     private Server server;
     private InetSocketAddress bindAddress;
+    private MetaSchedulerClient metaClient;
+    private DataMasterClient dataClient;
+    private SimulatorClient simulatorClient;
 
-    public POSUMMasterService(POSUMMasterContext context) {
-        super(POSUMMasterService.class.getName());
+    public MasterCommService(POSUMMasterContext context) {
+        super(MasterCommService.class.getName());
         this.pmContext = context;
+    }
+
+    @Override
+    protected void serviceInit(Configuration conf) throws Exception {
+        dataClient = new DataMasterClient();
+        dataClient.init(conf);
+        addIfService(dataClient);
+
+        simulatorClient = new SimulatorClient();
+        simulatorClient.init(conf);
+        addIfService(simulatorClient);
+
+        metaClient = new MetaSchedulerClient();
+        metaClient.init(conf);
+        addIfService(metaClient);
+
+        super.serviceInit(conf);
     }
 
     @Override
@@ -77,5 +108,28 @@ public class POSUMMasterService extends CompositeService implements POSUMMasterP
             return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
         }
         return SimpleResponse.newInstance(true);
+    }
+
+    @Override
+    public SimpleResponse handleSimulationResult(HandleSimResultRequest resultRequest) throws IOException, YarnException {
+        try {
+            pmContext.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SIMULATION_FINISH,
+                    resultRequest.getResults()));
+        } catch (Exception e) {
+            return SimpleResponse.newInstance("Exception resolving request ", e);
+        }
+        return SimpleResponse.newInstance(true);
+    }
+
+    public MetaSchedulerInterface getMetaScheduler() {
+        return metaClient;
+    }
+
+    public DataStoreInterface getDataStore() {
+        return dataClient;
+    }
+
+    public SimulatorInterface getSimulator() {
+        return simulatorClient;
     }
 }

@@ -2,7 +2,6 @@ package org.apache.hadoop.tools.posum.database.master;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
@@ -11,7 +10,7 @@ import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
 import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.request.EntityByIdPayload;
+import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
 import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;

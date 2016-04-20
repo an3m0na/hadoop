@@ -41,8 +41,9 @@ public class MetaSchedulerClient extends AbstractService implements MetaSchedule
         final Configuration conf = getConfig();
         try {
             metaClient = new StandardClientProxyFactory<>(conf, MetaSchedulerProtocol.class).createProxy();
+            checkPing();
         } catch (IOException e) {
-            throw new POSUMException("Could not init POSUMMaster client", e);
+            throw new POSUMException("Could not init MetaScheduler client", e);
         }
         super.serviceStart();
     }
@@ -67,7 +68,7 @@ public class MetaSchedulerClient extends AbstractService implements MetaSchedule
         }
     }
 
-    public void checkPing() {
+    private void checkPing() {
         sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
         logger.info("Successfully connected to MetaScheduler");
     }
