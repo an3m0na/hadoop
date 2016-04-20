@@ -3,6 +3,8 @@ package org.apache.hadoop.tools.posum.simulator.master;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
+import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
@@ -22,6 +24,7 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
     private SimulatorCommService commService;
     private PolicyMap policies;
     private Map<String, Simulation> simulationMap;
+    private HandleSimResultRequest resultRequest;
 
     public SimulatorImpl() {
         super(SimulatorImpl.class.getName());
@@ -50,8 +53,18 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
 
     @Override
     public void startSimulation() {
+        resultRequest = HandleSimResultRequest.newInstance();
         for (String policyName : policies.keySet()) {
-            simulationMap.put(policyName, new Simulation(policyName, predictor));
+            Simulation simulation = new Simulation(this, policyName, predictor);
+            simulationMap.put(policyName, simulation);
+            simulation.start();
+        }
+    }
+
+    protected void simulationDone(SimulationResult result) {
+        resultRequest.addResult(result);
+        if(resultRequest.getResults().size() == policies.size()){
+            commService.getMaster().handleSimulationResult(resultRequest);
         }
     }
 }

@@ -15,7 +15,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.request.EntityByIdPayload;
+import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.store.DataTransaction;
@@ -153,7 +153,7 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
         return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type));
     }
 
-    public SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
+    private SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
         try {
             return Utils.handleError(kind, dmClient.handleSimpleRequest(request));
         } catch (IOException | YarnException e) {
@@ -161,9 +161,8 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
         }
     }
 
-    public void checkPing() {
-        Utils.handleError("checkPing",
-                sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!")));
+    private void checkPing() {
+        sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
         logger.info("Successfully connected to Data Master");
     }
 }

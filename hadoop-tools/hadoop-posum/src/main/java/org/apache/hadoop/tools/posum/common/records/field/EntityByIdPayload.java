@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.records.request;
+package org.apache.hadoop.tools.posum.common.records.field;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.yarn.util.Records;

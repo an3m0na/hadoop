@@ -18,7 +18,7 @@ public abstract class GeneralLooper<T> extends AbstractService {
     protected long lastRun;
 
     private class LoopThread extends Thread {
-        private boolean exit = false;
+        private volatile boolean exit = false;
 
         void exit() {
             exit = true;

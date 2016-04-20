@@ -7,6 +7,7 @@ import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
 
@@ -15,7 +16,7 @@ import java.io.IOException;
 /**
  * Created by ane on 3/20/16.
  */
-public class SimulatorProtocolPBServiceImpl implements POSUMMasterProtocolPB {
+public class SimulatorProtocolPBServiceImpl implements SimulatorProtocolPB {
 
     private SimulatorProtocol real;
 
@@ -32,4 +33,5 @@ public class SimulatorProtocolPBServiceImpl implements POSUMMasterProtocolPB {
             throw new ServiceException(e);
         }
     }
+
 }

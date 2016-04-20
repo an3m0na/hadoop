@@ -47,14 +47,6 @@ public class DataMaster extends CompositeService {
         super.serviceInit(conf);
     }
 
-    @Override
-    protected void serviceStop() throws Exception {
-        if (dmService != null)
-            dmService.stop();
-
-        super.serviceStop();
-    }
-
     public static void main(String[] args) {
         Configuration conf = POSUMConfiguration.newInstance();
         DataMaster master = new DataMaster();

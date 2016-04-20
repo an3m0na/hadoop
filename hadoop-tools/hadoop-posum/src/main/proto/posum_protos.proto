@@ -184,3 +184,18 @@ message SimpleResponseProto {
         RESP_MULTI_ENTITY = 2;
     }
 }
+
+message SimulationResultProto{
+    required string policyName = 1;
+    optional CompoundScoreProto score = 2;
+}
+
+message CompoundScoreProto{
+    optional double runtime = 1;
+    optional double penalty = 2;
+    optional double cost = 3;
+}
+
+message HandleSimResultRequestProto{
+    repeated SimulationResultProto results = 1;
+}

@@ -27,11 +27,6 @@ public class SimulatorMaster extends CompositeService {
         addIfService(simulator);
     }
 
-    @Override
-    protected void serviceStart() throws Exception {
-        super.serviceStart();
-    }
-
     public static void main(String[] args) {
         Configuration conf = POSUMConfiguration.newInstance();
         SimulatorMaster master = new SimulatorMaster();

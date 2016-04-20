@@ -41,6 +41,7 @@ public class SimulatorClient extends AbstractService implements SimulatorInterfa
         final Configuration conf = getConfig();
         try {
             simClient = new StandardClientProxyFactory<>(conf, SimulatorProtocol.class).createProxy();
+            checkPing();
         } catch (IOException e) {
             throw new POSUMException("Could not init POSUMMaster client", e);
         }
@@ -55,11 +56,11 @@ public class SimulatorClient extends AbstractService implements SimulatorInterfa
         super.serviceStop();
     }
 
-    public SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
+    private SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
         return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type));
     }
 
-    public SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
+    private SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
         try {
             return Utils.handleError(kind, simClient.handleSimpleRequest(request));
         } catch (IOException | YarnException e) {
@@ -67,9 +68,8 @@ public class SimulatorClient extends AbstractService implements SimulatorInterfa
         }
     }
 
-    public void checkPing(){
-        Utils.handleError("checkPing",
-                sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!")));
+    private void checkPing(){
+        sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
         logger.info("Successfully connected to Simulator Master");
     }
 
