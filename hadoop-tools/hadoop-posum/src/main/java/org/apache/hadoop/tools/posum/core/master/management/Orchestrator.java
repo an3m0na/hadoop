@@ -7,6 +7,8 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
+import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
+import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 import org.apache.hadoop.yarn.event.EventHandler;
 
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -30,27 +32,22 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
     protected void serviceInit(Configuration conf) throws Exception {
         simulationManager = new SimulationManager(pmContext);
         simulationManager.init(conf);
-        addIfService(simulationManager);
 
         super.serviceInit(conf);
     }
 
     @Override
-    protected void serviceStart() throws Exception {
-        super.serviceStart();
-    }
-
-    @Override
-    protected void serviceStop() throws Exception {
-        super.serviceStop();
-    }
-
-    @Override
     public void handle(POSUMEvent event) {
         switch (event.getType()) {
+            case SETUP_COMPLETE:
+                addIfService(simulationManager);
+                simulationManager.start();
+                break;
             case SIMULATION_START:
                 logger.debug("Starting simulation");
-                pmContext.getCommService().getSimulator().startSimulation();
+                SimulatorInterface simulator = pmContext.getCommService().getSimulator();
+                if (simulator != null)
+                    simulator.startSimulation();
                 break;
             case SIMULATION_FINISH:
                 simulationManager.simulationFinished();
@@ -59,7 +56,9 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
                 SimulationResult bestResult = results.last();
                 if (bestResult != null) {
                     logger.info("Switching to best policy: " + bestResult.getPolicyName());
-                    pmContext.getCommService().getScheduler().changeToPolicy(bestResult.getPolicyName());
+                    MetaSchedulerInterface scheduler = pmContext.getCommService().getScheduler();
+                    if (scheduler != null)
+                        scheduler.changeToPolicy(bestResult.getPolicyName());
                 }
                 break;
             default:

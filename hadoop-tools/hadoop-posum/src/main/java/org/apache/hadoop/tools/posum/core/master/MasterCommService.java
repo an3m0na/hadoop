@@ -105,40 +105,50 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
         return SimpleResponse.newInstance(true);
     }
 
+    private void checkDM() {
+        if (dataClient == null || dataClient.getConnectAddress() == null)
+            throw new POSUMException("No DataMaster registered! Shutting down...");
+    }
+
     @Override
     public SimpleResponse registerProcess(RegistrationRequest request) throws IOException, YarnException {
         try {
             switch (request.getProcess()) {
-                case PM:
-                    throw new POSUMException("Now that's just absurd!");
                 case DM:
                     dataClient = new DataMasterClient(request.getConnectAddress());
                     dataClient.init(getConfig());
                     addIfService(dataClient);
                     dataClient.start();
+                    pmContext.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SETUP_COMPLETE));
                     break;
                 case SIMULATOR:
+                    checkDM();
                     simulatorClient = new SimulatorClient(request.getConnectAddress());
                     simulatorClient.init(getConfig());
                     addIfService(simulatorClient);
                     simulatorClient.start();
                     break;
                 case SCHEDULER:
+                    checkDM();
                     schedulerClient = new MetaSchedulerClient(request.getConnectAddress());
                     schedulerClient.init(getConfig());
                     addIfService(schedulerClient);
-                    simulatorClient.start();
+                    schedulerClient.start();
                     break;
+                default:
+                    throw new POSUMException("Now that's just absurd!");
             }
 
         } catch (Exception e) {
             return SimpleResponse.newInstance("Exception resolving request ", e);
         }
-        return SimpleResponse.newInstance(true, dataClient == null ? null : dataClient.getConnectAddress());
+        return SimpleResponse.newInstance(true, dataClient.getConnectAddress());
     }
 
     public MetaSchedulerInterface getScheduler() {
-        return schedulerClient;
+        if (schedulerClient != null && schedulerClient.isInState(STATE.STARTED))
+            return schedulerClient;
+        else return null;
     }
 
     public DataStoreInterface getDataStore() {
@@ -146,6 +156,8 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
     }
 
     public SimulatorInterface getSimulator() {
-        return simulatorClient;
+        if (simulatorClient != null && simulatorClient.isInState(STATE.STARTED))
+            return simulatorClient;
+        else return null;
     }
 }
