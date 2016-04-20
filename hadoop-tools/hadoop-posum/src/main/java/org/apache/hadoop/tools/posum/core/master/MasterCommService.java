@@ -119,7 +119,6 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
                     dataClient.init(getConfig());
                     addIfService(dataClient);
                     dataClient.start();
-                    pmContext.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SETUP_COMPLETE));
                     break;
                 case SIMULATOR:
                     checkDM();
@@ -127,6 +126,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
                     simulatorClient.init(getConfig());
                     addIfService(simulatorClient);
                     simulatorClient.start();
+                    pmContext.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SIMULATOR_CONNECTED));
                     break;
                 case SCHEDULER:
                     checkDM();
