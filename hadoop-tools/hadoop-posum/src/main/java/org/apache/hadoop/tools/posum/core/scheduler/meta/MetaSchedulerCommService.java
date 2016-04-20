@@ -66,7 +66,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         super.serviceStart();
 
         String dmAddress = masterClient.register(Utils.POSUMProcess.SCHEDULER,
-                this.metaServer.getListenerAddress().toString());
+                this.metaServer.getListenerAddress().getHostName());
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);

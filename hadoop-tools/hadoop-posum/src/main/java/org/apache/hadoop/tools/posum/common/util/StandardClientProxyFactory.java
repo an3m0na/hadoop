@@ -53,7 +53,7 @@ public class StandardClientProxyFactory<T> {
 
         String target = address != null ? address : defaultAddress;
         InetSocketAddress remoteAddress = NetUtils.createSocketAddr(target, port);
-        LOG.info("Connecting via" + protocol.getName() + " at " + remoteAddress);
+        LOG.info("Connecting via " + protocol.getName() + " at " + remoteAddress);
         T proxy = getProxy(remoteAddress);
         return (T) RetryProxy.create(protocol, proxy, retryPolicy);
     }
