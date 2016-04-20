@@ -24,7 +24,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
-import org.apache.hadoop.tools.posum.database.store.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
 import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;

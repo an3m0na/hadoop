@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.predictor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.database.store.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 import org.junit.Test;
@@ -32,8 +32,8 @@ public class TestPredictor {
 
         JobBehaviorPredictor predictor = null;
         try {
-            predictor = predictorClass.getConstructor(DataStoreInterface.class).newInstance(dataStoreInterface);
-            predictor.setConf(conf);
+            predictor = predictorClass.getConstructor(Configuration.class, DataStoreInterface.class)
+                    .newInstance(conf, dataStoreInterface);
         } catch (NoSuchMethodException |
                 InvocationTargetException |
                 InstantiationException |

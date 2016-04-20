@@ -4,7 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.database.store.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.yarn.util.Records;
 import org.junit.Test;

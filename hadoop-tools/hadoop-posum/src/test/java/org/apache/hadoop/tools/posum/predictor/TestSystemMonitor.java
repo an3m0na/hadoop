@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.predictor;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
-import org.apache.hadoop.tools.posum.database.store.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.tools.posum.database.monitor.HadoopMonitor;
 import org.junit.Test;

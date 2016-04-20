@@ -11,27 +11,27 @@ import org.apache.hadoop.yarn.event.Dispatcher;
  */
 public class POSUMMaster extends CompositeService {
 
-    private Dispatcher dispatcher;
-
     public POSUMMaster() {
         super(POSUMMaster.class.getName());
     }
 
     private POSUMMasterContext pmContext;
     private POSUMMasterService pmService;
+    private SimulationMonitor simulator;
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         pmContext = new POSUMMasterContext();
-        dispatcher = new AsyncDispatcher();
-        addIfService(dispatcher);
-
-        pmContext.setDispatcher(dispatcher);
 
         //service to allow other processes to communicate with the master
         pmService = new POSUMMasterService(pmContext);
         pmService.init(conf);
         addIfService(pmService);
+
+        //service that starts simulations and gathers information from them
+        simulator = new SimulationMonitor(pmContext);
+        simulator.init(conf);
+        addIfService(simulator);
 
         super.serviceInit(conf);
     }
@@ -40,7 +40,8 @@ public class POSUMMaster extends CompositeService {
     protected void serviceStop() throws Exception {
         if (pmService != null)
             pmService.stop();
-
+        if (simulator != null)
+            simulator.stop();
         super.serviceStop();
     }
 

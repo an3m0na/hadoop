@@ -7,6 +7,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.FifoPolicy;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
@@ -36,7 +37,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 class PortfolioMetaScheduler extends
         AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode> implements
-        Configurable {
+        Configurable, MetaSchedulerInterface {
 
     private static Log logger = LogFactory.getLog(PortfolioMetaScheduler.class);
 
@@ -45,7 +46,7 @@ class PortfolioMetaScheduler extends
     private MetaSchedulerCommService commService;
     private Map<String, Class<? extends PluginPolicy>> policies;
 
-    private Class<? extends PluginPolicy> currentPolicyClass = DefaultPolicy.FIFO.implClass;
+    private Class<? extends PluginPolicy> currentPolicyClass;
     private PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode, ?> currentPolicy;
     private ReadWriteLock lock = new ReentrantReadWriteLock();
     private Lock readLock = lock.readLock();
@@ -85,13 +86,9 @@ class PortfolioMetaScheduler extends
                 policies.put(policy.name(), policy.implClass);
             }
         }
-        String className = posumConf.get(POSUMConfiguration.DEFAULT_POLICY, POSUMConfiguration.DEFAULT_DEFAULT_POLICY);
+        String className = posumConf.get(POSUMConfiguration.DEFAULT_POLICY, POSUMConfiguration.DEFAULT_POLICY_DEFAULT);
         if (className != null)
-            try {
-                currentPolicyClass = (Class<? extends PluginPolicy>) getClass().getClassLoader().loadClass(className);
-            } catch (ClassNotFoundException e) {
-                logger.error("Could not load default policy " + className);
-            }
+            currentPolicyClass = posumConf.getClass(className, DefaultPolicy.FIFO.implClass, PluginPolicy.class);
     }
 
     private void initPolicy() {
@@ -107,7 +104,8 @@ class PortfolioMetaScheduler extends
         currentPolicy.init(conf);
     }
 
-    void changeToPolicy(String policyName) {
+    @Override
+    public void changeToPolicy(String policyName) {
         logger.debug("Changing policy to " + policyName);
         Class<? extends PluginPolicy> newClass = policies.get(policyName);
         if (newClass == null)
@@ -132,12 +130,6 @@ class PortfolioMetaScheduler extends
 
     }
 
-    private void initComms() {
-        commService = new MetaSchedulerCommService(this);
-        commService.init(posumConf);
-        commService.start();
-    }
-
     /**
      * Methods that all schedulers seem to override
      */
@@ -158,14 +150,15 @@ class PortfolioMetaScheduler extends
         this.posumConf = POSUMConfiguration.newInstance();
         setConf(conf);
         preparePolicies();
-        initComms();
+        commService = new MetaSchedulerCommService(this);
+        commService.init(posumConf);
         initPolicy();
     }
 
     @Override
     public void serviceStart() throws Exception {
         logger.debug("Starting meta");
-
+        commService.start();
         readLock.lock();
         try {
             currentPolicy.start();

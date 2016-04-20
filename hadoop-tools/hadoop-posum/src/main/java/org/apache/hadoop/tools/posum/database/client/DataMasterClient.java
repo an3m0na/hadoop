@@ -18,7 +18,6 @@ import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
 import org.apache.hadoop.tools.posum.common.records.request.EntityByIdPayload;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.database.store.DataStoreInterface;
 import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
@@ -45,6 +44,7 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
         final Configuration conf = getConfig();
         try {
             dmClient = new StandardClientProxyFactory<>(conf, DataMasterProtocol.class).createProxy();
+            checkPing();
         } catch (IOException e) {
             throw new POSUMException("Could not init DataMaster client", e);
         }

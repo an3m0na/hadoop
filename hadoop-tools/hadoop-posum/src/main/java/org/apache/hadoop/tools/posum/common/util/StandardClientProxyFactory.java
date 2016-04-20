@@ -56,20 +56,20 @@ public class StandardClientProxyFactory<T> {
         protocols.put(DataMasterProtocol.class, new AcceptableProtocol<>(
                 DataMasterProtocol.class,
                 POSUMConfiguration.DM_ADDRESS,
-                POSUMConfiguration.DEFAULT_DM_ADDRESS,
-                POSUMConfiguration.DEFAULT_DM_PORT
+                POSUMConfiguration.DM_ADDRESS_DEFAULT,
+                POSUMConfiguration.DM_PORT_DEFAULT
         ));
         protocols.put(POSUMMasterProtocol.class, new AcceptableProtocol<>(
                 POSUMMasterProtocol.class,
                 POSUMConfiguration.PM_ADDRESS,
-                POSUMConfiguration.DEFAULT_PM_ADDRESS,
-                POSUMConfiguration.DEFAULT_PM_PORT
+                POSUMConfiguration.PM_ADDRESS_DEFAULT,
+                POSUMConfiguration.PM_PORT_DEFAULT
         ));
         protocols.put(MetaSchedulerProtocol.class, new AcceptableProtocol<>(
                 MetaSchedulerProtocol.class,
                 POSUMConfiguration.SCHEDULER_ADDRESS,
-                POSUMConfiguration.DEFAULT_SCHEDULER_ADDRESS,
-                POSUMConfiguration.DEFAULT_SCHEDULER_PORT
+                POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT,
+                POSUMConfiguration.SCHEDULER_PORT_DEFAULT
         ));
     }
 
@@ -111,12 +111,12 @@ public class StandardClientProxyFactory<T> {
         long rmConnectWaitMS =
                 conf.getLong(
                         POSUMConfiguration.POSUM_CONNECT_MAX_WAIT_MS,
-                        POSUMConfiguration.DEFAULT_POSUM_CONNECT_MAX_WAIT_MS);
+                        POSUMConfiguration.POSUM_CONNECT_MAX_WAIT_MS_DEFAULT);
         long rmConnectionRetryIntervalMS =
                 conf.getLong(
                         POSUMConfiguration.POSUM_CONNECT_RETRY_INTERVAL_MS,
                         POSUMConfiguration
-                                .DEFAULT_POSUM_CONNECT_RETRY_INTERVAL_MS);
+                                .POSUM_CONNECT_RETRY_INTERVAL_MS_DEFAULT);
 
         boolean waitForEver = (rmConnectWaitMS == -1);
         if (!waitForEver) {

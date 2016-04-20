@@ -18,7 +18,7 @@ import java.io.IOException;
 /**
  * Created by ane on 2/9/16.
  */
-public class MetaSchedulerClient extends AbstractService {
+public class MetaSchedulerClient extends AbstractService implements MetaSchedulerInterface{
 
     private static Log logger = LogFactory.getLog(MetaSchedulerClient.class);
 
@@ -70,5 +70,10 @@ public class MetaSchedulerClient extends AbstractService {
     public void checkPing() {
         sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
         logger.info("Successfully connected to MetaScheduler");
+    }
+
+    @Override
+    public void changeToPolicy(String policyName) {
+        sendSimpleRequest("changeToPolicy", SimpleRequest.newInstance(SimpleRequest.Type.CHANGE_POLICY, policyName));
     }
 }
