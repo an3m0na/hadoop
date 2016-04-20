@@ -38,6 +38,7 @@ public class SimulationManager extends GeneralLooper<SimulationManager> {
     @Override
     protected void doAction() {
         lock.lock();
+        //TODO check if simulation is actually needed
         logger.debug("Should start simulation");
         context.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SIMULATION_START));
     }
