@@ -3,21 +3,16 @@ package org.apache.hadoop.tools.posum.simulator.master;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
-import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
-import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 
 /**
  * Created by ane on 2/4/16.
  */
-public class SimulatorMaster extends CompositeService {
+public class SimulationMaster extends CompositeService {
 
-    SimulatorImpl simulator;
+    private SimulatorImpl simulator;
 
-    public SimulatorMaster() {
-        super(SimulatorMaster.class.getName());
+    public SimulationMaster() {
+        super(SimulationMaster.class.getName());
     }
 
     @Override
@@ -29,7 +24,7 @@ public class SimulatorMaster extends CompositeService {
 
     public static void main(String[] args) {
         Configuration conf = POSUMConfiguration.newInstance();
-        SimulatorMaster master = new SimulatorMaster();
+        SimulationMaster master = new SimulationMaster();
         master.init(conf);
         master.start();
     }

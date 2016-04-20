@@ -9,6 +9,7 @@ import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
@@ -31,19 +32,29 @@ import java.util.Map;
  */
 public class DataMasterClient extends AbstractService implements DataStoreInterface {
 
-    public DataMasterClient() {
-        super(DataMasterClient.class.getName());
-    }
-
     private static Log logger = LogFactory.getLog(DataMasterClient.class);
 
-    DataMasterProtocol dmClient;
+    private DataMasterProtocol dmClient;
+    private String connectAddress;
+
+    public DataMasterClient(String connectAddress) {
+        super(DataMasterClient.class.getName());
+        this.connectAddress = connectAddress;
+    }
+
+    public String getConnectAddress() {
+        return connectAddress;
+    }
 
     @Override
     protected void serviceStart() throws Exception {
         final Configuration conf = getConfig();
         try {
-            dmClient = new StandardClientProxyFactory<>(conf, DataMasterProtocol.class).createProxy();
+            dmClient = new StandardClientProxyFactory<>(conf,
+                    connectAddress,
+                    POSUMConfiguration.DM_ADDRESS_DEFAULT,
+                    POSUMConfiguration.DM_PORT_DEFAULT,
+                    DataMasterProtocol.class).createProxy();
             checkPing();
         } catch (IOException e) {
             throw new POSUMException("Could not init DataMaster client", e);
@@ -101,7 +112,7 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
 
     @Override
     public JobProfile getJobProfileForApp(String appId) {
-        logger.debug("Getting job profile for app "+appId);
+        logger.debug("Getting job profile for app " + appId);
         try {
             SingleEntityPayload payload = Utils.handleError("getJobProfileForApp",
                     dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.JOB_FOR_APP, appId))

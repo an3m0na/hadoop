@@ -23,7 +23,7 @@ public class TestDataStoreClient {
     @Test
     public void checkOneObject() {
         Configuration conf = TestUtils.getConf();
-        DataMasterClient dataStore = new DataMasterClient();
+        DataMasterClient dataStore = new DataMasterClient(null);
         dataStore.init(conf);
         dataStore.start();
         DataStoreInterface myStore = new DataStoreImpl(conf);
@@ -85,7 +85,7 @@ public class TestDataStoreClient {
     @Test
     public void checkMuliObject() {
         Configuration conf = TestUtils.getConf();
-        DataMasterClient dataStore = new DataMasterClient();
+        DataMasterClient dataStore = new DataMasterClient(null);
         dataStore.init(conf);
         dataStore.start();
         DataStoreInterface myStore = new DataStoreImpl(conf);

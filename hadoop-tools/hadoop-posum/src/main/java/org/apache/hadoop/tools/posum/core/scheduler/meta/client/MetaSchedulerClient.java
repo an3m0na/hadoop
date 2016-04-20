@@ -8,6 +8,7 @@ import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -22,25 +23,24 @@ public class MetaSchedulerClient extends AbstractService implements MetaSchedule
 
     private static Log logger = LogFactory.getLog(MetaSchedulerClient.class);
 
-    private Configuration posumConf;
+    private String connectAddress;
 
-    public MetaSchedulerClient() {
+    public MetaSchedulerClient(String connectAddress) {
         super(MetaSchedulerClient.class.getName());
+        this.connectAddress = connectAddress;
     }
 
     private MetaSchedulerProtocol metaClient;
 
     @Override
-    protected void serviceInit(Configuration conf) throws Exception {
-        super.serviceInit(conf);
-        this.posumConf = conf;
-    }
-
-    @Override
     protected void serviceStart() throws Exception {
         final Configuration conf = getConfig();
         try {
-            metaClient = new StandardClientProxyFactory<>(conf, MetaSchedulerProtocol.class).createProxy();
+            metaClient = new StandardClientProxyFactory<>(conf,
+                    connectAddress,
+                    POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT,
+                    POSUMConfiguration.SCHEDULER_PORT_DEFAULT,
+                    MetaSchedulerProtocol.class).createProxy();
             checkPing();
         } catch (IOException e) {
             throw new POSUMException("Could not init MetaScheduler client", e);

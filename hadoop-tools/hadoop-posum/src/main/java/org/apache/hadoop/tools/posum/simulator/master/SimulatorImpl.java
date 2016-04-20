@@ -36,19 +36,27 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
         commService.init(conf);
         addIfService(commService);
 
-        Class<? extends JobBehaviorPredictor> predictorClass = conf.getClass(
+        Class<? extends JobBehaviorPredictor> predictorClass = getConfig().getClass(
                 POSUMConfiguration.PREDICTOR_CLASS,
                 BasicPredictor.class,
                 JobBehaviorPredictor.class
         );
 
         try {
-            predictor = predictorClass.getConstructor(Configuration.class, DataStoreInterface.class)
-                    .newInstance(conf, commService.getDataStore());
+            predictor = predictorClass.getConstructor(Configuration.class)
+                    .newInstance(conf);
         } catch (Exception e) {
             throw new POSUMException("Could not instantiate predictor type " + predictorClass.getName());
         }
         policies = new PolicyMap(conf);
+
+        super.serviceInit(conf);
+    }
+
+    @Override
+    protected void serviceStart() throws Exception {
+        super.serviceStart();
+        predictor.setDataStore(commService.getDataStore());
     }
 
     @Override
@@ -61,9 +69,9 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
         }
     }
 
-    protected void simulationDone(SimulationResult result) {
+    void simulationDone(SimulationResult result) {
         resultRequest.addResult(result);
-        if(resultRequest.getResults().size() == policies.size()){
+        if (resultRequest.getResults().size() == policies.size()) {
             commService.getMaster().handleSimulationResult(resultRequest);
         }
     }

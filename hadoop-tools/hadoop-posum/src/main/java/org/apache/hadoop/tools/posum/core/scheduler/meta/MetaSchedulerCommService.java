@@ -4,13 +4,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
-import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterInterface;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
@@ -45,10 +45,6 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         masterClient.init(conf);
         addIfService(masterClient);
 
-        dataClient = new DataMasterClient();
-        dataClient.init(conf);
-        addIfService(dataClient);
-
         super.serviceInit(conf);
     }
 
@@ -57,7 +53,6 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 POSUMConfiguration.SCHEDULER_BIND_ADDRESS,
-                POSUMConfiguration.SCHEDULER_ADDRESS,
                 POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT,
                 POSUMConfiguration.SCHEDULER_PORT_DEFAULT);
         this.metaServer =
@@ -66,13 +61,16 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
                         getConfig().getInt(POSUMConfiguration.SCHEDULER_SERVICE_THREAD_COUNT,
                                 POSUMConfiguration.SCHEDULER_SERVICE_THREAD_COUNT_DEFAULT));
 
-        metaServer.start();
-        this.bindAddress = getConfig().updateConnectAddr(
-                POSUMConfiguration.SCHEDULER_BIND_ADDRESS,
-                POSUMConfiguration.SCHEDULER_ADDRESS,
-                POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT,
-                metaServer.getListenerAddress());
+        this.metaServer.start();
+
         super.serviceStart();
+
+        String dmAddress = masterClient.register(Utils.POSUMProcess.SCHEDULER,
+                this.metaServer.getListenerAddress().toString());
+        dataClient = new DataMasterClient(dmAddress);
+        dataClient.init(getConfig());
+        addIfService(dataClient);
+        dataClient.start();
     }
 
     @Override
