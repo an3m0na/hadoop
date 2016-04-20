@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.database.master;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
@@ -50,21 +51,22 @@ public class DataMasterService extends AbstractService implements DataMasterProt
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 POSUMConfiguration.DM_BIND_ADDRESS,
                 POSUMConfiguration.DM_ADDRESS,
-                POSUMConfiguration.DEFAULT_DM_ADDRESS,
-                POSUMConfiguration.DEFAULT_DM_PORT);
+                POSUMConfiguration.DM_ADDRESS_DEFAULT,
+                POSUMConfiguration.DM_PORT_DEFAULT);
         dmContext.setTokenSecretManager(new DummyTokenSecretManager());
         this.server =
                 rpc.getServer(DataMasterProtocol.class, this, masterServiceAddress,
                         getConfig(), dmContext.getTokenSecretManager(),
                         getConfig().getInt(POSUMConfiguration.DM_SERVICE_THREAD_COUNT,
-                                POSUMConfiguration.DEFAULT_DM_SERVICE_THREAD_COUNT));
+                                POSUMConfiguration.DM_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.server.start();
         this.bindAddress = getConfig().updateConnectAddr(
                 POSUMConfiguration.DM_BIND_ADDRESS,
                 POSUMConfiguration.DM_ADDRESS,
-                POSUMConfiguration.DEFAULT_DM_ADDRESS,
+                POSUMConfiguration.DM_ADDRESS_DEFAULT,
                 server.getListenerAddress());
+
         super.serviceStart();
     }
 

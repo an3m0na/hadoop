@@ -31,30 +31,27 @@ public class POSUMMasterService extends CompositeService implements POSUMMasterP
     }
 
     @Override
-    protected void serviceInit(Configuration conf) throws Exception {
-    }
-
-    @Override
     protected void serviceStart() throws Exception {
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 POSUMConfiguration.PM_BIND_ADDRESS,
                 POSUMConfiguration.PM_ADDRESS,
-                POSUMConfiguration.DEFAULT_PM_ADDRESS,
-                POSUMConfiguration.DEFAULT_PM_PORT);
+                POSUMConfiguration.PM_ADDRESS_DEFAULT,
+                POSUMConfiguration.PM_PORT_DEFAULT);
         pmContext.setTokenSecretManager(new DummyTokenSecretManager());
         this.server =
                 rpc.getServer(POSUMMasterProtocol.class, this, masterServiceAddress,
                         getConfig(), pmContext.getTokenSecretManager(),
                         getConfig().getInt(POSUMConfiguration.PM_SERVICE_THREAD_COUNT,
-                                POSUMConfiguration.DEFAULT_PM_SERVICE_THREAD_COUNT));
+                                POSUMConfiguration.PM_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.server.start();
         this.bindAddress = getConfig().updateConnectAddr(
                 POSUMConfiguration.PM_BIND_ADDRESS,
                 POSUMConfiguration.PM_ADDRESS,
-                POSUMConfiguration.DEFAULT_PM_ADDRESS,
+                POSUMConfiguration.PM_ADDRESS_DEFAULT,
                 server.getListenerAddress());
+
         super.serviceStart();
     }
 

@@ -1,10 +1,11 @@
 package org.apache.hadoop.tools.posum.simulator.predictor;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.database.store.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 
 import java.util.List;
@@ -14,8 +15,8 @@ import java.util.List;
  */
 public class BasicPredictor extends JobBehaviorPredictor {
 
-    public BasicPredictor(DataStoreInterface dataStoreInterface) {
-        super(dataStoreInterface);
+    public BasicPredictor(Configuration conf, DataStoreInterface dataStoreInterface) {
+        super(conf, dataStoreInterface);
     }
 
     @Override

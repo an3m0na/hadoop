@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.database.master;
 
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.database.store.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
 /**

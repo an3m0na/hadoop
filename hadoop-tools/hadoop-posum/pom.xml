@@ -109,6 +109,7 @@
                                     <include>datamaster_protocol.proto</include>
                                     <include>posummaster_protocol.proto</include>
                                     <include>metascheduler_protocol.proto</include>
+                                    <include>simulator_protocol.proto</include>
                                 </includes>
                             </source>
                             <output>${project.build.directory}/generated-sources/java</output>
