@@ -8,7 +8,6 @@ import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
-import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 import org.apache.hadoop.yarn.event.EventHandler;
 
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -39,15 +38,14 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
     @Override
     public void handle(POSUMEvent event) {
         switch (event.getType()) {
-            case SETUP_COMPLETE:
+            case SIMULATOR_CONNECTED:
                 addIfService(simulationManager);
                 simulationManager.start();
+                logger.debug("Simulator connected");
                 break;
             case SIMULATION_START:
                 logger.debug("Starting simulation");
-                SimulatorInterface simulator = pmContext.getCommService().getSimulator();
-                if (simulator != null)
-                    simulator.startSimulation();
+                pmContext.getCommService().getSimulator();
                 break;
             case SIMULATION_FINISH:
                 simulationManager.simulationFinished();

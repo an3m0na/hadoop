@@ -115,6 +115,7 @@ class PortfolioMetaScheduler extends
         this.posumConf = POSUMConfiguration.newInstance();
         setConf(conf);
         policies = new PolicyMap(posumConf);
+        currentPolicyClass = policies.getDefaultPolicyClass();
         commService = new MetaSchedulerCommService(this);
         commService.init(posumConf);
         initPolicy();
