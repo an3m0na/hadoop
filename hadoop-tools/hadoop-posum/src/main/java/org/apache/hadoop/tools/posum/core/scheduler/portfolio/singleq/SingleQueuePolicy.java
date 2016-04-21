@@ -899,6 +899,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
                 onAppAttemptAdded(newApp);
             }
         }
+        printQueue();
     }
 
     @Override

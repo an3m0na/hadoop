@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.predictor;
+package org.apache.hadoop.tools.posum.test;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.database.master.DataMasterContext;

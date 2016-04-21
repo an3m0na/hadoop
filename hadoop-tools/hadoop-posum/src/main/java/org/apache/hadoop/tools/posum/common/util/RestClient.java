@@ -63,11 +63,11 @@ public class RestClient {
         try {
             response = resource.head();
             if (response.getStatus() != 200) {
-                logger.error("Could not connect to resource " + resource.toString());
+                logger.warn("Could not connect to resource " + resource.toString());
                 return null;
             }
         } catch (Exception e) {
-            logger.error("Could not connect to resource " + resource.toString());
+            logger.warn("Could not connect to resource " + resource.toString());
             return null;
         }
         response = resource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
@@ -78,7 +78,7 @@ public class RestClient {
 
         try {
             JSONObject object = response.getEntity(JSONObject.class);
-            logger.debug("[RestClient] Raw response:" + object);
+            logger.trace("[RestClient] Raw response:" + object);
             return object;
         } catch (Exception e) {
             logger.error("Could not parse response as JSON ", e);
