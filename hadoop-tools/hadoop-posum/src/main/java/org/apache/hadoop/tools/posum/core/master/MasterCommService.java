@@ -89,6 +89,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
             }
         } catch (Exception e) {
+            logger.error("Exception resolving request", e);
             return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
         }
         return SimpleResponse.newInstance(true);
@@ -100,6 +101,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
             pmContext.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SIMULATION_FINISH,
                     resultRequest.getResults()));
         } catch (Exception e) {
+            logger.error("Exception resolving request", e);
             return SimpleResponse.newInstance("Exception resolving request ", e);
         }
         return SimpleResponse.newInstance(true);
@@ -140,6 +142,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
             }
 
         } catch (Exception e) {
+            logger.error("Exception resolving request", e);
             return SimpleResponse.newInstance("Exception resolving request ", e);
         }
         return SimpleResponse.newInstance(true, dataClient.getConnectAddress());

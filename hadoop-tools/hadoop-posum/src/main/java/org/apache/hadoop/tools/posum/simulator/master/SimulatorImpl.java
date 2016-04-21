@@ -13,6 +13,7 @@ import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -62,7 +63,9 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
     @Override
     public void startSimulation() {
         resultRequest = HandleSimResultRequest.newInstance();
+        simulationMap = new HashMap<>(policies.size());
         for (String policyName : policies.keySet()) {
+            System.out.println("Starting simulation for " + policyName);
             Simulation simulation = new Simulation(this, policyName, predictor);
             simulationMap.put(policyName, simulation);
             simulation.start();
@@ -70,8 +73,10 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
     }
 
     void simulationDone(SimulationResult result) {
+        System.out.println("Simulation done");
         resultRequest.addResult(result);
         if (resultRequest.getResults().size() == policies.size()) {
+            System.out.println("Sending request");
             commService.getMaster().handleSimulationResult(resultRequest);
         }
     }

@@ -20,7 +20,8 @@ public class SimulationManager extends GeneralLooper<SimulationManager> {
     private static Log logger = LogFactory.getLog(Orchestrator.class);
 
     private final POSUMMasterContext context;
-    private Lock lock = new ReentrantLock();
+    private volatile boolean simulationRunning = false;
+    private final Object lock = new Object();
 
     public SimulationManager(POSUMMasterContext context) {
         super(SimulationManager.class);
@@ -37,13 +38,28 @@ public class SimulationManager extends GeneralLooper<SimulationManager> {
 
     @Override
     protected void doAction() {
-        lock.lock();
-        //TODO check if simulation is actually needed
-        logger.debug("Should start simulation");
-        context.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SIMULATION_START));
+        System.out.println("doing sim again");
+        synchronized (lock) {
+            while (simulationRunning)
+                try {
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    logger.warn(e);
+                }
+            //TODO check if simulation is actually needed
+            logger.debug("Should start simulation");
+            simulationRunning = true;
+            context.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SIMULATION_START));
+        }
+
+        System.out.println("done sim");
     }
 
     void simulationFinished() {
-        lock.unlock();
+        synchronized (lock) {
+            System.out.println("setting it to false");
+            simulationRunning = false;
+            lock.notifyAll();
+        }
     }
 }

@@ -168,6 +168,7 @@ message SimpleRequestProto {
         REQ_CHANGE_POLICY = 1;
         REQ_ENTITY_BY_ID = 2;
         REQ_JOB_FOR_APP = 3;
+        REQ_START = 4;
     }
 }
 

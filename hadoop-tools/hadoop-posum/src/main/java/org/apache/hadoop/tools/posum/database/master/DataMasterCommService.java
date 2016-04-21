@@ -111,6 +111,7 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                             "Could not recognize message type " + request.getType(), null);
             }
         } catch (Exception e) {
+            logger.error("Exception resolving request", e);
             return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY,
                     "Exception resolving request " + request, e);
         }
@@ -125,6 +126,7 @@ public class DataMasterCommService extends CompositeService implements DataMaste
             MultiEntityPayload payload = MultiEntityPayload.newInstance(request.getEntityType(), ret);
             return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY, payload);
         } catch (Exception e) {
+            logger.error("Exception resolving request", e);
             return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY,
                     "Exception resolving request " + request, e);
         }
@@ -141,6 +143,7 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
             }
         } catch (Exception e) {
+            logger.error("Exception resolving request", e);
             return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
         }
         return SimpleResponse.newInstance(true);

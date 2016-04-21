@@ -45,7 +45,7 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
                 break;
             case SIMULATION_START:
                 logger.debug("Starting simulation");
-                pmContext.getCommService().getSimulator();
+                pmContext.getCommService().getSimulator().startSimulation();
                 break;
             case SIMULATION_FINISH:
                 simulationManager.simulationFinished();
