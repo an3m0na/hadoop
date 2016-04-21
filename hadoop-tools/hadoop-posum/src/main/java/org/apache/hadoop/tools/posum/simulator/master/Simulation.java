@@ -30,6 +30,7 @@ public class Simulation extends Thread {
     public void run() {
         //TODO actual code
         try {
+            System.out.println("Doing simulation");
             sleep(3000);
             simulator.simulationDone(SimulationResult.newInstance(policy,
                     CompoundScore.newInstance(Math.random() * 10, null, null)));

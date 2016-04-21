@@ -11,6 +11,8 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.HandleSimResultRequestProtoOrBui
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by ane on 3/20/16.
@@ -20,8 +22,9 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
     private HandleSimResultRequestProto proto = HandleSimResultRequestProto.getDefaultInstance();
     private HandleSimResultRequestProto.Builder builder = null;
     private boolean viaProto = false;
+    private Lock lock = new ReentrantLock();
 
-    ConcurrentSkipListSet<SimulationResult> results;
+    private ConcurrentSkipListSet<SimulationResult> results;
 
     public HandleSimResultRequestPBImpl() {
         builder = HandleSimResultRequestProto.newBuilder();
@@ -111,6 +114,7 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
 
     @Override
     public ConcurrentSkipListSet<SimulationResult> getResults() {
+        lock.lock();
         if (this.results == null) {
             HandleSimResultRequestProtoOrBuilder p = viaProto ? proto : builder;
             this.results = new ConcurrentSkipListSet<>();
@@ -119,27 +123,22 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
                 results.add(result);
             }
         }
+        lock.unlock();
         return this.results;
     }
 
     @Override
     public void addResult(SimulationResult result) {
-        if (this.results == null) {
-            HandleSimResultRequestProtoOrBuilder p = viaProto ? proto : builder;
-            this.results = new ConcurrentSkipListSet<>();
-            for (POSUMProtos.SimulationResultProto simProto : p.getResultsList()) {
-                SimulationResult simResult = new SimulationResultPBImpl(simProto);
-                results.add(simResult);
-            }
-        }
-        results.add(result);
+        getResults().add(result);
     }
 
     @Override
     public void setResults(List<SimulationResult> results) {
         if (results == null)
             return;
+        lock.lock();
         this.results = new ConcurrentSkipListSet<>();
         this.results.addAll(results);
+        lock.unlock();
     }
 }

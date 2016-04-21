@@ -28,10 +28,12 @@ public abstract class GeneralLooper<T> extends AbstractService {
         @Override
         public void run() {
             long time;
+            lastRun = System.currentTimeMillis();
             while (!exit) {
                 try {
                     doAction();
-                    time = System.currentTimeMillis() - lastRun + sleepInterval;
+                    time = lastRun + sleepInterval - System.currentTimeMillis();
+                    System.out.println("escaped and waiting "+time);
                     if (time > 0)
                         sleep(time);
                 } catch (InterruptedException e) {

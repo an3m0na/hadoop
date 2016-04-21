@@ -90,12 +90,14 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
                     logger.info("Received ping with message: " + request.getPayload());
                     break;
                 case START:
+                    System.out.println("Starting simulation on the server side");
                     simulator.startSimulation();
                     break;
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
             }
         } catch (Exception e) {
+            logger.error("Exception occurred while resolving request", e);
             return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
         }
         return SimpleResponse.newInstance(true);

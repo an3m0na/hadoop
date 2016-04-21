@@ -96,6 +96,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
             }
         } catch (Exception e) {
+            logger.error(e);
             return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
         }
         return SimpleResponse.newInstance(true);
