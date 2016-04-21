@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.predictor;
+package org.apache.hadoop.tools.posum.test;
 
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;

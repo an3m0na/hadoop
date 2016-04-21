@@ -38,7 +38,6 @@ public class SimulationManager extends GeneralLooper<SimulationManager> {
 
     @Override
     protected void doAction() {
-        System.out.println("doing sim again");
         synchronized (lock) {
             while (simulationRunning)
                 try {
@@ -52,12 +51,10 @@ public class SimulationManager extends GeneralLooper<SimulationManager> {
             context.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SIMULATION_START));
         }
 
-        System.out.println("done sim");
     }
 
     void simulationFinished() {
         synchronized (lock) {
-            System.out.println("setting it to false");
             simulationRunning = false;
             lock.notifyAll();
         }

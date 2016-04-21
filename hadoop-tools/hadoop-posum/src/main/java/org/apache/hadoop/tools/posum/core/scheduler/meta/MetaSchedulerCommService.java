@@ -89,7 +89,6 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
                     logger.info("Received ping with message: " + request.getPayload());
                     break;
                 case CHANGE_POLICY:
-                    logger.info("Changing policy to: " + request.getPayload());
                     metaScheduler.changeToPolicy((String) request.getPayload());
                     break;
                 default:

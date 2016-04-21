@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.predictor;
+package org.apache.hadoop.tools.posum.test;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;

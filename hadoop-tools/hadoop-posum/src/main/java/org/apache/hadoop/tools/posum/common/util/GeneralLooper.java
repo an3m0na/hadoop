@@ -33,7 +33,6 @@ public abstract class GeneralLooper<T> extends AbstractService {
                 try {
                     doAction();
                     time = lastRun + sleepInterval - System.currentTimeMillis();
-                    System.out.println("escaped and waiting "+time);
                     if (time > 0)
                         sleep(time);
                 } catch (InterruptedException e) {

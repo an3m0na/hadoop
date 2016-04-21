@@ -90,7 +90,6 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
                     logger.info("Received ping with message: " + request.getPayload());
                     break;
                 case START:
-                    System.out.println("Starting simulation on the server side");
                     simulator.startSimulation();
                     break;
                 default:

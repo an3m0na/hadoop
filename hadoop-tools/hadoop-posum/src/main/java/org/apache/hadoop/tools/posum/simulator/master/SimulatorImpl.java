@@ -1,14 +1,14 @@
 package org.apache.hadoop.tools.posum.simulator.master;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
@@ -20,6 +20,8 @@ import java.util.Map;
  * Created by ane on 4/19/16.
  */
 public class SimulatorImpl extends CompositeService implements SimulatorInterface {
+
+    private static Log logger = LogFactory.getLog(SimulatorImpl.class);
 
     private JobBehaviorPredictor predictor;
     private SimulatorCommService commService;
@@ -65,7 +67,7 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
         resultRequest = HandleSimResultRequest.newInstance();
         simulationMap = new HashMap<>(policies.size());
         for (String policyName : policies.keySet()) {
-            System.out.println("Starting simulation for " + policyName);
+            logger.debug("Starting simulation for " + policyName);
             Simulation simulation = new Simulation(this, policyName, predictor);
             simulationMap.put(policyName, simulation);
             simulation.start();
@@ -73,10 +75,9 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
     }
 
     void simulationDone(SimulationResult result) {
-        System.out.println("Simulation done");
         resultRequest.addResult(result);
         if (resultRequest.getResults().size() == policies.size()) {
-            System.out.println("Sending request");
+            logger.debug("Sending simulation result request");
             commService.getMaster().handleSimulationResult(resultRequest);
         }
     }
