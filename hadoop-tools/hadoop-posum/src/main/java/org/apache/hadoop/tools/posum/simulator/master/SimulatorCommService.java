@@ -15,7 +15,7 @@ import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterInterface;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
 import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
-import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterfaceClass;
+import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -27,12 +27,12 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
 
     private static Log logger = LogFactory.getLog(SimulatorCommService.class);
 
-    SimulatorInterfaceClass simulator;
+    SimulatorInterface simulator;
     private Server simulatorServer;
     private POSUMMasterClient masterClient;
     private DataMasterClient dataClient;
 
-    SimulatorCommService(SimulatorInterfaceClass simulator) {
+    SimulatorCommService(SimulatorInterface simulator) {
         super(SimulatorCommService.class.getName());
         this.simulator = simulator;
     }

@@ -9,7 +9,7 @@ import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultReque
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
-import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterfaceClass;
+import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 
@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * Created by ane on 4/19/16.
  */
-public class SimulatorImpl extends CompositeService implements SimulatorInterfaceClass {
+public class SimulatorImpl extends CompositeService implements SimulatorInterface {
 
     private static Log logger = LogFactory.getLog(SimulatorImpl.class);
 
