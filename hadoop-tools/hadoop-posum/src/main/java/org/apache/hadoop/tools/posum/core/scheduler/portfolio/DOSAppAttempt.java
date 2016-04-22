@@ -18,6 +18,10 @@ public class DOSAppAttempt extends SQSAppAttempt {
         super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
     }
 
+    public DOSAppAttempt(SQSAppAttempt inner) {
+        super(inner);
+    }
+
     public Long getTotalInputSize() {
         return totalInputSize;
     }

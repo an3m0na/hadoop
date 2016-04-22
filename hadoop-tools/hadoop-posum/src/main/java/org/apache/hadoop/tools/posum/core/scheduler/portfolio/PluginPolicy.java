@@ -38,19 +38,27 @@ public abstract class PluginPolicy<
     }
 
     protected static class PluginPolicyState {
-        public Resource usedResource;
-        public SQSQueue queue;
-        public Map<NodeId, ? extends SQSchedulerNode> nodes;
-        public Map<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> applications;
+        public final Resource usedResource;
+        public final SQSQueue queue;
+        public final Map<NodeId, ? extends SQSchedulerNode> nodes;
+        public final Map<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> applications;
+        public final Resource clusterResource;
+        public final Resource maxAllocation;
+        public final boolean usePortForNodeName;
 
         public PluginPolicyState(Resource usedResource,
                                  SQSQueue queue,
                                  Map<NodeId, ? extends SQSchedulerNode> nodes,
-                                 Map<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> applications) {
+                                 Map<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> applications,
+                                 Resource clusterResource,
+                                 Resource maxAllocation, boolean usePortForNodeName) {
             this.usedResource = usedResource;
             this.queue = queue;
             this.nodes = nodes;
             this.applications = applications;
+            this.clusterResource = clusterResource;
+            this.maxAllocation = maxAllocation;
+            this.usePortForNodeName = usePortForNodeName;
         }
     }
 
