@@ -19,7 +19,7 @@ import java.io.IOException;
 /**
  * Created by ane on 4/13/16.
  */
-public class SimulatorClient extends AbstractService implements SimulatorInterface {
+public class SimulatorClient extends AbstractService implements SimulatorInterfaceClass {
 
     private static Log logger = LogFactory.getLog(SimulatorClient.class);
 

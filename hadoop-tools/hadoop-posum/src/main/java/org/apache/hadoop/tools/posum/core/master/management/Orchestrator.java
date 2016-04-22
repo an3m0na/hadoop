@@ -39,9 +39,11 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
     public void handle(POSUMEvent event) {
         switch (event.getType()) {
             case SIMULATOR_CONNECTED:
-                addIfService(simulationManager);
-                simulationManager.start();
-                logger.debug("Simulator connected");
+                if (!simulationManager.isInState(STATE.STARTED)) {
+                    addIfService(simulationManager);
+                    simulationManager.start();
+                    logger.debug("Simulator connected");
+                }
                 break;
             case SIMULATION_START:
                 logger.debug("Starting simulation");
