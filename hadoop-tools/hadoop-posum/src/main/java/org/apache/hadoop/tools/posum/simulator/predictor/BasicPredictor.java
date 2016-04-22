@@ -1,10 +1,10 @@
 package org.apache.hadoop.tools.posum.simulator.predictor;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 
 import java.util.List;
@@ -14,15 +14,15 @@ import java.util.List;
  */
 public class BasicPredictor extends JobBehaviorPredictor {
 
-    public BasicPredictor(DataStore dataStore) {
-        super(dataStore);
+    public BasicPredictor(Configuration conf) {
+        super(conf);
     }
 
     @Override
     public Integer predictJobDuration(String jobId) {
         Float duration = 0.0f;
-        JobProfile current = dataStore.findById(DataEntityType.JOB, jobId);
-        List<JobProfile> comparable = dataStore.getComparableProfiles(
+        JobProfile current = getDataStore().findById(DataEntityType.JOB, jobId);
+        List<JobProfile> comparable = getDataStore().getComparableProfiles(
                 current.getUser(),
                 conf.getInt(POSUMConfiguration.BUFFER,
                         POSUMConfiguration.BUFFER_DEFAULT)
@@ -39,12 +39,12 @@ public class BasicPredictor extends JobBehaviorPredictor {
     @Override
     public Integer predictTaskDuration(String jobId, TaskType type) {
         Float duration = 0.0f;
-        JobProfile current = dataStore.findById(DataEntityType.JOB, jobId);
+        JobProfile current = getDataStore().findById(DataEntityType.JOB, jobId);
         float currentAverage = TaskType.MAP.equals(type) ? current.getAvgMapDuration() : current.getAvgReduceDuration();
         if (currentAverage > 0)
             return new Float(currentAverage).intValue();
 
-        List<JobProfile> comparable = dataStore.getComparableProfiles(
+        List<JobProfile> comparable = getDataStore().getComparableProfiles(
                 current.getUser(),
                 conf.getInt(POSUMConfiguration.BUFFER, POSUMConfiguration.BUFFER_DEFAULT)
         );

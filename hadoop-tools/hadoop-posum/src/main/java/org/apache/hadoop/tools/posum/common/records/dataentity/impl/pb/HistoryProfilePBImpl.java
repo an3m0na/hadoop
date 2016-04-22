@@ -13,17 +13,17 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.HistoryProfileProtoOrBuilder;
 /**
  * Created by ane on 3/21/16.
  */
-public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends  GeneralDataEntityPBImpl<HistoryProfile, HistoryProfileProto, HistoryProfileProto.Builder>
-        implements HistoryProfile<T>{
+public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDataEntityPBImpl<HistoryProfile, HistoryProfileProto, HistoryProfileProto.Builder>
+        implements HistoryProfile<T> {
 
-    public HistoryProfilePBImpl(){
+    public HistoryProfilePBImpl() {
 
     }
 
-    public HistoryProfilePBImpl(DataEntityType type, T original){
+    public HistoryProfilePBImpl(DataEntityType type, T original) {
         super();
         long timestamp = System.currentTimeMillis();
-        setId(timestamp + "_"+ original.getId());
+        setId(timestamp + "_" + original.getId());
         setType(type);
         setTimestamp(timestamp);
         setOriginal(original);
@@ -32,7 +32,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends  GeneralD
 
     @Override
     void initBuilder() {
-        builder = viaProto? HistoryProfileProto.newBuilder(proto) : HistoryProfileProto.newBuilder();
+        builder = viaProto ? HistoryProfileProto.newBuilder(proto) : HistoryProfileProto.newBuilder();
     }
 
     @Override
@@ -50,7 +50,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends  GeneralD
     @Override
     public String getId() {
         HistoryProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return "".equals(p.getId())? null : p.getId();
+        return "".equals(p.getId()) ? null : p.getId();
     }
 
     @Override
@@ -65,7 +65,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends  GeneralD
         if (p.getOriginal() != null) {
             try {
                 Class eClass = getType().getMappedClass();
-                return (T)((GeneralDataEntityPBImpl)eClass.newInstance()).parseToEntity(p.getOriginal());
+                return (T) ((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(p.getOriginal());
             } catch (Exception e) {
                 throw new POSUMException("Could not read object from byte string " + p.getOriginal(), e);
             }
@@ -77,7 +77,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends  GeneralD
     public void setOriginal(T original) {
         maybeInitBuilder();
         if (original != null)
-            builder.setOriginal(((GeneralDataEntityPBImpl)original).getProto().toByteString());
+            builder.setOriginal(((GeneralDataEntityPBImpl) original).getProto().toByteString());
     }
 
     @Override
@@ -101,7 +101,8 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends  GeneralD
     @Override
     public void setTimestamp(Long timestamp) {
         maybeInitBuilder();
-        builder.setTimestamp(timestamp);
+        if (timestamp != null)
+            builder.setTimestamp(timestamp);
     }
 
     @Override
@@ -113,6 +114,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends  GeneralD
     @Override
     public void setOriginalId(String originalId) {
         maybeInitBuilder();
-        builder.setOriginalId(originalId);
+        if (originalId != null)
+            builder.setOriginalId(originalId);
     }
 }

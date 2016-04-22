@@ -139,23 +139,23 @@ message EntityPropertyProto {
     }
 }
 
-message SingleEntityRequestProto {
-    required EntityTypeProto type = 1;
+message EntityByIdPayloadProto {
+    required EntityTypeProto entityType = 1;
     required string id = 2;
 }
 
-message SingleEntityResponseProto {
-    required EntityTypeProto type = 1;
+message SingleEntityPayloadProto {
+    required EntityTypeProto entityType = 1;
     optional bytes entity = 2;
 }
 
 message MultiEntityRequestProto {
-    required EntityTypeProto type = 1;
+    required EntityTypeProto entityType = 1;
     repeated EntityPropertyProto properties = 2;
 }
 
-message MultiEntityResponseProto {
-    required EntityTypeProto type = 1;
+message MultiEntityPayloadProto {
+    required EntityTypeProto entityType = 1;
     repeated bytes entities = 2;
 }
 
@@ -165,7 +165,10 @@ message SimpleRequestProto {
 
     enum SimpleRequestTypeProto {
         REQ_PING = 0;
-        REQ_CHANGE_POLICY=1;
+        REQ_CHANGE_POLICY = 1;
+        REQ_ENTITY_BY_ID = 2;
+        REQ_JOB_FOR_APP = 3;
+        REQ_START = 4;
     }
 }
 
@@ -178,5 +181,34 @@ message SimpleResponseProto {
 
     enum SimpleResponseTypeProto {
         RESP_VOID = 0;
+        RESP_SINGLE_ENTITY = 1;
+        RESP_MULTI_ENTITY = 2;
+    }
+}
+
+message SimulationResultProto{
+    required string policyName = 1;
+    optional CompoundScoreProto score = 2;
+}
+
+message CompoundScoreProto{
+    optional double runtime = 1;
+    optional double penalty = 2;
+    optional double cost = 3;
+}
+
+message HandleSimResultRequestProto{
+    repeated SimulationResultProto results = 1;
+}
+
+message RegistrationRequestProto{
+    required POSUMProcessProto process = 1;
+    required string connectAddress = 2;
+
+    enum POSUMProcessProto{
+        PROCESS_PM = 0;
+        PROCESS_DM = 1;
+        PROCESS_SIMULATOR = 2;
+        PROCESS_SCHEDULER = 3;
     }
 }

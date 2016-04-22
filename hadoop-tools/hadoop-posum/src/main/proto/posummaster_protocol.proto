@@ -8,4 +8,6 @@ import "posum_protos.proto";
 
 service POSUMMasterProtocolService {
     rpc handleSimpleRequest (SimpleRequestProto) returns (SimpleResponseProto);
+    rpc handleSimulationResult (HandleSimResultRequestProto) returns (SimpleResponseProto);
+    rpc registerProcess (RegistrationRequestProto) returns (SimpleResponseProto);
 }

@@ -10,12 +10,12 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.TaskProfileProtoOrBuilder;
 /**
  * Created by ane on 3/21/16.
  */
-public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, TaskProfileProto, TaskProfileProto.Builder>
-        implements TaskProfile{
+public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, TaskProfileProto, TaskProfileProto.Builder>
+        implements TaskProfile {
 
     @Override
     void initBuilder() {
-        builder = viaProto? TaskProfileProto.newBuilder(proto) : TaskProfileProto.newBuilder();
+        builder = viaProto ? TaskProfileProto.newBuilder(proto) : TaskProfileProto.newBuilder();
     }
 
     @Override
@@ -33,13 +33,14 @@ public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, Ta
     @Override
     public String getId() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return "".equals(p.getId())? null : p.getId();
+        return "".equals(p.getId()) ? null : p.getId();
     }
 
     @Override
     public void setId(String id) {
         maybeInitBuilder();
-        builder.setId(id);
+        if (id != null)
+            builder.setId(id);
     }
 
     @Override
@@ -51,7 +52,8 @@ public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, Ta
     @Override
     public void setStartTime(Long startTime) {
         maybeInitBuilder();
-        builder.setStartTime(startTime);
+        if (startTime != null)
+            builder.setStartTime(startTime);
     }
 
     @Override
@@ -63,14 +65,16 @@ public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, Ta
     @Override
     public void setFinishTime(Long finishTime) {
         maybeInitBuilder();
-        builder.setFinishTime(finishTime);
+        if (finishTime != null)
+            builder.setFinishTime(finishTime);
     }
 
 
     @Override
     public void setInputBytes(Long inputBytes) {
         maybeInitBuilder();
-        builder.setInputBytes(inputBytes);
+        if (inputBytes != null)
+            builder.setInputBytes(inputBytes);
     }
 
     @Override
@@ -82,12 +86,17 @@ public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, Ta
     @Override
     public void setOutputBytes(Long outputBytes) {
         maybeInitBuilder();
-        builder.setOutputBytes(outputBytes);
+        if (outputBytes != null)
+            builder.setOutputBytes(outputBytes);
     }
 
     @Override
     public Integer getDuration() {
-        return null;
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if(p.hasStartTime() && p.hasFinishTime())
+            return Long.valueOf(p.getFinishTime() - p.getStartTime()).intValue();
+        else
+            return -1;
     }
 
     @Override
@@ -99,7 +108,8 @@ public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, Ta
     @Override
     public void setAppId(String appId) {
         maybeInitBuilder();
-        builder.setAppId(appId);
+        if (appId != null)
+            builder.setAppId(appId);
     }
 
     @Override
@@ -126,7 +136,8 @@ public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, Ta
     @Override
     public void setExpectedInputBytes(Long expectedInputBytes) {
         maybeInitBuilder();
-        builder.setExpectedInputBytes(expectedInputBytes);
+        if (expectedInputBytes != null)
+            builder.setExpectedInputBytes(expectedInputBytes);
     }
 
     @Override
@@ -140,7 +151,8 @@ public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, Ta
 
     @Override
     public void setReportedProgress(Float reportedProgress) {
-            maybeInitBuilder();
+        maybeInitBuilder();
+        if (reportedProgress != null)
             builder.setReportedProgress(reportedProgress);
     }
 
@@ -153,7 +165,8 @@ public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, Ta
     @Override
     public void setInputRecords(Long inputRecords) {
         maybeInitBuilder();
-        builder.setInputRecords(inputRecords);
+        if (inputRecords != null)
+            builder.setInputRecords(inputRecords);
     }
 
     @Override
@@ -165,7 +178,8 @@ public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, Ta
     @Override
     public void setOutputRecords(Long outputRecords) {
         maybeInitBuilder();
-        builder.setOutputRecords(outputRecords);
+        if (outputRecords != null)
+            builder.setOutputRecords(outputRecords);
     }
 
     @Override
@@ -177,7 +191,8 @@ public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, Ta
     @Override
     public void setJobId(String jobId) {
         maybeInitBuilder();
-        builder.setJobId(jobId);
+        if (jobId != null)
+            builder.setJobId(jobId);
     }
 
     @Override
@@ -189,7 +204,8 @@ public class TaskProfilePBImpl extends   GeneralDataEntityPBImpl<TaskProfile, Ta
     @Override
     public void setSuccessfulAttempt(String successfulAttempt) {
         maybeInitBuilder();
-        builder.setSuccessfulAttempt(successfulAttempt);
+        if (successfulAttempt != null)
+            builder.setSuccessfulAttempt(successfulAttempt);
     }
 
     @Override

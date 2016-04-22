@@ -18,6 +18,10 @@ public class DOSAppAttempt extends SQSAppAttempt {
         super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
     }
 
+    public DOSAppAttempt(SQSAppAttempt inner) {
+        super(inner);
+    }
+
     public Long getTotalInputSize() {
         return totalInputSize;
     }
@@ -32,5 +36,10 @@ public class DOSAppAttempt extends SQSAppAttempt {
 
     public void setInputSplits(Integer inputSplits) {
         this.inputSplits = inputSplits;
+    }
+
+    @Override
+    public String toString() {
+        return "DOSAttempt_" + getApplicationId() + "=" + totalInputSize;
     }
 }

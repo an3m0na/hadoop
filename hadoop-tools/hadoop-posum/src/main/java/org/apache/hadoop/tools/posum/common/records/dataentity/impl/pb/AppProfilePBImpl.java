@@ -41,6 +41,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setId(String id) {
         maybeInitBuilder();
+        if(id != null)
         builder.setId(id);
     }
 
@@ -53,6 +54,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setStartTime(Long startTime) {
         maybeInitBuilder();
+        if(startTime != null)
         builder.setStartTime(startTime);
     }
 
@@ -65,6 +67,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setUser(String user) {
         maybeInitBuilder();
+        if(user != null)
         builder.setUser(user);
     }
 
@@ -77,6 +80,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setName(String name) {
         maybeInitBuilder();
+        if(name != null)
         builder.setName(name);
     }
 
@@ -90,10 +94,10 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     }
 
     @Override
-    public void setState(String state) {
+    public void setState(YarnApplicationState state) {
         maybeInitBuilder();
         if (state != null)
-            builder.setState(AppProfileProto.AppStateProto.valueOf("STATE_" + state));
+            builder.setState(AppProfileProto.AppStateProto.valueOf("STATE_" + state.name()));
         else
             builder.setState(AppProfileProto.AppStateProto.STATE_NULL);
     }
@@ -108,10 +112,10 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     }
 
     @Override
-    public void setStatus(String status) {
+    public void setStatus(FinalApplicationStatus status) {
         maybeInitBuilder();
         if (status != null)
-            builder.setStatus(AppProfileProto.AppStatusProto.valueOf("STATUS_" + status));
+            builder.setStatus(AppProfileProto.AppStatusProto.valueOf("STATUS_" + status.name()));
         else
             builder.setStatus(AppProfileProto.AppStatusProto.STATUS_NULL);
     }
@@ -125,6 +129,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setFinishTime(Long finishTime) {
         maybeInitBuilder();
+        if(finishTime != null)
         builder.setFinishTime(finishTime);
     }
 
@@ -138,10 +143,10 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     }
 
     @Override
-    public void setTrackingUI(String trackingUI) {
+    public void setTrackingUI(RestClient.TrackingUI trackingUI) {
         maybeInitBuilder();
         if (trackingUI != null)
-            builder.setTrackingUI(AppProfileProto.AppTrackingUIProto.valueOf("UI_" + trackingUI));
+            builder.setTrackingUI(AppProfileProto.AppTrackingUIProto.valueOf("UI_" + trackingUI.name()));
         else
             builder.setTrackingUI(AppProfileProto.AppTrackingUIProto.UI_NULL);
     }

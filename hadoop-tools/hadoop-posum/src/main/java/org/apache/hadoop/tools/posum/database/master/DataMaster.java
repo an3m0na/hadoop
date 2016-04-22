@@ -4,7 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.monitor.HadoopMonitor;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
@@ -21,22 +21,22 @@ public class DataMaster extends CompositeService {
     }
 
     private DataMasterContext dmContext;
-    private DataMasterService dmService;
-    private DataStore dataStore;
+    private DataMasterCommService dmService;
+    private DataStoreInterface dataStoreInterface;
     private HadoopMonitor hadoopMonitor;
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        dataStore = new DataStoreImpl(conf);
+        dataStoreInterface = new DataStoreImpl(conf);
         dmContext = new DataMasterContext();
-        dmContext.setDataStore(dataStore);
+        dmContext.setDataStoreInterface(dataStoreInterface);
         dispatcher = new AsyncDispatcher();
         addIfService(dispatcher);
 
         dmContext.setDispatcher(dispatcher);
 
         //service to give database access to other POSUM processes
-        dmService = new DataMasterService(dmContext);
+        dmService = new DataMasterCommService(dmContext);
         dmService.init(conf);
         addIfService(dmService);
 
@@ -45,14 +45,6 @@ public class DataMaster extends CompositeService {
         addIfService(hadoopMonitor);
 
         super.serviceInit(conf);
-    }
-
-    @Override
-    protected void serviceStop() throws Exception {
-        if (dmService != null)
-            dmService.stop();
-
-        super.serviceStop();
     }
 
     public static void main(String[] args) {

@@ -58,14 +58,19 @@ public class RestClient {
     }
 
     public JSONObject getInfo(TrackingUI trackingUI, String path, String[] args) {
+        ClientResponse response;
         WebResource resource = client.resource(trackingUI.host).path(String.format(trackingUI.root + path, args));
         try {
-            resource.head();
+            response = resource.head();
+            if (response.getStatus() != 200) {
+                logger.warn("Could not connect to resource " + resource.toString());
+                return null;
+            }
         } catch (Exception e) {
-            logger.error("Could not connect to resource " + resource.toString());
+            logger.warn("Could not connect to resource " + resource.toString());
             return null;
         }
-        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+        response = resource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
 
         if (response.getStatus() != 200 || !response.getType().equals(MediaType.APPLICATION_JSON_TYPE)) {
             throw new POSUMException("Error during request to server: " + resource);
@@ -73,7 +78,7 @@ public class RestClient {
 
         try {
             JSONObject object = response.getEntity(JSONObject.class);
-            logger.debug("[RestClient] Raw response:" + object);
+            logger.trace("[RestClient] Raw response:" + object);
             return object;
         } catch (Exception e) {
             logger.error("Could not parse response as JSON ", e);

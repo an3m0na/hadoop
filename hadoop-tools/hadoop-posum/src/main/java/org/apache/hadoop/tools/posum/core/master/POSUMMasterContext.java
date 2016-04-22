@@ -9,6 +9,7 @@ import org.apache.hadoop.yarn.event.Dispatcher;
 public class POSUMMasterContext {
     private Dispatcher dispatcher;
     private DummyTokenSecretManager tokenSecretManager;
+    private MasterCommService commService;
 
     public void setDispatcher(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -26,4 +27,11 @@ public class POSUMMasterContext {
         return tokenSecretManager;
     }
 
+    public void setCommService(MasterCommService commService) {
+        this.commService = commService;
+    }
+
+    public MasterCommService getCommService(){
+        return commService;
+    }
 }

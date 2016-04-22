@@ -6,15 +6,17 @@ import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.tools.posum.common.records.protocol.POSUMMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.POSUMMasterProtocolPB;
-import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.reponse.impl.pb.SimpleResponsePBImpl;
+import org.apache.hadoop.tools.posum.common.records.request.impl.pb.HandleSimResultRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.request.impl.pb.RegistrationRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.*;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.HandleSimResultRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.RegistrationRequestProto;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -42,22 +44,36 @@ public class POSUMMasterProtocolPBClientImpl implements POSUMMasterProtocol, Clo
         }
     }
 
-    private static SimpleResponse wrapSimpleResponse(SimpleResponseProto proto) {
-        try {
-            Class<? extends SimpleResponsePBImpl> implClass =
-                    SimpleResponse.Type.fromProto(proto.getType()).getImplClass();
-            return implClass.getConstructor(SimpleResponseProto.class).newInstance(proto);
-        } catch (Exception e) {
-            throw new POSUMException("Could not construct response object", e);
-        }
-    }
-
     @Override
     public SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException {
         SimpleRequestProto requestProto =
                 ((SimpleRequestPBImpl) request).getProto();
         try {
-            return wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
+            return Utils.wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
+        } catch (ServiceException e) {
+            RPCUtil.unwrapAndThrowException(e);
+            return null;
+        }
+    }
+
+    @Override
+    public SimpleResponse handleSimulationResult(HandleSimResultRequest request) throws IOException, YarnException {
+        HandleSimResultRequestProto requestProto =
+                ((HandleSimResultRequestPBImpl) request).getProto();
+        try {
+            return Utils.wrapSimpleResponse(proxy.handleSimulationResult(null, requestProto));
+        } catch (ServiceException e) {
+            RPCUtil.unwrapAndThrowException(e);
+            return null;
+        }
+    }
+
+    @Override
+    public SimpleResponse registerProcess(RegistrationRequest request) throws IOException, YarnException {
+        RegistrationRequestProto requestProto =
+                ((RegistrationRequestPBImpl) request).getProto();
+        try {
+            return Utils.wrapSimpleResponse(proxy.registerProcess(null, requestProto));
         } catch (ServiceException e) {
             RPCUtil.unwrapAndThrowException(e);
             return null;
