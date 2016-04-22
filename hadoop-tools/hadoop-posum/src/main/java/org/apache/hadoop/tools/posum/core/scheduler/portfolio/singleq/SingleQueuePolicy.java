@@ -4,7 +4,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DOSAppAttempt;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.Priority;
@@ -872,12 +871,15 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     @Override
     public void assumeState(PluginPolicyState state) {
         this.usedResource = state.usedResource;
+        this.clusterResource = state.clusterResource;
+        this.usePortForNodeName = state.usePortForNodeName;
+        this.nodes = new ConcurrentHashMap<>();
         for (SQSchedulerNode node : state.nodes.values()) {
-            addNode(node.getRMNode());
+            this.nodes.put(node.getNodeID(), SQSchedulerNode.getInstance(nClass, node));
+            updateMaximumAllocation(node, true);
         }
         queue.setAvailableResourcesToQueue(Resources.subtract(clusterResource,
                 usedResource));
-        getMaximumResourceCapability(); //to update useConfiguredMaximumAllocationOnly
         for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> appEntry :
                 state.applications.entrySet()) {
             SchedulerApplication<? extends SQSAppAttempt> app = appEntry.getValue();
@@ -887,14 +889,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
             onAppAdded(newApp);
             SQSAppAttempt attempt = app.getCurrentAppAttempt();
             if (attempt != null) {
-                newApp.setCurrentAppAttempt(SQSAppAttempt.getInstance(
-                        aClass,
-                        attempt.getApplicationAttemptId(),
-                        app.getUser(),
-                        app.getQueue(),
-                        new ActiveUsersManager(app.getQueue().getMetrics()),
-                        this.rmContext)
-                );
+                newApp.setCurrentAppAttempt(SQSAppAttempt.getInstance(aClass, attempt));
                 queue.getMetrics().submitAppAttempt(app.getUser());
                 onAppAttemptAdded(newApp);
             }
@@ -904,7 +899,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
 
     @Override
     public PluginPolicyState exportState() {
-        return new PluginPolicyState(this.usedResource, this.queue, this.nodes, this.applications);
+        return new PluginPolicyState(this.usedResource, this.queue, this.nodes, this.applications, this.clusterResource, getMaximumResourceCapability(), this.usePortForNodeName);
     }
 
 }
