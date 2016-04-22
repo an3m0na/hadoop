@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
+import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -11,6 +12,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.util.Records;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -50,9 +53,9 @@ public class HadoopAPIClient {
                 app.setFinishTime(rawApp.getLong("finishedTime"));
                 app.setName(rawApp.getString("name"));
                 app.setUser(rawApp.getString("user"));
-                app.setState(rawApp.getString("state"));
-                app.setStatus(rawApp.getString("finalStatus"));
-                app.setTrackingUI(rawApp.getString("trackingUI"));
+                app.setState(YarnApplicationState.valueOf(rawApp.getString("state")));
+                app.setStatus(FinalApplicationStatus.valueOf(rawApp.getString("finalStatus")));
+                app.setTrackingUI(RestClient.TrackingUI.fromLabel(rawApp.getString("trackingUI")));
                 apps.add(app);
             }
         } catch (JSONException e) {
@@ -106,7 +109,7 @@ public class HadoopAPIClient {
             job.setFinishTime(rawJob.getLong("finishTime"));
             job.setName(rawJob.getString("name"));
             job.setUser(rawJob.getString("user"));
-            job.setState(rawJob.getString("state"));
+            job.setState(JobState.valueOf(rawJob.getString("state")));
             job.setCompletedMaps(rawJob.getInt("mapsCompleted"));
             job.setCompletedReduces(rawJob.getInt("reducesCompleted"));
             job.setTotalMapTasks(rawJob.getInt("mapsTotal"));
@@ -139,7 +142,7 @@ public class HadoopAPIClient {
             job.setFinishTime(rawJob.getLong("finishTime"));
             job.setName(rawJob.getString("name"));
             job.setUser(rawJob.getString("user"));
-            job.setState(rawJob.getString("state"));
+            job.setState(JobState.valueOf(rawJob.getString("state")));
             job.setMapProgress(new Double(rawJob.getDouble("mapProgress")).floatValue());
             job.setReduceProgress(new Double(rawJob.getDouble("reduceProgress")).floatValue());
             job.setCompletedMaps(rawJob.getInt("mapsCompleted"));

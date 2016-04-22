@@ -17,11 +17,20 @@ public class FifoAppAttempt extends SQSAppAttempt {
         super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
     }
 
+    public FifoAppAttempt(SQSAppAttempt inner) {
+        super(inner);
+    }
+
     public Long getSubmitTime() {
         return submitTime;
     }
 
     public void setSubmitTime(Long submitTime) {
         this.submitTime = submitTime;
+    }
+
+    @Override
+    public String toString() {
+        return "FifoAttempt_" + getApplicationId() + "=" + submitTime;
     }
 }

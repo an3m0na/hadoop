@@ -7,8 +7,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.FifoPolicy;
+import org.apache.hadoop.tools.posum.common.util.PolicyMap;
+import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -34,57 +34,26 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by ane on 2/4/16.
  */
-public class PortfolioMetaScheduler extends
+class PortfolioMetaScheduler extends
         AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode> implements
-        Configurable {
+        Configurable, MetaSchedulerInterface {
 
     private static Log logger = LogFactory.getLog(PortfolioMetaScheduler.class);
 
     private Configuration conf;
     private Configuration posumConf;
     private MetaSchedulerCommService commService;
-    private Map<String, Class<? extends PluginPolicy>> policies;
+    private PolicyMap policies;
 
-    private Class<? extends PluginPolicy> currentPolicyClass = DefaultPolicy.FIFO.implClass;
+    private Class<? extends PluginPolicy> currentPolicyClass;
     private PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode, ?> currentPolicy;
     private ReadWriteLock lock = new ReentrantReadWriteLock();
     private Lock readLock = lock.readLock();
     private Lock writeLock = lock.writeLock();
 
-    private enum DefaultPolicy {
-        FIFO(FifoPolicy.class),
-        DATA(DataOrientedPolicy.class);
-
-        Class<? extends PluginPolicy> implClass;
-
-        DefaultPolicy(Class<? extends PluginPolicy> implClass) {
-            this.implClass = implClass;
-        }
-    }
 
     public PortfolioMetaScheduler() {
         super(PortfolioMetaScheduler.class.getName());
-    }
-
-    private void preparePolicies() {
-        String policyMap = posumConf.get(POSUMConfiguration.SCHEDULER_POLICY_MAP);
-        policies = new HashMap<>(DefaultPolicy.values().length);
-        if (policyMap != null) {
-            try {
-                for (String entry : policyMap.split(",")) {
-                    String[] entryParts = entry.split("=");
-                    if (entryParts.length != 2)
-                        policies.put(entryParts[0],
-                                (Class<? extends PluginPolicy>) getClass().getClassLoader().loadClass(entryParts[1]));
-                }
-            } catch (Exception e) {
-                throw new POSUMException("Could not parse policy map");
-            }
-        } else {
-            for (DefaultPolicy policy : DefaultPolicy.values()) {
-                policies.put(policy.name(), policy.implClass);
-            }
-        }
     }
 
     private void initPolicy() {
@@ -93,22 +62,15 @@ public class PortfolioMetaScheduler extends
         } catch (InstantiationException | IllegalAccessException e) {
             throw new POSUMException("Could not instantiate scheduler for class " + currentPolicyClass, e);
         }
-        currentPolicy.initializePlugin(posumConf);
+        currentPolicy.initializePlugin(posumConf, commService);
         if (rmContext != null)
             currentPolicy.setRMContext(rmContext);
         logger.debug("Initializing current policy");
         currentPolicy.init(conf);
     }
 
-    private void transferState(PluginPolicy oldPolicy) {
-        //TODO transfer everything
-        if (isInState(STATE.STARTED)) {
-            logger.debug("Starting current policy");
-            currentPolicy.start();
-        }
-    }
-
-    protected void changeToPolicy(String policyName) {
+    @Override
+    public void changeToPolicy(String policyName) {
         logger.debug("Changing policy to " + policyName);
         Class<? extends PluginPolicy> newClass = policies.get(policyName);
         if (newClass == null)
@@ -119,19 +81,18 @@ public class PortfolioMetaScheduler extends
             if (isInState(STATE.INITED) || isInState(STATE.STARTED)) {
                 PluginPolicy oldPolicy = currentPolicy;
                 initPolicy();
-                if (oldPolicy != null)
-                    transferState(oldPolicy);
+                if (oldPolicy != null) {
+                    currentPolicy.transferStateFromPolicy(oldPolicy);
+                    if (isInState(STATE.STARTED)) {
+                        logger.debug("Starting current policy");
+                        currentPolicy.start();
+                    }
+                }
             }
             writeLock.unlock();
             logger.debug("Policy changed successfully");
         }
 
-    }
-
-    private void initComm() {
-        commService = new MetaSchedulerCommService(this);
-        commService.init(posumConf);
-        commService.start();
     }
 
     /**
@@ -153,15 +114,17 @@ public class PortfolioMetaScheduler extends
         logger.debug("Service init called for meta");
         this.posumConf = POSUMConfiguration.newInstance();
         setConf(conf);
-        preparePolicies();
-        initComm();
+        policies = new PolicyMap(posumConf);
+        currentPolicyClass = policies.getDefaultPolicyClass();
+        commService = new MetaSchedulerCommService(this);
+        commService.init(posumConf);
         initPolicy();
     }
 
     @Override
     public void serviceStart() throws Exception {
         logger.debug("Starting meta");
-
+        commService.start();
         readLock.lock();
         try {
             currentPolicy.start();

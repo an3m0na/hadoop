@@ -57,7 +57,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 
      JobState getState();
 
-     void setState(String state);
+     void setState(JobState state);
 
      Float getMapProgress();
 

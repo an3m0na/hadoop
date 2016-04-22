@@ -22,11 +22,11 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 
      YarnApplicationState getState();
 
-     void setState(String state);
+     void setState(YarnApplicationState state);
 
      FinalApplicationStatus getStatus();
 
-     void setStatus(String status);
+     void setStatus(FinalApplicationStatus status);
 
      Long getFinishTime();
 
@@ -34,5 +34,5 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 
      RestClient.TrackingUI getTrackingUI();
 
-     void setTrackingUI(String trackingUI);
+     void setTrackingUI(RestClient.TrackingUI trackingUI);
 }

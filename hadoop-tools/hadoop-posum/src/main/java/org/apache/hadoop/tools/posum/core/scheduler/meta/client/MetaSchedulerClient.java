@@ -5,11 +5,13 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.records.reponse.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
@@ -17,31 +19,31 @@ import java.io.IOException;
 /**
  * Created by ane on 2/9/16.
  */
-public class MetaSchedulerClient extends AbstractService {
+public class MetaSchedulerClient extends AbstractService implements MetaSchedulerInterface{
 
     private static Log logger = LogFactory.getLog(MetaSchedulerClient.class);
 
-    private Configuration posumConf;
+    private String connectAddress;
 
-    public MetaSchedulerClient() {
+    public MetaSchedulerClient(String connectAddress) {
         super(MetaSchedulerClient.class.getName());
+        this.connectAddress = connectAddress;
     }
 
     private MetaSchedulerProtocol metaClient;
 
     @Override
-    protected void serviceInit(Configuration conf) throws Exception {
-        super.serviceInit(conf);
-        this.posumConf = conf;
-    }
-
-    @Override
     protected void serviceStart() throws Exception {
         final Configuration conf = getConfig();
         try {
-            metaClient = new StandardClientProxyFactory<>(conf, MetaSchedulerProtocol.class).createProxy();
+            metaClient = new StandardClientProxyFactory<>(conf,
+                    connectAddress,
+                    POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT,
+                    POSUMConfiguration.SCHEDULER_PORT_DEFAULT,
+                    MetaSchedulerProtocol.class).createProxy();
+            checkPing();
         } catch (IOException e) {
-            throw new POSUMException("Could not init POSUMMaster client", e);
+            throw new POSUMException("Could not init MetaScheduler client", e);
         }
         super.serviceStart();
     }
@@ -54,28 +56,25 @@ public class MetaSchedulerClient extends AbstractService {
         super.serviceStop();
     }
 
-    private <T> SimpleResponse<T> handleError(String type, SimpleResponse<T> response) {
-        if (!response.getSuccessful()) {
-            throw new POSUMException("Request type " + type + " returned with error: " + "\n" + response.getText(),
-                    response.getException());
-        }
-        return response;
-    }
-
     private SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
         return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type));
     }
 
     private SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
         try {
-            return handleError(kind, metaClient.handleSimpleRequest(request));
+            return Utils.handleError(kind, metaClient.handleSimpleRequest(request));
         } catch (IOException | YarnException e) {
             throw new POSUMException("Error during RPC call", e);
         }
     }
 
-    public void checkPing() {
+    private void checkPing() {
         sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
         logger.info("Successfully connected to MetaScheduler");
+    }
+
+    @Override
+    public void changeToPolicy(String policyName) {
+        sendSimpleRequest("changeToPolicy", SimpleRequest.newInstance(SimpleRequest.Type.CHANGE_POLICY, policyName));
     }
 }

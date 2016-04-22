@@ -66,6 +66,7 @@ public class FifoPolicy extends SingleQueuePolicy<
     @Override
     protected void updateAppPriority(SchedulerApplication<FifoAppAttempt> app) {
         ApplicationId id = app.getCurrentAppAttempt().getApplicationId();
+        //TODO get submit time some other way (from the conf file) since information will be lost on scheduler change
         Long submitTime = submitTimes.get(id);
         if (submitTime == null) {
             submitTime = System.currentTimeMillis();
@@ -76,7 +77,6 @@ public class FifoPolicy extends SingleQueuePolicy<
 
     @Override
     protected void assignFromQueue(SQSchedulerNode node) {
-        logger.debug("Apps in queue " + orderedApps);
         for (SchedulerApplication<FifoAppAttempt> app : orderedApps) {
             assignToApp(node, app);
         }

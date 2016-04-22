@@ -1,11 +1,15 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.mongojack.DBQuery;
 
@@ -17,8 +21,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by ane on 2/9/16.
  */
-public class DataStoreImpl implements DataStore {
+public class DataStoreImpl implements DataStoreInterface {
 
+    private static Log logger = LogFactory.getLog(DataStoreImpl.class);
+
+    private final Configuration conf;
     private MongoJackConnector conn;
     private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private Lock readLock = lock.readLock();
@@ -31,6 +38,7 @@ public class DataStoreImpl implements DataStore {
         for (DataEntityType collection : DataEntityType.values()) {
             conn.addCollection(collection);
         }
+        this.conf = conf;
     }
 
     @Override
@@ -84,11 +92,18 @@ public class DataStoreImpl implements DataStore {
         } finally {
             readLock.unlock();
         }
+        if (profiles.size() == 1)
+            return profiles.get(0);
         if (profiles.size() > 1)
             throw new YarnRuntimeException("Found too many profiles in database for app " + appId);
-        if (profiles.size() < 1)
-            return null;
-        return profiles.get(0);
+
+        //if not found, force the reading of the configuration
+        try {
+            return ClusterInfoCollector.getSubmittedJobInfo(conf, appId);
+        } catch (Exception e) {
+            logger.debug("Could not retrieve job info for app " + appId, e);
+        }
+        return null;
 
     }
 
