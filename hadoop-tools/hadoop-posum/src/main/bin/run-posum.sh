@@ -88,7 +88,8 @@ runMaster() {
     CMD=`pgrep mongod > /dev/null; echo $?`
     if [[ $CMD != 0 ]]; then
       echo " >> Starting mongod"
-      mongod --fork --logpath $HADOOP_HOME/logs/mongodb.log
+      mongod --fork --logpath $HADOOP_HOME/logs/mongodb.log --bind_ip 127.0.0.1
+      exit
     fi
 
     args="-inputsomething ${input}"
