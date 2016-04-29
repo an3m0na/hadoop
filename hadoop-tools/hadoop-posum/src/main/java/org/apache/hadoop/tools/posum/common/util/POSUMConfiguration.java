@@ -8,6 +8,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
  */
 public class POSUMConfiguration {
 
+
     public static Configuration newInstance() {
         Configuration conf = new Configuration();
         conf.addResource("posum-core.xml");
@@ -42,21 +43,21 @@ public class POSUMConfiguration {
     public static final String PREDICTOR_CLASS = PREDICTOR_PREFIX + "class";
 
     public static final String DATABASE_URL = DATABASE_PREFIX + "url";
-    public static final String DATABASE_URL_DEFAULT = "127.0.0.1:27017";
+    public static final String DATABASE_URL_DEFAULT = "127.0.0.1:217017";
 
     public static final String DATABASE_NAME = DATABASE_PREFIX + "name";
     public static final String DATABASE_NAME_DEFAULT = "posum";
 
     public static final String DM_BIND_ADDRESS = DATABASE_PREFIX + "bind-host";
     public static final String DM_ADDRESS_DEFAULT = "127.0.0.1";
-    public static final int DM_PORT_DEFAULT = 7000;
+    public static final int DM_PORT_DEFAULT = 17000;
     public static final String DM_SERVICE_THREAD_COUNT = DATABASE_PREFIX + "conn.thread-count";
     public static final int DM_SERVICE_THREAD_COUNT_DEFAULT = 50;
 
     public static final String PM_BIND_ADDRESS = CORE_PREFIX + "bind-host";
     public static final String PM_ADDRESS = CORE_PREFIX + "address";
     public static final String PM_ADDRESS_DEFAULT = "127.0.0.1";
-    public static final int PM_PORT_DEFAULT = 7010;
+    public static final int PM_PORT_DEFAULT = 17010;
     public static final String PM_SERVICE_THREAD_COUNT = CORE_PREFIX + "conn.thread-count";
     public static final int PM_SERVICE_THREAD_COUNT_DEFAULT = 50;
 
@@ -73,7 +74,7 @@ public class POSUMConfiguration {
 
     public static final String SCHEDULER_BIND_ADDRESS = SCHEDULER_PREFIX + "bind-host";
     public static final String SCHEDULER_ADDRESS_DEFAULT = "127.0.0.1";
-    public static final int SCHEDULER_PORT_DEFAULT = 7020;
+    public static final int SCHEDULER_PORT_DEFAULT = 17020;
     public static final String SCHEDULER_SERVICE_THREAD_COUNT = SCHEDULER_PREFIX + "conn.thread-count";
     public static final int SCHEDULER_SERVICE_THREAD_COUNT_DEFAULT = 10;
 
@@ -87,7 +88,14 @@ public class POSUMConfiguration {
 
     public static final String SIMULATOR_BIND_ADDRESS = SIMULTATOR_PREFIX + "bind-host";
     public static final String SIMULATOR_ADDRESS_DEFAULT = "127.0.0.1";
-    public static final int SIMULATOR_PORT_DEFAULT = 7030;
+    public static final int SIMULATOR_PORT_DEFAULT = 17030;
     public static final String SIMULATOR_SERVICE_THREAD_COUNT = SIMULTATOR_PREFIX + "conn.thread-count";
     public static final int SIMULATOR_SERVICE_THREAD_COUNT_DEFAULT = 10;
+
+    public static final String MASTER_WEBAPP_PORT = CORE_PREFIX + "webapp.port";
+    public static final int MASTER_WEBAPP_PORT_DEFAULT = 18000;
+    public static final String SCHEDULER_WEBAPP_PORT = SCHEDULER_PREFIX + "webapp.port";
+    public static final int SCHEDULER_WEBAPP_PORT_DEFAULT = 18010;
+
+
 }

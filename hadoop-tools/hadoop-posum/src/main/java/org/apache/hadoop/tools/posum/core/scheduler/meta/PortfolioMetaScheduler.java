@@ -10,6 +10,8 @@ import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
+import org.apache.hadoop.tools.posum.web.MetaSchedulerWebApp;
+import org.apache.hadoop.tools.posum.web.POSUMWebApp;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.proto.YarnServiceProtos;
@@ -34,7 +36,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by ane on 2/4/16.
  */
-class PortfolioMetaScheduler extends
+public class PortfolioMetaScheduler extends
         AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode> implements
         Configurable, MetaSchedulerInterface {
 
@@ -50,6 +52,8 @@ class PortfolioMetaScheduler extends
     private ReadWriteLock lock = new ReentrantReadWriteLock();
     private Lock readLock = lock.readLock();
     private Lock writeLock = lock.writeLock();
+
+    private POSUMWebApp webApp;
 
 
     public PortfolioMetaScheduler() {
@@ -119,6 +123,8 @@ class PortfolioMetaScheduler extends
         commService = new MetaSchedulerCommService(this);
         commService.init(posumConf);
         initPolicy();
+        webApp = new MetaSchedulerWebApp(this,
+                posumConf.getInt(POSUMConfiguration.SCHEDULER_WEBAPP_PORT, POSUMConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT));
     }
 
     @Override
@@ -131,6 +137,7 @@ class PortfolioMetaScheduler extends
         } finally {
             readLock.unlock();
         }
+        webApp.start();
     }
 
     @Override
@@ -147,6 +154,7 @@ class PortfolioMetaScheduler extends
         } finally {
             readLock.unlock();
         }
+        webApp.stop();
     }
 
     @Override
