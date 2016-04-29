@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.PortfolioMetaScheduler;
@@ -110,19 +111,33 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
 
         ObjectNode policies = mapper.createObjectNode();
         policies.put("map", parsePolicyMap());
+        policies.put("list", parseRecentChoices());
         ret.put("policies", policies);
 
         return wrapResult(ret);
     }
 
     private JsonNode parsePolicyMap() {
-        ObjectNode retObject = mapper.createObjectNode();
+        ObjectNode ret = mapper.createObjectNode();
         for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfoEntry : scheduler.getPolicyMap().entrySet()) {
             ObjectNode policyInfoObject = mapper.createObjectNode();
             policyInfoObject.put("time", policyInfoEntry.getValue().getUsageTime());
             policyInfoObject.put("number", policyInfoEntry.getValue().getUsageNumber());
-            retObject.put(policyInfoEntry.getKey(), policyInfoObject);
+            ret.put(policyInfoEntry.getKey(), policyInfoObject);
         }
-        return retObject;
+        return ret;
+    }
+
+    private JsonNode parseRecentChoices() {
+        ObjectNode ret = mapper.createObjectNode();
+        ArrayNode times = mapper.createArrayNode();
+        ArrayNode choices = mapper.createArrayNode();
+        for (Map.Entry<Long, String> choiceEntry : scheduler.getRecentChoices().entrySet()) {
+            times.add(choiceEntry.getKey());
+            choices.add(choiceEntry.getValue());
+        }
+        ret.put("times", times);
+        ret.put("policies", choices);
+        return ret;
     }
 }
