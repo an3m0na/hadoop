@@ -35,7 +35,9 @@ function TabManager(env) {
             tabs[tab.id] = tab;
         });
 
-        setInterval(function(){ self.load(tabs[env.state]); }, env.refreshInterval);
+        setInterval(function () {
+            self.load(tabs[env.state]);
+        }, env.refreshInterval);
 
         return self;
     };
@@ -63,28 +65,50 @@ function TabManager(env) {
                 $.each(data.policies.map, function (k, v) {
                     var trace = {
                         x: [Math.round(v.time / totalTime * 100)],
-                        y: ["Choice"],
+                        y: ["Policy"],
                         name: k,
-                        orientation: 'h',
+                        orientation: "h",
                         marker: {
                             color: colors[crtColor++],
                             width: 1
                         },
-                        type: 'bar',
+                        type: "bar"
                     };
                     chartData.push(trace);
                 });
                 var layout = {
-                    title: "Scheduler Choices",
-                    barmode: 'stack',
+                    title: "Policy Usage",
+                    barmode: "stack",
                     xaxis: {
                         tickmode: "linear",
                         tick0: 0,
-                        dtick: 10
+                        dtick: 10,
+                        title: "Percentage of time spent running policy"
                     }
                 };
 
-                Plotly.newPlot('myDiv', chartData, layout);
+                Plotly.newPlot('sch_map', chartData, layout);
+
+                var choiceList = data.policies.list;
+                var trace = {
+                    x: choiceList.times,
+                    y: choiceList.policies,
+                    mode: "lines+markers",
+                    line: {shape: "hv"},
+                    type: "scatter"
+                };
+                layout = {
+                    title: "Policy Choices",
+                    xaxis: {
+                        title: "Time",
+                        type: "date"
+                    },
+                    yaxis: {
+                        title: "Policy"
+                    }
+                };
+
+                Plotly.newPlot("sch_list", [trace], layout);
             });
         }
     };

@@ -93,7 +93,7 @@ public class PortfolioMetaScheduler extends
             logger.error("Error writing to choice log ", e);
         }
         if (recentChoices.size() == maxChoices)
-            recentChoices.clear();
+            recentChoices.remove(recentChoices.lastKey());
         recentChoices.put(timestamp, policyName);
         if (!currentPolicyInfo.equals(newClass)) {
             currentPolicyInfo.stop(timestamp);

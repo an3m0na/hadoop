@@ -101,7 +101,7 @@ public class POSUMConfiguration {
     public static final String SCHEDULER_METRICS_DIR_DEFAULT = "logs";
 
     public static final String MAX_SCHEDULER_CHOICE_BUFFER = SCHEDULER_PREFIX + "choices.buffer";
-    public static final int MAX_SCHEDULER_CHOICE_BUFFER_DEFAULT = 100;
+    public static final int MAX_SCHEDULER_CHOICE_BUFFER_DEFAULT = 50;
 
 
 }
