@@ -103,6 +103,8 @@ public class POSUMWebApp extends HttpServlet {
             throws IOException {
         response.setContentType("text/json");
         response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "OPTIONS, GET, POST");
 
         response.getWriter().println(result.toString());
         ((Request) request).setHandled(true);
