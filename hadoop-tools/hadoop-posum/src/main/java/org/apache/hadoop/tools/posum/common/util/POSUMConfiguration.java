@@ -43,7 +43,7 @@ public class POSUMConfiguration {
     public static final String PREDICTOR_CLASS = PREDICTOR_PREFIX + "class";
 
     public static final String DATABASE_URL = DATABASE_PREFIX + "url";
-    public static final String DATABASE_URL_DEFAULT = "127.0.0.1:217017";
+    public static final String DATABASE_URL_DEFAULT = "127.0.0.1:27017";
 
     public static final String DATABASE_NAME = DATABASE_PREFIX + "name";
     public static final String DATABASE_NAME_DEFAULT = "posum";
@@ -78,10 +78,10 @@ public class POSUMConfiguration {
     public static final String SCHEDULER_SERVICE_THREAD_COUNT = SCHEDULER_PREFIX + "conn.thread-count";
     public static final int SCHEDULER_SERVICE_THREAD_COUNT_DEFAULT = 10;
 
+    //should be a comma separated list of NAME=CLASS groups
     public static final String SCHEDULER_POLICY_MAP = SCHEDULER_PREFIX + "policies";
-    public static final String DEFAULT_POLICY = SCHEDULER_PREFIX + "defualt";
-    public static final String DEFAULT_POLICY_DEFAULT =
-            "org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy";
+    public static final String DEFAULT_POLICY = SCHEDULER_PREFIX + "default";
+    public static final String DEFAULT_POLICY_DEFAULT = "FIFO";
 
     public static final String SIMULATION_INTERVAL = SIMULTATOR_PREFIX + "interval";
     public static final long SIMULATION_INTERVAL_DEFAULT = 10000;
@@ -96,6 +96,12 @@ public class POSUMConfiguration {
     public static final int MASTER_WEBAPP_PORT_DEFAULT = 18000;
     public static final String SCHEDULER_WEBAPP_PORT = SCHEDULER_PREFIX + "webapp.port";
     public static final int SCHEDULER_WEBAPP_PORT_DEFAULT = 18010;
+
+    public static final String SCHEDULER_METRICS_DIR = SCHEDULER_PREFIX + "metrics.dir";
+    public static final String SCHEDULER_METRICS_DIR_DEFAULT = "logs";
+
+    public static final String MAX_SCHEDULER_CHOICE_BUFFER = SCHEDULER_PREFIX + "choices.buffer";
+    public static final int MAX_SCHEDULER_CHOICE_BUFFER_DEFAULT = 100;
 
 
 }

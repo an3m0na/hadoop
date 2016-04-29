@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.PortfolioMetaScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.mortbay.jetty.Handler;
@@ -9,6 +10,9 @@ import org.mortbay.jetty.handler.AbstractHandler;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Map;
 
 /**
  * Created by ane on 4/29/16.
@@ -31,8 +35,22 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
                 try {
                     if (target.startsWith("/ajax")) {
                         // json request
-                        //TODO isolate call name and apply handler
-                        sendResult(request, response, generateRealTimeTrackingMetrics());
+                        String call = target.substring("/ajax".length());
+                        JsonNode ret;
+                        try {
+                            switch (call) {
+                                case "/metrics":
+                                    ret = generateRealTimeTrackingMetrics();
+                                    break;
+                                default:
+                                    ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
+                            }
+                        } catch (Exception e) {
+                            StringWriter traceWriter = new StringWriter();
+                            e.printStackTrace(new PrintWriter(traceWriter));
+                            ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), traceWriter.toString());
+                        }
+                        sendResult(request, response, ret);
                     } else {
                         // static resource request
                         response.setCharacterEncoding("utf-8");
@@ -88,7 +106,19 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
 
         ret.put("running.applications", rootMetrics.getAppsRunning());
         ret.put("running.containers", rootMetrics.getAllocatedContainers());
+        ret.put("policies.map", parsePolicyMap());
 
         return wrapResult(ret);
+    }
+
+    private JsonNode parsePolicyMap() {
+        ObjectNode retObject = mapper.createObjectNode();
+        for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfoEntry : scheduler.getPolicyMap().entrySet()) {
+            ObjectNode policyInfoObject = mapper.createObjectNode();
+            policyInfoObject.put("time", policyInfoEntry.getValue().getUsageTime());
+            policyInfoObject.put("number", policyInfoEntry.getValue().getUsageNumber());
+            retObject.put(policyInfoEntry.getKey(), policyInfoObject);
+        }
+        return retObject;
     }
 }

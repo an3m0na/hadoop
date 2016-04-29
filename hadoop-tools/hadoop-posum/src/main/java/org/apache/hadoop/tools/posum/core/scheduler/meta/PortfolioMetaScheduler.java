@@ -27,8 +27,11 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.QueueEntit
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -47,11 +50,15 @@ public class PortfolioMetaScheduler extends
     private MetaSchedulerCommService commService;
     private PolicyMap policies;
 
-    private Class<? extends PluginPolicy> currentPolicyClass;
+    private PolicyMap.PolicyInfo currentPolicyInfo;
     private PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode, ?> currentPolicy;
     private ReadWriteLock lock = new ReentrantReadWriteLock();
     private Lock readLock = lock.readLock();
     private Lock writeLock = lock.writeLock();
+
+    private BufferedWriter schedulerChoiceLog;
+    private ConcurrentSkipListMap<Long, String> recentChoices;
+    private int maxChoices;
 
     private POSUMWebApp webApp;
 
@@ -62,9 +69,9 @@ public class PortfolioMetaScheduler extends
 
     private void initPolicy() {
         try {
-            currentPolicy = currentPolicyClass.newInstance();
+            currentPolicy = currentPolicyInfo.getImplClass().newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            throw new POSUMException("Could not instantiate scheduler for class " + currentPolicyClass, e);
+            throw new POSUMException("Could not instantiate scheduler for class " + currentPolicyInfo.getImplClass(), e);
         }
         currentPolicy.initializePlugin(posumConf, commService);
         if (rmContext != null)
@@ -76,12 +83,23 @@ public class PortfolioMetaScheduler extends
     @Override
     public void changeToPolicy(String policyName) {
         logger.debug("Changing policy to " + policyName);
-        Class<? extends PluginPolicy> newClass = policies.get(policyName);
+        PolicyMap.PolicyInfo newClass = policies.get(policyName);
         if (newClass == null)
             throw new POSUMException("Target policy does not exist: " + policyName);
-        if (!currentPolicyClass.equals(newClass)) {
+        Long timestamp = System.currentTimeMillis();
+        try {
+            schedulerChoiceLog.write(policyName + "," + timestamp + "," + (timestamp - getStartTime()) + "\n");
+        } catch (IOException e) {
+            logger.error("Error writing to choice log ", e);
+        }
+        if (recentChoices.size() == maxChoices)
+            recentChoices.clear();
+        recentChoices.put(timestamp, policyName);
+        if (!currentPolicyInfo.equals(newClass)) {
+            currentPolicyInfo.stop(timestamp);
+            newClass.start(timestamp);
             writeLock.lock();
-            currentPolicyClass = newClass;
+            currentPolicyInfo = newClass;
             if (isInState(STATE.INITED) || isInState(STATE.STARTED)) {
                 PluginPolicy oldPolicy = currentPolicy;
                 initPolicy();
@@ -96,7 +114,14 @@ public class PortfolioMetaScheduler extends
             writeLock.unlock();
             logger.debug("Policy changed successfully");
         }
+    }
 
+    public ConcurrentSkipListMap<Long, String> getRecentChoices() {
+        return recentChoices;
+    }
+
+    public PolicyMap getPolicyMap() {
+        return policies;
     }
 
     /**
@@ -119,10 +144,21 @@ public class PortfolioMetaScheduler extends
         this.posumConf = POSUMConfiguration.newInstance();
         setConf(conf);
         policies = new PolicyMap(posumConf);
-        currentPolicyClass = policies.getDefaultPolicyClass();
+        currentPolicyInfo = policies.getDefaultPolicy();
+        currentPolicyInfo.start(System.currentTimeMillis());
         commService = new MetaSchedulerCommService(this);
         commService.init(posumConf);
         initPolicy();
+
+        maxChoices = posumConf.getInt(POSUMConfiguration.MAX_SCHEDULER_CHOICE_BUFFER,
+                POSUMConfiguration.MAX_SCHEDULER_CHOICE_BUFFER_DEFAULT);
+        recentChoices = new ConcurrentSkipListMap<>();
+        String metricsOutputDir = posumConf.get(POSUMConfiguration.SCHEDULER_METRICS_DIR,
+                POSUMConfiguration.SCHEDULER_METRICS_DIR_DEFAULT);
+        schedulerChoiceLog = new BufferedWriter(
+                new FileWriter(metricsOutputDir + "/jobruntime.csv"));
+        schedulerChoiceLog.write("SCHEDULER,choice_time,relative_choice_time" + "\n");
+        schedulerChoiceLog.flush();
         webApp = new MetaSchedulerWebApp(this,
                 posumConf.getInt(POSUMConfiguration.SCHEDULER_WEBAPP_PORT, POSUMConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT));
     }

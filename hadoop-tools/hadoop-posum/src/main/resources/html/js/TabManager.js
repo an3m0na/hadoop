@@ -13,6 +13,9 @@ function TabManager(env) {
 
     self.switchToTab = function (name) {
         tabContainers.hide();
+        if (name === "scheduler") {
+            self.load();
+        }
         var tab = tabs[name];
         if (!tab)
             tabs.none.container.show();
@@ -35,8 +38,6 @@ function TabManager(env) {
             tabs[tab.id] = tab;
         });
 
-        self.load();
-
         return self;
     };
 
@@ -50,7 +51,10 @@ function TabManager(env) {
         self.switchToTab(newState);
     };
 
-    self.load = function (data) {
+    self.load = function () {
+        env.comm.requestData(env.comm.schedulerPath + "/metrics", function (data) {
+            console.log(data);
+        });
         var trace1 = {
             x: [20, 14, 23],
             y: ['giraffes', 'orangutans', 'monkeys'],
