@@ -9,13 +9,10 @@ function TabManager(env) {
     var tabs = {};
     var navBar = $("#navbar");
     var navItems = navBar.find("li");
-    console.log(navItems);
+    var colors = ["#C2F0FF", "#FFFFB2", "#D1D1FF", "#FFC2E0", "#D1FFC2", "#FFE0D1", "#B2F0E0", "#D1E0E0"];
 
     self.switchToTab = function (name) {
         tabContainers.hide();
-        if (name === "scheduler") {
-            self.load();
-        }
         var tab = tabs[name];
         if (!tab)
             tabs.none.container.show();
@@ -38,6 +35,8 @@ function TabManager(env) {
             tabs[tab.id] = tab;
         });
 
+        setInterval(function(){ self.load(tabs[env.state]); }, env.refreshInterval);
+
         return self;
     };
 
@@ -51,42 +50,43 @@ function TabManager(env) {
         self.switchToTab(newState);
     };
 
-    self.load = function () {
-        env.comm.requestData(env.comm.schedulerPath + "/metrics", function (data) {
-            console.log(data);
-        });
-        var trace1 = {
-            x: [20, 14, 23],
-            y: ['giraffes', 'orangutans', 'monkeys'],
-            name: 'SF Zoo',
-            orientation: 'h',
-            marker: {
-                color: 'rgba(55,128,191,0.6)',
-                width: 1
-            },
-            type: 'bar'
-        };
+    self.load = function (tab) {
+        if (tab.id == "scheduler") {
+            var path = env.isTest ? "/html/js/scheduler_metrics.json" : env.comm.schedulerPath + "/metrics";
+            env.comm.requestData(path, function (data) {
+                var totalTime = 0;
+                var chartData = [];
+                var crtColor = 0;
+                $.each(data.policies.map, function (k, v) {
+                    totalTime += v.time
+                });
+                $.each(data.policies.map, function (k, v) {
+                    var trace = {
+                        x: [Math.round(v.time / totalTime * 100)],
+                        y: ["Choice"],
+                        name: k,
+                        orientation: 'h',
+                        marker: {
+                            color: colors[crtColor++],
+                            width: 1
+                        },
+                        type: 'bar',
+                    };
+                    chartData.push(trace);
+                });
+                var layout = {
+                    title: "Scheduler Choices",
+                    barmode: 'stack',
+                    xaxis: {
+                        tickmode: "linear",
+                        tick0: 0,
+                        dtick: 10
+                    }
+                };
 
-        var trace2 = {
-            x: [12, 18, 29],
-            y: ['giraffes', 'orangutans', 'monkeys'],
-            name: 'LA Zoo',
-            orientation: 'h',
-            type: 'bar',
-            marker: {
-                color: 'rgba(255,153,51,0.6)',
-                width: 1
-            }
-        };
-
-        var data = [trace1, trace2];
-
-        var layout = {
-            title: 'Colored Bar Chart',
-            barmode: 'stack'
-        };
-
-        Plotly.newPlot('myDiv', data, layout);
+                Plotly.newPlot('myDiv', chartData, layout);
+            });
+        }
     };
 
 }
