@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.core.master;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
@@ -14,6 +16,7 @@ import org.apache.hadoop.yarn.event.Dispatcher;
  * Created by ane on 2/4/16.
  */
 public class POSUMMaster extends CompositeService {
+    private static Log logger = LogFactory.getLog(POSUMMaster.class);
 
     private Dispatcher dispatcher;
     private MetaSchedulerClient metaClient;
@@ -46,8 +49,12 @@ public class POSUMMaster extends CompositeService {
         addIfService(orchestrator);
         dispatcher.register(POSUMEventType.class, orchestrator);
 
-        webApp = new MasterWebApp(conf.getInt(POSUMConfiguration.MASTER_WEBAPP_PORT,
-                POSUMConfiguration.MASTER_WEBAPP_PORT_DEFAULT));
+        try {
+            webApp = new MasterWebApp(conf.getInt(POSUMConfiguration.MASTER_WEBAPP_PORT,
+                    POSUMConfiguration.MASTER_WEBAPP_PORT_DEFAULT));
+        }catch (Exception e){
+            logger.error("Could not initialize web app", e);
+        }
 
         super.serviceInit(conf);
     }
@@ -55,12 +62,14 @@ public class POSUMMaster extends CompositeService {
     @Override
     protected void serviceStart() throws Exception {
         super.serviceStart();
-        webApp.start();
+        if (webApp != null)
+            webApp.start();
     }
 
     @Override
     protected void serviceStop() throws Exception {
-        webApp.stop();
+        if (webApp != null)
+            webApp.stop();
         super.serviceStop();
     }
 

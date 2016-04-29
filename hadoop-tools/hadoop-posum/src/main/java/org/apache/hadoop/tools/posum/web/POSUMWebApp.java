@@ -4,12 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.Request;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.handler.AbstractHandler;
 import org.mortbay.jetty.handler.ResourceHandler;
+import org.mortbay.resource.Resource;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServlet;
@@ -17,26 +20,22 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 public class POSUMWebApp extends HttpServlet {
     private static final long serialVersionUID = 1905162041950251407L;
+    private static Log logger = LogFactory.getLog(POSUMWebApp.class);
+
     private transient Server server;
 
     private int port;
-    protected String indexPage;
     protected ObjectMapper mapper = new ObjectMapper();
     protected final ResourceHandler staticHandler = new ResourceHandler();
     private final Handler handler;
 
     public POSUMWebApp(int metricsAddressPort) {
         port = metricsAddressPort;
-        try {
-            File indexPageFile = new File(getClass().getClassLoader().getResource("html/posumstats.html").getFile());
-            indexPage = FileUtils.readFileToString(indexPageFile);
-            staticHandler.setResourceBase(indexPageFile.getParent());
-        } catch (IOException e) {
-            throw new POSUMException("Could not load web resources");
-        }
+        staticHandler.setBaseResource(Resource.newClassPathResource("html"));
         handler = constructHandler();
     }
 

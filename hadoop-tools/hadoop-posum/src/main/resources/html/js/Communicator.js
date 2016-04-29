@@ -1,7 +1,7 @@
 function Communicator(env) {
     var self = this;
-    self.rootPath = "";
-    self.servicePath = self.rootPath + "/ajax";
+    self.schedulerPath = "http://localhost:18010/ajax";
+    self.masterPath = "/ajax";
     var generalDialog = $("#general_dialog");
     var loadingModal = $("#loading_modal");
 
@@ -102,9 +102,8 @@ function Communicator(env) {
         console.log("Sending " + (isPost ? "POST" : "GET") + " request to " + path + "...");
         if (isPost && showData)
             console.log(data);
-        var fullPath = self.servicePath + path;
         var ajaxMethod = isPost ? (isRaw ? $.post : $.postJSON) : (isRaw ? $.get : $.getJSON);
-        (isPost ? ajaxMethod(fullPath, data) : ajaxMethod(fullPath))
+        (isPost ? ajaxMethod(path, data) : ajaxMethod(path))
             .success(function (response) {
                 if (isRaw && !isPost) {
                     success(response);

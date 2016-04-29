@@ -35,4 +35,13 @@
     </fileSet>
   </fileSets>
 
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>/lib</outputDirectory>
+      <unpack>false</unpack>
+      <scope>compile</scope>
+      <useProjectArtifact>true</useProjectArtifact>
+    </dependencySet>
+  </dependencySets>
+
 </assembly>

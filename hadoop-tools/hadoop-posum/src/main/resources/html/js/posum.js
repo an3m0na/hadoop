@@ -10,7 +10,7 @@ $(document).ready(function () {
         env.state = location.hash.substr(1);
 
     $("#div_title").on("click", function () {
-        window.location = comm.rootPath;
+        window.location = "";
     });
 
     tabManager.changeState(env.state);
