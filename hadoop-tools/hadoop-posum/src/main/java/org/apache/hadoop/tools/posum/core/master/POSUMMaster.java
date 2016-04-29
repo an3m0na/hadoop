@@ -6,6 +6,7 @@ import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.core.master.management.Orchestrator;
 import org.apache.hadoop.tools.posum.core.master.management.POSUMEventType;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerClient;
+import org.apache.hadoop.tools.posum.web.MasterWebApp;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
@@ -24,6 +25,7 @@ public class POSUMMaster extends CompositeService {
     private POSUMMasterContext pmContext;
     private MasterCommService commService;
     private Orchestrator orchestrator;
+    private MasterWebApp webApp;
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
@@ -44,7 +46,22 @@ public class POSUMMaster extends CompositeService {
         addIfService(orchestrator);
         dispatcher.register(POSUMEventType.class, orchestrator);
 
+        webApp = new MasterWebApp(conf.getInt(POSUMConfiguration.MASTER_WEBAPP_PORT,
+                POSUMConfiguration.MASTER_WEBAPP_PORT_DEFAULT));
+
         super.serviceInit(conf);
+    }
+
+    @Override
+    protected void serviceStart() throws Exception {
+        super.serviceStart();
+        webApp.start();
+    }
+
+    @Override
+    protected void serviceStop() throws Exception {
+        webApp.stop();
+        super.serviceStop();
     }
 
     public static void main(String[] args) {
