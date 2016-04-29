@@ -103,10 +103,14 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
         ObjectNode ret = mapper.createObjectNode();
         ret.put("time", System.currentTimeMillis());
 
+        ObjectNode running = mapper.createObjectNode();
+        running.put("applications", rootMetrics.getAppsRunning());
+        running.put("containers", rootMetrics.getAllocatedContainers());
+        ret.put("running", running);
 
-        ret.put("running.applications", rootMetrics.getAppsRunning());
-        ret.put("running.containers", rootMetrics.getAllocatedContainers());
-        ret.put("policies.map", parsePolicyMap());
+        ObjectNode policies = mapper.createObjectNode();
+        policies.put("map", parsePolicyMap());
+        ret.put("policies", policies);
 
         return wrapResult(ret);
     }

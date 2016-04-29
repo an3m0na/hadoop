@@ -1,0 +1,22 @@
+{
+  "result": {
+    "time": 1461952157630,
+    "running": {
+      "applications": 0,
+      "containers": 0
+    },
+    "policies": {
+      "map": {
+        "FIFO": {
+          "time": 98560,
+          "number": 8
+        },
+        "DATA": {
+          "time": 130057,
+          "number": 7
+        }
+      }
+    }
+  },
+  "successful": true
+}
