@@ -51,7 +51,7 @@ calculateClasspath() {
 #  HADOOP_LIBEXEC_DIR=${HADOOP_LIBEXEC_DIR:-$DEFAULT_LIBEXEC_DIR}
 #  . $HADOOP_LIBEXEC_DIR/hadoop-config.sh
 #  export POSUM_CLASSPATH="${HADOOP_CLASSPATH}:${TOOL_PATH}:html"
-  export POSUM_CLASSPATH=`hadoop classpath`:${HADOOP_BASE}/../share/hadoop/tools/lib/*:html
+  export POSUM_CLASSPATH=`hadoop classpath`:${HADOOP_BASE}/../share/hadoop/tools/lib/*
 }
 ###############################################################################
 killProcesses() {
@@ -100,7 +100,7 @@ runMaster() {
     echo ">>> Starting POSUM processes"
     for (( i=0; i<${#PROCESSES[@]}; i++ )); do
       echo ${PROCESSES[${i}]}
-      java -cp ${POSUM_CLASSPATH} ${PROCESSES[${i}]} & #${args}
+      java -cp ${POSUM_CLASSPATH} -Dhadoop.log.dir="${HADOOP_HOME}/logs" ${PROCESSES[${i}]} & #${args}
       sleep 3
     done
 
