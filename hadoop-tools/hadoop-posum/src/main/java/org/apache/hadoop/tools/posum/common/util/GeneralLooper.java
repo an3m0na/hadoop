@@ -27,18 +27,22 @@ public abstract class GeneralLooper<T> extends AbstractService {
 
         @Override
         public void run() {
-            long time;
-            lastRun = System.currentTimeMillis();
-            while (!exit) {
-                try {
-                    doAction();
-                    time = lastRun + sleepInterval - System.currentTimeMillis();
-                    if (time > 0)
-                        sleep(time);
-                } catch (InterruptedException e) {
-                    logger.warn(e);
-                }
+            try {
+                long time;
                 lastRun = System.currentTimeMillis();
+                while (!exit) {
+                    try {
+                        doAction();
+                        time = lastRun + sleepInterval - System.currentTimeMillis();
+                        if (time > 0)
+                            sleep(time);
+                    } catch (InterruptedException e) {
+                        logger.warn(e);
+                    }
+                    lastRun = System.currentTimeMillis();
+                }
+            }catch (Exception e){
+                logger.error("Error occurred in loop. Shutting down looper...", e);
             }
         }
     }

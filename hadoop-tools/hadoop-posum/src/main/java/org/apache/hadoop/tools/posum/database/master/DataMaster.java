@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.database.master;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
@@ -13,6 +15,7 @@ import org.apache.hadoop.yarn.event.Dispatcher;
  * Created by ane on 2/4/16.
  */
 public class DataMaster extends CompositeService {
+    private static final Log logger = LogFactory.getLog(DataMaster.class);
 
     private Dispatcher dispatcher;
 
@@ -48,10 +51,14 @@ public class DataMaster extends CompositeService {
     }
 
     public static void main(String[] args) {
-        Configuration conf = POSUMConfiguration.newInstance();
-        DataMaster master = new DataMaster();
-        master.init(conf);
-        master.start();
+        try {
+            Configuration conf = POSUMConfiguration.newInstance();
+            DataMaster master = new DataMaster();
+            master.init(conf);
+            master.start();
+        }catch (Exception e){
+            logger.fatal("Could not start Data Master", e);
+        }
     }
 
 
