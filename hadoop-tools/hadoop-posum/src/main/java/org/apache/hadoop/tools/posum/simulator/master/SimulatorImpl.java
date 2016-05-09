@@ -75,10 +75,14 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
     }
 
     synchronized void simulationDone(SimulationResult result) {
-        resultRequest.addResult(result);
-        if (resultRequest.getResults().size() == policies.size()) {
-            logger.debug("Sending simulation result request");
-            commService.getMaster().handleSimulationResult(resultRequest);
+        try {
+            resultRequest.addResult(result);
+            if (resultRequest.getResults().size() == policies.size()) {
+                logger.debug("Sending simulation result request");
+                commService.getMaster().handleSimulationResult(resultRequest);
+            }
+        }catch (Exception e){
+            logger.error("Error processing simulation", e);
         }
     }
 }

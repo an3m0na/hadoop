@@ -52,7 +52,7 @@ public class POSUMMaster extends CompositeService {
         try {
             webApp = new MasterWebApp(conf.getInt(POSUMConfiguration.MASTER_WEBAPP_PORT,
                     POSUMConfiguration.MASTER_WEBAPP_PORT_DEFAULT));
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error("Could not initialize web app", e);
         }
 
@@ -74,9 +74,13 @@ public class POSUMMaster extends CompositeService {
     }
 
     public static void main(String[] args) {
-        Configuration conf = POSUMConfiguration.newInstance();
-        POSUMMaster master = new POSUMMaster();
-        master.init(conf);
-        master.start();
+        try {
+            Configuration conf = POSUMConfiguration.newInstance();
+            POSUMMaster master = new POSUMMaster();
+            master.init(conf);
+            master.start();
+        } catch (Exception e) {
+            logger.fatal("Could not start POSUM Master", e);
+        }
     }
 }

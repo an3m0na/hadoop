@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.simulator.master;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.records.field.CompoundScore;
 import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
@@ -8,6 +10,8 @@ import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
  * Created by ane on 4/20/16.
  */
 public class Simulation extends Thread {
+    private static final Log logger = LogFactory.getLog(SimulationMaster.class);
+
     private volatile boolean exit = false;
     private SimulatorImpl simulator;
     private String policy;
@@ -32,9 +36,13 @@ public class Simulation extends Thread {
         try {
             sleep(3000);
             simulator.simulationDone(SimulationResult.newInstance(policy,
-                    CompoundScore.newInstance(Math.random() * 10, null, null)));
+                    CompoundScore.newInstance(Math.random() * 10, 0.0, 0.0)));
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.warn(e);
+        } catch (Exception e) {
+            logger.error("Error during simulation. Shutting down simulation...", e);
         }
+        simulator.simulationDone(SimulationResult.newInstance(policy,
+                CompoundScore.newInstance(0.0, 0.0, 0.0)));
     }
 }
