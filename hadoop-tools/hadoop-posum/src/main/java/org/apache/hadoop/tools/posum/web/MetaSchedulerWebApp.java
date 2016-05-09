@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.PortfolioMetaScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.mortbay.jetty.Handler;
@@ -47,9 +48,7 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
                                     ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
                             }
                         } catch (Exception e) {
-                            StringWriter traceWriter = new StringWriter();
-                            e.printStackTrace(new PrintWriter(traceWriter));
-                            ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), traceWriter.toString());
+                            ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), Utils.getErrorTrace(e));
                         }
                         sendResult(request, response, ret);
                     } else {
