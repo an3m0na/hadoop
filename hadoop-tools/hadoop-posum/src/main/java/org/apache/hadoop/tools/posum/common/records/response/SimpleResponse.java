@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.response;
 
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto.SimpleResponseTypeProto;
 
 /**
@@ -48,7 +49,8 @@ public abstract class SimpleResponse<T> {
 
     public static SimpleResponse newInstance(String text, Throwable e) {
         SimpleResponse ret = newInstance(false, text);
-        ret.setException(e);
+        if (e != null)
+            ret.setException(Utils.getErrorTrace(e));
         return ret;
     }
 
@@ -77,7 +79,7 @@ public abstract class SimpleResponse<T> {
         response.setType(type);
         response.setText(text);
         if (e != null)
-            response.setException(e);
+            response.setException(Utils.getErrorTrace(e));
         return response;
     }
 
@@ -85,9 +87,9 @@ public abstract class SimpleResponse<T> {
 
     public abstract void setText(String text);
 
-    public abstract Throwable getException();
+    public abstract String getException();
 
-    public abstract void setException(Throwable exception);
+    public abstract void setException(String exception);
 
     public abstract boolean getSuccessful();
 

@@ -37,32 +37,36 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
 
     @Override
     public void handle(POSUMEvent event) {
-        switch (event.getType()) {
-            case SIMULATOR_CONNECTED:
-                if (!simulationManager.isInState(STATE.STARTED)) {
-                    addIfService(simulationManager);
-                    simulationManager.start();
-                    logger.debug("Simulator connected");
-                }
-                break;
-            case SIMULATION_START:
-                logger.debug("Starting simulation");
-                pmContext.getCommService().getSimulator().startSimulation();
-                break;
-            case SIMULATION_FINISH:
-                simulationManager.simulationFinished();
-                ConcurrentSkipListSet<SimulationResult> results = event.getCastContent();
-                logger.debug("Policy scores: " + results);
-                SimulationResult bestResult = results.last();
-                if (bestResult != null) {
-                    logger.info("Switching to best policy: " + bestResult.getPolicyName());
-                    MetaSchedulerInterface scheduler = pmContext.getCommService().getScheduler();
-                    if (scheduler != null)
-                        scheduler.changeToPolicy(bestResult.getPolicyName());
-                }
-                break;
-            default:
-                throw new POSUMException("Could not handle event of type " + event.getType());
+        try {
+            switch (event.getType()) {
+                case SIMULATOR_CONNECTED:
+                    if (!simulationManager.isInState(STATE.STARTED)) {
+                        addIfService(simulationManager);
+                        simulationManager.start();
+                        logger.debug("Simulator connected");
+                    }
+                    break;
+                case SIMULATION_START:
+                    logger.debug("Starting simulation");
+                    pmContext.getCommService().getSimulator().startSimulation();
+                    break;
+                case SIMULATION_FINISH:
+                    simulationManager.simulationFinished();
+                    ConcurrentSkipListSet<SimulationResult> results = event.getCastContent();
+                    logger.debug("Policy scores: " + results);
+                    SimulationResult bestResult = results.last();
+                    if (bestResult != null) {
+                        logger.info("Switching to best policy: " + bestResult.getPolicyName());
+                        MetaSchedulerInterface scheduler = pmContext.getCommService().getScheduler();
+                        if (scheduler != null)
+                            scheduler.changeToPolicy(bestResult.getPolicyName());
+                    }
+                    break;
+                default:
+                    throw new POSUMException("Could not handle event of type " + event.getType());
+            }
+        }catch (Exception e){
+            throw new POSUMException("Could not handle event of type " + event.getType());
         }
     }
 }
