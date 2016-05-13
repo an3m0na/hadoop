@@ -76,15 +76,6 @@ runMaster() {
         fi
     fi
 
-    echo ">>> Checking mongod"
-    #start mongod if not running
-    CMD=`pgrep mongod > /dev/null; echo $?`
-    if [[ $CMD != 0 ]]; then
-      echo " >> Starting mongod"
-      mkdir -p ${HADOOP_BASE}/logs
-      mongod --fork --logpath ${HADOOP_BASE}/logs/mongodb.log --bind_ip 127.0.0.1
-    fi
-
     args="-inputsomething ${input}"
 
     if [[ "${printsimulation}" == "true" ]] ; then
