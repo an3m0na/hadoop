@@ -1,24 +1,26 @@
-package org.apache.hadoop.tools.posum.core.master;
+package org.apache.hadoop.tools.posum.simulator.master;
 
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
 /**
  * Created by ane on 3/19/16.
  */
-public class POSUMMasterContext {
-    private Dispatcher dispatcher;
+public class SimulationMasterContext {
     private DummyTokenSecretManager tokenSecretManager;
-    private MasterCommService commService;
     private String hostAddress;
+    private SimulatorCommService commService;
 
-    public void setDispatcher(Dispatcher dispatcher) {
-        this.dispatcher = dispatcher;
+    public SimulatorInterface getSimulator() {
+        return simulator;
     }
 
-    public Dispatcher getDispatcher() {
-        return dispatcher;
+    public void setSimulator(SimulatorInterface simulator) {
+        this.simulator = simulator;
     }
+
+    private SimulatorInterface simulator;
 
     public void setTokenSecretManager(DummyTokenSecretManager tokenSecretManager) {
         this.tokenSecretManager = tokenSecretManager;
@@ -28,14 +30,6 @@ public class POSUMMasterContext {
         return tokenSecretManager;
     }
 
-    public void setCommService(MasterCommService commService) {
-        this.commService = commService;
-    }
-
-    public MasterCommService getCommService(){
-        return commService;
-    }
-
     public void setHostAddress(String hostAddress) {
         this.hostAddress = hostAddress;
     }
@@ -43,4 +37,14 @@ public class POSUMMasterContext {
     public String getHostAddress() {
         return hostAddress;
     }
+
+
+    public void setCommService(SimulatorCommService commService) {
+        this.commService = commService;
+    }
+
+    public SimulatorCommService getCommService(){
+        return commService;
+    }
+
 }

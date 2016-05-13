@@ -12,6 +12,8 @@ import org.apache.hadoop.tools.posum.web.MasterWebApp;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
+import java.util.Arrays;
+
 /**
  * Created by ane on 2/4/16.
  */
@@ -20,9 +22,12 @@ public class POSUMMaster extends CompositeService {
 
     private Dispatcher dispatcher;
     private MetaSchedulerClient metaClient;
+    private String hostAddress;
 
-    public POSUMMaster() {
+
+    public POSUMMaster(String hostAddress) {
         super(POSUMMaster.class.getName());
+        this.hostAddress = hostAddress;
     }
 
     private POSUMMasterContext pmContext;
@@ -33,6 +38,7 @@ public class POSUMMaster extends CompositeService {
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         pmContext = new POSUMMasterContext();
+        pmContext.setHostAddress(hostAddress);
         dispatcher = new AsyncDispatcher();
         addIfService(dispatcher);
         pmContext.setDispatcher(dispatcher);
@@ -75,8 +81,16 @@ public class POSUMMaster extends CompositeService {
 
     public static void main(String[] args) {
         try {
+
             Configuration conf = POSUMConfiguration.newInstance();
-            POSUMMaster master = new POSUMMaster();
+            String address;
+            if (args.length < 1) {
+                logger.warn("No hostAddress supplied for master. Reverting to default");
+                address = POSUMConfiguration.PM_ADDRESS_DEFAULT;
+            } else {
+                address = args[0];
+            }
+            POSUMMaster master = new POSUMMaster(address);
             master.init(conf);
             master.start();
         } catch (Exception e) {

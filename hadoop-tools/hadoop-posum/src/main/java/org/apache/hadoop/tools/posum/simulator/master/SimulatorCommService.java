@@ -27,14 +27,14 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
 
     private static Log logger = LogFactory.getLog(SimulatorCommService.class);
 
-    SimulatorInterface simulator;
+    SimulationMasterContext context;
     private Server simulatorServer;
     private POSUMMasterClient masterClient;
     private DataMasterClient dataClient;
 
-    SimulatorCommService(SimulatorInterface simulator) {
+    SimulatorCommService(SimulationMasterContext context) {
         super(SimulatorCommService.class.getName());
-        this.simulator = simulator;
+        this.context = context;
     }
 
     @Override
@@ -51,6 +51,7 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 POSUMConfiguration.SIMULATOR_BIND_ADDRESS,
+                context.getHostAddress(),
                 POSUMConfiguration.SIMULATOR_ADDRESS_DEFAULT,
                 POSUMConfiguration.SIMULATOR_PORT_DEFAULT);
         this.simulatorServer =
@@ -88,7 +89,7 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
                     logger.info("Received ping with message: " + request.getPayload());
                     break;
                 case START:
-                    simulator.startSimulation();
+                    context.getSimulator().startSimulation();
                     break;
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());

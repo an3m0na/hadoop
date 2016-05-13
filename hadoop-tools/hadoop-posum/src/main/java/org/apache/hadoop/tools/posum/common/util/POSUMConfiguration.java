@@ -72,7 +72,6 @@ public class POSUMConfiguration {
     public static final String MONITOR_KEEP_HISTORY = MONITOR_PREFIX + "keep-history";
     public static final boolean MONITOR_KEEP_HISTORY_DEFAULT = true;
 
-    public static final String SCHEDULER_BIND_ADDRESS = SCHEDULER_PREFIX + "bind-host";
     public static final String SCHEDULER_ADDRESS_DEFAULT = "127.0.0.1";
     public static final int SCHEDULER_PORT_DEFAULT = 17020;
     public static final String SCHEDULER_SERVICE_THREAD_COUNT = SCHEDULER_PREFIX + "conn.thread-count";
