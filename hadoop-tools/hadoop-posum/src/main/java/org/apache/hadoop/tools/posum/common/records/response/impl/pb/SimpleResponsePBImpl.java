@@ -5,8 +5,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
-import org.apache.hadoop.yarn.api.records.SerializedException;
-import org.apache.hadoop.yarn.api.records.impl.pb.SerializedExceptionPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProtoOrBuilder;
 
@@ -91,18 +89,18 @@ public abstract class SimpleResponsePBImpl<T> extends SimpleResponse<T> {
     }
 
     @Override
-    public Throwable getException() {
+    public String getException() {
         SimpleResponseProtoOrBuilder p = viaProto ? proto : builder;
         if (!p.hasException())
             return null;
-        return new SerializedExceptionPBImpl(p.getException()).deSerialize();
+        return p.getException();
     }
 
     @Override
-    public void setException(Throwable exception) {
+    public void setException(String exception) {
         maybeInitBuilder();
         if (exception != null)
-            builder.setException(((SerializedExceptionPBImpl) SerializedException.newInstance(exception)).getProto());
+            builder.setException(exception);
     }
 
     @Override

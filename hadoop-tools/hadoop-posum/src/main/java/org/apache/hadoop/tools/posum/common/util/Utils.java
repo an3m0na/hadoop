@@ -17,6 +17,9 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.util.Records;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 /**
  * Created by ane on 3/3/16.
  */
@@ -83,8 +86,8 @@ public class Utils {
 
     public static <T> SimpleResponse<T> handleError(String type, SimpleResponse<T> response) {
         if (!response.getSuccessful()) {
-            throw new POSUMException("Request type " + type + " returned with error: " + "\n" + response.getText(),
-                    response.getException());
+            throw new POSUMException("Request type " + type + " returned with error: " +
+                    "\n" + response.getText() + "\n" + response.getException());
         }
         return response;
     }
@@ -109,7 +112,13 @@ public class Utils {
         }
     }
 
-    public enum POSUMProcess{
+    public static String getErrorTrace(Throwable e) {
+        StringWriter traceWriter = new StringWriter();
+        e.printStackTrace(new PrintWriter(traceWriter));
+        return traceWriter.toString();
+    }
+
+    public enum POSUMProcess {
         PM("POSUMMaster", POSUMMasterProtocol.class),
         DM("DataMaster", DataMasterProtocol.class),
         SIMULATOR("SimulationMaster", SimulatorProtocol.class),
