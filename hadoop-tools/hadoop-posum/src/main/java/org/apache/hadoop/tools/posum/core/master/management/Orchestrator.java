@@ -52,20 +52,21 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
                     break;
                 case SIMULATION_FINISH:
                     simulationManager.simulationFinished();
+                    MetaSchedulerInterface scheduler = pmContext.getCommService().getScheduler();
                     ConcurrentSkipListSet<SimulationResult> results = event.getCastContent();
                     logger.debug("Policy scores: " + results);
-                    SimulationResult bestResult = results.last();
-                    if (bestResult != null) {
-                        logger.info("Switching to best policy: " + bestResult.getPolicyName());
-                        MetaSchedulerInterface scheduler = pmContext.getCommService().getScheduler();
-                        if (scheduler != null)
+                    if (scheduler != null) {
+                        SimulationResult bestResult = results.last();
+                        if (bestResult != null) {
+                            logger.info("Switching to best policy: " + bestResult.getPolicyName());
                             scheduler.changeToPolicy(bestResult.getPolicyName());
+                        }
                     }
                     break;
                 default:
                     throw new POSUMException("Could not handle event of type " + event.getType());
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new POSUMException("Could not handle event of type " + event.getType());
         }
     }
