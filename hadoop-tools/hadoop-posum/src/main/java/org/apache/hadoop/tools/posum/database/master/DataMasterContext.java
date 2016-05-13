@@ -11,7 +11,6 @@ public class DataMasterContext {
     private Dispatcher dispatcher;
     private DummyTokenSecretManager tokenSecretManager;
     private DataStoreInterface dataStoreInterface;
-    private String hostAddress;
 
     public void setDispatcher(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -37,11 +36,4 @@ public class DataMasterContext {
         return dataStoreInterface;
     }
 
-    public void setHostAddress(String hostAddress) {
-        this.hostAddress = hostAddress;
-    }
-
-    public String getHostAddress() {
-        return hostAddress;
-    }
 }

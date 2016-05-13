@@ -10,7 +10,6 @@ public class POSUMMasterContext {
     private Dispatcher dispatcher;
     private DummyTokenSecretManager tokenSecretManager;
     private MasterCommService commService;
-    private String hostAddress;
 
     public void setDispatcher(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -32,15 +31,8 @@ public class POSUMMasterContext {
         this.commService = commService;
     }
 
-    public MasterCommService getCommService(){
+    public MasterCommService getCommService() {
         return commService;
     }
 
-    public void setHostAddress(String hostAddress) {
-        this.hostAddress = hostAddress;
-    }
-
-    public String getHostAddress() {
-        return hostAddress;
-    }
 }

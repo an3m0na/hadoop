@@ -18,11 +18,9 @@ public class DataMaster extends CompositeService {
     private static final Log logger = LogFactory.getLog(DataMaster.class);
 
     private Dispatcher dispatcher;
-    private String hostAddress;
 
-    public DataMaster(String hostAddress) {
+    public DataMaster() {
         super(DataMaster.class.getName());
-        this.hostAddress = hostAddress;
     }
 
     private DataMasterContext dmContext;
@@ -33,7 +31,6 @@ public class DataMaster extends CompositeService {
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         dmContext = new DataMasterContext();
-        dmContext.setHostAddress(hostAddress);
 
         dataStoreInterface = new DataStoreImpl(conf);
         dmContext.setDataStoreInterface(dataStoreInterface);
@@ -57,14 +54,7 @@ public class DataMaster extends CompositeService {
     public static void main(String[] args) {
         try {
             Configuration conf = POSUMConfiguration.newInstance();
-            String hostAddress;
-            if (args.length < 1) {
-                logger.warn("No hostAddress supplied for master. Reverting to default");
-                hostAddress = POSUMConfiguration.DM_ADDRESS_DEFAULT;
-            } else {
-                hostAddress = args[0];
-            }
-            DataMaster master = new DataMaster(hostAddress);
+            DataMaster master = new DataMaster();
             master.init(conf);
             master.start();
         }catch (Exception e){

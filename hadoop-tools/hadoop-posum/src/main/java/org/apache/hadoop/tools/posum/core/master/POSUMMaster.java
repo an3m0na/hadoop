@@ -21,13 +21,9 @@ public class POSUMMaster extends CompositeService {
     private static Log logger = LogFactory.getLog(POSUMMaster.class);
 
     private Dispatcher dispatcher;
-    private MetaSchedulerClient metaClient;
-    private String hostAddress;
 
-
-    public POSUMMaster(String hostAddress) {
+    public POSUMMaster() {
         super(POSUMMaster.class.getName());
-        this.hostAddress = hostAddress;
     }
 
     private POSUMMasterContext pmContext;
@@ -38,7 +34,6 @@ public class POSUMMaster extends CompositeService {
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         pmContext = new POSUMMasterContext();
-        pmContext.setHostAddress(hostAddress);
         dispatcher = new AsyncDispatcher();
         addIfService(dispatcher);
         pmContext.setDispatcher(dispatcher);
@@ -83,14 +78,7 @@ public class POSUMMaster extends CompositeService {
         try {
 
             Configuration conf = POSUMConfiguration.newInstance();
-            String address;
-            if (args.length < 1) {
-                logger.warn("No hostAddress supplied for master. Reverting to default");
-                address = POSUMConfiguration.PM_ADDRESS_DEFAULT;
-            } else {
-                address = args[0];
-            }
-            POSUMMaster master = new POSUMMaster(address);
+            POSUMMaster master = new POSUMMaster();
             master.init(conf);
             master.start();
         } catch (Exception e) {

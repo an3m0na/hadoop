@@ -55,6 +55,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 bindAddress,
+                POSUMConfiguration.SCHEDULER_ADDRESS,
                 POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT,
                 POSUMConfiguration.SCHEDULER_PORT_DEFAULT);
         this.metaServer =
