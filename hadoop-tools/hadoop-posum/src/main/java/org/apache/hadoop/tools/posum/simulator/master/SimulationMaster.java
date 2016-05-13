@@ -15,19 +15,16 @@ public class SimulationMaster extends CompositeService {
 
     private SimulatorImpl simulator;
     private SimulationMasterContext smContext;
-    private String hostAddress;
     private SimulatorCommService commService;
 
 
-    public SimulationMaster(String hostAddress) {
+    public SimulationMaster() {
         super(SimulationMaster.class.getName());
-        this.hostAddress = hostAddress;
     }
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         smContext = new SimulationMasterContext();
-        smContext.setHostAddress(hostAddress);
 
         simulator = new SimulatorImpl(smContext);
         simulator.init(conf);
@@ -45,14 +42,7 @@ public class SimulationMaster extends CompositeService {
     public static void main(String[] args) {
         try {
             Configuration conf = POSUMConfiguration.newInstance();
-            String hostAddress;
-            if (args.length < 1) {
-                logger.warn("No hostAddress supplied for master. Reverting to default");
-                hostAddress = POSUMConfiguration.SIMULATOR_ADDRESS_DEFAULT;
-            } else {
-                hostAddress = args[0];
-            }
-            SimulationMaster master = new SimulationMaster(hostAddress);
+            SimulationMaster master = new SimulationMaster();
             master.init(conf);
             master.start();
         }catch (Exception e){

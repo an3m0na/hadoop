@@ -52,12 +52,12 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 POSUMConfiguration.SIMULATOR_BIND_ADDRESS,
-                context.getHostAddress(),
+                POSUMConfiguration.SIMULATOR_ADDRESS,
                 POSUMConfiguration.SIMULATOR_ADDRESS_DEFAULT,
                 POSUMConfiguration.SIMULATOR_PORT_DEFAULT);
         this.simulatorServer =
                 rpc.getServer(SimulatorProtocol.class, this, masterServiceAddress,
-                        getConfig(), new DummyTokenSecretManager(),
+                        getConfig(), context.getTokenSecretManager(),
                         getConfig().getInt(POSUMConfiguration.SIMULATOR_SERVICE_THREAD_COUNT,
                                 POSUMConfiguration.SIMULATOR_SERVICE_THREAD_COUNT_DEFAULT));
 
