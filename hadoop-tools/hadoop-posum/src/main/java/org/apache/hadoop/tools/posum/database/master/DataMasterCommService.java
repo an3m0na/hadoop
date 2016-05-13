@@ -64,6 +64,7 @@ public class DataMasterCommService extends CompositeService implements DataMaste
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 POSUMConfiguration.DM_BIND_ADDRESS,
+                dmContext.getHostAddress(),
                 POSUMConfiguration.DM_ADDRESS_DEFAULT,
                 POSUMConfiguration.DM_PORT_DEFAULT);
         dmContext.setTokenSecretManager(new DummyTokenSecretManager());

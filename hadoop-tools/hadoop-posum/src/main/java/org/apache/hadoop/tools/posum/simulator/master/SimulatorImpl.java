@@ -24,20 +24,19 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
     private static Log logger = LogFactory.getLog(SimulatorImpl.class);
 
     private JobBehaviorPredictor predictor;
-    private SimulatorCommService commService;
+    private SimulationMasterContext context;
     private PolicyMap policies;
     private Map<String, Simulation> simulationMap;
     private HandleSimResultRequest resultRequest;
 
-    public SimulatorImpl() {
+    public SimulatorImpl(SimulationMasterContext context) {
         super(SimulatorImpl.class.getName());
+        this.context = context;
     }
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        commService = new SimulatorCommService(this);
-        commService.init(conf);
-        addIfService(commService);
+
 
         Class<? extends JobBehaviorPredictor> predictorClass = getConfig().getClass(
                 POSUMConfiguration.PREDICTOR_CLASS,
@@ -59,7 +58,7 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
     @Override
     protected void serviceStart() throws Exception {
         super.serviceStart();
-        predictor.setDataStore(commService.getDataStore());
+        predictor.setDataStore(context.getCommService().getDataStore());
     }
 
     @Override
@@ -79,9 +78,9 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
             resultRequest.addResult(result);
             if (resultRequest.getResults().size() == policies.size()) {
                 logger.debug("Sending simulation result request");
-                commService.getMaster().handleSimulationResult(resultRequest);
+                context.getCommService().getMaster().handleSimulationResult(resultRequest);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error("Error processing simulation", e);
         }
     }

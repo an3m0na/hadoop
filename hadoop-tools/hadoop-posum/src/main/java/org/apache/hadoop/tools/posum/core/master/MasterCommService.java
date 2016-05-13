@@ -55,7 +55,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 POSUMConfiguration.PM_BIND_ADDRESS,
-                POSUMConfiguration.PM_ADDRESS,
+                pmContext.getHostAddress(),
                 POSUMConfiguration.PM_ADDRESS_DEFAULT,
                 POSUMConfiguration.PM_PORT_DEFAULT);
         pmContext.setTokenSecretManager(new DummyTokenSecretManager());

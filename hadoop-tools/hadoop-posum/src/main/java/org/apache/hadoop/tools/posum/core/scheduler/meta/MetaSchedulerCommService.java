@@ -31,12 +31,13 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
     private DataMasterClient dataClient;
 
     private Server metaServer;
-    private InetSocketAddress bindAddress;
     private MetaSchedulerInterface metaScheduler;
+    private String bindAddress;
 
-    MetaSchedulerCommService(MetaSchedulerInterface metaScheduler) {
+    MetaSchedulerCommService(MetaSchedulerInterface metaScheduler, String bindAddress) {
         super(MetaSchedulerCommService.class.getName());
         this.metaScheduler = metaScheduler;
+        this.bindAddress = bindAddress;
     }
 
     @Override
@@ -52,7 +53,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
     protected void serviceStart() throws Exception {
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
-                POSUMConfiguration.SCHEDULER_BIND_ADDRESS,
+                bindAddress,
                 POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT,
                 POSUMConfiguration.SCHEDULER_PORT_DEFAULT);
         this.metaServer =
