@@ -25,6 +25,7 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
 
@@ -75,11 +76,11 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                                 POSUMConfiguration.DM_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.dmServer.start();
-        this.bindAddress = dmServer.getListenerAddress();
+        InetSocketAddress connectAddress = NetUtils.getConnectAddress(this.dmServer.getListenerAddress());
 
         super.serviceStart();
 
-        masterClient.register(Utils.POSUMProcess.DM, this.dmServer.getListenerAddress().getHostName());
+        masterClient.register(Utils.POSUMProcess.DM, connectAddress.getHostName() + ":" + connectAddress.getPort());
     }
 
     @Override

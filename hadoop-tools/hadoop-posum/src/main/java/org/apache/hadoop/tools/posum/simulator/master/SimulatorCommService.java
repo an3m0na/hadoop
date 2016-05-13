@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -64,8 +65,9 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
 
         super.serviceStart();
 
+        InetSocketAddress connectAddress = NetUtils.getConnectAddress(this.simulatorServer.getListenerAddress());
         String dmAddress = masterClient.register(Utils.POSUMProcess.SIMULATOR,
-                this.simulatorServer.getListenerAddress().getHostName());
+                connectAddress.getHostName() + ":" + connectAddress.getPort());
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);
