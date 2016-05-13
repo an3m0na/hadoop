@@ -84,8 +84,8 @@ runMaster() {
 
     echo ">>> Starting POSUM processes"
     for (( i=0; i<${#PROCESSES[@]}; i++ )); do
-      echo ${PROCESSES[${i}]}
-      java -cp ${POSUM_CLASSPATH} -Dhadoop.log.dir="${HADOOP_BASE}/logs" ${PROCESSES[${i}]} & #${args}
+      echo ">> Starting ${PROCESSES[${i}]}"
+      java -cp ${POSUM_CLASSPATH} -Dhadoop.log.dir="${HADOOP_BASE}/logs" ${PROCESSES[${i}]} &>/dev/null & #${args}
       sleep 3
     done
 
