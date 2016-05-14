@@ -30,8 +30,9 @@ public class DataMaster extends CompositeService {
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        dataStoreInterface = new DataStoreImpl(conf);
         dmContext = new DataMasterContext();
+
+        dataStoreInterface = new DataStoreImpl(conf);
         dmContext.setDataStoreInterface(dataStoreInterface);
         dispatcher = new AsyncDispatcher();
         addIfService(dispatcher);

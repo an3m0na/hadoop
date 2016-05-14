@@ -14,6 +14,9 @@ public class SimulationMaster extends CompositeService {
     private static final Log logger =LogFactory.getLog(SimulationMaster.class);
 
     private SimulatorImpl simulator;
+    private SimulationMasterContext smContext;
+    private SimulatorCommService commService;
+
 
     public SimulationMaster() {
         super(SimulationMaster.class.getName());
@@ -21,9 +24,19 @@ public class SimulationMaster extends CompositeService {
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        simulator = new SimulatorImpl();
+        smContext = new SimulationMasterContext();
+
+        simulator = new SimulatorImpl(smContext);
         simulator.init(conf);
         addIfService(simulator);
+        smContext.setSimulator(simulator);
+
+        commService = new SimulatorCommService(smContext);
+        commService.init(conf);
+        addIfService(commService);
+        smContext.setCommService(commService);
+
+
     }
 
     public static void main(String[] args) {

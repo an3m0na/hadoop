@@ -13,6 +13,7 @@ import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.web.MetaSchedulerWebApp;
 import org.apache.hadoop.tools.posum.web.POSUMWebApp;
 import org.apache.hadoop.yarn.api.records.*;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.proto.YarnServiceProtos;
 import org.apache.hadoop.yarn.server.api.protocolrecords.NMContainerStatus;
@@ -146,7 +147,7 @@ public class PortfolioMetaScheduler extends
         policies = new PolicyMap(posumConf);
         currentPolicyInfo = policies.getDefaultPolicy();
         currentPolicyInfo.start(System.currentTimeMillis());
-        commService = new MetaSchedulerCommService(this);
+        commService = new MetaSchedulerCommService(this,  conf.get(YarnConfiguration.RM_ADDRESS));
         commService.init(posumConf);
         initPolicy();
 

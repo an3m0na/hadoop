@@ -12,6 +12,8 @@ import org.apache.hadoop.tools.posum.web.MasterWebApp;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
+import java.util.Arrays;
+
 /**
  * Created by ane on 2/4/16.
  */
@@ -19,7 +21,6 @@ public class POSUMMaster extends CompositeService {
     private static Log logger = LogFactory.getLog(POSUMMaster.class);
 
     private Dispatcher dispatcher;
-    private MetaSchedulerClient metaClient;
 
     public POSUMMaster() {
         super(POSUMMaster.class.getName());
@@ -75,6 +76,7 @@ public class POSUMMaster extends CompositeService {
 
     public static void main(String[] args) {
         try {
+
             Configuration conf = POSUMConfiguration.newInstance();
             POSUMMaster master = new POSUMMaster();
             master.init(conf);

@@ -115,6 +115,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
     @Override
     public SimpleResponse registerProcess(RegistrationRequest request) throws IOException, YarnException {
         try {
+            logger.debug("Registration request type "+request.getProcess()+" on "+request.getConnectAddress());
             switch (request.getProcess()) {
                 case DM:
                     dataClient = new DataMasterClient(request.getConnectAddress());

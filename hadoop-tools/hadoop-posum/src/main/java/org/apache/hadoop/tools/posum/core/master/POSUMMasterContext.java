@@ -31,7 +31,8 @@ public class POSUMMasterContext {
         this.commService = commService;
     }
 
-    public MasterCommService getCommService(){
+    public MasterCommService getCommService() {
         return commService;
     }
+
 }
