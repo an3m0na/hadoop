@@ -42,17 +42,6 @@ parseArgs() {
 #    exit 1
 #  fi
 }
-
-###############################################################################
-calculateClasspath() {
-  HADOOP_BASE=`which hadoop`
-  HADOOP_BASE=`dirname $HADOOP_BASE`
-#  DEFAULT_LIBEXEC_DIR=${HADOOP_BASE}/../libexec
-#  HADOOP_LIBEXEC_DIR=${HADOOP_LIBEXEC_DIR:-$DEFAULT_LIBEXEC_DIR}
-#  . $HADOOP_LIBEXEC_DIR/hadoop-config.sh
-#  export POSUM_CLASSPATH="${HADOOP_CLASSPATH}:${TOOL_PATH}:html"
-  export POSUM_CLASSPATH=`hadoop classpath`:${HADOOP_BASE}/../share/hadoop/tools/lib/*
-}
 ###############################################################################
 killProcesses() {
     PID=`jps -l | grep $1 | cut -d " " -f1`
@@ -70,6 +59,10 @@ runMaster() {
         "org.apache.hadoop.tools.posum.simulator.master.SimulationMaster"
         )
 
+    HADOOP_BASE=`which hadoop`
+    HADOOP_BASE=`dirname $HADOOP_BASE`/..
+    POSUM_CLASSPATH=`hadoop classpath`:${HADOOP_BASE}/share/hadoop/tools/lib/*
+
     if [[ ${doStop} == true ]] || [[ ${doRestart} == true ]]; then
 
         echo ">>> Killing POSUM processes"
@@ -83,14 +76,6 @@ runMaster() {
         fi
     fi
 
-    echo ">>> Checking mongod"
-    #start mongod if not running
-    CMD=`pgrep mongod > /dev/null; echo $?`
-    if [[ $CMD != 0 ]]; then
-      echo " >> Starting mongod"
-      mongod --fork --logpath $HADOOP_HOME/logs/mongodb.log --bind_ip 127.0.0.1
-    fi
-
     args="-inputsomething ${input}"
 
     if [[ "${printsimulation}" == "true" ]] ; then
@@ -99,15 +84,14 @@ runMaster() {
 
     echo ">>> Starting POSUM processes"
     for (( i=0; i<${#PROCESSES[@]}; i++ )); do
-      echo ${PROCESSES[${i}]}
-      java -cp ${POSUM_CLASSPATH} -Dhadoop.log.dir="${HADOOP_HOME}/logs" ${PROCESSES[${i}]} & #${args}
+      echo ">> Starting ${PROCESSES[${i}]}"
+      java -cp ${POSUM_CLASSPATH} -Dhadoop.log.dir="${HADOOP_BASE}/logs" ${PROCESSES[${i}]} &>/dev/null & #${args}
       sleep 3
     done
 
 }
 ###############################################################################
 
-calculateClasspath
 parseArgs "$@"
 runMaster
 

@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -31,12 +32,13 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
     private DataMasterClient dataClient;
 
     private Server metaServer;
-    private InetSocketAddress bindAddress;
     private MetaSchedulerInterface metaScheduler;
+    private String bindAddress;
 
-    MetaSchedulerCommService(MetaSchedulerInterface metaScheduler) {
+    MetaSchedulerCommService(MetaSchedulerInterface metaScheduler, String bindAddress) {
         super(MetaSchedulerCommService.class.getName());
         this.metaScheduler = metaScheduler;
+        this.bindAddress = bindAddress;
     }
 
     @Override
@@ -52,7 +54,8 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
     protected void serviceStart() throws Exception {
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
-                POSUMConfiguration.SCHEDULER_BIND_ADDRESS,
+                bindAddress,
+                POSUMConfiguration.SCHEDULER_ADDRESS,
                 POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT,
                 POSUMConfiguration.SCHEDULER_PORT_DEFAULT);
         this.metaServer =
@@ -62,11 +65,12 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
                                 POSUMConfiguration.SCHEDULER_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.metaServer.start();
+        InetSocketAddress connectAddress = NetUtils.getConnectAddress(this.metaServer.getListenerAddress());
 
         super.serviceStart();
 
         String dmAddress = masterClient.register(Utils.POSUMProcess.SCHEDULER,
-                this.metaServer.getListenerAddress().getHostName());
+                connectAddress.getHostName() + ":" + connectAddress.getPort());
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);

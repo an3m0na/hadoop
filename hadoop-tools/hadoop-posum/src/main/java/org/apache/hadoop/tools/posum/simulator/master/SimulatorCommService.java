@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -27,14 +28,14 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
 
     private static Log logger = LogFactory.getLog(SimulatorCommService.class);
 
-    SimulatorInterface simulator;
+    SimulationMasterContext context;
     private Server simulatorServer;
     private POSUMMasterClient masterClient;
     private DataMasterClient dataClient;
 
-    SimulatorCommService(SimulatorInterface simulator) {
+    SimulatorCommService(SimulationMasterContext context) {
         super(SimulatorCommService.class.getName());
-        this.simulator = simulator;
+        this.context = context;
     }
 
     @Override
@@ -51,11 +52,12 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 POSUMConfiguration.SIMULATOR_BIND_ADDRESS,
+                POSUMConfiguration.SIMULATOR_ADDRESS,
                 POSUMConfiguration.SIMULATOR_ADDRESS_DEFAULT,
                 POSUMConfiguration.SIMULATOR_PORT_DEFAULT);
         this.simulatorServer =
                 rpc.getServer(SimulatorProtocol.class, this, masterServiceAddress,
-                        getConfig(), new DummyTokenSecretManager(),
+                        getConfig(), context.getTokenSecretManager(),
                         getConfig().getInt(POSUMConfiguration.SIMULATOR_SERVICE_THREAD_COUNT,
                                 POSUMConfiguration.SIMULATOR_SERVICE_THREAD_COUNT_DEFAULT));
 
@@ -63,8 +65,9 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
 
         super.serviceStart();
 
+        InetSocketAddress connectAddress = NetUtils.getConnectAddress(this.simulatorServer.getListenerAddress());
         String dmAddress = masterClient.register(Utils.POSUMProcess.SIMULATOR,
-                this.simulatorServer.getListenerAddress().getHostName());
+                connectAddress.getHostName() + ":" + connectAddress.getPort());
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);
@@ -88,7 +91,7 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
                     logger.info("Received ping with message: " + request.getPayload());
                     break;
                 case START:
-                    simulator.startSimulation();
+                    context.getSimulator().startSimulation();
                     break;
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
