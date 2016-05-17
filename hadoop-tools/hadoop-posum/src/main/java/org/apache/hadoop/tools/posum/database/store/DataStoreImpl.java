@@ -176,4 +176,16 @@ public class DataStoreImpl implements DataStoreInterface {
     }
 
 
+    @Override
+    public String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) throws POSUMException {
+        writeLock.lock();
+        try {
+            return conn.getRawDocumentList(database, collection, queryParams);
+        } catch (Exception e) {
+            throw new POSUMException("Exception executing transaction ", e);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
 }

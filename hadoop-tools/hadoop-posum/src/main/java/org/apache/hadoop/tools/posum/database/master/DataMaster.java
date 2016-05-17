@@ -7,7 +7,10 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.monitor.HadoopMonitor;
 import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.monitor.POSUMMonitor;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
+import org.apache.hadoop.tools.posum.web.DataMasterWebApp;
+import org.apache.hadoop.tools.posum.web.MasterWebApp;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
@@ -18,6 +21,7 @@ public class DataMaster extends CompositeService {
     private static final Log logger = LogFactory.getLog(DataMaster.class);
 
     private Dispatcher dispatcher;
+    private DataMasterWebApp webApp;
 
     public DataMaster() {
         super(DataMaster.class.getName());
@@ -27,6 +31,7 @@ public class DataMaster extends CompositeService {
     private DataMasterCommService dmService;
     private DataStoreInterface dataStoreInterface;
     private HadoopMonitor hadoopMonitor;
+    private POSUMMonitor posumMonitor;
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
@@ -48,8 +53,35 @@ public class DataMaster extends CompositeService {
         hadoopMonitor.init(conf);
         addIfService(hadoopMonitor);
 
+        posumMonitor = new POSUMMonitor(dmContext);
+        posumMonitor.init(conf);
+        addIfService(posumMonitor);
+
+        try {
+            webApp = new DataMasterWebApp(dataStoreInterface,
+                    posumMonitor,
+                    conf.getInt(POSUMConfiguration.DM_WEBAPP_PORT, POSUMConfiguration.DM_WEBAPP_PORT_DEFAULT));
+        } catch (Exception e) {
+            logger.error("Could not initialize web app", e);
+        }
+
         super.serviceInit(conf);
     }
+
+    @Override
+    protected void serviceStart() throws Exception {
+        super.serviceStart();
+        if (webApp != null)
+            webApp.start();
+    }
+
+    @Override
+    protected void serviceStop() throws Exception {
+        if (webApp != null)
+            webApp.stop();
+        super.serviceStop();
+    }
+
 
     public static void main(String[] args) {
         try {
@@ -57,7 +89,7 @@ public class DataMaster extends CompositeService {
             DataMaster master = new DataMaster();
             master.init(conf);
             master.start();
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.fatal("Could not start Data Master", e);
         }
     }

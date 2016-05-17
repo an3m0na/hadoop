@@ -48,7 +48,11 @@ public class POSUMWebApp extends HttpServlet {
                 try {
                     if (target.startsWith("/ajax")) {
                         // json request
-                        sendResult(request, response, wrapResult("Server is online!"));
+                        String call = target.substring("/ajax".length());
+                        if ("/system".equals(call))
+                            sendResult(request, response, wrapResult(getSystemMetrics()));
+                        else
+                            sendResult(request, response, wrapResult("Server is online!"));
                     } else {
                         response.setStatus(HttpServletResponse.SC_OK);
                         response.setCharacterEncoding("utf-8");
@@ -106,5 +110,15 @@ public class POSUMWebApp extends HttpServlet {
 
         response.getWriter().println(result.toString());
         ((Request) request).setHandled(true);
+    }
+
+    protected JsonNode getSystemMetrics() {
+        return wrapResult(new JsonObject()
+                .put("time", System.currentTimeMillis())
+                .put("jvm", new JsonObject()
+                        .put("free", Runtime.getRuntime().freeMemory() / 1024 / 1024 / 1024)
+                        .put("max", Runtime.getRuntime().maxMemory() / 1024 / 1024 / 1024)
+                        .put("total", Runtime.getRuntime().totalMemory() / 1024 / 1024 / 1024))
+                .getNode());
     }
 }

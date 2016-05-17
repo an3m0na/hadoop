@@ -45,5 +45,5 @@ public interface DataStoreInterface {
 
     void runTransaction(DataTransaction transaction) throws POSUMException;
 
-
+    String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) throws POSUMException;
 }
