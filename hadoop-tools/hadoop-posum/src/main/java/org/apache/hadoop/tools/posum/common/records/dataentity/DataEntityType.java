@@ -12,7 +12,8 @@ public enum DataEntityType {
     TASK_HISTORY("tasks_history", TaskProfilePBImpl.class),
     APP("apps", AppProfilePBImpl.class),
     APP_HISTORY("apps_history", AppProfilePBImpl.class),
-    HISTORY("history", HistoryProfilePBImpl.class);
+    HISTORY("history", HistoryProfilePBImpl.class),
+    LOG_SCHEDULER("scheduler_log", LogEntry.class);
 
     private String label;
     private Class<? extends GeneralDataEntity> mappedClass;

@@ -14,35 +14,15 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
 
     public class PolicyInfo {
         private Class<? extends PluginPolicy> pClass;
-        private int usageNumber = 0;
-        private long usageTime = 0L;
-        private long lastStarted = 0;
 
         public PolicyInfo(Class<? extends PluginPolicy> pClass) {
             this.pClass = pClass;
-        }
-
-        public void start(Long now) {
-            usageNumber++;
-            lastStarted = now;
-        }
-
-        public void stop(Long now) {
-            usageTime += now - lastStarted;
-            lastStarted = 0;
         }
 
         public Class<? extends PluginPolicy> getImplClass() {
             return pClass;
         }
 
-        public int getUsageNumber() {
-            return usageNumber;
-        }
-
-        public long getUsageTime() {
-            return usageTime;
-        }
     }
 
     public enum AvailablePolicy {

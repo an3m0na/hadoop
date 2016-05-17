@@ -9,6 +9,7 @@ import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.field.JobForAppPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -147,6 +148,10 @@ public class DataMasterCommService extends CompositeService implements DataMaste
             switch (request.getType()) {
                 case PING:
                     logger.info("Received ping with message: " + request.getPayload());
+                    break;
+                case LOG_POLICY_CHANGE:
+                    dmContext.getDataStore().logAction(
+                            new LogEntry<>(LogEntry.Type.POLICY_CHANGE, request.getPayload()));
                     break;
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());

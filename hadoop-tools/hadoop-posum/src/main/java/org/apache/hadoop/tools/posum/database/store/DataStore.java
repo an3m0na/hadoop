@@ -3,20 +3,16 @@ package org.apache.hadoop.tools.posum.database.store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.mongojack.DBQuery;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -28,14 +24,13 @@ public class DataStore {
 
     private final Configuration conf;
     private MongoJackConnector conn;
-    private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private Lock readLock = lock.readLock();
-    private Lock writeLock = lock.writeLock();
+    private ConcurrentHashMap<Integer, ReentrantReadWriteLock> locks = new ConcurrentHashMap<>();
 
     public DataStore(Configuration conf) {
         String url = conf.get(POSUMConfiguration.DATABASE_URL, POSUMConfiguration.DATABASE_URL_DEFAULT);
         conn = new MongoJackConnector(url);
-        conn.addCollections(DataEntityDB.getMain(),
+        DataEntityDB db = DataEntityDB.getMain();
+        conn.addCollections(db,
                 DataEntityType.APP,
                 DataEntityType.APP_HISTORY,
                 DataEntityType.JOB,
@@ -43,58 +38,63 @@ public class DataStore {
                 DataEntityType.TASK,
                 DataEntityType.TASK_HISTORY,
                 DataEntityType.HISTORY);
+        locks.put(db.getId(), new ReentrantReadWriteLock());
+        conn.addCollections(DataEntityDB.getLogs(),
+                DataEntityType.LOG_SCHEDULER);
+        locks.put(db.getId(), new ReentrantReadWriteLock());
         conn.addCollections(DataEntityDB.getSimulation(),
                 DataEntityType.APP,
                 DataEntityType.JOB,
                 DataEntityType.TASK);
+        locks.put(db.getId(), new ReentrantReadWriteLock());
         this.conf = conf;
     }
 
     public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityType collection, String id) {
-        readLock.lock();
+        locks.get(db.getId()).readLock().lock();
         try {
             return conn.findObjectById(db, collection, id);
         } finally {
-            readLock.unlock();
+            locks.get(db.getId()).readLock().unlock();
         }
     }
 
     public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType collection, String field, Object value) {
-        readLock.lock();
+        locks.get(db.getId()).readLock().lock();
         try {
             return conn.findObjects(db, collection, field, value);
         } finally {
-            readLock.unlock();
+            locks.get(db.getId()).readLock().unlock();
         }
     }
 
     public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType
-                                                              collection, Map<String, Object> queryParams) {
-        readLock.lock();
+            collection, Map<String, Object> queryParams) {
+        locks.get(db.getId()).readLock().lock();
         try {
             return conn.findObjects(db, collection, queryParams);
         } finally {
-            readLock.unlock();
+            locks.get(db.getId()).readLock().unlock();
         }
     }
 
     public <T extends GeneralDataEntity> List<T> list(DataEntityDB db, DataEntityType collection) {
-        readLock.lock();
+        locks.get(db.getId()).readLock().lock();
         try {
             return conn.findObjects(db, collection, (DBQuery.Query) null);
         } finally {
-            readLock.unlock();
+            locks.get(db.getId()).readLock().unlock();
 
         }
     }
 
     public JobProfile getJobProfileForApp(DataEntityDB db, String appId) {
-        readLock.lock();
+        locks.get(db.getId()).readLock().lock();
         List<JobProfile> profiles;
         try {
             profiles = conn.findObjects(db, DataEntityType.JOB, "appId", appId);
         } finally {
-            readLock.unlock();
+            locks.get(db.getId()).readLock().unlock();
         }
         if (profiles.size() == 1)
             return profiles.get(0);
@@ -112,11 +112,11 @@ public class DataStore {
     }
 
     public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert) {
-        writeLock.lock();
+        locks.get(db.getId()).writeLock().lock();
         try {
             return conn.insertObject(db, collection, toInsert);
         } finally {
-            writeLock.unlock();
+            locks.get(db.getId()).writeLock().unlock();
         }
     }
 
@@ -127,61 +127,61 @@ public class DataStore {
 
     public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityType collection, T
             toUpdate) {
-        writeLock.lock();
+        locks.get(db.getId()).writeLock().lock();
         try {
             return conn.upsertObject(db, collection, toUpdate);
         } finally {
-            writeLock.unlock();
+            locks.get(db.getId()).writeLock().unlock();
         }
     }
 
     public void delete(DataEntityDB db, DataEntityType collection, String id) {
-        writeLock.lock();
+        locks.get(db.getId()).writeLock().lock();
         try {
             conn.deleteObject(db, collection, id);
         } finally {
-            writeLock.unlock();
+            locks.get(db.getId()).writeLock().unlock();
         }
     }
 
     public void delete(DataEntityDB db, DataEntityType collection, String field, Object value) {
-        writeLock.lock();
+        locks.get(db.getId()).writeLock().lock();
         try {
             conn.deleteObjects(db, collection, field, value);
         } finally {
-            writeLock.unlock();
+            locks.get(db.getId()).writeLock().unlock();
         }
     }
 
     public void delete(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
-        writeLock.lock();
+        locks.get(db.getId()).writeLock().lock();
         try {
             conn.deleteObject(db, collection, queryParams);
         } finally {
-            writeLock.unlock();
+            locks.get(db.getId()).writeLock().unlock();
         }
     }
 
-    public void runTransaction(DataTransaction transaction) throws POSUMException {
-        writeLock.lock();
+    public void runTransaction(DataEntityDB db, DataTransaction transaction) throws POSUMException {
+        locks.get(db.getId()).writeLock().lock();
         try {
             transaction.run();
         } catch (Exception e) {
             throw new POSUMException("Exception executing transaction ", e);
         } finally {
-            writeLock.unlock();
+            locks.get(db.getId()).writeLock().unlock();
         }
     }
 
     public String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) throws POSUMException {
-        writeLock.lock();
         try {
             return conn.getRawDocumentList(database, collection, queryParams);
         } catch (Exception e) {
             throw new POSUMException("Exception executing transaction ", e);
-        } finally {
-            writeLock.unlock();
         }
     }
 
+    public <T> void logAction(LogEntry<T> logEntry) {
+
+    }
 }

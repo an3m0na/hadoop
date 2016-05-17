@@ -186,6 +186,7 @@ message SimpleRequestProto {
         REQ_ENTITY_BY_ID = 2;
         REQ_JOB_FOR_APP = 3;
         REQ_START = 4;
+        REQ_LOG_POLICY_CHANGE = 5;
     }
 }
 
