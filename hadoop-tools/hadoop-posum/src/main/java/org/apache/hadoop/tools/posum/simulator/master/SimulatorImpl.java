@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
@@ -58,7 +59,8 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
     @Override
     protected void serviceStart() throws Exception {
         super.serviceStart();
-        predictor.setDataStore(context.getCommService().getDataStore());
+        //TODO rethink this when simulation db is up
+        predictor.setDataStore(context.getCommService().getDataClient().bindTo(DataEntityDB.getSimulation()));
     }
 
     @Override

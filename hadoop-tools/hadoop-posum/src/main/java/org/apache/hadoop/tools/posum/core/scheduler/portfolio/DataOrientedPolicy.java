@@ -66,7 +66,7 @@ public class DataOrientedPolicy extends SingleQueuePolicy<
         logger.debug("Updating app priority");
         try {
             String appId = app.getCurrentAppAttempt().getApplicationId().toString();
-            JobProfile job = commService.getDataStore().getJobProfileForApp(appId);
+            JobProfile job = commService.getDB().getJobProfileForApp(appId);
             if (job != null) {
                 Long size = job.getInputBytes();
                 if (size != null && size > 0) {

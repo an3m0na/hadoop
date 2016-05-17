@@ -47,9 +47,6 @@ public class POSUMConfiguration {
     public static final String DATABASE_URL = DATABASE_PREFIX + "url";
     public static final String DATABASE_URL_DEFAULT = "127.0.0.1:27017";
 
-    public static final String DATABASE_NAME = DATABASE_PREFIX + "name";
-    public static final String DATABASE_NAME_DEFAULT = "posum";
-
     public static final String DM_BIND_ADDRESS = DATABASE_PREFIX + "bind-host";
     public static final String DM_ADDRESS = DATABASE_PREFIX + "address";
     public static final int DM_PORT_DEFAULT = 17000;
