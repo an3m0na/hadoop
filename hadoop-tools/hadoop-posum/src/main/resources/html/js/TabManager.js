@@ -1,6 +1,7 @@
 function Tab(container) {
     this.id = container.attr("id");
     this.container = container;
+    this.plots = {};
 }
 
 function TabManager(env) {
@@ -36,6 +37,7 @@ function TabManager(env) {
         });
 
         setInterval(function () {
+            env.testTime += env.refreshInterval;
             self.load(tabs[env.state]);
         }, env.refreshInterval);
 
@@ -52,10 +54,14 @@ function TabManager(env) {
         self.switchToTab(newState);
     };
 
+    self.time = 0;
     self.load = function (tab) {
+        var path, traces, layout;
         if (tab.id == "scheduler") {
-            var path = env.isTest ? "/html/js/scheduler_metrics.json" : env.comm.schedulerPath + "/metrics";
+            path = env.isTest ? "/html/js/psmetrics_scheduler.json" : env.comm.psPath + "/scheduler";
             env.comm.requestData(path, function (data) {
+
+                //plot_policies_map
                 var totalTime = 0;
                 var chartData = [];
                 var crtColor = 0;
@@ -76,7 +82,7 @@ function TabManager(env) {
                     };
                     chartData.push(trace);
                 });
-                var layout = {
+                layout = {
                     title: "Policy Usage",
                     barmode: "stack",
                     xaxis: {
@@ -86,17 +92,17 @@ function TabManager(env) {
                         title: "Percentage of time spent running policy"
                     }
                 };
+                Plotly.newPlot('plot_policies_map', chartData, layout);
 
-                Plotly.newPlot('sch_map', chartData, layout);
-
+                //plot_policies_list
                 var choiceList = data.policies.list;
-                var trace = {
+                traces = [{
                     x: choiceList.times,
                     y: choiceList.policies,
                     mode: "lines+markers",
                     line: {shape: "hv"},
                     type: "scatter"
-                };
+                }];
                 layout = {
                     title: "Policy Choices",
                     xaxis: {
@@ -107,10 +113,124 @@ function TabManager(env) {
                         title: "Policy"
                     }
                 };
+                Plotly.newPlot("plot_policies_list", traces, layout);
 
-                Plotly.newPlot("sch_list", [trace], layout);
+
+                self.updateTimeSeries(tab,
+                    "plot_timecost",
+                    data,
+                    function (data) {
+                        return data.timecost
+                    },
+                    function (traceObject) {
+                        return traceObject
+                    },
+                    "Operation Timecost",
+                    {title: "Cost (MS)"}
+                );
+            });
+        } else if (tab.id == "system") {
+            path = env.isTest ? "/html/js/psmetrics_system.json" : env.comm.psPath + "/system";
+            self.updateTimeSeries(tab,
+                "plot_ps_jvm",
+                path,
+                function (data) {
+                    return data.jvm
+                },
+                function (traceObject) {
+                    return traceObject
+                },
+                "JVM Memory",
+                {title: "Memory (GB)", tickmode: "linear"}
+            );
+
+        } else if (tab.id == "cluster") {
+            path = env.isTest ? "/html/js/psmetrics_cluster.json" : env.comm.psPath + "/cluster";
+            env.comm.requestData(path, function (data) {
+
+                self.updateTimeSeries(tab,
+                    "plot_apps",
+                    data,
+                    function (data) {
+                        return data.running
+                    },
+                    function (traceObject) {
+                        return traceObject.applications
+                    },
+                    "Running Applications",
+                    {title: "Number", tickmode: "linear"}
+                );
+
+                self.updateTimeSeries(tab,
+                    "plot_containers",
+                    data,
+                    function (data) {
+                        return data.running
+                    },
+                    function (traceObject) {
+                        return traceObject.containers
+                    },
+                    "Running Containers",
+                    {title: "Number", tickmode: "linear"}
+                );
             });
         }
     };
+
+    self.updatePlot = function (tab, name, pathOrData, createPlot, updateTraces) {
+        var parser = function (data) {
+            var plot = tab.plots[name];
+            if (plot === undefined) {
+                var plotAttributes = createPlot(data);
+                Plotly.newPlot(name, plotAttributes.traces, plotAttributes.layout).then(function (value) {
+                    tab.plots[name] = value;
+                });
+            } else {
+                updateTraces(plot.data, data);
+                Plotly.redraw(plot);
+            }
+        };
+        if ($.isPlainObject(pathOrData))
+            parser(pathOrData);
+        else
+            env.comm.requestData(pathOrData, parser);
+    };
+
+    self.updateTimeSeries = function (tab,
+                                      name,
+                                      pathOrData,
+                                      getTracePoints,
+                                      getDataPointValue,
+                                      plotTitle,
+                                      yaxis) {
+        self.updatePlot(tab, name, pathOrData, function (data) {
+            var traces = [];
+            $.each(getTracePoints(data), function (k, v) {
+                traces.push({
+                    x: [data.time],
+                    y: [getDataPointValue(v)],
+                    mode: "lines",
+                    type: "scatter",
+                    name: k
+                });
+            });
+            return {
+                traces: traces,
+                layout: {
+                    title: plotTitle,
+                    xaxis: {
+                        title: "Time",
+                        type: "date"
+                    },
+                    yaxis: yaxis
+                }
+            };
+        }, function (traces, data) {
+            traces.forEach(function (trace) {
+                trace.x.push(data.time + (env.isTest ? env.testTime : 0));
+                trace.y.push(getDataPointValue(getTracePoints(data)[trace.name]));
+            });
+        });
+    }
 
 }

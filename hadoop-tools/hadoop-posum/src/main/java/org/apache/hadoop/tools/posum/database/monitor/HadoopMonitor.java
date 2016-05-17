@@ -23,8 +23,8 @@ public class HadoopMonitor extends GeneralLooper<HadoopMonitor> {
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         super.serviceInit(conf);
-        setSleepInterval(conf.getLong(POSUMConfiguration.MONITOR_HEARTBEAT_MS,
-                POSUMConfiguration.MONITOR_HEARTBEAT_MS_DEFAULT));
+        setSleepInterval(conf.getLong(POSUMConfiguration.CLUSTER_MONITOR_HEARTBEAT_MS,
+                POSUMConfiguration.CLUSTER_MONITOR_HEARTBEAT_MS_DEFAULT));
         this.collector = new ClusterInfoCollector(conf, context.getDataStore());
     }
 
