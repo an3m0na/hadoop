@@ -16,60 +16,52 @@ import java.util.List;
  */
 public class MongoConnector {
 
-    protected MongoDatabase db;
     protected MongoClient client;
 
-    public MongoConnector(String databaseName){
-        this(databaseName, null);
-    }
 
-    public MongoConnector(String databaseName, String databaseUrl) {
-        if (databaseName == null)
-            databaseName = "test";
+    public MongoConnector(String databaseUrl) {
         if (databaseUrl != null)
             client = new MongoClient(databaseUrl);
         client = new MongoClient();
-        db = client.getDatabase(databaseName);
     }
 
-    public void insertDoc(String collection, Document doc) {
-        db.getCollection(collection).insertOne(doc);
+    public void insertDoc(String database, String collection, Document doc) {
+        client.getDatabase(database).getCollection(collection).insertOne(doc);
     }
 
-    public void insertDocs(String collection, List<Document> docs) {
-        db.getCollection(collection).insertMany(docs);
+    public void insertDocs(String database, String collection, List<Document> docs) {
+        client.getDatabase(database).getCollection(collection).insertMany(docs);
     }
 
-    public void deleteDocs(String collection, Document queryDoc) {
-        db.getCollection(collection).deleteMany(queryDoc);
+    public void deleteDocs(String database, String collection, Document queryDoc) {
+        client.getDatabase(database).getCollection(collection).deleteMany(queryDoc);
     }
 
-    public void deleteDoc(String collection, Document queryDoc) {
-        db.getCollection(collection).findOneAndDelete(queryDoc);
+    public void deleteDoc(String database, String collection, Document queryDoc) {
+        client.getDatabase(database).getCollection(collection).findOneAndDelete(queryDoc);
     }
 
-    public void updateDoc(String collection, Document queryDoc, Document setterDoc) {
-        db.getCollection(collection).updateOne(queryDoc, setterDoc);
+    public void updateDoc(String database, String collection, Document queryDoc, Document setterDoc) {
+        client.getDatabase(database).getCollection(collection).updateOne(queryDoc, setterDoc);
     }
 
-    public void updateDocs(String collection, Document queryDoc, Document setterDoc) {
-        db.getCollection(collection).updateMany(queryDoc, setterDoc);
+    public void updateDocs(String database, String collection, Document queryDoc, Document setterDoc) {
+        client.getDatabase(database).getCollection(collection).updateMany(queryDoc, setterDoc);
     }
 
-    public void replaceDoc(String collection, Document queryDoc, Document newDoc) {
-        db.getCollection(collection).replaceOne(queryDoc, newDoc);
+    public void replaceDoc(String database, String collection, Document queryDoc, Document newDoc) {
+        client.getDatabase(database).getCollection(collection).replaceOne(queryDoc, newDoc);
     }
 
-    public AggregateIterable<Document> aggregateDocs(String collection, Document... query) {
+    public AggregateIterable<Document> aggregateDocs(String database, String collection, Document... query) {
         List<Document> actualQuery = query == null ? Collections.<Document>emptyList() : Arrays.asList(query);
-        return db.getCollection(collection).aggregate(actualQuery);
+        return client.getDatabase(database).getCollection(collection).aggregate(actualQuery);
     }
 
-
-    public FindIterable<Document> findDocs(String collection, Document queryDoc) {
+    public FindIterable<Document> findDocs(String database, String collection, Document queryDoc) {
         if (queryDoc == null)
             queryDoc = new Document();
-        return db.getCollection(collection).find(queryDoc);
+        return client.getDatabase(database).getCollection(collection).find(queryDoc);
     }
 
 }

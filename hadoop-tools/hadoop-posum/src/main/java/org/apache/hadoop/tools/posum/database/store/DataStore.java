@@ -3,12 +3,13 @@ package org.apache.hadoop.tools.posum.database.store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.mongojack.DBQuery;
@@ -21,9 +22,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by ane on 2/9/16.
  */
-public class DataStoreImpl implements DataStoreInterface {
+public class DataStore {
 
-    private static Log logger = LogFactory.getLog(DataStoreImpl.class);
+    private static Log logger = LogFactory.getLog(DataStore.class);
 
     private final Configuration conf;
     private MongoJackConnector conn;
@@ -31,64 +32,67 @@ public class DataStoreImpl implements DataStoreInterface {
     private Lock readLock = lock.readLock();
     private Lock writeLock = lock.writeLock();
 
-    public DataStoreImpl(Configuration conf) {
-        String name = conf.get(POSUMConfiguration.DATABASE_NAME, POSUMConfiguration.DATABASE_NAME_DEFAULT);
+    public DataStore(Configuration conf) {
         String url = conf.get(POSUMConfiguration.DATABASE_URL, POSUMConfiguration.DATABASE_URL_DEFAULT);
-        conn = new MongoJackConnector(name, url);
-        for (DataEntityType collection : DataEntityType.values()) {
-            conn.addCollection(collection);
-        }
+        conn = new MongoJackConnector(url);
+        conn.addCollections(DataEntityDB.getMain(),
+                DataEntityType.APP,
+                DataEntityType.APP_HISTORY,
+                DataEntityType.JOB,
+                DataEntityType.JOB_HISTORY,
+                DataEntityType.TASK,
+                DataEntityType.TASK_HISTORY,
+                DataEntityType.HISTORY);
+        conn.addCollections(DataEntityDB.getSimulation(),
+                DataEntityType.APP,
+                DataEntityType.JOB,
+                DataEntityType.TASK);
         this.conf = conf;
     }
 
-    @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
+    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityType collection, String id) {
         readLock.lock();
         try {
-            return conn.findObjectById(collection, id);
+            return conn.findObjectById(db, collection, id);
         } finally {
             readLock.unlock();
         }
     }
 
-    @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value) {
+    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType collection, String field, Object value) {
         readLock.lock();
         try {
-            return conn.findObjects(collection, field, value);
+            return conn.findObjects(db, collection, field, value);
         } finally {
             readLock.unlock();
         }
     }
 
-    @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityType
+    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType
                                                               collection, Map<String, Object> queryParams) {
         readLock.lock();
         try {
-            return conn.findObjects(collection, queryParams);
+            return conn.findObjects(db, collection, queryParams);
         } finally {
             readLock.unlock();
         }
     }
 
-    @Override
-    public <T extends GeneralDataEntity> List<T> list(DataEntityType collection) {
+    public <T extends GeneralDataEntity> List<T> list(DataEntityDB db, DataEntityType collection) {
         readLock.lock();
         try {
-            return conn.findObjects(collection, (DBQuery.Query) null);
+            return conn.findObjects(db, collection, (DBQuery.Query) null);
         } finally {
             readLock.unlock();
 
         }
     }
 
-    @Override
-    public JobProfile getJobProfileForApp(String appId) {
+    public JobProfile getJobProfileForApp(DataEntityDB db, String appId) {
         readLock.lock();
         List<JobProfile> profiles;
         try {
-            profiles = conn.findObjects(DataEntityType.JOB, "appId", appId);
+            profiles = conn.findObjects(db, DataEntityType.JOB, "appId", appId);
         } finally {
             readLock.unlock();
         }
@@ -107,63 +111,57 @@ public class DataStoreImpl implements DataStoreInterface {
 
     }
 
-    @Override
-    public <T extends GeneralDataEntity> String store(DataEntityType collection, T toInsert) {
+    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert) {
         writeLock.lock();
         try {
-            return conn.insertObject(collection, toInsert);
+            return conn.insertObject(db, collection, toInsert);
         } finally {
             writeLock.unlock();
         }
     }
 
-    @Override
-    public List<JobProfile> getComparableProfiles(String user, int count) {
+    public List<JobProfile> getComparableProfiles(DataEntityDB db, String user, int count) {
+        //TODO
         return null;
     }
 
-    @Override
-    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType collection, T
+    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityType collection, T
             toUpdate) {
         writeLock.lock();
         try {
-            return conn.upsertObject(collection, toUpdate);
+            return conn.upsertObject(db, collection, toUpdate);
         } finally {
             writeLock.unlock();
         }
     }
 
-    @Override
-    public void delete(DataEntityType collection, String id) {
+    public void delete(DataEntityDB db, DataEntityType collection, String id) {
         writeLock.lock();
         try {
-            conn.deleteObject(collection, id);
+            conn.deleteObject(db, collection, id);
         } finally {
             writeLock.unlock();
         }
     }
 
-    @Override
-    public void delete(DataEntityType collection, String field, Object value) {
+    public void delete(DataEntityDB db, DataEntityType collection, String field, Object value) {
         writeLock.lock();
         try {
-            conn.deleteObjects(collection, field, value);
+            conn.deleteObjects(db, collection, field, value);
         } finally {
             writeLock.unlock();
         }
     }
 
-    @Override
-    public void delete(DataEntityType collection, Map<String, Object> queryParams) {
+    public void delete(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
         writeLock.lock();
         try {
-            conn.deleteObject(collection, queryParams);
+            conn.deleteObject(db, collection, queryParams);
         } finally {
             writeLock.unlock();
         }
     }
 
-    @Override
     public void runTransaction(DataTransaction transaction) throws POSUMException {
         writeLock.lock();
         try {
@@ -175,8 +173,6 @@ public class DataStoreImpl implements DataStoreInterface {
         }
     }
 
-
-    @Override
     public String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) throws POSUMException {
         writeLock.lock();
         try {

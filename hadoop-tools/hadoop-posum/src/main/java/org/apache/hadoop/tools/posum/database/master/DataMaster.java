@@ -6,11 +6,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.monitor.HadoopMonitor;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.monitor.POSUMMonitor;
-import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.web.DataMasterWebApp;
-import org.apache.hadoop.tools.posum.web.MasterWebApp;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
@@ -29,7 +28,7 @@ public class DataMaster extends CompositeService {
 
     private DataMasterContext dmContext;
     private DataMasterCommService dmService;
-    private DataStoreInterface dataStoreInterface;
+    private DataStore dataStore;
     private HadoopMonitor hadoopMonitor;
     private POSUMMonitor posumMonitor;
 
@@ -37,8 +36,8 @@ public class DataMaster extends CompositeService {
     protected void serviceInit(Configuration conf) throws Exception {
         dmContext = new DataMasterContext();
 
-        dataStoreInterface = new DataStoreImpl(conf);
-        dmContext.setDataStoreInterface(dataStoreInterface);
+        dataStore = new DataStore(conf);
+        dmContext.setDataStore(dataStore);
         dispatcher = new AsyncDispatcher();
         addIfService(dispatcher);
 
@@ -58,7 +57,7 @@ public class DataMaster extends CompositeService {
         addIfService(posumMonitor);
 
         try {
-            webApp = new DataMasterWebApp(dataStoreInterface,
+            webApp = new DataMasterWebApp(dataStore,
                     posumMonitor,
                     conf.getInt(POSUMConfiguration.DM_WEBAPP_PORT, POSUMConfiguration.DM_WEBAPP_PORT_DEFAULT));
         } catch (Exception e) {

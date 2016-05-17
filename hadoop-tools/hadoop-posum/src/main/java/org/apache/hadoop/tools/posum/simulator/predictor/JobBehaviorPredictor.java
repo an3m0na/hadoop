@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.simulator.predictor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
 
 /**
  * Created by ane on 2/9/16.
@@ -11,7 +11,7 @@ import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
 public abstract class JobBehaviorPredictor {
 
     protected Configuration conf;
-    private DataStoreInterface dataStore;
+    private DBInterface dataStore;
 
     public JobBehaviorPredictor(Configuration conf) {
         this.conf = conf;
@@ -23,11 +23,11 @@ public abstract class JobBehaviorPredictor {
 
     public abstract Integer predictTaskDuration(String jobId, String taskId);
 
-    public void setDataStore(DataStoreInterface dataStore) {
+    public void setDataStore(DBInterface dataStore) {
         this.dataStore = dataStore;
     }
 
-    DataStoreInterface getDataStore() {
+    DBInterface getDataStore() {
         if (dataStore == null)
             throw new POSUMException("DataStore not initialized in Simulator");
         return dataStore;

@@ -5,6 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.field.JobForAppPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -30,7 +32,7 @@ import java.util.Map;
 /**
  * Created by ane on 2/9/16.
  */
-public class DataMasterClient extends AbstractService implements DataStoreInterface {
+public class DataMasterClient extends AbstractService {
 
     private static Log logger = LogFactory.getLog(DataMasterClient.class);
 
@@ -70,12 +72,11 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
         super.serviceStop();
     }
 
-    @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
+    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityType collection, String id) {
         try {
             SingleEntityPayload payload = Utils.handleError("findById",
                     dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.ENTITY_BY_ID,
-                            EntityByIdPayload.newInstance(collection, id)))
+                            EntityByIdPayload.newInstance(db, collection, id)))
             ).getPayload();
             if (payload != null)
                 return (T) payload.getEntity();
@@ -85,18 +86,10 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
         }
     }
 
-    @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value) {
-        Map<String, Object> queryParams = new HashMap<>(1);
-        queryParams.put(field, value);
-        return find(collection, queryParams);
-    }
-
-    @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams) {
+    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
         try {
             MultiEntityPayload payload = Utils.handleError("findById",
-                    dmClient.listEntities(MultiEntityRequest.newInstance(collection, queryParams))).getPayload();
+                    dmClient.listEntities(MultiEntityRequest.newInstance(db, collection, queryParams))).getPayload();
             if (payload != null)
                 return (List<T>) payload.getEntities();
             return null;
@@ -105,17 +98,12 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
         }
     }
 
-    @Override
-    public <T extends GeneralDataEntity> List<T> list(DataEntityType collection) {
-        return find(collection, new HashMap<String, Object>());
-    }
-
-    @Override
-    public JobProfile getJobProfileForApp(String appId) {
+    public JobProfile getJobProfileForApp(DataEntityDB db, String appId) {
         logger.debug("Getting job profile for app " + appId);
         try {
             SingleEntityPayload payload = Utils.handleError("getJobProfileForApp",
-                    dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.JOB_FOR_APP, appId))
+                    dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.JOB_FOR_APP,
+                            JobForAppPayload.newInstance(db, appId)))
             ).getPayload();
             if (payload != null)
                 return (JobProfile) payload.getEntity();
@@ -125,45 +113,27 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
         }
     }
 
-    @Override
-    public <T extends GeneralDataEntity> String store(DataEntityType collection, T toInsert) {
+    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert) {
+        //TODO
         return null;
     }
 
-    @Override
-    public List<JobProfile> getComparableProfiles(String user, int count) {
+    public List<JobProfile> getComparableProfiles(DataEntityDB db, String user, int count) {
+        //TODO
         return null;
     }
 
-    @Override
-    public void runTransaction(DataTransaction transaction) throws POSUMException {
-        throw new POSUMException("Transactions are not supported remotely");
-    }
-
-    @Override
-    public String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) throws POSUMException {
-        //TODO maybe do this
-        throw new POSUMException("Method not implemented");
-    }
-
-    @Override
-    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType apps, T toUpdate) {
+    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityType apps, T toUpdate) {
+        //TODO
         return false;
     }
 
-    @Override
-    public void delete(DataEntityType collection, String id) {
-
+    public void delete(DataEntityDB db, DataEntityType collection, String id) {
+        //TODO
     }
 
-    @Override
-    public void delete(DataEntityType collection, String field, Object value) {
-
-    }
-
-    @Override
-    public void delete(DataEntityType collection, Map<String, Object> queryParams) {
-
+    public void delete(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
+        //TODO
     }
 
     public SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
@@ -181,5 +151,9 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
     private void checkPing() {
         sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
         logger.info("Successfully connected to Data Master");
+    }
+
+    public DBInterface bindTo(DataEntityDB db){
+        return new DBImpl(db, this);
     }
 }

@@ -2,8 +2,9 @@ package org.apache.hadoop.tools.posum.test;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 import org.junit.Test;
@@ -20,7 +21,7 @@ import java.util.Map;
 public class TestPredictor {
     Configuration conf;
 
-    private JobBehaviorPredictor initPredictor(DataStoreInterface dataStoreInterface) {
+    private JobBehaviorPredictor initPredictor(DBInterface dbInterface) {
 
         conf = TestUtils.getConf();
 
@@ -32,8 +33,8 @@ public class TestPredictor {
 
         JobBehaviorPredictor predictor = null;
         try {
-            predictor = predictorClass.getConstructor(Configuration.class, DataStoreInterface.class)
-                    .newInstance(conf, dataStoreInterface);
+            predictor = predictorClass.getConstructor(Configuration.class, DBInterface.class)
+                    .newInstance(conf, dbInterface);
         } catch (NoSuchMethodException |
                 InvocationTargetException |
                 InstantiationException |
@@ -54,7 +55,7 @@ public class TestPredictor {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        JobBehaviorPredictor predictor = initPredictor(dataStore);
+        JobBehaviorPredictor predictor = initPredictor(dataStore.bindTo(DataEntityDB.getMain()));
         System.out.println(dataStore.getJobList());
         int heartbeat = conf.getInt(POSUMConfiguration.MASTER_HEARTBEAT_MS,
                 POSUMConfiguration.MASTER_HEARTBEAT_MS_DEFAULT);

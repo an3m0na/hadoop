@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -16,7 +17,7 @@ import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterInterface;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -30,6 +31,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
 
     private POSUMMasterClient masterClient;
     private DataMasterClient dataClient;
+    private DBInterface dbInterface;
 
     private Server metaServer;
     private MetaSchedulerInterface metaScheduler;
@@ -46,6 +48,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         masterClient = new POSUMMasterClient();
         masterClient.init(conf);
         addIfService(masterClient);
+        this.dbInterface = dataClient.bindTo(DataEntityDB.getMain());
 
         super.serviceInit(conf);
     }
@@ -105,8 +108,8 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         return SimpleResponse.newInstance(true);
     }
 
-    public DataStoreInterface getDataStore() {
-        return dataClient;
+    public DBInterface getDB() {
+        return dbInterface;
     }
 
     public POSUMMasterInterface getMaster() {

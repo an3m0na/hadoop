@@ -15,16 +15,13 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.mapreduce.v2.util.MRApps;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
@@ -41,13 +38,14 @@ public class ClusterInfoCollector {
 
     private Set<String> running = new HashSet<>();
     private Set<String> finished = new HashSet<>();
-    private final DataStoreInterface dataStoreInterface;
+    private final DataStore dataStore;
+    private final DataEntityDB db = DataEntityDB.getMain();
     private final HadoopAPIClient api;
     private final Configuration conf;
     private final boolean historyEnabled;
 
-    ClusterInfoCollector(Configuration conf, DataStoreInterface dataStoreInterface) {
-        this.dataStoreInterface = dataStoreInterface;
+    ClusterInfoCollector(Configuration conf, DataStore dataStore) {
+        this.dataStore = dataStore;
         this.api = new HadoopAPIClient(conf);
         this.conf = conf;
         this.historyEnabled = conf.getBoolean(POSUMConfiguration.MONITOR_KEEP_HISTORY,
@@ -79,7 +77,7 @@ public class ClusterInfoCollector {
         finished.add(appId);
 
         // gather app info
-        List<JobProfile> jobs = dataStoreInterface.find(DataEntityType.JOB, "appId", appId);
+        List<JobProfile> jobs = dataStore.find(db, DataEntityType.JOB, "appId", appId);
         JobProfile job;
         String jobId;
         if (jobs.size() > 1)
@@ -95,16 +93,16 @@ public class ClusterInfoCollector {
         final List<TaskProfile> tasks = api.getFinishedTasksInfo(appId, jobId);
 
         // move info in database
-        dataStoreInterface.runTransaction(new DataTransaction() {
+        dataStore.runTransaction(new DataTransaction() {
             @Override
             public void run() throws Exception {
-                dataStoreInterface.delete(DataEntityType.APP, appId);
-                dataStoreInterface.delete(DataEntityType.JOB, "appId", appId);
-                dataStoreInterface.delete(DataEntityType.TASK, "appId", appId);
-                dataStoreInterface.updateOrStore(DataEntityType.APP_HISTORY, app);
-                dataStoreInterface.updateOrStore(DataEntityType.JOB_HISTORY, finalJob);
+                dataStore.delete(db, DataEntityType.APP, appId);
+                dataStore.delete(db, DataEntityType.JOB, "appId", appId);
+                dataStore.delete(db, DataEntityType.TASK, "appId", appId);
+                dataStore.updateOrStore(db, DataEntityType.APP_HISTORY, app);
+                dataStore.updateOrStore(db, DataEntityType.JOB_HISTORY, finalJob);
                 for (TaskProfile task : tasks) {
-                    dataStoreInterface.updateOrStore(DataEntityType.TASK_HISTORY, task);
+                    dataStore.updateOrStore(db, DataEntityType.TASK_HISTORY, task);
                 }
             }
         });
@@ -113,14 +111,14 @@ public class ClusterInfoCollector {
     private void updateAppInfo(final AppProfile app) {
         logger.trace("Updating " + app.getId() + " info");
 
-        dataStoreInterface.updateOrStore(DataEntityType.APP, app);
+        dataStore.updateOrStore(db, DataEntityType.APP, app);
         if (historyEnabled) {
-            dataStoreInterface.store(DataEntityType.HISTORY,
+            dataStore.store(db, DataEntityType.HISTORY,
                     new HistoryProfilePBImpl<>(DataEntityType.APP, app));
         }
 
         if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-            JobProfile lastJobInfo = dataStoreInterface.getJobProfileForApp(app.getId());
+            JobProfile lastJobInfo = dataStore.getJobProfileForApp(db, app.getId());
             final JobProfile job = api.getRunningJobInfo(app.getId(), lastJobInfo);
             if (job == null)
                 logger.warn("Could not find job for " + app.getId());
@@ -150,23 +148,23 @@ public class ClusterInfoCollector {
                     }
                 }
 
-                dataStoreInterface.runTransaction(new DataTransaction() {
+                dataStore.runTransaction(new DataTransaction() {
                     @Override
                     public void run() throws Exception {
-                        dataStoreInterface.updateOrStore(DataEntityType.JOB, job);
+                        dataStore.updateOrStore(db, DataEntityType.JOB, job);
                         for (TaskProfile task : tasks) {
-                            dataStoreInterface.updateOrStore(DataEntityType.TASK, task);
+                            dataStore.updateOrStore(db, DataEntityType.TASK, task);
                         }
                     }
                 });
 
                 if (historyEnabled) {
-                    dataStoreInterface.store(DataEntityType.HISTORY,
+                    dataStore.store(db, DataEntityType.HISTORY,
                             new HistoryProfilePBImpl<>(DataEntityType.APP, app));
-                    dataStoreInterface.store(DataEntityType.HISTORY,
+                    dataStore.store(db, DataEntityType.HISTORY,
                             new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
                     for (TaskProfile task : tasks) {
-                        dataStoreInterface.store(DataEntityType.HISTORY,
+                        dataStore.store(db, DataEntityType.HISTORY,
                                 new HistoryProfilePBImpl<>(DataEntityType.TASK, task));
                     }
                 }
@@ -176,9 +174,9 @@ public class ClusterInfoCollector {
             logger.trace(" pp " + app.getId() + " is not tracked");
             try {
                 final JobProfile job = getSubmittedJobInfo(conf, app.getId());
-                dataStoreInterface.updateOrStore(DataEntityType.JOB, job);
+                dataStore.updateOrStore(db, DataEntityType.JOB, job);
                 if (historyEnabled) {
-                    dataStoreInterface.store(DataEntityType.HISTORY,
+                    dataStore.store(db, DataEntityType.HISTORY,
                             new HistoryProfilePBImpl<>(DataEntityType.JOB,  job));
                 }
             } catch (Exception e) {

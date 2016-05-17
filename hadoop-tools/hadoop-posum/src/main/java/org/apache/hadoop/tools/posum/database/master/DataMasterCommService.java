@@ -9,6 +9,7 @@ import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.field.JobForAppPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
@@ -99,12 +100,16 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                 case ENTITY_BY_ID:
                     EntityByIdPayload idPayload = (EntityByIdPayload) request.getPayload();
                     GeneralDataEntity ret =
-                            dmContext.getDataStore().findById(idPayload.getEntityType(), idPayload.getId());
+                            dmContext.getDataStore().findById(idPayload.getEntityDB(),
+                                    idPayload.getEntityType(),
+                                    idPayload.getId());
                     SingleEntityPayload entityPayload = SingleEntityPayload.newInstance(idPayload.getEntityType(), ret);
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
                 case JOB_FOR_APP:
-                    String appId = (String) request.getPayload();
-                    JobProfile jobProfile = dmContext.getDataStore().getJobProfileForApp(appId);
+                    JobForAppPayload jobForAppPayload = (JobForAppPayload) request.getPayload();
+                    JobProfile jobProfile =
+                            dmContext.getDataStore().getJobProfileForApp(jobForAppPayload.getEntityDB(),
+                                    jobForAppPayload.getAppId());
                     entityPayload = SingleEntityPayload.newInstance(DataEntityType.JOB, jobProfile);
                     logger.debug("Returning profile" + jobProfile);
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
@@ -124,7 +129,9 @@ public class DataMasterCommService extends CompositeService implements DataMaste
             throws IOException, YarnException {
         try {
             List<GeneralDataEntity> ret =
-                    dmContext.getDataStore().find(request.getEntityType(), request.getProperties());
+                    dmContext.getDataStore().find(request.getEntityDB(),
+                            request.getEntityType(),
+                            request.getProperties());
             MultiEntityPayload payload = MultiEntityPayload.newInstance(request.getEntityType(), ret);
             return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY, payload);
         } catch (Exception e) {

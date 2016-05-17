@@ -18,7 +18,8 @@ import org.apache.hadoop.tools.posum.core.master.management.POSUMEventType;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerClient;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.master.DataMaster;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorClient;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -153,10 +154,6 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
         if (schedulerClient != null && schedulerClient.isInState(STATE.STARTED))
             return schedulerClient;
         else return null;
-    }
-
-    public DataStoreInterface getDataStore() {
-        return dataClient;
     }
 
     public SimulatorInterface getSimulator() {

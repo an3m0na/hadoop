@@ -1,18 +1,16 @@
 package org.apache.hadoop.tools.posum.web;
 
-import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.util.JsonArray;
 import org.apache.hadoop.tools.posum.common.util.JsonObject;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.master.DataMaster;
 import org.apache.hadoop.tools.posum.database.monitor.POSUMMonitor;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.handler.AbstractHandler;
 
@@ -26,10 +24,10 @@ import java.util.Map;
 public class DataMasterWebApp extends POSUMWebApp {
     private static Log logger = LogFactory.getLog(POSUMWebApp.class);
 
-    private final transient DataStoreInterface dataStore;
+    private final transient DataStore dataStore;
     private final transient POSUMMonitor monitor;
 
-    public DataMasterWebApp(DataStoreInterface dataStore, POSUMMonitor monitor, int metricsAddressPort) {
+    public DataMasterWebApp(DataStore dataStore, POSUMMonitor monitor, int metricsAddressPort) {
         super(metricsAddressPort);
         this.dataStore = dataStore;
         this.monitor = monitor;
