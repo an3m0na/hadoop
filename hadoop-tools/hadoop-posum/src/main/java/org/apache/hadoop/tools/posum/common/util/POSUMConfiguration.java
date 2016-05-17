@@ -101,10 +101,17 @@ public class POSUMConfiguration {
     public static final String SCHEDULER_WEBAPP_PORT = SCHEDULER_PREFIX + "webapp.port";
     public static final int SCHEDULER_WEBAPP_PORT_DEFAULT = 18010;
 
+    public static final String DM_WEBAPP_PORT = DATABASE_PREFIX + "webapp.port";
+    public static final int DM_WEBAPP_PORT_DEFAULT = 18020;
+
     public static final String SCHEDULER_METRICS_DIR = SCHEDULER_PREFIX + "metrics.dir";
     public static final String SCHEDULER_METRICS_DIR_DEFAULT = "logs";
     public static final String SCHEDULER_METRICS_ON = SCHEDULER_PREFIX + "metrics.on";
     public static final boolean SCHEDULER_METRICS_ON_DEFAULT = true;
+
+    public static final String MONITOR_PERSIST_METRICS = MONITOR_PREFIX + "metrics.persist";
+    public static final boolean MONITOR_PERSIST_METRICS_DEFAULT = true;
+
 
 
     public static final String MAX_SCHEDULER_CHOICE_BUFFER = SCHEDULER_PREFIX + "choices.buffer";

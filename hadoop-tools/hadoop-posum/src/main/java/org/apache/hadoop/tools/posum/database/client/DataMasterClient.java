@@ -141,6 +141,12 @@ public class DataMasterClient extends AbstractService implements DataStoreInterf
     }
 
     @Override
+    public String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) throws POSUMException {
+        //TODO maybe do this
+        throw new POSUMException("Method not implemented");
+    }
+
+    @Override
     public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType apps, T toUpdate) {
         return false;
     }

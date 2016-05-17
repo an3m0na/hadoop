@@ -4,8 +4,13 @@ import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.tools.posum.common.util.*;
-import org.apache.hadoop.tools.posum.core.scheduler.meta.PortfolioMetaScheduler;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.util.JsonArray;
+import org.apache.hadoop.tools.posum.common.util.JsonObject;
+import org.apache.hadoop.tools.posum.common.util.PolicyMap;
+import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.monitor.POSUMMonitor;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;
 import org.mortbay.jetty.Handler;
@@ -18,14 +23,16 @@ import java.util.Map;
 /**
  * Created by ane on 4/29/16.
  */
-public class MetaSchedulerWebApp extends POSUMWebApp {
+public class DataMasterWebApp extends POSUMWebApp {
     private static Log logger = LogFactory.getLog(POSUMWebApp.class);
 
-    private final transient PortfolioMetaScheduler scheduler;
+    private final transient DataStoreInterface dataStore;
+    private final transient POSUMMonitor monitor;
 
-    public MetaSchedulerWebApp(PortfolioMetaScheduler scheduler, int metricsAddressPort) {
+    public DataMasterWebApp(DataStoreInterface dataStore, POSUMMonitor monitor, int metricsAddressPort) {
         super(metricsAddressPort);
-        this.scheduler = scheduler;
+        this.dataStore = dataStore;
+        this.monitor = monitor;
     }
 
     @Override
@@ -41,16 +48,26 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
                         JsonNode ret;
                         try {
                             switch (call) {
-                                case "/cluster":
-                                    ret = getClusterMetrics();
-                                    break;
-                                case "/scheduler":
-                                    ret = getSchedulerMetrics();
+                                case "/policies":
+                                    ret = getPolicyMetrics();
                                     break;
                                 case "/system":
                                     ret = getSystemMetrics();
                                     break;
                                 default:
+                                    if (call.startsWith("/data/")) {
+                                        String path = call.substring("/data/".length());
+                                        String db = null;
+                                        String collection = path;
+                                        int index = path.indexOf("/");
+                                        if (index >= 0) {
+                                            db = path.substring(0, index);
+                                            collection = path.substring(index);
+                                        }
+                                        ret = wrapResult(dataStore.getRawDocumentList(db,
+                                                collection, (Map<String, Object>) request.getParameterMap()));
+                                        break;
+                                    }
                                     ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
                             }
                         } catch (Exception e) {
@@ -69,50 +86,18 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
         };
     }
 
-    private JsonNode getSchedulerMetrics() {
-        JsonObject timecosts = new JsonObject()
-                .put("ALLOCATE", scheduler.getAllocateTimer().getSnapshot().getMean())
-                .put("HANDLE", scheduler.getHandleTimer().getSnapshot().getMean());
-        //TODO also change event
-        for (Map.Entry<SchedulerEventType, Timer> entry : scheduler.getHandleByTypeTimers().entrySet()) {
-            timecosts.put("HANDLE_" + entry.getKey().name(), entry.getValue().getSnapshot().getMean());
-        }
+    private JsonNode getPolicyMetrics() {
         return wrapResult(new JsonObject()
                 .put("time", System.currentTimeMillis())
-                .put("timecost", timecosts)
-                //TODO (num applications, allocated GB and vcores) for each queue
-                //TODO send this to system monitor DM
                 .put("policies", new JsonObject()
                         .put("map", parsePolicyMap())
                         .put("list", parseRecentChoices()))
                 .getNode());
     }
 
-    private JsonNode getClusterMetrics() {
-
-        QueueMetrics rootMetrics = scheduler.getRootQueueMetrics();
-        if (rootMetrics == null) {
-            return wrapError("NULL_METRICS", "Scheduler metrics were null", null);
-        }
-
-        return wrapResult(new JsonObject()
-                .put("time", System.currentTimeMillis())
-                .put("running", new JsonObject()
-                        .put("root", new JsonObject()
-                                .put("applications", rootMetrics.getAppsRunning())
-                                .put("containers", rootMetrics.getAllocatedContainers())))
-                .put("memoryGB", new JsonObject()
-                        .put("allocated", rootMetrics.getAllocatedMB() / 1024)
-                        .put("available", rootMetrics.getAvailableMB() / 1024))
-                .put("vcores", new JsonObject()
-                        .put("allocated", rootMetrics.getAllocatedVirtualCores())
-                        .put("available", rootMetrics.getAvailableVirtualCores()))
-                .getNode());
-    }
-
     private JsonObject parsePolicyMap() {
         JsonObject ret = new JsonObject();
-        for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfoEntry : scheduler.getPolicyMap().entrySet()) {
+        for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfoEntry : monitor.getPolicyMap().entrySet()) {
             ret.put(policyInfoEntry.getKey(), new JsonObject()
                     .put("time", policyInfoEntry.getValue().getUsageTime())
                     .put("number", policyInfoEntry.getValue().getUsageNumber()));
@@ -124,7 +109,7 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
 
         JsonArray times = new JsonArray();
         JsonArray choices = new JsonArray();
-        for (Map.Entry<Long, String> choiceEntry : scheduler.getRecentChoices().entrySet()) {
+        for (Map.Entry<Long, String> choiceEntry : monitor.getRecentChoices().entrySet()) {
             times.add(choiceEntry.getKey());
             choices.add(choiceEntry.getValue());
         }

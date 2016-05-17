@@ -1,8 +1,11 @@
 package org.apache.hadoop.tools.posum.database.store;
 
 import com.mongodb.DB;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoDatabase;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
+import org.bson.Document;
 import org.mongojack.DBQuery;
 import org.mongojack.JacksonDBCollection;
 import org.mongojack.WriteResult;
@@ -97,5 +100,13 @@ public class MongoJackConnector extends MongoConnector {
         if (queryParams == null || queryParams.size() == 0)
             return this.<T>getCollection(collection).find().toArray();
         return findObjects(collection, composeQuery(queryParams));
+    }
+
+    String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) {
+        if (database == null)
+            return findDocs(collection, new Document(queryParams)).toString();
+        return client.getDatabase(database)
+                .getCollection(collection)
+                .find(new Document(queryParams)).toString();
     }
 }

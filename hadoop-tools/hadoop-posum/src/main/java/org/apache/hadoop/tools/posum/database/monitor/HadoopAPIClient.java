@@ -29,8 +29,8 @@ public class HadoopAPIClient {
 
     private static Log logger = LogFactory.getLog(HadoopAPIClient.class);
 
-    private RestClient restClient;
-    private Configuration conf;
+    private final RestClient restClient;
+    private final Configuration conf;
 
     public HadoopAPIClient(Configuration conf) {
         restClient = new RestClient();

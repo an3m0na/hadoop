@@ -41,21 +41,21 @@ public class ClusterInfoCollector {
 
     private Set<String> running = new HashSet<>();
     private Set<String> finished = new HashSet<>();
-    private DataStoreInterface dataStoreInterface;
-    private HadoopAPIClient collector;
-    private Configuration conf;
-    private boolean historyEnabled;
+    private final DataStoreInterface dataStoreInterface;
+    private final HadoopAPIClient api;
+    private final Configuration conf;
+    private final boolean historyEnabled;
 
     ClusterInfoCollector(Configuration conf, DataStoreInterface dataStoreInterface) {
         this.dataStoreInterface = dataStoreInterface;
-        this.collector = new HadoopAPIClient(conf);
+        this.api = new HadoopAPIClient(conf);
         this.conf = conf;
         this.historyEnabled = conf.getBoolean(POSUMConfiguration.MONITOR_KEEP_HISTORY,
                 POSUMConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
     }
 
     void collect() {
-        List<AppProfile> apps = collector.getAppsInfo();
+        List<AppProfile> apps = api.getAppsInfo();
         logger.trace("Found " + apps.size() + " apps");
         for (AppProfile app : apps) {
             if (!finished.contains(app.getId())) {
@@ -85,14 +85,14 @@ public class ClusterInfoCollector {
         if (jobs.size() > 1)
             throw new POSUMException("Unexpected number of jobs for mapreduce app " + appId);
         else if (jobs.size() < 1) {
-            job = collector.getFinishedJobInfo(appId);
+            job = api.getFinishedJobInfo(appId);
             jobId = job.getId();
         } else {
             jobId = jobs.get(0).getId();
-            job = collector.getFinishedJobInfo(appId, jobId);
+            job = api.getFinishedJobInfo(appId, jobId);
         }
         final JobProfile finalJob = job;
-        final List<TaskProfile> tasks = collector.getFinishedTasksInfo(appId, jobId);
+        final List<TaskProfile> tasks = api.getFinishedTasksInfo(appId, jobId);
 
         // move info in database
         dataStoreInterface.runTransaction(new DataTransaction() {
@@ -121,11 +121,11 @@ public class ClusterInfoCollector {
 
         if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
             JobProfile lastJobInfo = dataStoreInterface.getJobProfileForApp(app.getId());
-            final JobProfile job = collector.getRunningJobInfo(app.getId(), lastJobInfo);
+            final JobProfile job = api.getRunningJobInfo(app.getId(), lastJobInfo);
             if (job == null)
                 logger.warn("Could not find job for " + app.getId());
             else {
-                final List<TaskProfile> tasks = collector.getRunningTasksInfo(job);
+                final List<TaskProfile> tasks = api.getRunningTasksInfo(job);
                 Integer mapDuration = 0, reduceDuration = 0, avgDuration = 0, mapNo = 0, reduceNo = 0, avgNo = 0;
                 for (TaskProfile task : tasks) {
                     Integer duration = task.getDuration();
