@@ -93,7 +93,7 @@ public class ClusterInfoCollector {
         final List<TaskProfile> tasks = api.getFinishedTasksInfo(appId, jobId);
 
         // move info in database
-        dataStore.runTransaction(new DataTransaction() {
+        dataStore.runTransaction(db, new DataTransaction() {
             @Override
             public void run() throws Exception {
                 dataStore.delete(db, DataEntityType.APP, appId);
@@ -148,7 +148,7 @@ public class ClusterInfoCollector {
                     }
                 }
 
-                dataStore.runTransaction(new DataTransaction() {
+                dataStore.runTransaction(db, new DataTransaction() {
                     @Override
                     public void run() throws Exception {
                         dataStore.updateOrStore(db, DataEntityType.JOB, job);

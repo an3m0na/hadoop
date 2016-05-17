@@ -140,7 +140,7 @@ public class DataMasterClient extends AbstractService {
         return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type));
     }
 
-    private SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
+    public SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
         try {
             return Utils.handleError(kind, dmClient.handleSimpleRequest(request));
         } catch (IOException | YarnException e) {

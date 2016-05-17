@@ -97,8 +97,8 @@ public class DataMasterWebApp extends POSUMWebApp {
         JsonObject ret = new JsonObject();
         for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfoEntry : monitor.getPolicyMap().entrySet()) {
             ret.put(policyInfoEntry.getKey(), new JsonObject()
-                    .put("time", policyInfoEntry.getValue().getUsageTime())
-                    .put("number", policyInfoEntry.getValue().getUsageNumber()));
+                    .put("time", "0")
+                    .put("number", "0"));
         }
         return ret;
     }

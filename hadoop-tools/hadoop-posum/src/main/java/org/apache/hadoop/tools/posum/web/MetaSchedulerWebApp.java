@@ -72,19 +72,14 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
     private JsonNode getSchedulerMetrics() {
         JsonObject timecosts = new JsonObject()
                 .put("ALLOCATE", scheduler.getAllocateTimer().getSnapshot().getMean())
-                .put("HANDLE", scheduler.getHandleTimer().getSnapshot().getMean());
-        //TODO also change event
+                .put("HANDLE", scheduler.getHandleTimer().getSnapshot().getMean())
+                .put("CHANGE", scheduler.getChangeTimer().getSnapshot().getMean());
         for (Map.Entry<SchedulerEventType, Timer> entry : scheduler.getHandleByTypeTimers().entrySet()) {
             timecosts.put("HANDLE_" + entry.getKey().name(), entry.getValue().getSnapshot().getMean());
         }
         return wrapResult(new JsonObject()
                 .put("time", System.currentTimeMillis())
                 .put("timecost", timecosts)
-                //TODO (num applications, allocated GB and vcores) for each queue
-                //TODO send this to system monitor DM
-                .put("policies", new JsonObject()
-                        .put("map", parsePolicyMap())
-                        .put("list", parseRecentChoices()))
                 .getNode());
     }
 
@@ -108,26 +103,5 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
                         .put("allocated", rootMetrics.getAllocatedVirtualCores())
                         .put("available", rootMetrics.getAvailableVirtualCores()))
                 .getNode());
-    }
-
-    private JsonObject parsePolicyMap() {
-        JsonObject ret = new JsonObject();
-        for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfoEntry : scheduler.getPolicyMap().entrySet()) {
-            ret.put(policyInfoEntry.getKey(), new JsonObject()
-                    .put("time", policyInfoEntry.getValue().getUsageTime())
-                    .put("number", policyInfoEntry.getValue().getUsageNumber()));
-        }
-        return ret;
-    }
-
-    private JsonObject parseRecentChoices() {
-
-        JsonArray times = new JsonArray();
-        JsonArray choices = new JsonArray();
-        for (Map.Entry<Long, String> choiceEntry : scheduler.getRecentChoices().entrySet()) {
-            times.add(choiceEntry.getKey());
-            choices.add(choiceEntry.getValue());
-        }
-        return new JsonObject().put("times", times).put("policies", choices);
     }
 }

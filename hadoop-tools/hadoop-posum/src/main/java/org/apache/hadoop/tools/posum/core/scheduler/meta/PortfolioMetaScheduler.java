@@ -60,15 +60,12 @@ public class PortfolioMetaScheduler extends
     private Lock readLock = lock.readLock();
     private Lock writeLock = lock.writeLock();
 
-    private BufferedWriter schedulerChoiceLog;
-    private ConcurrentSkipListMap<Long, String> recentChoices;
-    private int maxChoices;
-
     private POSUMWebApp webApp;
 
     //metrics
     private Timer allocateTimer;
     private Timer handleTimer;
+    private Timer changeTimer;
     private Map<SchedulerEventType, Timer> handleByTypeTimers;
     private boolean metricsON;
 
@@ -95,19 +92,11 @@ public class PortfolioMetaScheduler extends
         PolicyMap.PolicyInfo newClass = policies.get(policyName);
         if (newClass == null)
             throw new POSUMException("Target policy does not exist: " + policyName);
-        Long timestamp = System.currentTimeMillis();
-        try {
-            schedulerChoiceLog.write(policyName + "," + timestamp + "," + (timestamp - getStartTime()) + "\n");
-        } catch (IOException e) {
-            logger.error("Error writing to choice log ", e);
-        }
-        if (recentChoices.size() == maxChoices)
-            recentChoices.remove(recentChoices.lastKey());
-        recentChoices.put(timestamp, policyName);
+        commService.logPolicyChange( policyName);
         if (!currentPolicyInfo.equals(newClass)) {
-            currentPolicyInfo.stop(timestamp);
-            newClass.start(timestamp);
-            //TODO measure timecost
+            Timer.Context context = null;
+            if (metricsON)
+                changeTimer.time();
             writeLock.lock();
             currentPolicyInfo = newClass;
             if (isInState(STATE.INITED) || isInState(STATE.STARTED)) {
@@ -122,16 +111,10 @@ public class PortfolioMetaScheduler extends
                 }
             }
             writeLock.unlock();
+            if (metricsON)
+                context.stop();
             logger.debug("Policy changed successfully");
         }
-    }
-
-    public ConcurrentSkipListMap<Long, String> getRecentChoices() {
-        return recentChoices;
-    }
-
-    public PolicyMap getPolicyMap() {
-        return policies;
     }
 
     /**
@@ -156,6 +139,10 @@ public class PortfolioMetaScheduler extends
         return handleTimer;
     }
 
+    public Timer getChangeTimer() {
+        return changeTimer;
+    }
+
     public Map<SchedulerEventType, Timer> getHandleByTypeTimers() {
         return handleByTypeTimers;
     }
@@ -166,22 +153,9 @@ public class PortfolioMetaScheduler extends
         setConf(conf);
         policies = new PolicyMap(posumConf);
         currentPolicyInfo = policies.getDefaultPolicy();
-        currentPolicyInfo.start(System.currentTimeMillis());
         commService = new MetaSchedulerCommService(this, conf.get(YarnConfiguration.RM_ADDRESS));
         commService.init(posumConf);
         initPolicy();
-
-        //TODO move everything to POSUM Monitor
-        maxChoices = posumConf.getInt(POSUMConfiguration.MAX_SCHEDULER_CHOICE_BUFFER,
-                POSUMConfiguration.MAX_SCHEDULER_CHOICE_BUFFER_DEFAULT);
-        recentChoices = new ConcurrentSkipListMap<>();
-        String metricsOutputDir = posumConf.get(POSUMConfiguration.SCHEDULER_METRICS_DIR,
-                POSUMConfiguration.SCHEDULER_METRICS_DIR_DEFAULT);
-        schedulerChoiceLog = new BufferedWriter(
-                new FileWriter(metricsOutputDir + "/jobruntime.csv"));
-        schedulerChoiceLog.write("SCHEDULER,choice_time,relative_choice_time" + "\n");
-        schedulerChoiceLog.flush();
-
 
         //initialize  metrics
         metricsON = posumConf.getBoolean(POSUMConfiguration.SCHEDULER_METRICS_ON, POSUMConfiguration.SCHEDULER_METRICS_ON_DEFAULT);
