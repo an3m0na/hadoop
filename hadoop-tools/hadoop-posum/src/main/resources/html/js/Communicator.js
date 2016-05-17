@@ -1,16 +1,16 @@
 function Communicator(env) {
     var self = this;
-    self.schedulerPath = "http://localhost:18010/ajax";
+    self.psPath = "http://localhost:18010/ajax";
     self.masterPath = "/ajax";
     var generalDialog = $("#general_dialog");
     var loadingModal = $("#loading_modal");
 
-    self.showLoading = function(){
+    self.showLoading = function () {
         console.log("showing kitty");
         loadingModal.modal("show");
     };
 
-    self.hideLoading = function(){
+    self.hideLoading = function () {
         console.log("hiding kitty");
         loadingModal.modal("hide");
     };
