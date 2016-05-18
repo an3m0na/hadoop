@@ -58,7 +58,7 @@ function TabManager(env) {
     self.load = function (tab) {
         var path, traces, layout;
         if (tab.id == "scheduler") {
-            path = env.isTest ? "/html/js/psmetrics_scheduler.json" : env.comm.psPath + "/scheduler";
+            path = env.isTest ? "/html/js/dmmetrics_policies.json" : env.comm.dmPath + "/policies";
             env.comm.requestData(path, function (data) {
 
                 //plot_policies_map
@@ -114,8 +114,10 @@ function TabManager(env) {
                     }
                 };
                 Plotly.newPlot("plot_policies_list", traces, layout);
+            });
 
-
+            path = env.isTest ? "/html/js/psmetrics_scheduler.json" : env.comm.psPath + "/scheduler";
+            env.comm.requestData(path, function (data) {
                 self.updateTimeSeries(tab,
                     "plot_timecost",
                     data,
@@ -130,7 +132,7 @@ function TabManager(env) {
                 );
             });
         } else if (tab.id == "system") {
-            path = env.isTest ? "/html/js/psmetrics_system.json" : env.comm.psPath + "/system";
+            path = env.isTest ? "/html/js/metrics_system.json" : env.comm.psPath + "/system";
             self.updateTimeSeries(tab,
                 "plot_ps_jvm",
                 path,

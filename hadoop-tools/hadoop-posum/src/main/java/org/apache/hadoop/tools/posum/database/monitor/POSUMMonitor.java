@@ -28,6 +28,7 @@ public class POSUMMonitor extends GeneralLooper<POSUMMonitor> {
         setSleepInterval(conf.getLong(POSUMConfiguration.POSUM_MONITOR_HEARTBEAT_MS,
                 POSUMConfiguration.POSUM_MONITOR_HEARTBEAT_MS_DEFAULT));
         this.collector = new POSUMInfoCollector(conf, context.getDataStore());
+
     }
 
     @Override
@@ -35,12 +36,4 @@ public class POSUMMonitor extends GeneralLooper<POSUMMonitor> {
         collector.collect();
     }
 
-
-    public Map<String, PolicyMap.PolicyInfo> getPolicyMap() {
-        return null;
-    }
-
-    public Map<Long, String> getRecentChoices() {
-        return null;
-    }
 }

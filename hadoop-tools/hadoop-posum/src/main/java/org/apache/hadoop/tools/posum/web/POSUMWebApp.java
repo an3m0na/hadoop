@@ -87,7 +87,7 @@ public class POSUMWebApp extends HttpServlet {
                 .put("successful", true)
                 .put("result", JsonElement.wrapObject(result))
                 .getNode();
-        LoggerFactory.getLogger(getClass()).debug("Sending result " + wrapper);
+        LoggerFactory.getLogger(getClass()).trace("Sending result " + wrapper);
         return wrapper;
     }
 
@@ -113,12 +113,15 @@ public class POSUMWebApp extends HttpServlet {
     }
 
     protected JsonNode getSystemMetrics() {
+        double free = Runtime.getRuntime().freeMemory();
+        double max = Runtime.getRuntime().maxMemory();
+        double total = Runtime.getRuntime().totalMemory();
         return wrapResult(new JsonObject()
                 .put("time", System.currentTimeMillis())
                 .put("jvm", new JsonObject()
-                        .put("free", Runtime.getRuntime().freeMemory() / 1024 / 1024 / 1024)
-                        .put("max", Runtime.getRuntime().maxMemory() / 1024 / 1024 / 1024)
-                        .put("total", Runtime.getRuntime().totalMemory() / 1024 / 1024 / 1024))
+                        .put("free", free / 1024 / 1024 / 1024)
+                        .put("max", max / 1024 / 1024 / 1024)
+                        .put("total", total / 1024 / 1024 / 1024))
                 .getNode());
     }
 }

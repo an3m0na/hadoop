@@ -10,36 +10,6 @@
       "HANDLE_NODE_UPDATE": 41,
       "HANDLE_APP_ADDED": 42,
       "HANDLE_APP_REMOVED": 53
-    },
-    "policies": {
-      "map": {
-        "FIFO": {
-          "time": 98560,
-          "number": 8
-        },
-        "DATA": {
-          "time": 130057,
-          "number": 7
-        },
-        "EDF": {
-          "time": 58560,
-          "number": 1
-        }
-      },
-      "list": {
-        "times": [
-          1461952157630,
-          1461952157910,
-          1461952158345,
-          1461952159263
-        ],
-        "policies": [
-          "FIFO",
-          "DATA",
-          "FIFO",
-          "EDF"
-        ]
-      }
     }
   }
 }
