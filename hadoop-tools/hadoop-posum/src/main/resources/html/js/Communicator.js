@@ -2,6 +2,7 @@ function Communicator(env) {
     var self = this;
     self.psPath = "http://localhost:18010/ajax";
     self.dmPath = "http://localhost:18020/ajax";
+    self.smPath = "http://localhost:18030/ajax";
     self.masterPath = "/ajax";
     var generalDialog = $("#general_dialog");
     var loadingModal = $("#loading_modal");

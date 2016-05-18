@@ -63,9 +63,10 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
 
         super.serviceStart();
 
-        InetSocketAddress connectAddress = NetUtils.getConnectAddress(this.simulatorServer.getListenerAddress());
+        String connectAddress =
+                NetUtils.getConnectAddress(this.simulatorServer.getListenerAddress()).toString();
         String dmAddress = masterClient.register(Utils.POSUMProcess.SIMULATOR,
-                connectAddress.getHostName() + ":" + connectAddress.getPort());
+                connectAddress.substring(connectAddress.indexOf("/") + 1));
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);

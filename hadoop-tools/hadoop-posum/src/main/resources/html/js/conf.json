@@ -1,0 +1,9 @@
+{
+  "successful": true,
+  "result": {
+    "refreshInterval": 3000,
+    "psAddress": "localhost:18010",
+    "dmAddress": "localhost:18020",
+    "smAddress": "localhost:18030"
+  }
+}

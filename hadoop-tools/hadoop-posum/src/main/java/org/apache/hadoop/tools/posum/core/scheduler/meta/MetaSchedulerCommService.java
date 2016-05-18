@@ -67,12 +67,13 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
                                 POSUMConfiguration.SCHEDULER_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.metaServer.start();
-        InetSocketAddress connectAddress = NetUtils.getConnectAddress(this.metaServer.getListenerAddress());
 
         super.serviceStart();
 
+        String connectAddress =
+                NetUtils.getConnectAddress(this.metaServer.getListenerAddress()).toString();
         String dmAddress = masterClient.register(Utils.POSUMProcess.SCHEDULER,
-                connectAddress.getHostName() + ":" + connectAddress.getPort());
+                connectAddress.substring(connectAddress.indexOf("/") + 1));
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);

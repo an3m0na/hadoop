@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.records.request.RegistrationRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -116,7 +117,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
     @Override
     public SimpleResponse registerProcess(RegistrationRequest request) throws IOException, YarnException {
         try {
-            logger.debug("Registration request type "+request.getProcess()+" on "+request.getConnectAddress());
+            logger.debug("Registration request type " + request.getProcess() + " on " + request.getConnectAddress());
             switch (request.getProcess()) {
                 case DM:
                     dataClient = new DataMasterClient(request.getConnectAddress());
@@ -150,6 +151,12 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
         return SimpleResponse.newInstance(true, dataClient.getConnectAddress());
     }
 
+    public DBInterface getDB() {
+        if (dataClient != null && dataClient.isInState(STATE.STARTED))
+            return dataClient.bindTo(DataEntityDB.getMain());
+        else return null;
+    }
+
     public MetaSchedulerInterface getScheduler() {
         if (schedulerClient != null && schedulerClient.isInState(STATE.STARTED))
             return schedulerClient;
@@ -160,5 +167,38 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
         if (simulatorClient != null && simulatorClient.isInState(STATE.STARTED))
             return simulatorClient;
         else return null;
+    }
+
+    public String getDMAddress() {
+        if (dataClient != null && dataClient.isInState(STATE.STARTED)) {
+            String address = dataClient.getConnectAddress();
+            if (address != null) {
+                return address.split(":")[0] + ":" + getConfig().getInt(POSUMConfiguration.DM_WEBAPP_PORT,
+                        POSUMConfiguration.DM_WEBAPP_PORT_DEFAULT);
+            }
+        }
+        return null;
+    }
+
+    public String getPSAddress() {
+        if (schedulerClient != null && schedulerClient.isInState(STATE.STARTED)) {
+            String address = schedulerClient.getConnectAddress();
+            if (address != null) {
+                return address.split(":")[0] + ":" + getConfig().getInt(POSUMConfiguration.SCHEDULER_WEBAPP_PORT,
+                        POSUMConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT);
+            }
+        }
+        return null;
+    }
+
+    public String getSMAddress() {
+        if (simulatorClient != null && simulatorClient.isInState(STATE.STARTED)) {
+            String address = simulatorClient.getConnectAddress();
+            if (address != null) {
+                return address.split(":")[0] + ":" + getConfig().getInt(POSUMConfiguration.SIMULATOR_WEBAPP_PORT,
+                        POSUMConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT);
+            }
+        }
+        return null;
     }
 }
