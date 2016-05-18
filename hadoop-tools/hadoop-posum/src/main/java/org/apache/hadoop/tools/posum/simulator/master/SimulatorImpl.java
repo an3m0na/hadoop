@@ -60,7 +60,7 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
     protected void serviceStart() throws Exception {
         super.serviceStart();
         //TODO rethink this when simulation db is up
-        predictor.setDataStore(context.getCommService().getDataClient().bindTo(DataEntityDB.getSimulation()));
+//        predictor.setDataStore(context.getCommService().getDataClient().bindTo(DataEntityDB.getSimulation()));
     }
 
     @Override

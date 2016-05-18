@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.mongojack.DBQuery;
@@ -24,13 +25,15 @@ public class DataStore {
 
     private final Configuration conf;
     private MongoJackConnector conn;
+    private DataEntityDB mainDb = DataEntityDB.getMain(),
+            logDb = DataEntityDB.getLogs(),
+            simDb = DataEntityDB.getSimulation();
     private ConcurrentHashMap<Integer, ReentrantReadWriteLock> locks = new ConcurrentHashMap<>();
 
     public DataStore(Configuration conf) {
         String url = conf.get(POSUMConfiguration.DATABASE_URL, POSUMConfiguration.DATABASE_URL_DEFAULT);
         conn = new MongoJackConnector(url);
-        DataEntityDB db = DataEntityDB.getMain();
-        conn.addCollections(db,
+        conn.addCollections(mainDb,
                 DataEntityType.APP,
                 DataEntityType.APP_HISTORY,
                 DataEntityType.JOB,
@@ -38,15 +41,16 @@ public class DataStore {
                 DataEntityType.TASK,
                 DataEntityType.TASK_HISTORY,
                 DataEntityType.HISTORY);
-        locks.put(db.getId(), new ReentrantReadWriteLock());
-        conn.addCollections(DataEntityDB.getLogs(),
-                DataEntityType.LOG_SCHEDULER);
-        locks.put(db.getId(), new ReentrantReadWriteLock());
-        conn.addCollections(DataEntityDB.getSimulation(),
+        locks.put(mainDb.getId(), new ReentrantReadWriteLock());
+        conn.addCollections(logDb,
+                DataEntityType.LOG_SCHEDULER,
+                DataEntityType.POSUM_STATS);
+        locks.put(logDb.getId(), new ReentrantReadWriteLock());
+        conn.addCollections(simDb,
                 DataEntityType.APP,
                 DataEntityType.JOB,
                 DataEntityType.TASK);
-        locks.put(db.getId(), new ReentrantReadWriteLock());
+        locks.put(simDb.getId(), new ReentrantReadWriteLock());
         this.conf = conf;
     }
 
@@ -173,7 +177,8 @@ public class DataStore {
         }
     }
 
-    public String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) throws POSUMException {
+    public String getRawDocumentList(String database, String collection, Map<String, Object> queryParams)
+            throws POSUMException {
         try {
             return conn.getRawDocumentList(database, collection, queryParams);
         } catch (Exception e) {
@@ -181,7 +186,41 @@ public class DataStore {
         }
     }
 
-    public <T> void logAction(LogEntry<T> logEntry) {
+    public <T> void storeLogEntry(LogEntry<T> logEntry) {
+        updateOrStore(logDb, logEntry.getType().getCollection(), logEntry);
+    }
 
+    public <T> List<LogEntry<T>> findLogs(LogEntry.Type type, long from, long to) {
+        locks.get(logDb.getId()).readLock().lock();
+        try {
+            return conn.findObjects(logDb, type.getCollection(), DBQuery.and(
+                    DBQuery.greaterThan("timestamp", from),
+                    DBQuery.lessThanEquals("timestamp", to),
+                    DBQuery.is("type", type))
+            );
+        } finally {
+            locks.get(logDb.getId()).readLock().unlock();
+        }
+    }
+
+    public <T> List<LogEntry<T>> findLogs(LogEntry.Type type, long after) {
+        locks.get(logDb.getId()).readLock().lock();
+        try {
+            return conn.findObjects(logDb, type.getCollection(), DBQuery.and(
+                    DBQuery.greaterThan("timestamp", after),
+                    DBQuery.is("type", type))
+            );
+        } finally {
+            locks.get(logDb.getId()).readLock().unlock();
+        }
+    }
+
+    public <T> LogEntry<T> findReport(LogEntry.Type type) {
+        return findById(logDb, type.getCollection(), type.name());
+    }
+
+    public <T> void storeLogReport(LogEntry<T> logReport) {
+        logReport.setId(logReport.getType().name());
+        storeLogEntry(logReport);
     }
 }

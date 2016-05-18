@@ -58,7 +58,6 @@ public class DataMaster extends CompositeService {
 
         try {
             webApp = new DataMasterWebApp(dataStore,
-                    posumMonitor,
                     conf.getInt(POSUMConfiguration.DM_WEBAPP_PORT, POSUMConfiguration.DM_WEBAPP_PORT_DEFAULT));
         } catch (Exception e) {
             logger.error("Could not initialize web app", e);

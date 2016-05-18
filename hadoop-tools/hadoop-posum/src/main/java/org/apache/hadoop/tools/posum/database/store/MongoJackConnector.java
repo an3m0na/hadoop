@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
@@ -15,6 +17,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
  * Created by ane on 3/3/16.
  */
 public class MongoJackConnector extends MongoConnector {
+
+    private static Log logger = LogFactory.getLog(MongoJackConnector.class);
 
     private static final int MAX_DBS = 100;
     private static final int MAX_COLS = 100;
@@ -39,6 +43,7 @@ public class MongoJackConnector extends MongoConnector {
                     type.getMappedClass(),
                     String.class));
         }
+        logger.debug("Collections are:" + collections);
     }
 
     synchronized void deleteCollections(DataEntityDB db) {

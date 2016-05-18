@@ -48,7 +48,6 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         masterClient = new POSUMMasterClient();
         masterClient.init(conf);
         addIfService(masterClient);
-        this.dbInterface = dataClient.bindTo(DataEntityDB.getMain());
 
         super.serviceInit(conf);
     }
@@ -77,6 +76,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);
+        this.dbInterface = dataClient.bindTo(DataEntityDB.getMain());
         dataClient.start();
     }
 
@@ -102,7 +102,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
             }
         } catch (Exception e) {
-            logger.error(e);
+            logger.error("Exception handling simple request type " + request.getType(), e);
             return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
         }
         return SimpleResponse.newInstance(true);

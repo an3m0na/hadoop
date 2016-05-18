@@ -5,7 +5,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
-import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
@@ -27,7 +26,6 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
 
@@ -150,7 +148,7 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                     logger.info("Received ping with message: " + request.getPayload());
                     break;
                 case LOG_POLICY_CHANGE:
-                    dmContext.getDataStore().logAction(
+                    dmContext.getDataStore().storeLogEntry(
                             new LogEntry<>(LogEntry.Type.POLICY_CHANGE, request.getPayload()));
                     break;
                 default:

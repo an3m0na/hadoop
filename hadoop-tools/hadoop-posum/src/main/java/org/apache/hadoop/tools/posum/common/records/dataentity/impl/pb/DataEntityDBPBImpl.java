@@ -85,7 +85,7 @@ public class DataEntityDBPBImpl extends DataEntityDB {
     @Override
     public String getView() {
         EntityDBProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getView();
+        return p.hasView()? p.getView() : null;
     }
 
     @Override

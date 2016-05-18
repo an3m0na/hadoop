@@ -13,7 +13,8 @@ public enum DataEntityType {
     APP("apps", AppProfilePBImpl.class),
     APP_HISTORY("apps_history", AppProfilePBImpl.class),
     HISTORY("history", HistoryProfilePBImpl.class),
-    LOG_SCHEDULER("scheduler_log", LogEntry.class);
+    LOG_SCHEDULER("scheduler_log", LogEntry.class),
+    POSUM_STATS("posum_stats", LogEntry.class);
 
     private String label;
     private Class<? extends GeneralDataEntity> mappedClass;

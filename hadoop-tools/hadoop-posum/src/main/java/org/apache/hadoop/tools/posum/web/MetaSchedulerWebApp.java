@@ -70,12 +70,15 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
     }
 
     private JsonNode getSchedulerMetrics() {
-        JsonObject timecosts = new JsonObject()
-                .put("ALLOCATE", scheduler.getAllocateTimer().getSnapshot().getMean())
-                .put("HANDLE", scheduler.getHandleTimer().getSnapshot().getMean())
-                .put("CHANGE", scheduler.getChangeTimer().getSnapshot().getMean());
-        for (Map.Entry<SchedulerEventType, Timer> entry : scheduler.getHandleByTypeTimers().entrySet()) {
-            timecosts.put("HANDLE_" + entry.getKey().name(), entry.getValue().getSnapshot().getMean());
+
+        JsonObject timecosts = new JsonObject();
+        if (scheduler.hasMetricsOn()) {
+            timecosts.put("ALLOCATE", scheduler.getAllocateTimer().getSnapshot().getMean())
+                    .put("HANDLE", scheduler.getHandleTimer().getSnapshot().getMean())
+                    .put("CHANGE", scheduler.getChangeTimer().getSnapshot().getMean());
+            for (Map.Entry<SchedulerEventType, Timer> entry : scheduler.getHandleByTypeTimers().entrySet()) {
+                timecosts.put("HANDLE_" + entry.getKey().name(), entry.getValue().getSnapshot().getMean());
+            }
         }
         return wrapResult(new JsonObject()
                 .put("time", System.currentTimeMillis())

@@ -92,11 +92,11 @@ public class PortfolioMetaScheduler extends
         PolicyMap.PolicyInfo newClass = policies.get(policyName);
         if (newClass == null)
             throw new POSUMException("Target policy does not exist: " + policyName);
-        commService.logPolicyChange( policyName);
+        commService.logPolicyChange(policyName);
         if (!currentPolicyInfo.equals(newClass)) {
             Timer.Context context = null;
             if (metricsON)
-                changeTimer.time();
+                context = changeTimer.time();
             writeLock.lock();
             currentPolicyInfo = newClass;
             if (isInState(STATE.INITED) || isInState(STATE.STARTED)) {
@@ -166,6 +166,7 @@ public class PortfolioMetaScheduler extends
 
             allocateTimer = new Timer(new SlidingTimeWindowReservoir(windowSize, TimeUnit.MILLISECONDS));
             handleTimer = new Timer(new SlidingTimeWindowReservoir(windowSize, TimeUnit.MILLISECONDS));
+            changeTimer = new Timer(new SlidingTimeWindowReservoir(windowSize, TimeUnit.MILLISECONDS));
 
             handleByTypeTimers = new HashMap<>();
             for (SchedulerEventType e : SchedulerEventType.values()) {
@@ -183,6 +184,7 @@ public class PortfolioMetaScheduler extends
     public void serviceStart() throws Exception {
         logger.debug("Starting meta");
         commService.start();
+        commService.logPolicyChange(policies.getDefaultPolicyName());
         readLock.lock();
         try {
             currentPolicy.start();
@@ -686,5 +688,9 @@ public class PortfolioMetaScheduler extends
         } finally {
             readLock.unlock();
         }
+    }
+
+    public boolean hasMetricsOn() {
+        return metricsON;
     }
 }

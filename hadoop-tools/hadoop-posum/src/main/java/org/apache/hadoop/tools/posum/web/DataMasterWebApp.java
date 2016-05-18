@@ -3,13 +3,11 @@ package org.apache.hadoop.tools.posum.web;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.util.JsonArray;
 import org.apache.hadoop.tools.posum.common.util.JsonObject;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
-import org.apache.hadoop.tools.posum.database.master.DataMaster;
-import org.apache.hadoop.tools.posum.database.monitor.POSUMMonitor;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.handler.AbstractHandler;
@@ -25,12 +23,10 @@ public class DataMasterWebApp extends POSUMWebApp {
     private static Log logger = LogFactory.getLog(POSUMWebApp.class);
 
     private final transient DataStore dataStore;
-    private final transient POSUMMonitor monitor;
 
-    public DataMasterWebApp(DataStore dataStore, POSUMMonitor monitor, int metricsAddressPort) {
+    public DataMasterWebApp(DataStore dataStore, int metricsAddressPort) {
         super(metricsAddressPort);
         this.dataStore = dataStore;
-        this.monitor = monitor;
     }
 
     @Override
@@ -47,7 +43,18 @@ public class DataMasterWebApp extends POSUMWebApp {
                         try {
                             switch (call) {
                                 case "/policies":
-                                    ret = getPolicyMetrics();
+                                    Long since = 0L;
+                                    String sinceParam = request.getParameter("since");
+                                    if (sinceParam != null) {
+                                        try {
+                                            since = Long.valueOf(sinceParam);
+                                        } catch (Exception e) {
+                                            ret = wrapError("INCORRECT_PARAMETERS",
+                                                    "Could not parce parameter 'since'", e.getMessage());
+                                            break;
+                                        }
+                                    }
+                                    ret = getPolicyMetrics(since);
                                     break;
                                 case "/system":
                                     ret = getSystemMetrics();
@@ -84,32 +91,35 @@ public class DataMasterWebApp extends POSUMWebApp {
         };
     }
 
-    private JsonNode getPolicyMetrics() {
+    private JsonNode getPolicyMetrics(Long since) {
         return wrapResult(new JsonObject()
                 .put("time", System.currentTimeMillis())
                 .put("policies", new JsonObject()
-                        .put("map", parsePolicyMap())
-                        .put("list", parseRecentChoices()))
+                        .put("map", composePolicyMap())
+                        .put("list", composeRecentChoices(since)))
                 .getNode());
     }
 
-    private JsonObject parsePolicyMap() {
+    private JsonObject composePolicyMap() {
         JsonObject ret = new JsonObject();
-        for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfoEntry : monitor.getPolicyMap().entrySet()) {
-            ret.put(policyInfoEntry.getKey(), new JsonObject()
-                    .put("time", "0")
-                    .put("number", "0"));
+        LogEntry<PolicyMap> policyReport = dataStore.findReport(LogEntry.Type.POLICY_MAP);
+        if(policyReport != null){
+            for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfo :
+                    policyReport.getDetails().entrySet()) {
+                ret.put(policyInfo.getKey(), new JsonObject()
+                        .put("time", policyInfo.getValue().getUsageTime())
+                        .put("number", policyInfo.getValue().getUsageNumber()));
+            }
         }
         return ret;
     }
 
-    private JsonObject parseRecentChoices() {
-
+    private JsonObject composeRecentChoices(Long since) {
         JsonArray times = new JsonArray();
         JsonArray choices = new JsonArray();
-        for (Map.Entry<Long, String> choiceEntry : monitor.getRecentChoices().entrySet()) {
-            times.add(choiceEntry.getKey());
-            choices.add(choiceEntry.getValue());
+        for (LogEntry<String> choiceEntry : dataStore.<String>findLogs(LogEntry.Type.POLICY_CHANGE, since)) {
+            times.add(choiceEntry.getTimestamp());
+            choices.add(choiceEntry.getDetails());
         }
         return new JsonObject().put("times", times).put("policies", choices);
     }

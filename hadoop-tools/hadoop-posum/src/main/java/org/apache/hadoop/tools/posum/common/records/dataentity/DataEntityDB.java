@@ -10,7 +10,7 @@ public abstract class DataEntityDB {
     protected final String root = "posum";
 
     public enum Type {
-        MAIN(""), LOGS("logs"), SIMULATION("sim");
+        MAIN("main"), LOGS("logs"), SIMULATION("sim");
 
         private String label;
 
@@ -42,7 +42,7 @@ public abstract class DataEntityDB {
 
     public String getName() {
         String view = getView();
-        return root + getType().getLabel() + (view != null ? view : "");
+        return root + "_" + getType().getLabel() + (view != null ? "_" + view : "");
     }
 
     public static DataEntityDB getMain() {
