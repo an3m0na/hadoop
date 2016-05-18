@@ -77,4 +77,8 @@ public class MetaSchedulerClient extends AbstractService implements MetaSchedule
     public void changeToPolicy(String policyName) {
         sendSimpleRequest("changeToPolicy", SimpleRequest.newInstance(SimpleRequest.Type.CHANGE_POLICY, policyName));
     }
+
+    public String getConnectAddress(){
+        return connectAddress;
+    }
 }

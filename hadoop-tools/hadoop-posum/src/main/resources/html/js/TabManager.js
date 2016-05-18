@@ -172,6 +172,20 @@ function TabManager(env) {
                 {title: "Memory (GB)", tickmode: "linear", showticklabels: true}
             );
 
+            path = env.isTest ? "/html/js/metrics_system.json" : env.comm.smPath + "/system";
+            self.updateTimeSeries(tab,
+                "plot_sm_jvm",
+                path,
+                function (data) {
+                    return data.jvm
+                },
+                function (traceObject) {
+                    return traceObject
+                },
+                "JVM Memory on Simulation Master",
+                {title: "Memory (GB)", tickmode: "linear", showticklabels: true}
+            );
+
         } else if (tab.id == "cluster") {
             path = env.isTest ? "/html/js/psmetrics_cluster.json" : env.comm.psPath + "/cluster";
             env.comm.requestData(path, function (data) {

@@ -8,7 +8,7 @@ import org.apache.hadoop.tools.posum.common.util.JsonArray;
 import org.apache.hadoop.tools.posum.common.util.JsonObject;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.handler.AbstractHandler;
 
@@ -22,11 +22,11 @@ import java.util.Map;
 public class DataMasterWebApp extends POSUMWebApp {
     private static Log logger = LogFactory.getLog(POSUMWebApp.class);
 
-    private final transient DataStore dataStore;
+    private final transient DataMasterContext context;
 
-    public DataMasterWebApp(DataStore dataStore, int metricsAddressPort) {
+    public DataMasterWebApp(DataMasterContext context, int metricsAddressPort) {
         super(metricsAddressPort);
-        this.dataStore = dataStore;
+        this.context = context;
     }
 
     @Override
@@ -69,7 +69,7 @@ public class DataMasterWebApp extends POSUMWebApp {
                                             db = path.substring(0, index);
                                             collection = path.substring(index);
                                         }
-                                        ret = wrapResult(dataStore.getRawDocumentList(db,
+                                        ret = wrapResult(context.getDataStore().getRawDocumentList(db,
                                                 collection, (Map<String, Object>) request.getParameterMap()));
                                         break;
                                     }
@@ -102,7 +102,7 @@ public class DataMasterWebApp extends POSUMWebApp {
 
     private JsonObject composePolicyMap() {
         JsonObject ret = new JsonObject();
-        LogEntry<PolicyMap> policyReport = dataStore.findReport(LogEntry.Type.POLICY_MAP);
+        LogEntry<PolicyMap> policyReport = context.getDataStore().findReport(LogEntry.Type.POLICY_MAP);
         if(policyReport != null){
             for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfo :
                     policyReport.getDetails().entrySet()) {
@@ -117,7 +117,7 @@ public class DataMasterWebApp extends POSUMWebApp {
     private JsonObject composeRecentChoices(Long since) {
         JsonArray times = new JsonArray();
         JsonArray choices = new JsonArray();
-        for (LogEntry<String> choiceEntry : dataStore.<String>findLogs(LogEntry.Type.POLICY_CHANGE, since)) {
+        for (LogEntry<String> choiceEntry : context.getDataStore().<String>findLogs(LogEntry.Type.POLICY_CHANGE, since)) {
             times.add(choiceEntry.getTimestamp());
             choices.add(choiceEntry.getDetails());
         }

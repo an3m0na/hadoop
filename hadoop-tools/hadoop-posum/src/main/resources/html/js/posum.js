@@ -13,5 +13,35 @@ $(document).ready(function () {
     env.comm = comm;
     env.tabManager = tabManager;
 
+    var path = env.isTest ? "/html/js/conf.json" : env.comm.masterPath + "/conf";
+    env.comm.requestData(path, function (data) {
+        if (window.location.hostname != "localhost") {
+            var address = data.psAddress;
+            if (address) {
+                env.comm.psPath = "http://" + address + "/ajax";
+            } else {
+                env.comm.showDialog("Error", "Error occurred:\n" +
+                    "POSUM not yet ready. Please refresh.");
+                return;
+            }
+            address = data.dmAddress;
+            if (address) {
+                env.comm.dmPath = "http://" + address + "/ajax";
+            } else {
+                env.comm.showDialog("Error", "Error occurred:\n" +
+                    "POSUM not yet ready. Please refresh.");
+                return;
+            }
+            address = data.smAddress;
+            if (address) {
+                env.comm.smPath = "http://" + address + "/ajax";
+            } else {
+                env.comm.showDialog("Error", "Error occurred:\n" +
+                    "POSUM not yet ready. Please refresh.");
+                return;
+            }
+        }
+    });
+
     tabManager.changeState(env.state);
 });

@@ -76,11 +76,12 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                                 POSUMConfiguration.DM_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.dmServer.start();
-        InetSocketAddress connectAddress = NetUtils.getConnectAddress(this.dmServer.getListenerAddress());
-
         super.serviceStart();
 
-        masterClient.register(Utils.POSUMProcess.DM, connectAddress.getHostName() + ":" + connectAddress.getPort());
+        String connectAddress =
+                NetUtils.getConnectAddress(this.dmServer.getListenerAddress()).toString();
+        masterClient.register(Utils.POSUMProcess.DM,
+                connectAddress.substring(connectAddress.indexOf("/") + 1));
     }
 
     @Override

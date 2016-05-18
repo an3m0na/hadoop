@@ -6,7 +6,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.monitor.HadoopMonitor;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.monitor.POSUMMonitor;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.web.DataMasterWebApp;
@@ -57,8 +56,9 @@ public class DataMaster extends CompositeService {
         addIfService(posumMonitor);
 
         try {
-            webApp = new DataMasterWebApp(dataStore,
-                    conf.getInt(POSUMConfiguration.DM_WEBAPP_PORT, POSUMConfiguration.DM_WEBAPP_PORT_DEFAULT));
+            webApp = new DataMasterWebApp(dmContext,
+                    conf.getInt(POSUMConfiguration.DM_WEBAPP_PORT,
+                            POSUMConfiguration.DM_WEBAPP_PORT_DEFAULT));
         } catch (Exception e) {
             logger.error("Could not initialize web app", e);
         }
