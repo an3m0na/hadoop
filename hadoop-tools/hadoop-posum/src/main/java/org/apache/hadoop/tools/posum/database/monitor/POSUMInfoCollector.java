@@ -56,8 +56,8 @@ public class POSUMInfoCollector {
                         policyMap.get(policyMap.getLastUsed()).stop(change.getTimestamp());
                     }
                     policyMap.setLastUsed(policy);
-                    info.start(change.getTimestamp());
                 }
+                info.start(change.getTimestamp());
             }
             dataStore.storeLogReport(new LogEntry<>(LogEntry.Type.POLICY_MAP, policyMap));
         }

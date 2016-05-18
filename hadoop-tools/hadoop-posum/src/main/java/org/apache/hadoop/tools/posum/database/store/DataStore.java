@@ -6,7 +6,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
-import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.mongojack.DBQuery;
@@ -33,7 +32,7 @@ public class DataStore {
     public DataStore(Configuration conf) {
         String url = conf.get(POSUMConfiguration.DATABASE_URL, POSUMConfiguration.DATABASE_URL_DEFAULT);
         conn = new MongoJackConnector(url);
-        conn.addCollections(mainDb,
+        conn.addDatabase(mainDb,
                 DataEntityType.APP,
                 DataEntityType.APP_HISTORY,
                 DataEntityType.JOB,
@@ -42,11 +41,12 @@ public class DataStore {
                 DataEntityType.TASK_HISTORY,
                 DataEntityType.HISTORY);
         locks.put(mainDb.getId(), new ReentrantReadWriteLock());
-        conn.addCollections(logDb,
+        conn.dropDatabase(logDb);
+        conn.addDatabase(logDb,
                 DataEntityType.LOG_SCHEDULER,
                 DataEntityType.POSUM_STATS);
         locks.put(logDb.getId(), new ReentrantReadWriteLock());
-        conn.addCollections(simDb,
+        conn.addDatabase(simDb,
                 DataEntityType.APP,
                 DataEntityType.JOB,
                 DataEntityType.TASK);

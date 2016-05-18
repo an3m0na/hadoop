@@ -119,9 +119,9 @@ public class POSUMWebApp extends HttpServlet {
         return wrapResult(new JsonObject()
                 .put("time", System.currentTimeMillis())
                 .put("jvm", new JsonObject()
-                        .put("free", free / 1024 / 1024 / 1024)
-                        .put("max", max / 1024 / 1024 / 1024)
-                        .put("total", total / 1024 / 1024 / 1024))
+                        .put("free", String.format("%.3f", free / 1024 / 1024 / 1024))
+                        .put("max", String.format("%.3f", max / 1024 / 1024 / 1024))
+                        .put("total", String.format("%.3f", total / 1024 / 1024 / 1024)))
                 .getNode());
     }
 }

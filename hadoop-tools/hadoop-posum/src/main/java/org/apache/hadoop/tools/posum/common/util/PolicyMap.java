@@ -21,7 +21,7 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
         private long usageTime = 0L;
         private long lastStarted = 0L;
 
-        public PolicyInfo(){
+        public PolicyInfo() {
 
         }
 
@@ -30,8 +30,13 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
         }
 
         public void start(Long now) {
-            usageNumber++;
+            if (lastStarted != 0) {
+                usageTime += now - lastStarted;
+            }
             lastStarted = now;
+            usageNumber++;
+
+
         }
 
         public void stop(Long now) {

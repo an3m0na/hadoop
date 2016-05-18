@@ -142,8 +142,34 @@ function TabManager(env) {
                 function (traceObject) {
                     return traceObject
                 },
-                "JVM Memory",
-                {title: "Memory (GB)", tickmode: "linear"}
+                "JVM Memory on Portfolio Scheduler",
+                {title: "Memory (GB)", tickmode: "linear", showticklabels: true}
+            );
+            path = env.isTest ? "/html/js/metrics_system.json" : env.comm.masterPath + "/system";
+            self.updateTimeSeries(tab,
+                "plot_pm_jvm",
+                path,
+                function (data) {
+                    return data.jvm
+                },
+                function (traceObject) {
+                    return traceObject
+                },
+                "JVM Memory on POSUM Master",
+                {title: "Memory (GB)", tickmode: "linear", showticklabels: true}
+            );
+            path = env.isTest ? "/html/js/metrics_system.json" : env.comm.dmPath + "/system";
+            self.updateTimeSeries(tab,
+                "plot_dm_jvm",
+                path,
+                function (data) {
+                    return data.jvm
+                },
+                function (traceObject) {
+                    return traceObject
+                },
+                "JVM Memory on Data Master",
+                {title: "Memory (GB)", tickmode: "linear", showticklabels: true}
             );
 
         } else if (tab.id == "cluster") {
