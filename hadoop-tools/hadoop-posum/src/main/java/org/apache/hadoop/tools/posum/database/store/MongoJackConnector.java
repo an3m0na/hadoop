@@ -31,7 +31,7 @@ public class MongoJackConnector extends MongoConnector {
         super(databaseUrl);
     }
 
-    synchronized void addCollections(DataEntityDB db, DataEntityType... types) {
+    synchronized void addDatabase(DataEntityDB db, DataEntityType... types) {
         Integer id = db.getId();
         if (db.isView()) {
             transientDbs.put(db.getName(), ++transientId);
@@ -46,7 +46,7 @@ public class MongoJackConnector extends MongoConnector {
         logger.debug("Collections are:" + collections);
     }
 
-    synchronized void deleteCollections(DataEntityDB db) {
+    synchronized void dropDatabase(DataEntityDB db) {
         Integer id = db.getId();
         if (db.isView()) {
             id = transientDbs.remove(db.getName());
@@ -55,6 +55,7 @@ public class MongoJackConnector extends MongoConnector {
         for (Integer index : toDelete) {
             collections.remove(index);
         }
+        client.getDB(db.getName()).dropDatabase();
     }
 
     private <T> JacksonDBCollection<T, String> getCollection(DataEntityDB db, DataEntityType collection) {

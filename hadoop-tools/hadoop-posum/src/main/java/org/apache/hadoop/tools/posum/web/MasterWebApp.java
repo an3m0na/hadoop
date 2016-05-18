@@ -26,8 +26,11 @@ public class MasterWebApp extends POSUMWebApp {
                 try {
                     if (target.startsWith("/ajax")) {
                         // json request
-                        //TODO isolate call name and apply handler
-                        sendResult(request, response, wrapResult("Server is online!"));
+                        String call = target.substring("/ajax".length());
+                        if ("/system".equals(call))
+                            sendResult(request, response, wrapResult(getSystemMetrics()));
+                        else
+                            sendResult(request, response, wrapResult("Server is online!"));
                     } else {
                         // static resource request
                         response.setCharacterEncoding("utf-8");
