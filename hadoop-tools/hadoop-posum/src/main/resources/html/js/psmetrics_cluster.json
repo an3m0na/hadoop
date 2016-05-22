@@ -1,0 +1,20 @@
+{
+  "successful": true,
+  "result": {
+    "time": 1461952157630,
+    "running": {
+      "root": {
+        "applications": 5,
+        "containers": 3
+      },
+      "queue1": {
+        "applications": 2,
+        "containers": 1
+      },
+      "queue2": {
+        "applications": 3,
+        "containers": 2
+      }
+    }
+  }
+}

@@ -1,25 +1,25 @@
 package org.apache.hadoop.tools.posum.web;
 
+import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.hadoop.tools.posum.common.util.PolicyMap;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.tools.posum.common.util.*;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.PortfolioMetaScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.handler.AbstractHandler;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Map;
 
 /**
  * Created by ane on 4/29/16.
  */
 public class MetaSchedulerWebApp extends POSUMWebApp {
+    private static Log logger = LogFactory.getLog(POSUMWebApp.class);
 
     private final transient PortfolioMetaScheduler scheduler;
 
@@ -41,8 +41,14 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
                         JsonNode ret;
                         try {
                             switch (call) {
-                                case "/metrics":
-                                    ret = generateRealTimeTrackingMetrics();
+                                case "/cluster":
+                                    ret = getClusterMetrics();
+                                    break;
+                                case "/scheduler":
+                                    ret = getSchedulerMetrics();
+                                    break;
+                                case "/system":
+                                    ret = getSystemMetrics();
                                     break;
                                 default:
                                     ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
@@ -57,86 +63,48 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
                         staticHandler.handle(target, request, response, dispatch);
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Error resolving request: ", e);
                 }
             }
         };
     }
 
-    private JsonNode generateRealTimeTrackingMetrics() {
+    private JsonNode getSchedulerMetrics() {
+
+        JsonObject timecosts = new JsonObject();
+        if (scheduler.hasMetricsOn()) {
+            timecosts.put("ALLOCATE", scheduler.getAllocateTimer().getSnapshot().getMean() / 1000000)
+                    .put("HANDLE", scheduler.getHandleTimer().getSnapshot().getMean() / 1000000)
+                    .put("CHANGE", scheduler.getChangeTimer().getSnapshot().getMean() / 1000000);
+            for (Map.Entry<SchedulerEventType, Timer> entry : scheduler.getHandleByTypeTimers().entrySet()) {
+                timecosts.put("HANDLE_" + entry.getKey().name(), entry.getValue().getSnapshot().getMean() / 1000000);
+            }
+        }
+        return wrapResult(new JsonObject()
+                .put("time", System.currentTimeMillis())
+                .put("timecost", timecosts)
+                .getNode());
+    }
+
+    private JsonNode getClusterMetrics() {
 
         QueueMetrics rootMetrics = scheduler.getRootQueueMetrics();
         if (rootMetrics == null) {
             return wrapError("NULL_METRICS", "Scheduler metrics were null", null);
         }
 
-        // package results
-//        StringBuilder sb = new StringBuilder();
-//        sb.append("{");
-//                .append(",\"jvm.free.memory\":").append(jvmFreeMemoryGB)
-//                .append(",\"jvm.max.memory\":").append(jvmMaxMemoryGB)
-//                .append(",\"jvm.total.memory\":").append(jvmTotalMemoryGB)
-//                .append(",\"running.applications\":").append(numRunningApps)
-//                .append(",\"running.containers\":").append(numRunningContainers)
-//                .append(",\"cluster.allocated.memory\":").append(allocatedMemoryGB)
-//                .append(",\"cluster.allocated.vcores\":").append(allocatedVCoresGB)
-//                .append(",\"cluster.available.memory\":").append(availableMemoryGB)
-//                .append(",\"cluster.available.vcores\":").append(availableVCoresGB)
-        ;
-
-//        for (String queue : wrapper.getQueueSet()) {
-//            sb.append(",\"queue.").append(queue).append(".allocated.memory\":")
-//                    .append(queueAllocatedMemoryMap.get(queue));
-//            sb.append(",\"queue.").append(queue).append(".allocated.vcores\":")
-//                    .append(queueAllocatedVCoresMap.get(queue));
-//        }
-//        // scheduler allocate & handle
-//        sb.append(",\"scheduler.allocate.timecost\":").append(allocateTimecost);
-//        sb.append(",\"scheduler.handle.timecost\":").append(handleTimecost);
-//        for (SchedulerEventType e : SchedulerEventType.values()) {
-//            sb.append(",\"scheduler.handle-").append(e).append(".timecost\":")
-//                    .append(handleOperTimecostMap.get(e));
-//        }
-//        sb.append("}");
-//        return sb.toString();
-
-        ObjectNode ret = mapper.createObjectNode();
-        ret.put("time", System.currentTimeMillis());
-
-        ObjectNode running = mapper.createObjectNode();
-        running.put("applications", rootMetrics.getAppsRunning());
-        running.put("containers", rootMetrics.getAllocatedContainers());
-        ret.put("running", running);
-
-        ObjectNode policies = mapper.createObjectNode();
-        policies.put("map", parsePolicyMap());
-        policies.put("list", parseRecentChoices());
-        ret.put("policies", policies);
-
-        return wrapResult(ret);
-    }
-
-    private JsonNode parsePolicyMap() {
-        ObjectNode ret = mapper.createObjectNode();
-        for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfoEntry : scheduler.getPolicyMap().entrySet()) {
-            ObjectNode policyInfoObject = mapper.createObjectNode();
-            policyInfoObject.put("time", policyInfoEntry.getValue().getUsageTime());
-            policyInfoObject.put("number", policyInfoEntry.getValue().getUsageNumber());
-            ret.put(policyInfoEntry.getKey(), policyInfoObject);
-        }
-        return ret;
-    }
-
-    private JsonNode parseRecentChoices() {
-        ObjectNode ret = mapper.createObjectNode();
-        ArrayNode times = mapper.createArrayNode();
-        ArrayNode choices = mapper.createArrayNode();
-        for (Map.Entry<Long, String> choiceEntry : scheduler.getRecentChoices().entrySet()) {
-            times.add(choiceEntry.getKey());
-            choices.add(choiceEntry.getValue());
-        }
-        ret.put("times", times);
-        ret.put("policies", choices);
-        return ret;
+        return wrapResult(new JsonObject()
+                .put("time", System.currentTimeMillis())
+                .put("running", new JsonObject()
+                        .put("root", new JsonObject()
+                                .put("applications", rootMetrics.getAppsRunning())
+                                .put("containers", rootMetrics.getAllocatedContainers())))
+                .put("memoryGB", new JsonObject()
+                        .put("allocated", rootMetrics.getAllocatedMB() / 1024)
+                        .put("available", rootMetrics.getAvailableMB() / 1024))
+                .put("vcores", new JsonObject()
+                        .put("allocated", rootMetrics.getAllocatedVirtualCores())
+                        .put("available", rootMetrics.getAvailableVirtualCores()))
+                .getNode());
     }
 }

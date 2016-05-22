@@ -1,10 +1,8 @@
 package org.apache.hadoop.tools.posum.database.client;
 
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +10,7 @@ import java.util.Map;
 /**
  * Created by ane on 2/9/16.
  */
-public interface DataStoreInterface {
+public interface DBInterface {
 
     /* Generic accessors */
 
@@ -42,8 +40,5 @@ public interface DataStoreInterface {
     JobProfile getJobProfileForApp(String appId);
 
     List<JobProfile> getComparableProfiles(String user, int count);
-
-    void runTransaction(DataTransaction transaction) throws POSUMException;
-
-
 }
+

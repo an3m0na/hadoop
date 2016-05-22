@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -16,7 +17,7 @@ import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterInterface;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -30,6 +31,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
 
     private POSUMMasterClient masterClient;
     private DataMasterClient dataClient;
+    private DBInterface dbInterface;
 
     private Server metaServer;
     private MetaSchedulerInterface metaScheduler;
@@ -65,15 +67,17 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
                                 POSUMConfiguration.SCHEDULER_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.metaServer.start();
-        InetSocketAddress connectAddress = NetUtils.getConnectAddress(this.metaServer.getListenerAddress());
 
         super.serviceStart();
 
+        String connectAddress =
+                NetUtils.getConnectAddress(this.metaServer.getListenerAddress()).toString();
         String dmAddress = masterClient.register(Utils.POSUMProcess.SCHEDULER,
-                connectAddress.getHostName() + ":" + connectAddress.getPort());
+                connectAddress.substring(connectAddress.indexOf("/") + 1));
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);
+        this.dbInterface = dataClient.bindTo(DataEntityDB.getMain());
         dataClient.start();
     }
 
@@ -99,14 +103,14 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
             }
         } catch (Exception e) {
-            logger.error(e);
+            logger.error("Exception handling simple request type " + request.getType(), e);
             return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
         }
         return SimpleResponse.newInstance(true);
     }
 
-    public DataStoreInterface getDataStore() {
-        return dataClient;
+    public DBInterface getDB() {
+        return dbInterface;
     }
 
     public POSUMMasterInterface getMaster() {
@@ -114,4 +118,8 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
     }
 
 
+    void logPolicyChange(String policyName) {
+        dataClient.sendSimpleRequest("logPolicyChange",
+                SimpleRequest.newInstance(SimpleRequest.Type.LOG_POLICY_CHANGE, policyName));
+    }
 }

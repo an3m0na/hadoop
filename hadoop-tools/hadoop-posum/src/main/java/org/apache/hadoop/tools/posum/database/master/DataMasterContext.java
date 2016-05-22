@@ -1,7 +1,8 @@
 package org.apache.hadoop.tools.posum.database.master;
 
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
 /**
@@ -10,7 +11,8 @@ import org.apache.hadoop.yarn.event.Dispatcher;
 public class DataMasterContext {
     private Dispatcher dispatcher;
     private DummyTokenSecretManager tokenSecretManager;
-    private DataStoreInterface dataStoreInterface;
+    private DataStore dataStore;
+    private DataMasterCommService commService;
 
     public void setDispatcher(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -28,12 +30,19 @@ public class DataMasterContext {
         return tokenSecretManager;
     }
 
-    public void setDataStoreInterface(DataStoreInterface dataStoreInterface) {
-        this.dataStoreInterface = dataStoreInterface;
+    public void setDataStore(DataStore dataStore) {
+        this.dataStore = dataStore;
     }
 
-    public DataStoreInterface getDataStore() {
-        return dataStoreInterface;
+    public DataStore getDataStore() {
+        return dataStore;
     }
 
+    public void setCommService(DataMasterCommService commService) {
+        this.commService = commService;
+    }
+
+    public DataMasterCommService getCommService() {
+        return commService;
+    }
 }

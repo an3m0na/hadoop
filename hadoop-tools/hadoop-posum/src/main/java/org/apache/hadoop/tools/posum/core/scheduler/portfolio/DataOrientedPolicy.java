@@ -7,6 +7,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSQueue;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSchedulerNode;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SingleQueuePolicy;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.*;
 
 import java.util.*;
@@ -66,13 +67,18 @@ public class DataOrientedPolicy extends SingleQueuePolicy<
         logger.debug("Updating app priority");
         try {
             String appId = app.getCurrentAppAttempt().getApplicationId().toString();
-            JobProfile job = commService.getDataStore().getJobProfileForApp(appId);
-            if (job != null) {
-                Long size = job.getInputBytes();
-                if (size != null && size > 0) {
-                    logger.debug("Read input size for " + appId + ": " + size);
-                    app.getCurrentAppAttempt().setInputSplits(job.getInputSplits());
-                    app.getCurrentAppAttempt().setTotalInputSize(size);
+            if (app.getCurrentAppAttempt().getTotalInputSize() != null)
+                return;
+            DBInterface db = commService.getDB();
+            if (db != null) {
+                JobProfile job = db.getJobProfileForApp(appId);
+                if (job != null) {
+                    Long size = job.getInputBytes();
+                    if (size != null && size > 0) {
+                        logger.debug("Read input size for " + appId + ": " + size);
+                        app.getCurrentAppAttempt().setInputSplits(job.getInputSplits());
+                        app.getCurrentAppAttempt().setTotalInputSize(size);
+                    }
                 }
             }
         } catch (Exception e) {

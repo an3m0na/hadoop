@@ -9,14 +9,12 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterInterface;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.database.client.DataStoreInterface;
-import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -65,9 +63,10 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
 
         super.serviceStart();
 
-        InetSocketAddress connectAddress = NetUtils.getConnectAddress(this.simulatorServer.getListenerAddress());
+        String connectAddress =
+                NetUtils.getConnectAddress(this.simulatorServer.getListenerAddress()).toString();
         String dmAddress = masterClient.register(Utils.POSUMProcess.SIMULATOR,
-                connectAddress.getHostName() + ":" + connectAddress.getPort());
+                connectAddress.substring(connectAddress.indexOf("/") + 1));
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);
@@ -103,7 +102,7 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
         return SimpleResponse.newInstance(true);
     }
 
-    public DataStoreInterface getDataStore() {
+    public DataMasterClient getDataClient() {
         return dataClient;
     }
 

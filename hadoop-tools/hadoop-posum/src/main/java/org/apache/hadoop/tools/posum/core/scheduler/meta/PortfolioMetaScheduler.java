@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.core.scheduler.meta;
 
+import com.codahale.metrics.*;
+import com.codahale.metrics.Timer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
@@ -33,6 +35,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -57,12 +60,14 @@ public class PortfolioMetaScheduler extends
     private Lock readLock = lock.readLock();
     private Lock writeLock = lock.writeLock();
 
-    private BufferedWriter schedulerChoiceLog;
-    private ConcurrentSkipListMap<Long, String> recentChoices;
-    private int maxChoices;
-
     private POSUMWebApp webApp;
 
+    //metrics
+    private Timer allocateTimer;
+    private Timer handleTimer;
+    private Timer changeTimer;
+    private Map<SchedulerEventType, Timer> handleByTypeTimers;
+    private boolean metricsON;
 
     public PortfolioMetaScheduler() {
         super(PortfolioMetaScheduler.class.getName());
@@ -87,18 +92,11 @@ public class PortfolioMetaScheduler extends
         PolicyMap.PolicyInfo newClass = policies.get(policyName);
         if (newClass == null)
             throw new POSUMException("Target policy does not exist: " + policyName);
-        Long timestamp = System.currentTimeMillis();
-        try {
-            schedulerChoiceLog.write(policyName + "," + timestamp + "," + (timestamp - getStartTime()) + "\n");
-        } catch (IOException e) {
-            logger.error("Error writing to choice log ", e);
-        }
-        if (recentChoices.size() == maxChoices)
-            recentChoices.remove(recentChoices.lastKey());
-        recentChoices.put(timestamp, policyName);
+        commService.logPolicyChange(policyName);
         if (!currentPolicyInfo.equals(newClass)) {
-            currentPolicyInfo.stop(timestamp);
-            newClass.start(timestamp);
+            Timer.Context context = null;
+            if (metricsON)
+                context = changeTimer.time();
             writeLock.lock();
             currentPolicyInfo = newClass;
             if (isInState(STATE.INITED) || isInState(STATE.STARTED)) {
@@ -113,16 +111,10 @@ public class PortfolioMetaScheduler extends
                 }
             }
             writeLock.unlock();
+            if (metricsON)
+                context.stop();
             logger.debug("Policy changed successfully");
         }
-    }
-
-    public ConcurrentSkipListMap<Long, String> getRecentChoices() {
-        return recentChoices;
-    }
-
-    public PolicyMap getPolicyMap() {
-        return policies;
     }
 
     /**
@@ -139,27 +131,51 @@ public class PortfolioMetaScheduler extends
         this.conf = conf;
     }
 
+    public Timer getAllocateTimer() {
+        return allocateTimer;
+    }
+
+    public Timer getHandleTimer() {
+        return handleTimer;
+    }
+
+    public Timer getChangeTimer() {
+        return changeTimer;
+    }
+
+    public Map<SchedulerEventType, Timer> getHandleByTypeTimers() {
+        return handleByTypeTimers;
+    }
+
     @Override
     public void serviceInit(Configuration conf) throws Exception {
-        logger.debug("Service init called for meta");
         this.posumConf = POSUMConfiguration.newInstance();
         setConf(conf);
         policies = new PolicyMap(posumConf);
         currentPolicyInfo = policies.getDefaultPolicy();
-        currentPolicyInfo.start(System.currentTimeMillis());
-        commService = new MetaSchedulerCommService(this,  conf.get(YarnConfiguration.RM_ADDRESS));
+        commService = new MetaSchedulerCommService(this, conf.get(YarnConfiguration.RM_ADDRESS));
         commService.init(posumConf);
         initPolicy();
 
-        maxChoices = posumConf.getInt(POSUMConfiguration.MAX_SCHEDULER_CHOICE_BUFFER,
-                POSUMConfiguration.MAX_SCHEDULER_CHOICE_BUFFER_DEFAULT);
-        recentChoices = new ConcurrentSkipListMap<>();
-        String metricsOutputDir = posumConf.get(POSUMConfiguration.SCHEDULER_METRICS_DIR,
-                POSUMConfiguration.SCHEDULER_METRICS_DIR_DEFAULT);
-        schedulerChoiceLog = new BufferedWriter(
-                new FileWriter(metricsOutputDir + "/jobruntime.csv"));
-        schedulerChoiceLog.write("SCHEDULER,choice_time,relative_choice_time" + "\n");
-        schedulerChoiceLog.flush();
+        //initialize  metrics
+        metricsON = posumConf.getBoolean(POSUMConfiguration.SCHEDULER_METRICS_ON, POSUMConfiguration.SCHEDULER_METRICS_ON_DEFAULT);
+
+        if (metricsON) {
+            long windowSize = posumConf.getLong(POSUMConfiguration.POSUM_MONITOR_HEARTBEAT_MS,
+                    POSUMConfiguration.POSUM_MONITOR_HEARTBEAT_MS_DEFAULT);
+
+            allocateTimer = new Timer(new SlidingTimeWindowReservoir(windowSize, TimeUnit.MILLISECONDS));
+            handleTimer = new Timer(new SlidingTimeWindowReservoir(windowSize, TimeUnit.MILLISECONDS));
+            changeTimer = new Timer(new SlidingTimeWindowReservoir(windowSize, TimeUnit.MILLISECONDS));
+
+            handleByTypeTimers = new HashMap<>();
+            for (SchedulerEventType e : SchedulerEventType.values()) {
+                Timer timer = new Timer(new SlidingTimeWindowReservoir(windowSize, TimeUnit.MILLISECONDS));
+                handleByTypeTimers.put(e, timer);
+            }
+        }
+
+        //initialize statistics service
         webApp = new MetaSchedulerWebApp(this,
                 posumConf.getInt(POSUMConfiguration.SCHEDULER_WEBAPP_PORT, POSUMConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT));
     }
@@ -168,6 +184,7 @@ public class PortfolioMetaScheduler extends
     public void serviceStart() throws Exception {
         logger.debug("Starting meta");
         commService.start();
+        commService.logPolicyChange(policies.getDefaultPolicyName());
         readLock.lock();
         try {
             currentPolicy.start();
@@ -233,21 +250,37 @@ public class PortfolioMetaScheduler extends
     public Allocation allocate(
             ApplicationAttemptId applicationAttemptId, List<ResourceRequest> ask,
             List<ContainerId> release, List<String> blacklistAdditions, List<String> blacklistRemovals) {
+        Timer.Context context = null;
+        if (metricsON) {
+            context = allocateTimer.time();
+        }
         readLock.lock();
         try {
             return currentPolicy.allocate(applicationAttemptId, ask,
                     release, blacklistAdditions, blacklistRemovals);
         } finally {
+            if (metricsON) {
+                context.stop();
+            }
             readLock.unlock();
         }
     }
 
     @Override
     public void handle(SchedulerEvent event) {
+        Timer.Context generalContext = null, typeContext = null;
+        if (metricsON) {
+            generalContext = handleTimer.time();
+            typeContext = handleByTypeTimers.get(event.getType()).time();
+        }
         readLock.lock();
         try {
             currentPolicy.handle(event);
         } finally {
+            if (metricsON) {
+                generalContext.stop();
+                typeContext.stop();
+            }
             readLock.unlock();
         }
     }
@@ -655,5 +688,9 @@ public class PortfolioMetaScheduler extends
         } finally {
             readLock.unlock();
         }
+    }
+
+    public boolean hasMetricsOn() {
+        return metricsON;
     }
 }

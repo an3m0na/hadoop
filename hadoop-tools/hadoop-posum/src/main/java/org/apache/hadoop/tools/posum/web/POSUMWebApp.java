@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.tools.posum.common.util.JsonElement;
+import org.apache.hadoop.tools.posum.common.util.JsonObject;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.Request;
@@ -29,7 +31,6 @@ public class POSUMWebApp extends HttpServlet {
     private transient Server server;
 
     private int port;
-    protected ObjectMapper mapper = new ObjectMapper();
     protected final ResourceHandler staticHandler = new ResourceHandler();
     private final Handler handler;
 
@@ -47,7 +48,11 @@ public class POSUMWebApp extends HttpServlet {
                 try {
                     if (target.startsWith("/ajax")) {
                         // json request
-                        sendResult(request, response, wrapResult("Server is online!"));
+                        String call = target.substring("/ajax".length());
+                        if ("/system".equals(call))
+                            sendResult(request, response, wrapResult(getSystemMetrics()));
+                        else
+                            sendResult(request, response, wrapResult("Server is online!"));
                     } else {
                         response.setStatus(HttpServletResponse.SC_OK);
                         response.setCharacterEncoding("utf-8");
@@ -57,7 +62,7 @@ public class POSUMWebApp extends HttpServlet {
                         ((Request) request).setHandled(true);
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Error resolving request: ", e);
                 }
             }
         };
@@ -78,23 +83,20 @@ public class POSUMWebApp extends HttpServlet {
     }
 
     protected JsonNode wrapResult(Object result) {
-        ObjectNode wrapper = mapper.createObjectNode();
-        JsonNode out = result instanceof JsonNode ? (JsonNode) result : mapper.valueToTree(result);
-        wrapper.put("result", out);
-        wrapper.put("successful", true);
-        LoggerFactory.getLogger(getClass()).debug("Sending result " + wrapper);
+        JsonNode wrapper = new JsonObject()
+                .put("successful", true)
+                .put("result", JsonElement.wrapObject(result))
+                .getNode();
+        LoggerFactory.getLogger(getClass()).trace("Sending result " + wrapper);
         return wrapper;
     }
 
     protected JsonNode wrapError(String code, String message, String errorString) {
-        ObjectNode wrapper = mapper.createObjectNode();
-        ObjectNode error = mapper.createObjectNode();
-        error.put("code", code);
-        error.put("message", message);
-        wrapper.put("result", error);
-        wrapper.put("successful", false);
-        LoggerFactory.getLogger(getClass()).error("Sending error " + errorString);
-        return wrapper;
+        LoggerFactory.getLogger(getClass()).error("Sending error: " + message + ".Caused by :" + errorString);
+        return new JsonObject()
+                .put("successful", false)
+                .put("result", new JsonObject().put("code", code).put("message", message))
+                .getNode();
     }
 
 
@@ -108,5 +110,18 @@ public class POSUMWebApp extends HttpServlet {
 
         response.getWriter().println(result.toString());
         ((Request) request).setHandled(true);
+    }
+
+    protected JsonNode getSystemMetrics() {
+        double free = Runtime.getRuntime().freeMemory();
+        double max = Runtime.getRuntime().maxMemory();
+        double total = Runtime.getRuntime().totalMemory();
+        return wrapResult(new JsonObject()
+                .put("time", System.currentTimeMillis())
+                .put("jvm", new JsonObject()
+                        .put("free", String.format("%.3f", free / 1024 / 1024 / 1024))
+                        .put("max", String.format("%.3f", max / 1024 / 1024 / 1024))
+                        .put("total", String.format("%.3f", total / 1024 / 1024 / 1024)))
+                .getNode());
     }
 }

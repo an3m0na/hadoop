@@ -51,7 +51,8 @@ public class POSUMMaster extends CompositeService {
         dispatcher.register(POSUMEventType.class, orchestrator);
 
         try {
-            webApp = new MasterWebApp(conf.getInt(POSUMConfiguration.MASTER_WEBAPP_PORT,
+            webApp = new MasterWebApp(pmContext,
+                    conf.getInt(POSUMConfiguration.MASTER_WEBAPP_PORT,
                     POSUMConfiguration.MASTER_WEBAPP_PORT_DEFAULT));
         } catch (Exception e) {
             logger.error("Could not initialize web app", e);

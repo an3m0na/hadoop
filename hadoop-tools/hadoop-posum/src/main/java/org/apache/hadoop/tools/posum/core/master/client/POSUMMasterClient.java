@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.tools.posum.common.records.field.StringStringMapPayload;
 import org.apache.hadoop.tools.posum.common.records.protocol.POSUMMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.records.request.RegistrationRequest;
@@ -17,6 +18,8 @@ import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by ane on 4/13/16.
@@ -89,5 +92,19 @@ public class POSUMMasterClient extends AbstractService implements POSUMMasterInt
         } catch (IOException | YarnException e) {
             throw new POSUMException("Error during RPC call", e);
         }
+    }
+
+    public Map<Utils.POSUMProcess, String> getSystemAddresses() {
+        SimpleResponse response =
+                sendSimpleRequest("getSystemAddresses", SimpleRequest.newInstance(SimpleRequest.Type.SYSTEM_ADDRESSES));
+        StringStringMapPayload payload = (StringStringMapPayload) response.getPayload();
+        if (payload != null) {
+            Map<Utils.POSUMProcess, String> ret = new HashMap<>();
+            for (Map.Entry<String, String> entry : payload.getEntries().entrySet()) {
+                ret.put(Utils.POSUMProcess.valueOf(entry.getKey()), entry.getValue());
+            }
+            return ret;
+        }
+        return null;
     }
 }

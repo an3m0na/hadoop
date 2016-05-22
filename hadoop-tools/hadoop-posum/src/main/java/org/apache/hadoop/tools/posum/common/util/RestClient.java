@@ -8,6 +8,10 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.MRConfig;
+import org.apache.hadoop.mapreduce.v2.jobhistory.JHAdminConfig;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.codehaus.jettison.json.JSONObject;
 
 import javax.ws.rs.core.MediaType;
@@ -29,15 +33,21 @@ public class RestClient {
     }
 
     public enum TrackingUI {
-        RM("ResourceManager", "http://localhost:8088", "ws/v1/"),
-        HISTORY("History", "http://localhost:19888", "ws/v1/history/mapreduce/"),
-        AM("ApplicationMaster", "http://localhost:8088", "proxy/%s/ws/v1/mapreduce/");
+        RM("ResourceManager", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, "ws/v1/"),
+        HISTORY("History", JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_ADDRESS, "ws/v1/history/mapreduce/"),
+        AM("ApplicationMaster", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, "proxy/%s/ws/v1/mapreduce/"),
+        PS("PortfolioScheduler", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS + POSUMConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT, "/ajax/"),
+        PM("POSUMMaster", "http://localhost:" + POSUMConfiguration.MASTER_WEBAPP_PORT_DEFAULT, "/ajax/"),
+        SM("SimulationMaster", "http://localhost:" + POSUMConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT, "/ajax/"),
+        DM("DataMaster", "http://localhost:" + POSUMConfiguration.DM_WEBAPP_PORT_DEFAULT, "/ajax/");
+
+        private static boolean updated = false;
 
         private static final Map<String, TrackingUI> labelMap = new HashMap<>();
 
         public String label;
         public String root;
-        public String host;
+        public String address;
 
         static {
             for (TrackingUI field : TrackingUI.values()) {
@@ -45,9 +55,9 @@ public class RestClient {
             }
         }
 
-        TrackingUI(String label, String host, String root) {
+        TrackingUI(String label, String address, String root) {
             this.label = label;
-            this.host = host;
+            this.address = address;
             this.root = root;
         }
 
@@ -55,34 +65,67 @@ public class RestClient {
             return labelMap.get(label);
         }
 
+        public static boolean isUpdated() {
+            return updated;
+        }
+
+        public static boolean tryUpdate(Map<Utils.POSUMProcess, String> addresses) {
+            String psAddress = addresses.get(Utils.POSUMProcess.SCHEDULER);
+            if (psAddress == null)
+                return false;
+            String pmAddress = addresses.get(Utils.POSUMProcess.PM);
+            if (pmAddress == null)
+                return false;
+            String dmAddress = addresses.get(Utils.POSUMProcess.DM);
+            if (dmAddress == null)
+                return false;
+            String smAddress = addresses.get(Utils.POSUMProcess.SIMULATOR);
+            if (smAddress == null)
+                return false;
+            PS.address = "http://" + psAddress;
+            PM.address = "http://" + pmAddress;
+            SM.address = "http://" + smAddress;
+            DM.address = "http://" + dmAddress;
+            //FIXME assuming that the scheduler, the AM proxy and the history server are all on the same node
+            String rmAddress = psAddress.substring(0, psAddress.indexOf(":"));
+            RM.address = "http://" + rmAddress + RM.address.substring(RM.address.indexOf(":"));
+            HISTORY.address = "http://" + rmAddress + HISTORY.address.substring(HISTORY.address.indexOf(":"));
+            AM.address = RM.address;
+            updated = true;
+            return true;
+        }
     }
 
     public JSONObject getInfo(TrackingUI trackingUI, String path, String[] args) {
         ClientResponse response;
-        WebResource resource = client.resource(trackingUI.host).path(String.format(trackingUI.root + path, args));
+        String destination = String.format(trackingUI.root + path, args);
         try {
+            WebResource resource = client.resource(trackingUI.address).path(destination);
             response = resource.head();
             if (response.getStatus() != 200) {
                 logger.warn("Could not connect to resource " + resource.toString());
                 return null;
             }
+
+            response = resource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+
+            if (response.getStatus() != 200 || !response.getType().equals(MediaType.APPLICATION_JSON_TYPE)) {
+                throw new POSUMException("Error during request to server: " + resource);
+            }
+
+            try {
+                JSONObject object = response.getEntity(JSONObject.class);
+                logger.trace("[RestClient] Raw response:" + object);
+                return object;
+            } catch (Exception e) {
+                logger.error("Could not parse response as JSON ", e);
+            }
         } catch (Exception e) {
-            logger.warn("Could not connect to resource " + resource.toString());
+            logger.warn("Could not connect to url " + trackingUI.address + "/" + destination, e);
             return null;
-        }
-        response = resource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
-
-        if (response.getStatus() != 200 || !response.getType().equals(MediaType.APPLICATION_JSON_TYPE)) {
-            throw new POSUMException("Error during request to server: " + resource);
-        }
-
-        try {
-            JSONObject object = response.getEntity(JSONObject.class);
-            logger.trace("[RestClient] Raw response:" + object);
-            return object;
-        } catch (Exception e) {
-            logger.error("Could not parse response as JSON ", e);
         }
         return null;
     }
+
+
 }

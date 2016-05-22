@@ -5,17 +5,18 @@ printUsage() {
   echo "Usage: run-posum.sh <OPTIONS>"
   echo "                 --stop"
   echo "                 --restart"
-  echo "                 --input-something=<something>"
+  echo "                 --maxmem=<maximum JVM memory for each process in MB>"
   echo "                 [--print-simulation]"
   echo                  
 }
 ###############################################################################
 parseArgs() {
+  mem=2048
   for i in $*
   do
     case $i in
-    --input-something=*)
-      input=${i#*=}
+    --maxmem=*)
+      mem=${i#*=}
       ;;
       --stop)
       doStop=true
@@ -34,13 +35,6 @@ parseArgs() {
       ;;
     esac
   done
-
-#  if [[ "${input}" == "" ]] ; then
-#    echo "--input-something must be specified"
-#    echo
-#    printUsage
-#    exit 1
-#  fi
 }
 ###############################################################################
 killProcesses() {
@@ -76,8 +70,6 @@ runMaster() {
         fi
     fi
 
-    args="-inputsomething ${input}"
-
     if [[ "${printsimulation}" == "true" ]] ; then
         args="${args} -printsimulation"
     fi
@@ -85,7 +77,7 @@ runMaster() {
     echo ">>> Starting POSUM processes"
     for (( i=0; i<${#PROCESSES[@]}; i++ )); do
       echo ">> Starting ${PROCESSES[${i}]}"
-      java -cp ${POSUM_CLASSPATH} -Dhadoop.log.dir="${HADOOP_BASE}/logs" ${PROCESSES[${i}]} &>/dev/null & #${args}
+      java -cp ${POSUM_CLASSPATH} -Xmx${maxmem}M -Dhadoop.log.dir="${HADOOP_BASE}/logs" ${PROCESSES[${i}]} &>/dev/null &
       sleep 3
     done
 
