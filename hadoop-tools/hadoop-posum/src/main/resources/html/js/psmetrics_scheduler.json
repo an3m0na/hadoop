@@ -1,0 +1,15 @@
+{
+  "successful": true,
+  "result": {
+    "time": 1461952157630,
+    "timecost": {
+      "ALLOCATE": 30,
+      "HANDLE": 50,
+      "HANDLE_NODE_ADDED": 60,
+      "HANDLE_NODE_REMOVED": 40,
+      "HANDLE_NODE_UPDATE": 41,
+      "HANDLE_APP_ADDED": 42,
+      "HANDLE_APP_REMOVED": 53
+    }
+  }
+}

@@ -3,12 +3,9 @@ package org.apache.hadoop.tools.posum.test;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
+import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.rumen.JobTraceReader;
 import org.apache.hadoop.tools.rumen.LoggedJob;
 import org.apache.hadoop.tools.rumen.LoggedTask;
@@ -125,7 +122,7 @@ public class MockDataMasterClient extends DataMasterClient {
     }
 
     @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
+    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityType collection, String id) {
         if (DataEntityType.JOB.equals(collection)) {
             for (JobProfile job : jobList)
                 if (job.getId().equals(id))
@@ -150,7 +147,7 @@ public class MockDataMasterClient extends DataMasterClient {
     }
 
     @Override
-    public List<JobProfile> getComparableProfiles(String user, int count) {
+    public List<JobProfile> getComparableProfiles(DataEntityDB db, String user, int count) {
         TreeMap<Long, JobProfile> latest = new TreeMap<>();
         TreeMap<Long, JobProfile> relevant = new TreeMap<>();
         for (JobProfile job : jobList) {

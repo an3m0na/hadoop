@@ -1,7 +1,9 @@
 package org.apache.hadoop.tools.posum.common.records.field.impl.pb;
 
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.EntityByIdPayloadProto;
@@ -68,6 +70,18 @@ public class EntityByIdPayloadPBImpl extends EntityByIdPayload {
             builder = EntityByIdPayloadProto.newBuilder(proto);
         }
         viaProto = false;
+    }
+
+    @Override
+    public DataEntityDB getEntityDB() {
+        EntityByIdPayloadProtoOrBuilder p = viaProto ? proto : builder;
+        return new DataEntityDBPBImpl(p.getEntityDB());
+    }
+
+    @Override
+    public void setEntityDB(DataEntityDB db) {
+        maybeInitBuilder();
+        builder.setEntityDB(((DataEntityDBPBImpl)db).getProto());
     }
 
     @Override

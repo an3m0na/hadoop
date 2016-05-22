@@ -18,9 +18,9 @@
 <nav class="navbar navbar-default navbar-static-top an3-navbar">
     <div id="navbar" class="navbar-collapse collapse">
         <ul class="nav navbar-nav">
-            <li><a class="an3-nav-link" href="#apps">Applications</a></li>
+            <li><a class="an3-nav-link" href="#cluster">Cluster</a></li>
             <li><a class="an3-nav-link" href="#scheduler">Scheduler</a></li>
-            <li><a class="an3-nav-link" href="#resource">Resource</a></li>
+            <li><a class="an3-nav-link" href="#system">System</a></li>
         </ul>
     </div>
     <!--/.nav-collapse -->
@@ -39,15 +39,20 @@
             <a id="btn_start" class="btn btn-lg an3-nav-link" href="#scheduler" role="button">Scheduler Stats »</a>
         </p>
     </div>
-    <div id="apps" class="row an3-tab an3-dual">
-        Applications
+    <div id="cluster" class="row an3-tab an3-dual">
+        <div id="plot_apps"></div>
+        <div id="plot_containers"></div>
     </div>
     <div id="scheduler" class="row an3-tab an3-dual">
-        <div id="sch_map"></div>
-        <div id="sch_list"></div>
+        <div id="plot_policies_map"></div>
+        <div id="plot_policies_list"></div>
+        <div id="plot_timecost"></div>
     </div>
-    <div id="resource" class="row an3-tab an3-dual">
-        Resource tab
+    <div id="system" class="row an3-tab an3-dual">
+        <div id="plot_ps_jvm"></div>
+        <div id="plot_pm_jvm"></div>
+        <div id="plot_dm_jvm"></div>
+        <div id="plot_sm_jvm"></div>
     </div>
     <div id="none" class="an3-tab">
         <div class="an3-info-container">

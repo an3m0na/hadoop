@@ -1,57 +1,79 @@
 package org.apache.hadoop.tools.posum.database.store;
 
-import com.mongodb.DB;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
+import org.bson.Document;
 import org.mongojack.DBQuery;
 import org.mongojack.JacksonDBCollection;
 import org.mongojack.WriteResult;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * Created by ane on 3/3/16.
  */
 public class MongoJackConnector extends MongoConnector {
 
-    Map<Integer, JacksonDBCollection> collections = new HashMap<>();
-    DB deprecatedDb;
+    private static Log logger = LogFactory.getLog(MongoJackConnector.class);
 
-    public MongoJackConnector(String databaseName) {
-        this(databaseName, null);
+    private static final int MAX_DBS = 100;
+    private static final int MAX_COLS = 100;
+
+    private static Integer transientId = MAX_DBS;
+    private HashMap<String, Integer> transientDbs = new HashMap<>();
+    private ConcurrentSkipListMap<Integer, JacksonDBCollection> collections = new ConcurrentSkipListMap<>();
+
+    public MongoJackConnector(String databaseUrl) {
+        super(databaseUrl);
     }
 
-    MongoJackConnector(String databaseName, String databaseUrl) {
-        super(databaseName, databaseUrl);
-        deprecatedDb = client.getDB(db.getName());
+    synchronized void addDatabase(DataEntityDB db, DataEntityType... types) {
+        Integer id = db.getId();
+        if (db.isView()) {
+            transientDbs.put(db.getName(), ++transientId);
+            id = transientId;
+        }
+        for (DataEntityType type : types) {
+            collections.put(id * MAX_COLS + type.getId(), JacksonDBCollection.wrap(
+                    client.getDB(db.getName()).getCollection(type.getLabel()),
+                    type.getMappedClass(),
+                    String.class));
+        }
+        logger.debug("Collections are:" + collections);
     }
 
-    void addCollection(DataEntityType collection) {
-        collections.put(collection.getId(),
-                JacksonDBCollection.wrap(deprecatedDb.getCollection(collection.getLabel()),
-                        collection.getMappedClass(),
-                        String.class));
+    synchronized void dropDatabase(DataEntityDB db) {
+        Integer id = db.getId();
+        if (db.isView()) {
+            id = transientDbs.remove(db.getName());
+        }
+        Set<Integer> toDelete = collections.keySet().subSet(id * MAX_COLS, (id + 1) * MAX_COLS);
+        for (Integer index : toDelete) {
+            collections.remove(index);
+        }
+        client.getDB(db.getName()).dropDatabase();
     }
 
-
-    private <T> JacksonDBCollection<T, String> getCollection(DataEntityType collection) {
-        return (JacksonDBCollection<T, String>) collections.get(collection.getId());
+    private <T> JacksonDBCollection<T, String> getCollection(DataEntityDB db, DataEntityType collection) {
+        Integer id = (db.isView() ? transientDbs.get(db.getName()) : db.getId()) * MAX_COLS + collection.getId();
+        return (JacksonDBCollection<T, String>) collections.get(id);
     }
 
-    <T extends GeneralDataEntity> String insertObject(DataEntityType collection, T object) {
-        WriteResult<T, String> result = this.<T>getCollection(collection).insert(object);
+    <T extends GeneralDataEntity> String insertObject(DataEntityDB db, DataEntityType collection, T object) {
+        WriteResult<T, String> result = this.<T>getCollection(db, collection).insert(object);
         return result.getSavedId();
     }
 
-    <T extends GeneralDataEntity> boolean updateObject(DataEntityType collection, T object) {
-        return this.<T>getCollection(collection).updateById(object.getId(), object).getN() == 1;
+    <T extends GeneralDataEntity> boolean updateObject(DataEntityDB db, DataEntityType collection, T object) {
+        return this.<T>getCollection(db, collection).updateById(object.getId(), object).getN() == 1;
     }
 
-    <T extends GeneralDataEntity> boolean upsertObject(DataEntityType collection, T object) {
-        Object upsertedId = this.<T>getCollection(collection)
+    <T extends GeneralDataEntity> boolean upsertObject(DataEntityDB db, DataEntityType collection, T object) {
+        Object upsertedId = this.<T>getCollection(db, collection)
                 .update(DBQuery.is("_id", object.getId()), object, true, false).getUpsertedId();
         if (object.getId() != null)
             return object.getId().equals(upsertedId);
@@ -59,12 +81,12 @@ public class MongoJackConnector extends MongoConnector {
             return upsertedId != null;
     }
 
-    <T> void deleteObject(DataEntityType collection, String id) {
-        this.<T>getCollection(collection).removeById(id);
+    <T> void deleteObject(DataEntityDB db, DataEntityType collection, String id) {
+        this.<T>getCollection(db, collection).removeById(id);
     }
 
-    <T> void deleteObjects(DataEntityType collection, String field, Object value) {
-        this.<T>getCollection(collection).remove(DBQuery.is(field, value));
+    <T> void deleteObjects(DataEntityDB db, DataEntityType collection, String field, Object value) {
+        this.<T>getCollection(db, collection).remove(DBQuery.is(field, value));
     }
 
     private DBQuery.Query composeQuery(Map<String, Object> queryParams) {
@@ -75,27 +97,33 @@ public class MongoJackConnector extends MongoConnector {
         return DBQuery.and(paramList.toArray(new DBQuery.Query[queryParams.size()]));
     }
 
-    <T> void deleteObject(DataEntityType collection, Map<String, Object> queryParams) {
-        this.<T>getCollection(collection).remove(composeQuery(queryParams));
+    <T> void deleteObject(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
+        this.<T>getCollection(db, collection).remove(composeQuery(queryParams));
     }
 
-    <T> T findObjectById(DataEntityType collection, String id) {
-        return this.<T>getCollection(collection).findOneById(id);
+    <T> T findObjectById(DataEntityDB db, DataEntityType collection, String id) {
+        return this.<T>getCollection(db, collection).findOneById(id);
     }
 
-    <T> List<T> findObjects(DataEntityType collection, String field, Object value) {
-        return this.<T>getCollection(collection).find(DBQuery.is(field, value)).toArray();
+    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, String field, Object value) {
+        return this.<T>getCollection(db, collection).find(DBQuery.is(field, value)).toArray();
     }
 
-    <T> List<T> findObjects(DataEntityType collection, DBQuery.Query query) {
+    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, DBQuery.Query query) {
         if (query == null)
-            return this.<T>getCollection(collection).find().toArray();
-        return this.<T>getCollection(collection).find(query).toArray();
+            return this.<T>getCollection(db, collection).find().toArray();
+        return this.<T>getCollection(db, collection).find(query).toArray();
     }
 
-    <T> List<T> findObjects(DataEntityType collection, Map<String, Object> queryParams) {
+    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
         if (queryParams == null || queryParams.size() == 0)
-            return this.<T>getCollection(collection).find().toArray();
-        return findObjects(collection, composeQuery(queryParams));
+            return this.<T>getCollection(db, collection).find().toArray();
+        return findObjects(db, collection, composeQuery(queryParams));
+    }
+
+    String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) {
+        return client.getDatabase(database)
+                .getCollection(collection)
+                .find(new Document(queryParams)).toString();
     }
 }

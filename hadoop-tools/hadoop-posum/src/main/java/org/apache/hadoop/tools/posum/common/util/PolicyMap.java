@@ -4,6 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.FifoPolicy;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.HashMap;
 
@@ -12,19 +13,30 @@ import java.util.HashMap;
  */
 public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
 
-    public class PolicyInfo {
+    public static class PolicyInfo {
+        @JsonIgnore
         private Class<? extends PluginPolicy> pClass;
+
         private int usageNumber = 0;
         private long usageTime = 0L;
-        private long lastStarted = 0;
+        private long lastStarted = 0L;
+
+        public PolicyInfo() {
+
+        }
 
         public PolicyInfo(Class<? extends PluginPolicy> pClass) {
             this.pClass = pClass;
         }
 
         public void start(Long now) {
-            usageNumber++;
+            if (lastStarted != 0) {
+                usageTime += now - lastStarted;
+            }
             lastStarted = now;
+            usageNumber++;
+
+
         }
 
         public void stop(Long now) {
@@ -32,6 +44,7 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
             lastStarted = 0;
         }
 
+        @JsonIgnore
         public Class<? extends PluginPolicy> getImplClass() {
             return pClass;
         }
@@ -42,6 +55,22 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
 
         public long getUsageTime() {
             return usageTime;
+        }
+
+        public long getLastStarted() {
+            return lastStarted;
+        }
+
+        public void setUsageNumber(int usageNumber) {
+            this.usageNumber = usageNumber;
+        }
+
+        public void setUsageTime(long usageTime) {
+            this.usageTime = usageTime;
+        }
+
+        public void setLastStarted(long lastStarted) {
+            this.lastStarted = lastStarted;
         }
     }
 
@@ -56,7 +85,17 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
         }
     }
 
+    @JsonIgnore
     private PolicyInfo defaultPolicy;
+
+    private String defaultPolicyName;
+    private long schedulingStart = 0;
+    private long totalChanges = 0;
+    private String lastUsed;
+
+    public PolicyMap() {
+
+    }
 
     public PolicyMap(Configuration conf) {
         super(AvailablePolicy.values().length);
@@ -82,7 +121,7 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
                 put(policy.name(), new PolicyInfo(policy.implClass));
             }
         }
-        String defaultPolicyName = conf.get(POSUMConfiguration.DEFAULT_POLICY, POSUMConfiguration.DEFAULT_POLICY_DEFAULT);
+        defaultPolicyName = conf.get(POSUMConfiguration.DEFAULT_POLICY, POSUMConfiguration.DEFAULT_POLICY_DEFAULT);
         if (defaultPolicyName != null) {
             defaultPolicy = this.get(defaultPolicyName);
         }
@@ -90,5 +129,37 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
 
     public PolicyInfo getDefaultPolicy() {
         return defaultPolicy;
+    }
+
+    public String getDefaultPolicyName() {
+        return defaultPolicyName;
+    }
+
+    public long getTotalChanges() {
+        return totalChanges;
+    }
+
+    public void incTotalChanges(long newChanges) {
+        this.totalChanges += newChanges;
+    }
+
+    public void setTotalChanges(long totalChanges) {
+        this.totalChanges = totalChanges;
+    }
+
+    public String getLastUsed() {
+        return lastUsed;
+    }
+
+    public void setLastUsed(String lastUsed) {
+        this.lastUsed = lastUsed;
+    }
+
+    public long getSchedulingStart() {
+        return schedulingStart;
+    }
+
+    public void setSchedulingStart(long schedulingStart) {
+        this.schedulingStart = schedulingStart;
     }
 }
