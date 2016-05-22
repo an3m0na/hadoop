@@ -73,11 +73,11 @@ public class MetaSchedulerWebApp extends POSUMWebApp {
 
         JsonObject timecosts = new JsonObject();
         if (scheduler.hasMetricsOn()) {
-            timecosts.put("ALLOCATE", scheduler.getAllocateTimer().getSnapshot().getMean() / 1000)
-                    .put("HANDLE", scheduler.getHandleTimer().getSnapshot().getMean() / 1000)
-                    .put("CHANGE", scheduler.getChangeTimer().getSnapshot().getMean() / 1000);
+            timecosts.put("ALLOCATE", scheduler.getAllocateTimer().getSnapshot().getMean() / 1000000)
+                    .put("HANDLE", scheduler.getHandleTimer().getSnapshot().getMean() / 1000000)
+                    .put("CHANGE", scheduler.getChangeTimer().getSnapshot().getMean() / 1000000);
             for (Map.Entry<SchedulerEventType, Timer> entry : scheduler.getHandleByTypeTimers().entrySet()) {
-                timecosts.put("HANDLE_" + entry.getKey().name(), entry.getValue().getSnapshot().getMean() / 1000);
+                timecosts.put("HANDLE_" + entry.getKey().name(), entry.getValue().getSnapshot().getMean() / 1000000);
             }
         }
         return wrapResult(new JsonObject()

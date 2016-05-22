@@ -12,6 +12,7 @@ public class DataMasterContext {
     private Dispatcher dispatcher;
     private DummyTokenSecretManager tokenSecretManager;
     private DataStore dataStore;
+    private DataMasterCommService commService;
 
     public void setDispatcher(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -37,4 +38,11 @@ public class DataMasterContext {
         return dataStore;
     }
 
+    public void setCommService(DataMasterCommService commService) {
+        this.commService = commService;
+    }
+
+    public DataMasterCommService getCommService() {
+        return commService;
+    }
 }

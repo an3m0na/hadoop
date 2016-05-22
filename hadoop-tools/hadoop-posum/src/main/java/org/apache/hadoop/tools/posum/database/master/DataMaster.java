@@ -46,6 +46,7 @@ public class DataMaster extends CompositeService {
         dmService = new DataMasterCommService(dmContext);
         dmService.init(conf);
         addIfService(dmService);
+        dmContext.setCommService(dmService);
 
         hadoopMonitor = new HadoopMonitor(dmContext);
         hadoopMonitor.init(conf);

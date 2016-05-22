@@ -143,7 +143,7 @@ function TabManager(env) {
                     return traceObject
                 },
                 "JVM Memory on Portfolio Scheduler",
-                {title: "Memory (GB)", tickmode: "linear", showticklabels: true}
+                {title: "Memory (GB)", tickmode: "linear", dtick: 0.25}
             );
             path = env.isTest ? "/html/js/metrics_system.json" : env.comm.masterPath + "/system";
             self.updateTimeSeries(tab,
@@ -156,7 +156,7 @@ function TabManager(env) {
                     return traceObject
                 },
                 "JVM Memory on POSUM Master",
-                {title: "Memory (GB)", tickmode: "linear", showticklabels: true}
+                {title: "Memory (GB)", tickmode: "linear", dtick: 0.25}
             );
             path = env.isTest ? "/html/js/metrics_system.json" : env.comm.dmPath + "/system";
             self.updateTimeSeries(tab,
@@ -169,7 +169,7 @@ function TabManager(env) {
                     return traceObject
                 },
                 "JVM Memory on Data Master",
-                {title: "Memory (GB)", tickmode: "linear", showticklabels: true}
+                {title: "Memory (GB)", tickmode: "linear", dtick: 0.25}
             );
 
             path = env.isTest ? "/html/js/metrics_system.json" : env.comm.smPath + "/system";
@@ -183,7 +183,7 @@ function TabManager(env) {
                     return traceObject
                 },
                 "JVM Memory on Simulation Master",
-                {title: "Memory (GB)", tickmode: "linear", showticklabels: true}
+                {title: "Memory (GB)", tickmode: "linear", dtick: 0.25}
             );
 
         } else if (tab.id == "cluster") {

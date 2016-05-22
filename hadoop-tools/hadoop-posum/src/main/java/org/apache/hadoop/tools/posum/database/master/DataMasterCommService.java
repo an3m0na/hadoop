@@ -28,6 +28,7 @@ import org.apache.hadoop.yarn.ipc.YarnRPC;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by ane on 3/19/16.
@@ -160,5 +161,9 @@ public class DataMasterCommService extends CompositeService implements DataMaste
             return SimpleResponse.newInstance("Exception when forwarding message type " + request.getType(), e);
         }
         return SimpleResponse.newInstance(true);
+    }
+
+    public Map<Utils.POSUMProcess, String> getSystemAddresses() {
+        return masterClient.getSystemAddresses();
     }
 }

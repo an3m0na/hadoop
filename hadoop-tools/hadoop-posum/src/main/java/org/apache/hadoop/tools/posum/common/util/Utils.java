@@ -14,6 +14,7 @@ import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleReques
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.util.Records;
 
@@ -119,17 +120,43 @@ public class Utils {
     }
 
     public enum POSUMProcess {
-        PM("POSUMMaster", POSUMMasterProtocol.class),
-        DM("DataMaster", DataMasterProtocol.class),
-        SIMULATOR("SimulationMaster", SimulatorProtocol.class),
-        SCHEDULER("PortfolioMetaScheduler", MetaSchedulerProtocol.class);
+        PM("POSUMMaster",
+                POSUMConfiguration.PM_ADDRESS_DEFAULT + ":" + POSUMConfiguration.PM_PORT_DEFAULT,
+                POSUMMasterProtocol.class),
+        DM("DataMaster",
+                POSUMConfiguration.DM_ADDRESS_DEFAULT + ":" + POSUMConfiguration.DM_PORT_DEFAULT,
+                DataMasterProtocol.class),
+        SIMULATOR("SimulationMaster",
+                POSUMConfiguration.SIMULATOR_ADDRESS_DEFAULT + ":" + POSUMConfiguration.SIMULATOR_PORT_DEFAULT,
+                SimulatorProtocol.class),
+        SCHEDULER("PortfolioMetaScheduler",
+                POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT + ":" + POSUMConfiguration.SCHEDULER_PORT_DEFAULT,
+                MetaSchedulerProtocol.class);
 
         private final String longName;
+        private String address;
         private final Class<? extends StandardProtocol> accessorProtocol;
 
-        POSUMProcess(String longName, Class<? extends StandardProtocol> accessorProtocol) {
+        POSUMProcess(String longName, String address, Class<? extends StandardProtocol> accessorProtocol) {
             this.longName = longName;
+            this.address = address;
             this.accessorProtocol = accessorProtocol;
+        }
+
+        public String getLongName() {
+            return longName;
+        }
+
+        public Class<? extends StandardProtocol> getAccessorProtocol() {
+            return accessorProtocol;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
         }
     }
 }

@@ -10,6 +10,8 @@ public class POSUMConfiguration {
 
     public static Configuration newInstance() {
         Configuration conf = new Configuration();
+        conf.addResource("mapred-site.xml");
+        conf.addResource("yarn-site.xml");
         conf.addResource("posum-core.xml");
         return conf;
     }
