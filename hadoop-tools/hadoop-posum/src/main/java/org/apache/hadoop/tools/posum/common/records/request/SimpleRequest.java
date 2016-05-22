@@ -18,7 +18,8 @@ public abstract class SimpleRequest<T> {
         ENTITY_BY_ID(EntityByIdRequestPBImpl.class),
         JOB_FOR_APP(StringRequestPBImpl.class),
         START(VoidRequestPBImpl.class),
-        LOG_POLICY_CHANGE(StringRequestPBImpl.class);
+        LOG_POLICY_CHANGE(StringRequestPBImpl.class),
+        SYSTEM_ADDRESSES(VoidRequestPBImpl.class);
 
         private Class<? extends SimpleRequestPBImpl> implClass;
         private static final String prefix = "REQ_";

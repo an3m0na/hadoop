@@ -187,6 +187,7 @@ message SimpleRequestProto {
         REQ_JOB_FOR_APP = 3;
         REQ_START = 4;
         REQ_LOG_POLICY_CHANGE = 5;
+        REQ_SYSTEM_ADDRESSES = 6;
     }
 }
 
@@ -201,6 +202,7 @@ message SimpleResponseProto {
         RESP_VOID = 0;
         RESP_SINGLE_ENTITY = 1;
         RESP_MULTI_ENTITY = 2;
+        RESP_STRING_STRING_MAP = 3;
     }
 }
 
@@ -229,4 +231,8 @@ message RegistrationRequestProto {
         PROCESS_SIMULATOR = 2;
         PROCESS_SCHEDULER = 3;
     }
+}
+
+message StringStringMapPayloadProto{
+    repeated StringStringMapProto entries = 1;
 }

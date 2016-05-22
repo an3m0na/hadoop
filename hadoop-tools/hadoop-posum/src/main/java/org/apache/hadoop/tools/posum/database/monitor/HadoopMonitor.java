@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.database.monitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.GeneralLooper;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
 
 
@@ -30,6 +31,9 @@ public class HadoopMonitor extends GeneralLooper<HadoopMonitor> {
 
     @Override
     protected void doAction() {
+        if (!RestClient.TrackingUI.isUpdated()) {
+            RestClient.TrackingUI.tryUpdate(context.getCommService().getSystemAddresses());
+        }
         collector.collect();
     }
 }
