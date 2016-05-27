@@ -22,8 +22,7 @@ import java.util.Map;
  */
 public abstract class PluginPolicy<
         A extends SchedulerApplicationAttempt,
-        N extends SchedulerNode,
-        S extends PluginPolicy<A, N, S>>
+        N extends SchedulerNode>
         extends AbstractYarnScheduler<A, N> implements Configurable {
 
     protected Class<A> aClass;
@@ -31,8 +30,8 @@ public abstract class PluginPolicy<
     protected Configuration pluginConf;
     protected MetaSchedulerCommService commService;
 
-    public PluginPolicy(Class<A> aClass, Class<N> nClass, Class<S> sClass) {
-        super(sClass.getName());
+    public PluginPolicy(Class<A> aClass, Class<N> nClass, String policyName) {
+        super(policyName);
         this.aClass = aClass;
         this.nClass = nClass;
     }
