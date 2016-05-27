@@ -43,7 +43,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
         N extends SQSchedulerNode,
         Q extends SQSQueue,
         S extends SingleQueuePolicy<A, N, Q, S>>
-        extends PluginPolicy<A, N, S> {
+        extends PluginPolicy<A, N> {
 
     private static Log LOG = LogFactory.getLog(SingleQueuePolicy.class);
 
@@ -61,7 +61,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     protected ConcurrentSkipListSet<SchedulerApplication<A>> orderedApps;
 
     public SingleQueuePolicy(Class<A> aClass, Class<N> nClass, Class<Q> qClass, Class<S> sClass) {
-        super(aClass, nClass, sClass);
+        super(aClass, nClass, sClass.getName());
         this.qClass = qClass;
     }
 
