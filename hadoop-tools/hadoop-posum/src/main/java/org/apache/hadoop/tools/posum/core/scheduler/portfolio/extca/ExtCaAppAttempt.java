@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
@@ -53,7 +54,7 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
             Constructor<A> constructor = aClass.getConstructor(ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
             return constructor.newInstance(applicationAttemptId, user, queue, activeUsersManager, rmContext);
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate app attempt via default constructor" + e);
+            throw new POSUMException("Failed to instantiate app attempt via default constructor", e);
         }
     }
 
@@ -62,13 +63,13 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
             Constructor<A> constructor = aClass.getConstructor(ExtCaAppAttempt.class);
             return constructor.newInstance(attempt);
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate app attempt via default constructor" + e);
+            throw new POSUMException("Failed to instantiate app attempt via default constructor", e);
         }
     }
 
     protected void writeField(String name, Object value) {
         try {
-            Field field = FiCaSchedulerApp.class.getField(name);
+            Field field = Utils.findField(FiCaSchedulerApp.class, name);
             field.setAccessible(true);
             field.set(inner, value);
         } catch (NoSuchFieldException | IllegalAccessException e) {
@@ -76,19 +77,20 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
         }
     }
 
-    protected Object readField(String name) {
+    protected <T> T readField(String name) {
         try {
-            Field field = FiCaSchedulerApp.class.getField(name);
+            Field field = Utils.findField(FiCaSchedulerApp.class, name);
             field.setAccessible(true);
-            return field.get(inner);
+            return (T) field.get(inner);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new POSUMException("Reflection error: ", e);
         }
     }
 
+
     protected <T> T invokeMethod(String name, Class<?>[] paramTypes, Object... args) {
         try {
-            Method method = FiCaSchedulerApp.class.getMethod(name, paramTypes);
+            Method method = Utils.findMethod(FiCaSchedulerApp.class, name, paramTypes);
             method.setAccessible(true);
             return (T) method.invoke(inner, args);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {

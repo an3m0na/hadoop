@@ -3,11 +3,13 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerNode;
 
@@ -42,9 +44,9 @@ public class ExtCaSchedulerNode extends FiCaSchedulerNode {
     static <N extends ExtCaSchedulerNode> N getInstance(Class<N> nClass, RMNode node, boolean usePortForNodeName, Set<String> nodeLabels) {
         try {
             Constructor<N> constructor = nClass.getConstructor(RMNode.class, boolean.class, Set.class);
-            return constructor.newInstance(node, usePortForNodeName);
+            return constructor.newInstance(node, usePortForNodeName, nodeLabels);
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate scheduler node via constructor" + e);
+            throw new POSUMException("Failed to instantiate scheduler node via constructor", e);
         }
     }
 
@@ -53,13 +55,13 @@ public class ExtCaSchedulerNode extends FiCaSchedulerNode {
             Constructor<N> constructor = nClass.getConstructor(ExtCaSchedulerNode.class);
             return constructor.newInstance(node);
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate scheduler node via constructor" + e);
+            throw new POSUMException("Failed to instantiate scheduler node via constructor", e);
         }
     }
 
     protected void writeField(String name, Object value) {
         try {
-            Field field = FiCaSchedulerApp.class.getField(name);
+            Field field = Utils.findField(FiCaSchedulerNode.class, name);
             field.setAccessible(true);
             field.set(inner, value);
         } catch (NoSuchFieldException | IllegalAccessException e) {
@@ -67,19 +69,20 @@ public class ExtCaSchedulerNode extends FiCaSchedulerNode {
         }
     }
 
-    protected Object readField(String name) {
+    protected <T> T readField(String name) {
         try {
-            Field field = FiCaSchedulerApp.class.getField(name);
+            Field field = Utils.findField(FiCaSchedulerNode.class, name);
             field.setAccessible(true);
-            return field.get(inner);
+            return (T)field.get(inner);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new POSUMException("Reflection error: ", e);
         }
     }
 
+
     protected <T> T invokeMethod(String name, Class<?>[] paramTypes, Object... args) {
         try {
-            Method method = FiCaSchedulerApp.class.getMethod(name, paramTypes);
+            Method method = Utils.findMethod(FiCaSchedulerNode.class, name, paramTypes);
             method.setAccessible(true);
             return (T) method.invoke(inner, args);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {

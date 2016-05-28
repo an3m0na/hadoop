@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -39,6 +40,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -68,7 +70,7 @@ public abstract class ExtensibleCapacityScheduler<
 
     protected void writeField(String name, Object value) {
         try {
-            Field field = CapacityScheduler.class.getField(name);
+            Field field = Utils.findField(CapacityScheduler.class, name);
             field.setAccessible(true);
             field.set(inner, value);
         } catch (NoSuchFieldException | IllegalAccessException e) {
@@ -76,19 +78,20 @@ public abstract class ExtensibleCapacityScheduler<
         }
     }
 
-    protected Object readField(String name) {
+    protected <T> T readField(String name) {
         try {
-            Field field = CapacityScheduler.class.getField(name);
+            Field field = Utils.findField(CapacityScheduler.class, name);
             field.setAccessible(true);
-            return field.get(inner);
+            return (T) field.get(inner);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new POSUMException("Reflection error: ", e);
         }
     }
 
+
     protected <T> T invokeMethod(String name, Class<?>[] paramTypes, Object... args) {
         try {
-            Method method = CapacityScheduler.class.getMethod(name, paramTypes);
+            Method method = Utils.findMethod(CapacityScheduler.class, name, paramTypes);
             method.setAccessible(true);
             return (T) method.invoke(inner, args);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
@@ -175,7 +178,7 @@ public abstract class ExtensibleCapacityScheduler<
 
             A attempt =
                     ExtCaAppAttempt.getInstance(aClass, applicationAttemptId, application.getUser(),
-                            queue, queue.getActiveUsersManager(), rmContext);
+                            queue, queue.getActiveUsersManager(), inner.getRMContext());
             if (transferStateFromPreviousAttempt) {
                 attempt.transferStateFromPreviousAttempt(application
                         .getCurrentAppAttempt());
@@ -194,7 +197,7 @@ public abstract class ExtensibleCapacityScheduler<
                             + " is recovering. Skipping notifying ATTEMPT_ADDED");
                 }
             } else {
-                rmContext.getDispatcher().getEventHandler().handle(
+                inner.getRMContext().getDispatcher().getEventHandler().handle(
                         new RMAppAttemptEvent(applicationAttemptId,
                                 RMAppAttemptEventType.ATTEMPT_ADDED));
             }
@@ -205,24 +208,25 @@ public abstract class ExtensibleCapacityScheduler<
         synchronized (inner) {
             N schedulerNode = ExtCaSchedulerNode.getInstance(nClass, nodeManager,
                     capacityConf.getUsePortForNodeName(), nodeManager.getNodeLabels());
-            this.nodes.put(nodeManager.getNodeID(), schedulerNode);
-            Resources.addTo(clusterResource, nodeManager.getTotalCapability());
+            Map<NodeId, FiCaSchedulerNode> nodes = readField("nodes");
+            nodes.put(nodeManager.getNodeID(), schedulerNode);
+            Resources.addTo(getClusterResource(), nodeManager.getTotalCapability());
 
             // update this node to node label manager
-            RMNodeLabelsManager labelManager = (RMNodeLabelsManager) readField("labelsManager");
+            RMNodeLabelsManager labelManager = readField("labelManager");
             if (labelManager != null) {
                 labelManager.activateNode(nodeManager.getNodeID(),
                         nodeManager.getTotalCapability());
             }
 
-            CSQueue root = (CSQueue) readField("root");
-            root.updateClusterResource(clusterResource, new ResourceLimits(
-                    clusterResource));
-            int numNodes = ((AtomicInteger) readField("numNodeManagers")).incrementAndGet();
+            CSQueue root = readField("root");
+            root.updateClusterResource(getClusterResource(), new ResourceLimits(
+                    getClusterResource()));
+            int numNodes = this.<AtomicInteger>readField("numNodeManagers").incrementAndGet();
             updateMaximumAllocation(schedulerNode, true);
 
             LOG.info("Added node " + nodeManager.getNodeAddress() +
-                    " clusterResource: " + clusterResource);
+                    " clusterResource: " + getClusterResource());
 
             //FIXME uncomment if scheduleAsynchronously becomes available
 //            if (scheduleAsynchronously && numNodes == 1) {
@@ -234,7 +238,7 @@ public abstract class ExtensibleCapacityScheduler<
     protected void allocateContainersToNode(FiCaSchedulerNode node) {
         if (checkIfPrioritiesExpired()) {
             synchronized (inner) {
-                updateApplicationPriorities((CSQueue) readField("root"));
+                updateApplicationPriorities(this.<CSQueue>readField("root"));
             }
         }
         invokeMethod("allocateContainersToNode", new Class<?>[]{FiCaSchedulerNode.class}, node);
@@ -243,9 +247,9 @@ public abstract class ExtensibleCapacityScheduler<
     protected void initializeWithModifiedConf() {
         synchronized (inner) {
             writeField("conf", capacityConf);
-            invokeMethod("validateConf", new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
+            invokeMethod("validateConf", new Class<?>[]{Configuration.class}, capacityConf);
             writeField("calculator", capacityConf.getResourceCalculator());
-            invokeMethod("initializeQueues", new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
+            invokeMethod("reinitializeQueues", new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
             //asynchronous scheduling is disabled by default, in order to have control over the scheduling cycle
             writeField("scheduleAsynchronously", false);
             LOG.info("Overwrote CapacityScheduler with: " +
@@ -258,20 +262,19 @@ public abstract class ExtensibleCapacityScheduler<
     protected void reinitializeWithModifiedConf() {
         synchronized (inner) {
             writeField("conf", capacityConf);
-            invokeMethod("validateConf", new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
+            invokeMethod("validateConf", new Class<?>[]{Configuration.class}, capacityConf);
             invokeMethod("reinitializeQueues", new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
         }
     }
 
     @Override
     public void serviceInit(Configuration conf) throws Exception {
-        super.serviceInit(conf);
         // this call will use default capacity configurations in capacity-scheduler.xml
+        setConf(conf);
         inner.init(conf);
         if (customConf) {
             // reinitialize with the given capacity scheduler configuration
             capacityConf = loadCustomCapacityConf(conf);
-
             initializeWithModifiedConf();
         } else {
             capacityConf = getConfiguration();
@@ -305,6 +308,7 @@ public abstract class ExtensibleCapacityScheduler<
             case NODE_UPDATE: {
                 NodeUpdateSchedulerEvent nodeUpdatedEvent = (NodeUpdateSchedulerEvent) event;
                 RMNode node = nodeUpdatedEvent.getRMNode();
+                Map<NodeId, FiCaSchedulerNode> nodes = readField("nodes");
                 invokeMethod("nodeUpdate", new Class<?>[]{RMNode.class}, node);
                 //FIXME uncomment if scheduleAsynchronously becomes available
 //                if (!scheduleAsynchronously) {
@@ -358,7 +362,6 @@ public abstract class ExtensibleCapacityScheduler<
     //
     // <------ Delegation methods ------>
     //
-
 
     @Override
     public void serviceStart() throws Exception {
@@ -581,7 +584,7 @@ public abstract class ExtensibleCapacityScheduler<
 
     @Override
     public void updateMaximumAllocation(SchedulerNode node, boolean add) {
-        invokeMethod("updateMaximumAllocation", new Class<?>[]{SchedulerNode.class, Boolean.class}, node, add);
+        invokeMethod("updateMaximumAllocation", new Class<?>[]{SchedulerNode.class, boolean.class}, node, add);
     }
 
     @Override
@@ -687,6 +690,7 @@ public abstract class ExtensibleCapacityScheduler<
 //        }
 //        printQueue();
     }
+
 
     @Override
     public PluginPolicyState exportState() {

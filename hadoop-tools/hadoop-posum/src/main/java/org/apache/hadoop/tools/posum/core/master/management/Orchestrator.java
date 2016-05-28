@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
@@ -21,6 +22,7 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
 
     private POSUMMasterContext pmContext;
     private SimulationManager simulationManager;
+    private boolean switchEnabled;
 
     public Orchestrator(POSUMMasterContext pmContext) {
         super(Orchestrator.class.getName());
@@ -31,7 +33,8 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
     protected void serviceInit(Configuration conf) throws Exception {
         simulationManager = new SimulationManager(pmContext);
         simulationManager.init(conf);
-
+        switchEnabled = getConfig().getBoolean(POSUMConfiguration.POLICY_SWITCH_ENABLED,
+                POSUMConfiguration.POLICY_SWITCH_ENABLED_DEFAULT);
         super.serviceInit(conf);
     }
 
@@ -52,16 +55,9 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
                     break;
                 case SIMULATION_FINISH:
                     simulationManager.simulationFinished();
-                    MetaSchedulerInterface scheduler = pmContext.getCommService().getScheduler();
                     ConcurrentSkipListSet<SimulationResult> results = event.getCastContent();
                     logger.debug("Policy scores: " + results);
-                    if (scheduler != null) {
-                        SimulationResult bestResult = results.last();
-                        if (bestResult != null) {
-                            logger.info("Switching to best policy: " + bestResult.getPolicyName());
-                            scheduler.changeToPolicy(bestResult.getPolicyName());
-                        }
-                    }
+                    decidePolicyChange(results);
                     break;
                 default:
                     throw new POSUMException("Could not handle event of type " + event.getType());
@@ -69,5 +65,18 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
         } catch (Exception e) {
             throw new POSUMException("Could not handle event of type " + event.getType());
         }
+    }
+
+    private void decidePolicyChange(ConcurrentSkipListSet<SimulationResult> results) {
+        if (!switchEnabled)
+            return;
+        MetaSchedulerInterface scheduler = pmContext.getCommService().getScheduler();
+        if (scheduler == null)
+            return;
+        SimulationResult bestResult = results.last();
+        if (bestResult == null)
+            return;
+        logger.info("Switching to best policy: " + bestResult.getPolicyName());
+        scheduler.changeToPolicy(bestResult.getPolicyName());
     }
 }
