@@ -121,7 +121,7 @@ public class RestClient {
                 logger.error("Could not parse response as JSON ", e);
             }
         } catch (Exception e) {
-            logger.warn("Could not connect to url " + trackingUI.address + "/" + destination, e);
+            logger.warn("Could not connect to url " + trackingUI.address + "/" + destination + ": " + e.getMessage());
             return null;
         }
         return null;

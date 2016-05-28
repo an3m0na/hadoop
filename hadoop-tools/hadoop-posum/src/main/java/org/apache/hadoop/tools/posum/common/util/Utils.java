@@ -20,6 +20,9 @@ import org.apache.hadoop.yarn.util.Records;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 
 /**
  * Created by ane on 3/3/16.
@@ -158,5 +161,38 @@ public class Utils {
         public void setAddress(String address) {
             this.address = address;
         }
+    }
+
+    public static Field findField(Class startClass, String name)
+            throws NoSuchFieldException {
+        Class crtClass = startClass;
+        while (crtClass != null) {
+            Field[] fields = crtClass.getDeclaredFields();
+            for (Field field : fields) {
+                if (field.getName().equals(name)) {
+                    return field;
+                }
+            }
+            crtClass = crtClass.getSuperclass();
+        }
+        throw new NoSuchFieldException(startClass.getName() + "." + name);
+    }
+
+    public static Method findMethod(Class startClass, String name, Class<?>... paramTypes)
+            throws NoSuchMethodException {
+        Class crtClass = startClass;
+        while (crtClass != null) {
+            Method[] methods = crtClass.getDeclaredMethods();
+            for (Method method : methods) {
+                if (method.getName().equals(name)) {
+                    if (Arrays.equals(method.getParameterTypes(), paramTypes)) {
+                        return method;
+                    }
+                }
+            }
+            crtClass = crtClass.getSuperclass();
+        }
+        throw new NoSuchMethodException(startClass.getName() + "." + name +
+                (paramTypes != null ? Arrays.asList(paramTypes).toString().replace('[', '(').replace(']', ')') : ""));
     }
 }

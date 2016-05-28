@@ -209,7 +209,8 @@ public class PortfolioMetaScheduler extends
         } finally {
             readLock.unlock();
         }
-        webApp.stop();
+        if (webApp != null)
+            webApp.stop();
     }
 
     @Override
