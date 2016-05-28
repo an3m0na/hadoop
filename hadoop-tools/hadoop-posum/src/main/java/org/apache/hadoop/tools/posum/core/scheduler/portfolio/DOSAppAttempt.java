@@ -6,6 +6,7 @@ import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
 /**
  * Created by ane on 1/22/16.
@@ -42,5 +43,15 @@ public class DOSAppAttempt extends ExtCaAppAttempt {
     @Override
     public String toString() {
         return "DOSAttempt_" + getApplicationId() + "=" + totalInputSize;
+    }
+
+    @Override
+    public synchronized void transferStateFromPreviousAttempt(SchedulerApplicationAttempt appAttempt) {
+        super.transferStateFromPreviousAttempt(appAttempt);
+        if (appAttempt instanceof DOSAppAttempt) {
+            DOSAppAttempt dosapp = (DOSAppAttempt) appAttempt;
+            setInputSplits(dosapp.getInputSplits());
+            setTotalInputSize(dosapp.getTotalInputSize());
+        }
     }
 }

@@ -16,11 +16,13 @@ import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleRespo
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
@@ -194,5 +196,36 @@ public class Utils {
         }
         throw new NoSuchMethodException(startClass.getName() + "." + name +
                 (paramTypes != null ? Arrays.asList(paramTypes).toString().replace('[', '(').replace(']', ')') : ""));
+    }
+
+    public static void writeField(Object object, Class startClass, String name, Object value) {
+        try {
+            Field field = Utils.findField(startClass, name);
+            field.setAccessible(true);
+            field.set(object, value);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new POSUMException("Reflection error: ", e);
+        }
+    }
+
+    public static <T> T readField(Object object, Class startClass, String name) {
+        try {
+            Field field = Utils.findField(startClass, name);
+            field.setAccessible(true);
+            return (T) field.get(object);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new POSUMException("Reflection error: ", e);
+        }
+    }
+
+
+    public static <T> T invokeMethod(Object object, Class startClass, String name, Class<?>[] paramTypes, Object... args) {
+        try {
+            Method method = Utils.findMethod(startClass, name, paramTypes);
+            method.setAccessible(true);
+            return (T) method.invoke(object, args);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new POSUMException("Reflection error: ", e);
+        }
     }
 }

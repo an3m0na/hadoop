@@ -98,13 +98,6 @@ public abstract class PluginPolicy<
         refreshMaximumAllocation(newMaxAlloc);
     }
 
-    protected abstract void assumeState(PluginPolicyState state);
-
-    protected abstract PluginPolicyState exportState();
-
-    public void transferStateFromPolicy(PluginPolicy other){
-        PluginPolicyState state = other.exportState();
-        assumeState(state);
-    }
+    public abstract void transferStateFromPolicy(PluginPolicy other);
 
 }
