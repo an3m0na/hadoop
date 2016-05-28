@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -37,10 +38,7 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -69,34 +67,16 @@ public abstract class ExtensibleCapacityScheduler<
     }
 
     protected void writeField(String name, Object value) {
-        try {
-            Field field = Utils.findField(CapacityScheduler.class, name);
-            field.setAccessible(true);
-            field.set(inner, value);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new POSUMException("Reflection error: ", e);
-        }
+        Utils.writeField(inner, CapacityScheduler.class, name, value);
     }
 
     protected <T> T readField(String name) {
-        try {
-            Field field = Utils.findField(CapacityScheduler.class, name);
-            field.setAccessible(true);
-            return (T) field.get(inner);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new POSUMException("Reflection error: ", e);
-        }
+        return Utils.readField(inner, CapacityScheduler.class, name);
     }
 
 
     protected <T> T invokeMethod(String name, Class<?>[] paramTypes, Object... args) {
-        try {
-            Method method = Utils.findMethod(CapacityScheduler.class, name, paramTypes);
-            method.setAccessible(true);
-            return (T) method.invoke(inner, args);
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            throw new POSUMException("Reflection error: ", e);
-        }
+        return Utils.invokeMethod(inner, CapacityScheduler.class, name, paramTypes, args);
     }
 
     //
@@ -119,6 +99,11 @@ public abstract class ExtensibleCapacityScheduler<
                                   ApplicationId applicationId,
                                   boolean isAppRecovering,
                                   ReservationId reservationID) {
+        return queue;
+    }
+
+    protected String resolveMoveQueue(String queue,
+                                      ApplicationId applicationId) {
         return queue;
     }
 
@@ -233,6 +218,52 @@ public abstract class ExtensibleCapacityScheduler<
 //                asyncSchedulerThread.beginSchedule();
 //            }
         }
+    }
+
+    public SchedulerApplication<A> moveApplicationReference(ApplicationId appId,
+                                                            SchedulerApplication<? extends ExtCaAppAttempt> app,
+                                                            LeafQueue source,
+                                                            String targetQueueName) throws YarnException {
+        ExtCaAppAttempt appAttempt = app.getCurrentAppAttempt();
+        String destQueueName = invokeMethod("handleMoveToPlanQueue", new Class<?>[]{String.class}, targetQueueName);
+        LeafQueue dest = invokeMethod("getAndCheckLeafQueue", new Class<?>[]{String.class}, destQueueName);
+
+        SchedulerApplication<A> newApp = new SchedulerApplication<>(dest, app.getUser());
+
+        if (appAttempt != null) {
+            //wrap attempt in appropriate implementation
+
+            A newAppAttempt = ExtCaAppAttempt.getInstance(aClass, appAttempt);
+            String sourceQueueName = newAppAttempt.getQueue().getQueueName();
+
+            //the rest is basically standard moveApplication code from CapacityScheduler
+
+            // Validation check - ACLs, submission limits for user & queue
+            String user = newAppAttempt.getUser();
+            try {
+                dest.submitApplication(appId, user, destQueueName);
+            } catch (AccessControlException e) {
+                throw new YarnException(e);
+            }
+            // Move all live containers
+            for (RMContainer rmContainer : newAppAttempt.getLiveContainers()) {
+                source.detachContainer(getClusterResource(), newAppAttempt, rmContainer);
+                // attach the Container to another queue
+                dest.attachContainer(getClusterResource(), newAppAttempt, rmContainer);
+            }
+            // Detach the application..
+            source.finishApplicationAttempt(newAppAttempt, sourceQueueName);
+            source.getParent().finishApplication(appId, newAppAttempt.getUser());
+            // Finish app & update metrics
+            newAppAttempt.move(dest);
+            // Submit to a new queue
+            dest.submitApplicationAttempt(newAppAttempt, user);
+            LOG.info("App: " + appId + " successfully moved from "
+                    + sourceQueueName + " to: " + destQueueName);
+            newApp.setCurrentAppAttempt(newAppAttempt);
+        }
+
+        return newApp;
     }
 
     protected void allocateContainersToNode(FiCaSchedulerNode node) {
@@ -359,6 +390,7 @@ public abstract class ExtensibleCapacityScheduler<
     //
     // <------ / Adapted methods ------>
     //
+
     //
     // <------ Delegation methods ------>
     //
@@ -661,42 +693,73 @@ public abstract class ExtensibleCapacityScheduler<
         inner.setRMContext(rmContext);
     }
 
-    @Override
-    public void assumeState(PluginPolicyState state) {
-        //TODO
-//        this.usedResource = state.usedResource;
-//        this.clusterResource = state.clusterResource;
-//        this.usePortForNodeName = state.usePortForNodeName;
-//        this.nodes = new ConcurrentHashMap<>();
-//        for (SQSchedulerNode node : state.nodes.values()) {
-//            this.nodes.put(node.getNodeID(), SQSchedulerNode.getInstance(nClass, node));
-//            updateMaximumAllocation(node, true);
-//        }
-//        queue.setAvailableResourcesToQueue(Resources.subtract(clusterResource,
-//                usedResource));
-//        for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> appEntry :
-//                state.applications.entrySet()) {
-//            SchedulerApplication<? extends SQSAppAttempt> app = appEntry.getValue();
-//            SchedulerApplication<A> newApp = new SchedulerApplication<>(app.getQueue(), app.getUser());
-//            this.applications.put(appEntry.getKey(), newApp);
-//            queue.getMetrics().submitApp(app.getUser());
-//            onAppAdded(newApp);
-//            SQSAppAttempt attempt = app.getCurrentAppAttempt();
-//            if (attempt != null) {
-//                newApp.setCurrentAppAttempt(SQSAppAttempt.getInstance(aClass, attempt));
-//                queue.getMetrics().submitAppAttempt(app.getUser());
-//                onAppAttemptAdded(newApp);
-//            }
-//        }
-//        printQueue();
+    //
+    // <------ Added state accessors ------>
+    //
+
+    protected RMNodeLabelsManager getLabelManager() {
+        return readField("labelManager");
     }
 
+    protected Map<NodeId, N> getNodes() {
+        return readField("nodes");
+    }
+
+    //
+    // <------ / Added state accessors ------>
+    //
+
+
+    public void transferStateFromPolicy(ExtensibleCapacityScheduler<ExtCaAppAttempt, ExtCaSchedulerNode> otherExtCa) {
+        synchronized (inner) {
+            //transfer total resource
+            writeField("clusterResource", otherExtCa.getClusterResource());
+            CSQueue root = readField("root");
+            root.updateClusterResource(getClusterResource(), new ResourceLimits(getClusterResource()));
+
+            //transfer nodes
+            Map<NodeId, N> newNodes = readField("nodes");
+            for (Map.Entry<NodeId, ExtCaSchedulerNode> nodeEntry : otherExtCa.getNodes().entrySet()) {
+                ExtCaSchedulerNode node = nodeEntry.getValue();
+                newNodes.put(nodeEntry.getKey(), ExtCaSchedulerNode.getInstance(nClass, node));
+                updateMaximumAllocation(node, true);
+            }
+
+            //transfer node-related properties
+            writeField("labelManager", otherExtCa.getLabelManager());
+            AtomicInteger numNodeManagers = readField("numNodeManagers");
+            numNodeManagers.set(otherExtCa.getNumClusterNodes());
+
+            //transfer applications
+            Map<ApplicationId, SchedulerApplication<A>> myApps = getSchedulerApplications();
+            Map<ApplicationId, ? extends SchedulerApplication<? extends ExtCaAppAttempt>> othersApps =
+                    otherExtCa.getSchedulerApplications();
+            for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends ExtCaAppAttempt>> appEntry :
+                    othersApps.entrySet()) {
+                ApplicationId appId = appEntry.getKey();
+                SchedulerApplication<? extends ExtCaAppAttempt> app = appEntry.getValue();
+                LeafQueue oldQueue = (LeafQueue) app.getQueue();
+                String newQueueName = resolveMoveQueue(oldQueue.getQueuePath(), appId);
+                try {
+                    //build a new scheduler application based on the old one
+                    myApps.put(appId, moveApplicationReference(appId, app, oldQueue, newQueueName));
+                } catch (Exception e) {
+                    throw new POSUMException("Could not move" + appId.toString() +
+                            " from " + oldQueue.getQueuePath() + " to " + newQueueName, e);
+                }
+            }
+        }
+
+    }
 
     @Override
-    public PluginPolicyState exportState() {
+    public void transferStateFromPolicy(PluginPolicy other) {
+        if (PluginPolicy.class.isAssignableFrom(ExtensibleCapacityScheduler.class)) {
+            transferStateFromPolicy((ExtensibleCapacityScheduler) other);
+            return;
+        }
         //TODO
-        return null;
-//        return new PluginPolicyState(this.usedResource, this.queue, this.nodes, this.applications, this.clusterResource, getMaximumResourceCapability(), this.usePortForNodeName);
+        throw new POSUMException("Cannot transfer state from unknown policy " + other.getClass().getName());
     }
 }
 
