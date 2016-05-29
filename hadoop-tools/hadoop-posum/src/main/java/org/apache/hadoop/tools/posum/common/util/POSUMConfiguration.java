@@ -88,7 +88,7 @@ public class POSUMConfiguration {
     public static final boolean POLICY_SWITCH_ENABLED_DEFAULT = true;
 
     public static final String SIMULATION_INTERVAL = SIMULATOR_PREFIX + "interval";
-    public static final long SIMULATION_INTERVAL_DEFAULT = 10000;
+    public static final long SIMULATION_INTERVAL_DEFAULT = 30000;
 
     public static final String SIMULATOR_BIND_ADDRESS = SIMULATOR_PREFIX + "bind-host";
     public static final String SIMULATOR_ADDRESS = SIMULATOR_PREFIX + "address";

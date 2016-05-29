@@ -81,19 +81,23 @@ public class EntityByIdPayloadPBImpl extends EntityByIdPayload {
     @Override
     public void setEntityDB(DataEntityDB db) {
         maybeInitBuilder();
-        builder.setEntityDB(((DataEntityDBPBImpl)db).getProto());
+        builder.setEntityDB(((DataEntityDBPBImpl) db).getProto());
     }
 
     @Override
     public DataEntityType getEntityType() {
         EntityByIdPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityType.valueOf(p.getEntityType().name().substring("TYPE_".length()));
+        if (p.hasEntityType())
+            return DataEntityType.valueOf(p.getEntityType().name().substring("TYPE_".length()));
+        return null;
     }
 
     @Override
     public void setEntityType(DataEntityType type) {
+        if (type == null)
+            return;
         maybeInitBuilder();
-        builder.setEntityType(POSUMProtos.EntityTypeProto.valueOf("TYPE_"+type.name()));
+        builder.setEntityType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
     }
 
     @Override
