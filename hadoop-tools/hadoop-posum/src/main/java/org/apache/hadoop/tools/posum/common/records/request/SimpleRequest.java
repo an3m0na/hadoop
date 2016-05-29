@@ -16,7 +16,7 @@ public abstract class SimpleRequest<T> {
         PING(VoidRequestPBImpl.class),
         CHANGE_POLICY(StringRequestPBImpl.class),
         ENTITY_BY_ID(EntityByIdRequestPBImpl.class),
-        JOB_FOR_APP(StringRequestPBImpl.class),
+        JOB_FOR_APP(EntityByIdRequestPBImpl.class),
         START(VoidRequestPBImpl.class),
         LOG_POLICY_CHANGE(StringRequestPBImpl.class),
         SYSTEM_ADDRESSES(VoidRequestPBImpl.class);

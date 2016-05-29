@@ -9,7 +9,6 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
-import org.apache.hadoop.tools.posum.common.records.field.JobForAppPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
@@ -107,10 +106,10 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                     SingleEntityPayload entityPayload = SingleEntityPayload.newInstance(idPayload.getEntityType(), ret);
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
                 case JOB_FOR_APP:
-                    JobForAppPayload jobForAppPayload = (JobForAppPayload) request.getPayload();
+                    EntityByIdPayload jobForAppPayload = (EntityByIdPayload) request.getPayload();
                     JobProfile jobProfile =
                             dmContext.getDataStore().getJobProfileForApp(jobForAppPayload.getEntityDB(),
-                                    jobForAppPayload.getAppId());
+                                    jobForAppPayload.getId());
                     entityPayload = SingleEntityPayload.newInstance(DataEntityType.JOB, jobProfile);
                     logger.debug("Returning profile" + jobProfile);
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);

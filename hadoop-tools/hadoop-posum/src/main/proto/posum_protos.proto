@@ -151,13 +151,8 @@ message EntityPropertyProto {
 
 message EntityByIdPayloadProto {
     required EntityDBProto entityDB = 1;
-    required EntityTypeProto entityType = 2;
+    optional EntityTypeProto entityType = 2;
     required string id = 3;
-}
-
-message JobForAppPayloadProto {
-    required EntityDBProto entityDB = 1;
-    required string appId = 2;
 }
 
 message SingleEntityPayloadProto {

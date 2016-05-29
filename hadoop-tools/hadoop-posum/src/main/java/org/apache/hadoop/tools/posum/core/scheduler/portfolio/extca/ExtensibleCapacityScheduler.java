@@ -10,6 +10,7 @@ import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.yarn.api.records.*;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
@@ -104,7 +105,8 @@ public abstract class ExtensibleCapacityScheduler<
 
     protected String resolveMoveQueue(String queue,
                                       ApplicationId applicationId) {
-        return queue;
+        //TODO
+        return YarnConfiguration.DEFAULT_QUEUE_NAME;
     }
 
     protected boolean checkIfPrioritiesExpired() {
@@ -744,7 +746,7 @@ public abstract class ExtensibleCapacityScheduler<
                     //build a new scheduler application based on the old one
                     myApps.put(appId, moveApplicationReference(appId, app, oldQueue, newQueueName));
                 } catch (Exception e) {
-                    throw new POSUMException("Could not move" + appId.toString() +
+                    throw new POSUMException("Could not move " + appId.toString() +
                             " from " + oldQueue.getQueuePath() + " to " + newQueueName, e);
                 }
             }
