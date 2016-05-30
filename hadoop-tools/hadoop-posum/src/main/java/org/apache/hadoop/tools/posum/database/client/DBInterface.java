@@ -37,7 +37,7 @@ public interface DBInterface {
 
     /* Custom accessors */
 
-    JobProfile getJobProfileForApp(String appId);
+    JobProfile getJobProfileForApp(String appId, String user);
 
     List<JobProfile> getComparableProfiles(String user, int count);
 }

@@ -27,6 +27,8 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 
 /**
@@ -118,8 +120,8 @@ public class ClusterInfoCollector {
         }
 
         if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-            JobProfile lastJobInfo = dataStore.getJobProfileForApp(db, app.getId());
-            final JobProfile job = api.getRunningJobInfo(app.getId(), lastJobInfo);
+            JobProfile lastJobInfo = dataStore.getJobProfileForApp(db, app.getId(), app.getUser());
+            final JobProfile job = api.getRunningJobInfo(app.getId(), app.getQueue(), lastJobInfo);
             if (job == null)
                 logger.warn("Could not find job for " + app.getId());
             else {
@@ -173,11 +175,10 @@ public class ClusterInfoCollector {
             //app is not yet tracked
             logger.trace(" pp " + app.getId() + " is not tracked");
             try {
-                final JobProfile job = getSubmittedJobInfo(conf, app.getId());
-                dataStore.updateOrStore(db, DataEntityType.JOB, job);
+                JobProfile job = getAndStoreSubmittedJobInfo(conf, app.getId(), app.getUser(), dataStore, db);
                 if (historyEnabled) {
                     dataStore.store(db, DataEntityType.HISTORY,
-                            new HistoryProfilePBImpl<>(DataEntityType.JOB,  job));
+                            new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
                 }
             } catch (Exception e) {
                 logger.error("Could not get job info from staging dir!", e);
@@ -185,7 +186,28 @@ public class ClusterInfoCollector {
         }
     }
 
-    private static JobProfile readJobConf(String appId, JobId jobId, FileSystem fs, JobConf conf, Path jobSubmitDir) throws IOException {
+    public static JobProfile getAndStoreSubmittedJobInfo(Configuration conf,
+                                                         String appId,
+                                                         String user,
+                                                         final DataStore store,
+                                                         final DataEntityDB db) throws IOException {
+        final JobConfProxy confProxy = getSubmittedJobConf(conf, appId, user);
+        final JobProfile job = getSubmittedJobInfo(confProxy, appId);
+        store.runTransaction(db, new DataTransaction() {
+            @Override
+            public void run() throws Exception {
+                try {
+                    store.store(db, DataEntityType.JOB_CONF, confProxy);
+                    store.store(db, DataEntityType.JOB, job);
+                } catch (Exception e) {
+                    logger.warn("Exception occurred when storing new job info", e);
+                }
+            }
+        });
+        return job;
+    }
+
+    private static JobProfile getJobProfileFromConf(String appId, JobId jobId, FileSystem fs, JobConf conf, Path jobSubmitDir) throws IOException {
         JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = SplitMetaInfoReader.readSplitMetaInfo(
                 TypeConverter.fromYarn(jobId), fs,
                 conf,
@@ -195,9 +217,6 @@ public class ClusterInfoCollector {
         for (JobSplit.TaskSplitMetaInfo aTaskSplitMetaInfo : taskSplitMetaInfo) {
             inputLength += aTaskSplitMetaInfo.getInputDataLength();
         }
-
-        logger.trace("Input splits: " + taskSplitMetaInfo.length);
-        logger.trace("Total input size: " + inputLength);
 
         JobProfile profile = Records.newRecord(JobProfile.class);
         profile.setId(jobId.toString());
@@ -209,13 +228,29 @@ public class ClusterInfoCollector {
         return profile;
     }
 
-    public static JobProfile getSubmittedJobInfo(Configuration conf, String appId) throws IOException {
+    private static JobProfile getSubmittedJobInfo(JobConfProxy confProxy, String appId) throws IOException {
+        FileSystem fs = FileSystem.get(confProxy.getConf());
+        String jobConfDirPath = confProxy.getConfPath();
+        Path jobConfDir = null;
+        try {
+            jobConfDir = new Path(new URI(jobConfDirPath));
+            logger.debug("Checking file path: " + jobConfDir);
+            String jobId = jobConfDir.getName();
+            //DANGER We assume there can only be one job / application
+            return getJobProfileFromConf(appId, Utils.parseJobId(appId, jobId), fs, confProxy.getConf(), jobConfDir);
+        } catch (URISyntaxException e) {
+            throw new POSUMException("Invalid jobConfDir path " + jobConfDirPath, e);
+        }
+    }
+
+    private static JobConfProxy getSubmittedJobConf(Configuration conf, String appId, String user) throws IOException {
         final ApplicationId actualAppId = Utils.parseApplicationId(appId);
         FileSystem fs = FileSystem.get(conf);
-        Path confPath = MRApps.getStagingAreaDir(conf, UserGroupInformation.getCurrentUser().getUserName());
+        Path confPath = MRApps.getStagingAreaDir(conf,
+                user != null ? user : UserGroupInformation.getCurrentUser().getUserName());
         confPath = fs.makeQualified(confPath);
 
-        logger.trace("Looking in staging path: " + confPath);
+        logger.debug("Looking in staging path: " + confPath);
         FileStatus[] statuses = fs.listStatus(confPath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
@@ -223,15 +258,17 @@ public class ClusterInfoCollector {
             }
         });
 
+        //DANGER We assume there can only be one job / application
         if (statuses.length != 1)
             throw new POSUMException("Wrong number of job profile directories for: " + appId);
 
         Path jobConfDir = statuses[0].getPath();
-        logger.trace("Checking file path: " + jobConfDir);
-        String jobId = jobConfDir.getName();
+        logger.debug("Checking file path: " + jobConfDir);
         JobConf jobConf = new JobConf(new Path(jobConfDir, "job.xml"));
-        //DANGER We assume there can only be one job / application
-        return readJobConf(appId, Utils.parseJobId(appId, jobId), fs, jobConf, jobConfDir);
-
+        JobConfProxy proxy = Records.newRecord(JobConfProxy.class);
+        proxy.setId(jobConfDir.getName());
+        proxy.setConfPath(jobConfDir.toUri().toString());
+        proxy.setConf(jobConf);
+        return proxy;
     }
 }

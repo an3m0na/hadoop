@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.*;
+import org.apache.hadoop.tools.posum.common.records.field.impl.pb.StringStringMapPayloadPBImpl;
 
 /**
  * Created by ane on 3/3/16.
@@ -14,6 +15,7 @@ public enum DataEntityType {
     APP_HISTORY("apps_history", AppProfilePBImpl.class),
     HISTORY("history", HistoryProfilePBImpl.class),
     LOG_SCHEDULER("scheduler_log", LogEntry.class),
+    JOB_CONF("job_confs", JobConfProxyPBImpl.class),
     POSUM_STATS("posum_stats", LogEntry.class);
 
     private String label;

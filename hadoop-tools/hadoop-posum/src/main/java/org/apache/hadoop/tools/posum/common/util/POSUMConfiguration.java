@@ -1,6 +1,9 @@
 package org.apache.hadoop.tools.posum.common.util;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.MRConfig;
+import org.apache.hadoop.mapreduce.MRJobConfig;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 /**
  * Created by ane on 2/9/16.
@@ -114,5 +117,10 @@ public class POSUMConfiguration {
 
     public static final String MONITOR_PERSIST_METRICS = MONITOR_PREFIX + "metrics.persist";
     public static final boolean MONITOR_PERSIST_METRICS_DEFAULT = true;
+
+    public static final String APP_DEADLINE = YarnConfiguration.YARN_PREFIX + "application.deadline";
+    public static final long APP_DEADLINE_DEFAULT = 120000;
+
+    public static final String JOB_CONF_DIR = MRJobConfig.MR_PREFIX + "job.conf-dir";
 
 }

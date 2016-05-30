@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.field.JobForAppPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -95,12 +96,12 @@ public class DataMasterClient extends AbstractService {
         }
     }
 
-    public JobProfile getJobProfileForApp(DataEntityDB db, String appId) {
+    public JobProfile getJobProfileForApp(DataEntityDB db, String appId, String user) {
         logger.debug("Getting job profile for app " + appId);
         try {
             SingleEntityPayload payload = Utils.handleError("getJobProfileForApp",
                     dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.JOB_FOR_APP,
-                            EntityByIdPayload.newInstance(db, null, appId)))
+                            JobForAppPayload.newInstance(db, appId, user)))
             ).getPayload();
             if (payload != null)
                 return (JobProfile) payload.getEntity();

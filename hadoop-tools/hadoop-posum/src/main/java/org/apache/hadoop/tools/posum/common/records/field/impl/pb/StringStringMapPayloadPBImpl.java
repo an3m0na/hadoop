@@ -111,6 +111,11 @@ public class StringStringMapPayloadPBImpl extends StringStringMapPayload {
     }
 
     @Override
+    public void addEntry(String key, String value) {
+        getEntries().put(key, value);
+    }
+
+    @Override
     public Map<String, String> getEntries() {
         if (entries == null) {
             StringStringMapPayloadProtoOrBuilder p = viaProto ? proto : builder;
