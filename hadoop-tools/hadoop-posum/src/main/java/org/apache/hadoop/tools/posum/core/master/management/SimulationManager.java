@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Created by ane on 4/18/16.
  */
 public class SimulationManager extends GeneralLooper<SimulationManager> {
-    private static Log logger = LogFactory.getLog(Orchestrator.class);
+    private static Log logger = LogFactory.getLog(SimulationManager.class);
 
     private final POSUMMasterContext context;
     private volatile boolean simulationRunning = false;
@@ -46,7 +46,7 @@ public class SimulationManager extends GeneralLooper<SimulationManager> {
                     logger.warn(e);
                 }
             //TODO check if simulation is actually needed
-            logger.debug("Should start simulation");
+            logger.trace("Should start simulation");
             simulationRunning = true;
             context.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SIMULATION_START));
         }

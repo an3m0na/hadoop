@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaAppAttempt;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSAppAttempt;
 import org.apache.hadoop.yarn.api.records.*;
@@ -12,6 +14,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicat
  * Created by ane on 1/22/16.
  */
 public class DOSAppAttempt extends ExtCaAppAttempt {
+    private static final Log logger = LogFactory.getLog(DOSAppAttempt.class);
 
     private Long totalInputSize;
     private Integer inputSplits;
@@ -42,11 +45,12 @@ public class DOSAppAttempt extends ExtCaAppAttempt {
 
     @Override
     public String toString() {
-        return "DOSAttempt_" + getApplicationId() + "=" + totalInputSize;
+        return super.toString() + "\n      InputSize: " + totalInputSize;
     }
 
     @Override
     public synchronized void transferStateFromPreviousAttempt(SchedulerApplicationAttempt appAttempt) {
+        logger.debug("Transfering state from previous attempt "+appAttempt.getApplicationAttemptId());
         super.transferStateFromPreviousAttempt(appAttempt);
         if (appAttempt instanceof DOSAppAttempt) {
             DOSAppAttempt dosapp = (DOSAppAttempt) appAttempt;

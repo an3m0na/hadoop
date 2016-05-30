@@ -643,5 +643,13 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
         super.setApplicationHeadroomForMetrics(headroom);
     }
 
-
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+        builder.append("=").append(getApplicationId()).append("\n");
+        builder.append("      ").append("Consumption: ").append(getCurrentConsumption()).append("\n");
+        builder.append("      ").append("Containers: ").append(getLiveContainersMap()).append("\n");
+        builder.append("      ").append("ResourceRequests: ").append(getAppSchedulingInfo().getAllResourceRequests());
+        return builder.toString();
+    }
 }

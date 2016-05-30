@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -174,6 +175,8 @@ public abstract class ExtensibleCapacityScheduler<
 
             onAppAttemptAdded(attempt);
 
+            LOG.debug("Submitting app attempt to queue: \n" + attempt);
+
             queue.submitApplicationAttempt(attempt, application.getUser());
             LOG.info("Added Application Attempt " + applicationAttemptId
                     + " to scheduler from user " + application.getUser() + " in queue "
@@ -258,6 +261,8 @@ public abstract class ExtensibleCapacityScheduler<
             source.getParent().finishApplication(appId, newAppAttempt.getUser());
             // Finish app & update metrics
             newAppAttempt.move(dest);
+            // Calculate its priority given the new scheduler
+            updateAppPriority(newAppAttempt);
             // Submit to a new queue
             dest.submitApplicationAttempt(newAppAttempt, user);
             LOG.info("App: " + appId + " successfully moved from "
@@ -274,6 +279,7 @@ public abstract class ExtensibleCapacityScheduler<
                 updateApplicationPriorities(this.<CSQueue>readField("root"));
             }
         }
+        printQueues();
         invokeMethod("allocateContainersToNode", new Class<?>[]{FiCaSchedulerNode.class}, node);
     }
 
@@ -341,8 +347,8 @@ public abstract class ExtensibleCapacityScheduler<
             case NODE_UPDATE: {
                 NodeUpdateSchedulerEvent nodeUpdatedEvent = (NodeUpdateSchedulerEvent) event;
                 RMNode node = nodeUpdatedEvent.getRMNode();
-                Map<NodeId, FiCaSchedulerNode> nodes = readField("nodes");
                 invokeMethod("nodeUpdate", new Class<?>[]{RMNode.class}, node);
+                LOG.debug(printQueues());
                 //FIXME uncomment if scheduleAsynchronously becomes available
 //                if (!scheduleAsynchronously) {
                 allocateContainersToNode(getNode(node.getNodeID()));
@@ -376,17 +382,7 @@ public abstract class ExtensibleCapacityScheduler<
 
     @Override
     public Map<ApplicationId, SchedulerApplication<A>> getSchedulerApplications() {
-        Map<ApplicationId, SchedulerApplication<FiCaSchedulerApp>> apps =
-                inner.getSchedulerApplications();
-        Map<ApplicationId, SchedulerApplication<A>> ret = new HashMap<>(apps.size());
-
-        for (Map.Entry<ApplicationId, SchedulerApplication<FiCaSchedulerApp>> entry :
-                apps.entrySet()) {
-            SchedulerApplication<A> app = new SchedulerApplication<>(entry.getValue().getQueue(), entry.getValue().getUser());
-            app.setCurrentAppAttempt((A) entry.getValue().getCurrentAppAttempt());
-            ret.put(entry.getKey(), app);
-        }
-        return ret;
+        return readField("applications");
     }
 
     //
@@ -707,8 +703,42 @@ public abstract class ExtensibleCapacityScheduler<
         return readField("nodes");
     }
 
+    public String printQueues() {
+        StringBuilder builder = new StringBuilder("Queues are:\n");
+        return printQueues(builder, this.<CSQueue>readField("root")).toString();
+    }
+
+    public StringBuilder printQueues(StringBuilder builder, CSQueue queue) {
+        builder.append(queue.getQueuePath()).append("\n");
+        if (queue instanceof ParentQueue) {
+            ParentQueue parent = (ParentQueue) queue;
+            for (CSQueue child : parent.getChildQueues()) {
+                builder = printQueues(builder, child);
+            }
+        } else {
+            LeafQueue leaf = (LeafQueue) queue;
+            Set<A> pendingApplications =
+                    Utils.readField(leaf, LeafQueue.class, "pendingApplications");
+            builder.append(" --pending:\n");
+            for (A app : pendingApplications) {
+                builder.append("   ").append(app);
+            }
+            Set<A> activeApplications =
+                    Utils.readField(leaf, LeafQueue.class, "activeApplications");
+            builder.append(" --active:\n");
+            for (A app : activeApplications) {
+                builder.append("   ").append(app);
+            }
+        }
+        return builder;
+    }
+
     //
     // <------ / Added state accessors ------>
+    //
+
+    //
+    // <------ Plugin Policy requirements ------>
     //
 
 
@@ -763,5 +793,9 @@ public abstract class ExtensibleCapacityScheduler<
         //TODO
         throw new POSUMException("Cannot transfer state from unknown policy " + other.getClass().getName());
     }
+
+    //
+    // <------ /  Plugin Policy requirements ------>
+    //
 }
 
