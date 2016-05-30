@@ -68,7 +68,7 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
         resultRequest = HandleSimResultRequest.newInstance();
         simulationMap = new HashMap<>(policies.size());
         for (String policyName : policies.keySet()) {
-            logger.debug("Starting simulation for " + policyName);
+            logger.trace("Starting simulation for " + policyName);
             Simulation simulation = new Simulation(this, policyName, predictor);
             simulationMap.put(policyName, simulation);
             simulation.start();
@@ -79,7 +79,7 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
         try {
             resultRequest.addResult(result);
             if (resultRequest.getResults().size() == policies.size()) {
-                logger.debug("Sending simulation result request");
+                logger.trace("Sending simulation result request");
                 context.getCommService().getMaster().handleSimulationResult(resultRequest);
             }
         } catch (Exception e) {

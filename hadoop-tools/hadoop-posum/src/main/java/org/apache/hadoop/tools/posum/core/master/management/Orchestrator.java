@@ -46,17 +46,17 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
                     if (!simulationManager.isInState(STATE.STARTED)) {
                         addIfService(simulationManager);
                         simulationManager.start();
-                        logger.debug("Simulator connected");
+                        logger.info("Simulator connected");
                     }
                     break;
                 case SIMULATION_START:
-                    logger.debug("Starting simulation");
+                    logger.trace("Starting simulation");
                     pmContext.getCommService().getSimulator().startSimulation();
                     break;
                 case SIMULATION_FINISH:
                     simulationManager.simulationFinished();
                     ConcurrentSkipListSet<SimulationResult> results = event.getCastContent();
-                    logger.debug("Policy scores: " + results);
+                    logger.trace("Policy scores: " + results);
                     decidePolicyChange(results);
                     break;
                 default:
