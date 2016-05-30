@@ -36,9 +36,10 @@ message AppProfileProto {
     optional int64 finishTime = 3;
     optional string user = 4;
     optional string name = 5;
-    optional AppStateProto state = 6;
-    optional AppStatusProto status = 7;
-    optional AppTrackingUIProto trackingUI = 8;
+    optional string queue = 6;
+    optional AppStateProto state = 7;
+    optional AppStatusProto status = 8;
+    optional AppTrackingUIProto trackingUI = 9;
 
     enum AppStateProto {
         STATE_NULL = 0;
@@ -73,25 +74,27 @@ message JobProfileProto {
     optional string name = 2;
     optional string appId = 3;
     optional string user = 4;
-    optional int32 totalMapTasks = 5;
-    optional int32 totalReduceTasks = 6;
-    optional int32 inputSplits = 7; // only from conf
-    optional int64 inputBytes = 8; // only from conf
-    optional int64 outputBytes = 9; // only in history
-    optional int64 submitTime = 10; // only in history
-    optional int64 startTime = 11;
-    optional int64 finishTime = 12;
-    optional JobStateProto state = 13;
-    optional float mapProgress = 14;
-    optional float reduceProgress = 15;
-    optional int32 completedMaps = 16;
-    optional int32 completedReduces = 17;
-    optional bool uberized = 18;
-    optional int32 avgMapDuration = 19;
-    optional int32 avgReduceDuration = 20;
-    optional int32 avgTaskDuration = 21;
-    optional int32 avgShuffleDuration = 22;
-    optional int32 avgMergeDuration = 23;
+    optional string queue = 5;
+    optional int32 totalMapTasks = 6;
+    optional int32 totalReduceTasks = 7;
+    optional int32 inputSplits = 8; // only from conf
+    optional int64 inputBytes = 9; // only from conf
+    optional int64 outputBytes = 10; // only in history
+    optional int64 submitTime = 11; // only in history
+    optional int64 startTime = 12;
+    optional int64 finishTime = 13;
+    optional JobStateProto state = 14;
+    optional float mapProgress = 15;
+    optional float reduceProgress = 16;
+    optional int32 completedMaps = 17;
+    optional int32 completedReduces = 18;
+    optional bool uberized = 19;
+    optional int32 avgMapDuration = 20;
+    optional int32 avgReduceDuration = 21;
+    optional int32 avgTaskDuration = 22;
+    optional int32 avgShuffleDuration = 23;
+    optional int32 avgMergeDuration = 24;
+    optional StringStringMapPayloadProto flexFields = 25;
 
     enum JobStateProto {
         STATE_NULL = 0;
@@ -103,6 +106,12 @@ message JobProfileProto {
         STATE_KILLED = 6;
         STATE_ERROR = 7;
     }
+}
+
+message JobConfProxyProto {
+    required string id = 1;
+    optional StringStringMapPayloadProto properties = 2;
+    optional string confPath = 3;
 }
 
 message TaskProfileProto {
@@ -147,6 +156,12 @@ message EntityPropertyProto {
         PROPERTY_INT = 2;
         PROPERTY_BOOL = 3;
     }
+}
+
+message JobForAppPayloadProto {
+    required EntityDBProto entityDB = 1;
+    optional string user = 2;
+    required string appId = 3;
 }
 
 message EntityByIdPayloadProto {
@@ -228,6 +243,6 @@ message RegistrationRequestProto {
     }
 }
 
-message StringStringMapPayloadProto{
+message StringStringMapPayloadProto {
     repeated StringStringMapProto entries = 1;
 }

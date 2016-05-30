@@ -15,6 +15,8 @@ public abstract class StringStringMapPayload {
         return property;
     }
 
+    public abstract void addEntry(String key, String value);
+
     public abstract Map<String, String> getEntries();
 
     public abstract void setEntries(Map<String, String> map);

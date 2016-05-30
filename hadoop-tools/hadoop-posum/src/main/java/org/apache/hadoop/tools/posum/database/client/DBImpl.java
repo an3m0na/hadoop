@@ -71,8 +71,8 @@ public class DBImpl implements DBInterface {
     }
 
     @Override
-    public JobProfile getJobProfileForApp(String appId) {
-        return client.getJobProfileForApp(db, appId);
+    public JobProfile getJobProfileForApp(String appId, String user) {
+        return client.getJobProfileForApp(db, appId, user);
     }
 
     @Override

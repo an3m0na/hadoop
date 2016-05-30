@@ -53,6 +53,7 @@ public class HadoopAPIClient {
                 app.setFinishTime(rawApp.getLong("finishedTime"));
                 app.setName(rawApp.getString("name"));
                 app.setUser(rawApp.getString("user"));
+                app.setQueue(rawApp.getString("queue"));
                 app.setState(YarnApplicationState.valueOf(rawApp.getString("state")));
                 app.setStatus(FinalApplicationStatus.valueOf(rawApp.getString("finalStatus")));
                 app.setTrackingUI(RestClient.TrackingUI.fromLabel(rawApp.getString("trackingUI")));
@@ -109,6 +110,7 @@ public class HadoopAPIClient {
             job.setFinishTime(rawJob.getLong("finishTime"));
             job.setName(rawJob.getString("name"));
             job.setUser(rawJob.getString("user"));
+            job.setQueue(rawJob.getString("queue"));
             job.setState(JobState.valueOf(rawJob.getString("state")));
             job.setCompletedMaps(rawJob.getInt("mapsCompleted"));
             job.setCompletedReduces(rawJob.getInt("reducesCompleted"));
@@ -126,7 +128,7 @@ public class HadoopAPIClient {
         return null;
     }
 
-    public JobProfile getRunningJobInfo(String appId, JobProfile previousJob) {
+    public JobProfile getRunningJobInfo(String appId, String queue, JobProfile previousJob) {
         try {
             JSONObject wrapper = restClient.getInfo(RestClient.TrackingUI.AM, "jobs", new String[]{appId});
             if (wrapper == null || wrapper.isNull("jobs"))
@@ -135,13 +137,10 @@ public class HadoopAPIClient {
             if (rawJobs.length() != 1)
                 throw new POSUMException("Unexpected number of jobs for mapreduce app " + appId);
             JSONObject rawJob = rawJobs.getJSONObject(0);
-            JobProfile job = Records.newRecord(JobProfile.class);
-            job.setId(rawJob.getString("id"));
-            job.setAppId(appId);
+            JobProfile job = previousJob != null? previousJob : Records.newRecord(JobProfile.class);
+            job.setQueue(queue);
             job.setStartTime(rawJob.getLong("startTime"));
             job.setFinishTime(rawJob.getLong("finishTime"));
-            job.setName(rawJob.getString("name"));
-            job.setUser(rawJob.getString("user"));
             job.setState(JobState.valueOf(rawJob.getString("state")));
             job.setMapProgress(new Double(rawJob.getDouble("mapProgress")).floatValue());
             job.setReduceProgress(new Double(rawJob.getDouble("reduceProgress")).floatValue());
@@ -150,10 +149,6 @@ public class HadoopAPIClient {
             job.setTotalMapTasks(rawJob.getInt("mapsTotal"));
             job.setTotalReduceTasks(rawJob.getInt("reducesTotal"));
             job.setUberized(rawJob.getBoolean("uberized"));
-            if (previousJob != null) {
-                job.setInputBytes(previousJob.getInputBytes());
-                job.setInputSplits(previousJob.getInputSplits());
-            }
             return job;
         } catch (JSONException e) {
             logger.debug("[" + getClass().getSimpleName() + "] Exception parsing jobs from AM", e);

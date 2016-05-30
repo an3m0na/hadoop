@@ -2,10 +2,17 @@ package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.field.StringStringMapPayload;
+import org.apache.hadoop.tools.posum.common.records.field.impl.pb.StringStringMapPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProtoOrBuilder;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by ane on 3/21/16.
@@ -18,9 +25,14 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
         builder = viaProto ? JobProfileProto.newBuilder(proto) : JobProfileProto.newBuilder();
     }
 
+    private Map<String, String> flexMap;
+
     @Override
     void buildProto() {
-        proto = builder.build();
+        maybeInitBuilder();
+        StringStringMapPayloadPBImpl flexFields = new StringStringMapPayloadPBImpl();
+        flexFields.setEntries(flexMap);
+        proto = builder.setFlexFields(flexFields.getProto()).build();
     }
 
     @Override
@@ -342,5 +354,38 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     public Integer getAvgMergeDuration() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getAvgMergeDuration();
+    }
+
+    @Override
+    public void setQueue(String queue) {
+        maybeInitBuilder();
+        if (queue != null) {
+            builder.setQueue(queue);
+        }
+    }
+
+    @Override
+    public String getQueue() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getQueue();
+    }
+
+    @Override
+    public void addFlexField(String name, String value) {
+        getFlexFields().put(name, value);
+    }
+
+    @Override
+    public String getFlexField(String name) {
+        return getFlexFields().get(name);
+    }
+
+    @Override
+    public Map<String, String> getFlexFields() {
+        if (flexMap == null) {
+            JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+            flexMap = new StringStringMapPayloadPBImpl(p.getFlexFields()).getEntries();
+        }
+        return flexMap;
     }
 }
