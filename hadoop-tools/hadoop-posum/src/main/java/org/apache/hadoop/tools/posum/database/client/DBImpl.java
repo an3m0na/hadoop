@@ -1,9 +1,6 @@
 package org.apache.hadoop.tools.posum.database.client;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -78,5 +75,10 @@ public class DBImpl implements DBInterface {
     @Override
     public List<JobProfile> getComparableProfiles(String user, int count) {
         return client.getComparableProfiles(db, user, count);
+    }
+
+    @Override
+    public JobConfProxy getJobConf(String jobId) {
+        return client.getJobConf(db, jobId);
     }
 }

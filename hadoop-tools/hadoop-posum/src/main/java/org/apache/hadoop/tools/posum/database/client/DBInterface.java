@@ -1,8 +1,6 @@
 package org.apache.hadoop.tools.posum.database.client;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 
 import java.util.List;
 import java.util.Map;
@@ -40,5 +38,7 @@ public interface DBInterface {
     JobProfile getJobProfileForApp(String appId, String user);
 
     List<JobProfile> getComparableProfiles(String user, int count);
+
+    JobConfProxy getJobConf(String jobId);
 }
 

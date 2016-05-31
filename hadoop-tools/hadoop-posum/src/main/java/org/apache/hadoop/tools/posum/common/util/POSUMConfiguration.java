@@ -121,6 +121,8 @@ public class POSUMConfiguration {
     public static final String APP_DEADLINE = YarnConfiguration.YARN_PREFIX + "application.deadline";
     public static final long APP_DEADLINE_DEFAULT = 120000;
 
-    public static final String JOB_CONF_DIR = MRJobConfig.MR_PREFIX + "job.conf-dir";
+    public static final String DEADLINE_CONSTRAINED_PRIORITY = SCHEDULER_PREFIX + "dc-priority";
+    public static final float DEADLINE_CONSTRAINED_PRIORITY_DEFAULT = 0.8f;
+
 
 }

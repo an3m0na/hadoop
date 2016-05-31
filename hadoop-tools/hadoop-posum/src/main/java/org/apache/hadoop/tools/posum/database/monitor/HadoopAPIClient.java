@@ -139,7 +139,8 @@ public class HadoopAPIClient {
             JSONObject rawJob = rawJobs.getJSONObject(0);
             JobProfile job = previousJob != null? previousJob : Records.newRecord(JobProfile.class);
             job.setQueue(queue);
-            job.setStartTime(rawJob.getLong("startTime"));
+            job.setSubmitTime(rawJob.getLong("startTime"));
+            job.setStartTime(job.getSubmitTime());
             job.setFinishTime(rawJob.getLong("finishTime"));
             job.setState(JobState.valueOf(rawJob.getString("state")));
             job.setMapProgress(new Double(rawJob.getDouble("mapProgress")).floatValue());

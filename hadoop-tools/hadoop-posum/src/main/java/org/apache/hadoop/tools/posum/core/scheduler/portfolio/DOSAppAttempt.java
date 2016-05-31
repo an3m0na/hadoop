@@ -53,9 +53,9 @@ public class DOSAppAttempt extends ExtCaAppAttempt {
         logger.debug("Transfering state from previous attempt "+appAttempt.getApplicationAttemptId());
         super.transferStateFromPreviousAttempt(appAttempt);
         if (appAttempt instanceof DOSAppAttempt) {
-            DOSAppAttempt dosapp = (DOSAppAttempt) appAttempt;
-            setInputSplits(dosapp.getInputSplits());
-            setTotalInputSize(dosapp.getTotalInputSize());
+            DOSAppAttempt dosApp = (DOSAppAttempt) appAttempt;
+            setInputSplits(dosApp.getInputSplits());
+            setTotalInputSize(dosApp.getTotalInputSize());
         }
     }
 }
