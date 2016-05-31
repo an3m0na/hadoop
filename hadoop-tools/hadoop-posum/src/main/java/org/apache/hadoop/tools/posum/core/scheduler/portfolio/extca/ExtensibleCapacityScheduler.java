@@ -68,6 +68,10 @@ public abstract class ExtensibleCapacityScheduler<
         this.customConf = customConf;
     }
 
+    //
+    // <------ Helper reflection methods for accessing internal CapacityScheduler methods and fields ------>
+    //
+
     protected void writeField(String name, Object value) {
         Utils.writeField(inner, CapacityScheduler.class, name, value);
     }
@@ -82,21 +86,50 @@ public abstract class ExtensibleCapacityScheduler<
     }
 
     //
+    // <------ / Helper reflection methods for accessing internal CapacityScheduler methods and fields ------>
+    //
+
+    //
     // <------ Methods to be overridden when extending scheduler ------>
     //
 
+    /**
+     * Override this to load a custom configuration for the underlying capacity scheduler.
+     * By default, the configuration remains the same as the one in capacity-scheduler.xml
+     * @param conf  the initial YARN configuration
+     * @return  the custom CapacitySchedulerConfiguration
+     */
     protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf) {
-        return new CapacitySchedulerConfiguration(conf);
+        return readField("conf");
     }
 
+    /**
+     * Override this to populate custom fields of an instance of A to be used for prioritisation within a queue.
+     * By default, the priority is its ApplicationId, so no update is necessary
+     * @param app   the application attempt
+     */
     protected void updateAppPriority(A app) {
 
     }
 
+    /**
+     * Override this to add custom logic when application attempt is being added.
+     * It is called after SchedulerApplication::setCurrentAppAttempt(A) and before notifying the queue.
+     * By default, only the updateAppPriority(A) method is called
+     * @param app   the application attempt
+     */
     protected void onAppAttemptAdded(A app) {
         updateAppPriority(app);
     }
 
+    /**
+     * Override this to modify the target queue of an application when it is added to the scheduler
+     * @param queue intended queue name from the app added event
+     * @param applicationId   the application id
+     * @param isAppRecovering   from the app added event; usually not necessary
+     * @param reservationID from the app added event; usually not necessary
+     * @return  the revised target queue name
+     */
     protected String resolveQueue(String queue,
                                   ApplicationId applicationId,
                                   boolean isAppRecovering,
@@ -104,16 +137,35 @@ public abstract class ExtensibleCapacityScheduler<
         return queue;
     }
 
+    /**
+     * Acts the same as resolveQueue, but is used when the scheduler has just been initialized and must accept the
+     * applications from a previous scheduler
+     * @param queue   the name of the application's queue in the other scheduler
+     * @param applicationId the application id
+     * @return  the target queue name for this scheduler
+     */
     protected String resolveMoveQueue(String queue,
                                       ApplicationId applicationId) {
         //TODO
         return YarnConfiguration.DEFAULT_QUEUE_NAME;
     }
 
+    /**
+     * Override to add custom logic to whether priorities should be updated.
+     * This is called whenever NODE_UPDATE is received, before trying to allocate.
+     * By default, priorities never expire (ApplicationId is constant after app is initially added)
+     * @return  true = priorities have expired and need recalculation
+     */
     protected boolean checkIfPrioritiesExpired() {
         return false;
     }
 
+    /**
+     * Override this to apply priority updates to a leaf queue's application set.
+     * By default, each instance of A is passed to updateAppPriority(A) in order
+     * @param queue target leaf queue
+     * @param applicationSetName    either "pendingApplications" or "activeApplications"
+     */
     protected void updateApplicationPriorities(LeafQueue queue, String applicationSetName) {
         try {
             Field appsField = LeafQueue.class.getField(applicationSetName);
@@ -133,6 +185,12 @@ public abstract class ExtensibleCapacityScheduler<
 
     }
 
+    /**
+     * Override this to apply priority updates to queues recursively.
+     * By default, the queues are parsed RLF and in each leaf queue
+     * updateApplicationPriorities(LeafQueue, String) is applied
+     * @param queue current queue (starting with root)
+     */
     protected void updateApplicationPriorities(CSQueue queue) {
 
         if (queue instanceof LeafQueue) {
@@ -145,6 +203,27 @@ public abstract class ExtensibleCapacityScheduler<
             }
         }
     }
+
+    /**
+     * Override in order to change the priorities of applications within a single leaf queue.
+     * The default comparator orders by ApplicationId lexicographically
+     * @return an instance of a comparator that orders elements of type A
+     */
+    @Override
+    public Comparator<FiCaSchedulerApp> getApplicationComparator() {
+        return inner.getApplicationComparator();
+    }
+
+    /**
+     * Override in order to change the priorities of queues.
+     * The default comparator orders according to queue.getUsedCapacity()
+     * @return an instance of a comparator that orders queues
+     */
+    @Override
+    public Comparator<CSQueue> getQueueComparator() {
+        return inner.getQueueComparator();
+    }
+
 
     //
     // <------ / Methods to be overridden when extending scheduler ------>
@@ -662,18 +741,8 @@ public abstract class ExtensibleCapacityScheduler<
     }
 
     @Override
-    public Comparator<FiCaSchedulerApp> getApplicationComparator() {
-        return inner.getApplicationComparator();
-    }
-
-    @Override
     public ResourceCalculator getResourceCalculator() {
         return inner.getResourceCalculator();
-    }
-
-    @Override
-    public Comparator<CSQueue> getQueueComparator() {
-        return inner.getQueueComparator();
     }
 
     @Override
