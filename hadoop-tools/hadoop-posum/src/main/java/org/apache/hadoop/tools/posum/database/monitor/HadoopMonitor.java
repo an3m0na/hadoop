@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.database.monitor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.GeneralLooper;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
@@ -11,7 +13,7 @@ import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
  * Created by ane on 2/4/16.
  */
 public class HadoopMonitor extends GeneralLooper<HadoopMonitor> {
-
+    private static Log logger = LogFactory.getLog(HadoopMonitor.class);
 
     private ClusterInfoCollector collector;
     private final DataMasterContext context;
@@ -31,6 +33,7 @@ public class HadoopMonitor extends GeneralLooper<HadoopMonitor> {
 
     @Override
     protected void doAction() {
+        logger.debug("Monitoring Hadoop...");
         if (!RestClient.TrackingUI.isUpdated()) {
             RestClient.TrackingUI.tryUpdate(context.getCommService().getSystemAddresses());
         }

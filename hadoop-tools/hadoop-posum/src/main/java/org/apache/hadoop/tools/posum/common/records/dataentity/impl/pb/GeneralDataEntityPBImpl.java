@@ -2,17 +2,18 @@ package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.mongojack.Id;
 
 /**
  * Created by ane on 3/21/16.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class GeneralDataEntityPBImpl<
         E extends GeneralDataEntity,
         P extends com.google.protobuf.GeneratedMessage & com.google.protobuf.MessageOrBuilder,
@@ -20,6 +21,8 @@ public abstract class GeneralDataEntityPBImpl<
         implements GeneralDataEntity {
     @Id
     @JsonProperty("_id")
+    // for serialization from the rest api this should be id, not _id, so no following line:
+    // @org.codehaus.jackson.annotate.JsonProperty("_id")
     public String id; // empty; only here to solve Jackson mapping
 
     public GeneralDataEntityPBImpl() {
@@ -69,19 +72,12 @@ public abstract class GeneralDataEntityPBImpl<
     }
 
     @JsonIgnore
+    @org.codehaus.jackson.annotate.JsonIgnore
     public P getProto() {
         if (!viaProto)
             mergeLocalToProto();
         return proto;
     }
-
-//    public String getId() {
-//        return id;
-//    }
-//
-//    public void setId(String id) {
-//       this.id = id;
-//    }
 
     public abstract E parseToEntity(ByteString data) throws InvalidProtocolBufferException;
 

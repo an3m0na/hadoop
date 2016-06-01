@@ -8,11 +8,8 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.v2.jobhistory.JHAdminConfig;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.codehaus.jettison.json.JSONObject;
 
 import javax.ws.rs.core.MediaType;
 import java.util.*;
@@ -96,7 +93,7 @@ public class RestClient {
         }
     }
 
-    public JSONObject getInfo(TrackingUI trackingUI, String path, String[] args) {
+    public <T> T getInfo(Class<T> tClass, TrackingUI trackingUI, String path, String[] args) {
         ClientResponse response;
         String destination = String.format(trackingUI.root + path, args);
         try {
@@ -114,7 +111,7 @@ public class RestClient {
             }
 
             try {
-                JSONObject object = response.getEntity(JSONObject.class);
+                T object = response.getEntity(tClass);
                 logger.trace("[RestClient] Raw response:" + object);
                 return object;
             } catch (Exception e) {
