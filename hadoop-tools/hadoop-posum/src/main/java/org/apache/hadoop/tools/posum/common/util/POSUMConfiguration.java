@@ -10,7 +10,6 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
  */
 public class POSUMConfiguration {
 
-
     public static Configuration newInstance() {
         Configuration conf = new Configuration();
         conf.addResource("mapred-site.xml");
@@ -74,7 +73,7 @@ public class POSUMConfiguration {
     public static String CLIENT_FAILOVER_SLEEPTIME_MAX_MS = PREFIX + "failover.sleeptime.max.ms";
     public static String CLIENT_FAILOVER_MAX_ATTEMPTS = PREFIX + "failover.max.attempts";
 
-    public static final String MONITOR_KEEP_HISTORY = MONITOR_PREFIX + "keep-history";
+    public static final String MONITOR_KEEP_HISTORY = MONITOR_PREFIX + "history.on";
     public static final boolean MONITOR_KEEP_HISTORY_DEFAULT = true;
 
     public static final String SCHEDULER_ADDRESS = SCHEDULER_PREFIX + "address";
@@ -121,8 +120,14 @@ public class POSUMConfiguration {
     public static final String APP_DEADLINE = YarnConfiguration.YARN_PREFIX + "application.deadline";
     public static final long APP_DEADLINE_DEFAULT = 120000;
 
-    public static final String DEADLINE_CONSTRAINED_PRIORITY = SCHEDULER_PREFIX + "dc-priority";
-    public static final float DEADLINE_CONSTRAINED_PRIORITY_DEFAULT = 0.8f;
+    public static final String DC_PRIORITY = SCHEDULER_PREFIX + "dc.priority";
+    public static final float DC_PRIORITY_DEFAULT = 0.8f;
+
+    public static final String MIN_EXEC_TIME = SCHEDULER_PREFIX + "min-exec-time";
+    public static final long MIN_EXEC_TIME_DEFAULT = 10000;
+
+    public static final String REPRIORITIZE_INTERVAL = SCHEDULER_PREFIX + "reprioritize.ms";
+    public static final long REPRIORITIZE_INTERVAL_DEFAULT = 10000;
 
 
 }

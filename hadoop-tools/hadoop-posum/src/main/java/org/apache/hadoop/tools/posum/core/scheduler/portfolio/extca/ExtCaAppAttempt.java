@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.api.records.*;
@@ -37,7 +38,7 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
     protected final boolean viaInner;
 
 
-    public ExtCaAppAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+    public ExtCaAppAttempt(Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
         super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
         this.inner = this;
         this.viaInner = false;
@@ -49,10 +50,10 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
         this.viaInner = true;
     }
 
-    static <A extends ExtCaAppAttempt> A getInstance(Class<A> aClass, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+    static <A extends ExtCaAppAttempt> A getInstance(Class<A> aClass, Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
         try {
-            Constructor<A> constructor = aClass.getConstructor(ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
-            return constructor.newInstance(applicationAttemptId, user, queue, activeUsersManager, rmContext);
+            Constructor<A> constructor = aClass.getConstructor(Configuration.class, ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
+            return constructor.newInstance(posumConf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
         } catch (Exception e) {
             throw new POSUMException("Failed to instantiate app attempt via default constructor", e);
         }
