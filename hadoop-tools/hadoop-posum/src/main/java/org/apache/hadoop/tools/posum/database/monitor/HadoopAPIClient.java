@@ -315,7 +315,6 @@ public class HadoopAPIClient {
                 map.put(property.get("name").asText(), property.get("value").asText());
             }
             conf.setPropertyMap(map);
-            logger.debug("Conf is " + conf);
             return conf;
         } catch (IOException e) {
             logger.debug("[" + getClass().getSimpleName() + "] Exception parsing JSON string", e);

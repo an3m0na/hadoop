@@ -1,10 +1,7 @@
 package org.apache.hadoop.tools.posum.common.util;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.DataOrientedPolicy;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.EDLSSharePolicy;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.FifoPolicy;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.HashMap;
@@ -78,7 +75,8 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
     public enum AvailablePolicy {
         FIFO(FifoPolicy.class),
         DATA(DataOrientedPolicy.class),
-        EDLS_SH(EDLSSharePolicy.class);
+        EDLS_SH(EDLSSharePolicy.class),
+        LOCF(LocalityFirstPolicy.class);
 
         Class<? extends PluginPolicy> implClass;
 
