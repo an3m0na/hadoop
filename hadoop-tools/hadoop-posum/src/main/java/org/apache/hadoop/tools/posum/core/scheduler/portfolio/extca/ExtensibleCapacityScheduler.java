@@ -1,7 +1,6 @@
 package org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -96,8 +95,9 @@ public abstract class ExtensibleCapacityScheduler<
     /**
      * Override this to load a custom configuration for the underlying capacity scheduler.
      * By default, the configuration remains the same as the one in capacity-scheduler.xml
-     * @param conf  the initial YARN configuration
-     * @return  the custom CapacitySchedulerConfiguration
+     *
+     * @param conf the initial YARN configuration
+     * @return the custom CapacitySchedulerConfiguration
      */
     protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf) {
         return readField("conf");
@@ -106,7 +106,8 @@ public abstract class ExtensibleCapacityScheduler<
     /**
      * Override this to populate custom fields of an instance of A to be used for prioritisation within a queue.
      * By default, the priority is its ApplicationId, so no update is necessary
-     * @param app   the application attempt
+     *
+     * @param app the application attempt
      */
     protected void updateAppPriority(A app) {
 
@@ -116,7 +117,8 @@ public abstract class ExtensibleCapacityScheduler<
      * Override this to add custom logic when application attempt is being added.
      * It is called after SchedulerApplication::setCurrentAppAttempt(A) and before notifying the queue.
      * By default, only the updateAppPriority(A) method is called
-     * @param app   the application attempt
+     *
+     * @param app the application attempt
      */
     protected void onAppAttemptAdded(A app) {
         updateAppPriority(app);
@@ -124,14 +126,16 @@ public abstract class ExtensibleCapacityScheduler<
 
     /**
      * Override this to modify the target queue of an application when it is added to the scheduler
-     * @param queue intended queue name from the app added event
+     *
+     * @param queue           intended queue name from the app added event
      * @param applicationId   the application id
-     * @param isAppRecovering   from the app added event; usually not necessary
-     * @param reservationID from the app added event; usually not necessary
-     * @return  the revised target queue name
+     * @param isAppRecovering from the app added event; usually not necessary
+     * @param reservationID   from the app added event; usually not necessary
+     * @return the revised target queue name
      */
     protected String resolveQueue(String queue,
                                   ApplicationId applicationId,
+                                  String user,
                                   boolean isAppRecovering,
                                   ReservationId reservationID) {
         return queue;
@@ -140,12 +144,14 @@ public abstract class ExtensibleCapacityScheduler<
     /**
      * Acts the same as resolveQueue, but is used when the scheduler has just been initialized and must accept the
      * applications from a previous scheduler
-     * @param queue   the name of the application's queue in the other scheduler
+     *
+     * @param queue         the name of the application's queue in the other scheduler
      * @param applicationId the application id
-     * @return  the target queue name for this scheduler
+     * @return the target queue name for this scheduler
      */
     protected String resolveMoveQueue(String queue,
-                                      ApplicationId applicationId) {
+                                      ApplicationId applicationId,
+                                      String user) {
         //TODO
         return YarnConfiguration.DEFAULT_QUEUE_NAME;
     }
@@ -154,7 +160,8 @@ public abstract class ExtensibleCapacityScheduler<
      * Override to add custom logic to whether priorities should be updated.
      * This is called whenever NODE_UPDATE is received, before trying to allocate.
      * By default, priorities never expire (ApplicationId is constant after app is initially added)
-     * @return  true = priorities have expired and need recalculation
+     *
+     * @return true = priorities have expired and need recalculation
      */
     protected boolean checkIfPrioritiesExpired() {
         return false;
@@ -163,32 +170,26 @@ public abstract class ExtensibleCapacityScheduler<
     /**
      * Override this to apply priority updates to a leaf queue's application set.
      * By default, each instance of A is passed to updateAppPriority(A) in order
-     * @param queue target leaf queue
-     * @param applicationSetName    either "pendingApplications" or "activeApplications"
+     *
+     * @param queue              target leaf queue
+     * @param applicationSetName either "pendingApplications" or "activeApplications"
      */
     protected void updateApplicationPriorities(LeafQueue queue, String applicationSetName) {
-        try {
-            Field appsField = LeafQueue.class.getField(applicationSetName);
-            appsField.setAccessible(true);
-            Set<FiCaSchedulerApp> apps = (Set<FiCaSchedulerApp>) appsField.get(queue);
-            for (Iterator<FiCaSchedulerApp> i = apps.iterator(); i.hasNext(); ) {
-                A app = (A) i.next();
-                // remove, update and add to resort
-                i.remove();
-                updateAppPriority(app);
-                apps.add(app);
-            }
-
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new POSUMException("Reflection error: ", e);
+        Set<FiCaSchedulerApp> apps = Utils.readField(queue, LeafQueue.class, applicationSetName);
+        for (Iterator<FiCaSchedulerApp> i = apps.iterator(); i.hasNext(); ) {
+            A app = (A) i.next();
+            // remove, update and add to resort
+            i.remove();
+            updateAppPriority(app);
+            apps.add(app);
         }
-
     }
 
     /**
      * Override this to apply priority updates to queues recursively.
      * By default, the queues are parsed RLF and in each leaf queue
      * updateApplicationPriorities(LeafQueue, String) is applied
+     *
      * @param queue current queue (starting with root)
      */
     protected void updateApplicationPriorities(CSQueue queue) {
@@ -207,6 +208,7 @@ public abstract class ExtensibleCapacityScheduler<
     /**
      * Override in order to change the priorities of applications within a single leaf queue.
      * The default comparator orders by ApplicationId lexicographically
+     *
      * @return an instance of a comparator that orders elements of type A
      */
     @Override
@@ -217,6 +219,7 @@ public abstract class ExtensibleCapacityScheduler<
     /**
      * Override in order to change the priorities of queues.
      * The default comparator orders according to queue.getUsedCapacity()
+     *
      * @return an instance of a comparator that orders queues
      */
     @Override
@@ -244,7 +247,7 @@ public abstract class ExtensibleCapacityScheduler<
             CSQueue queue = (CSQueue) application.getQueue();
 
             A attempt =
-                    ExtCaAppAttempt.getInstance(aClass, applicationAttemptId, application.getUser(),
+                    ExtCaAppAttempt.getInstance(aClass, pluginConf, applicationAttemptId, application.getUser(),
                             queue, queue.getActiveUsersManager(), inner.getRMContext());
             if (transferStateFromPreviousAttempt) {
                 attempt.transferStateFromPreviousAttempt(application
@@ -439,6 +442,7 @@ public abstract class ExtensibleCapacityScheduler<
                 inner.handle(new AppAddedSchedulerEvent(appAddedEvent.getApplicationId(),
                         resolveQueue(appAddedEvent.getQueue(),
                                 appAddedEvent.getApplicationId(),
+                                appAddedEvent.getUser(),
                                 appAddedEvent.getIsAppRecovering(),
                                 appAddedEvent.getReservationID()),
                         appAddedEvent.getUser(),
@@ -778,7 +782,7 @@ public abstract class ExtensibleCapacityScheduler<
     }
 
     public StringBuilder printQueues(StringBuilder builder, CSQueue queue) {
-        builder.append(queue.getQueuePath()).append("\n");
+        builder.append(queue.toString()).append("\n");
         if (queue instanceof ParentQueue) {
             ParentQueue parent = (ParentQueue) queue;
             for (CSQueue child : parent.getChildQueues()) {
@@ -840,7 +844,7 @@ public abstract class ExtensibleCapacityScheduler<
                 ApplicationId appId = appEntry.getKey();
                 SchedulerApplication<? extends ExtCaAppAttempt> app = appEntry.getValue();
                 LeafQueue oldQueue = (LeafQueue) app.getQueue();
-                String newQueueName = resolveMoveQueue(oldQueue.getQueuePath(), appId);
+                String newQueueName = resolveMoveQueue(oldQueue.getQueuePath(), appId, app.getUser());
                 try {
                     //build a new scheduler application based on the old one
                     myApps.put(appId, moveApplicationReference(appId, app, oldQueue, newQueueName));

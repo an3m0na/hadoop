@@ -72,7 +72,7 @@ public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttemp
                 }
             }
         } catch (Exception e) {
-            logger.debug("Could not read input size for: " + app.getApplicationId(), e);
+            logger.debug("Could not update app priority for : " + app.getApplicationId(), e);
         }
     }
 }

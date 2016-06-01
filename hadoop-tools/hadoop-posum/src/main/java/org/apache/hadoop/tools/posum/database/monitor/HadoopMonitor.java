@@ -33,7 +33,6 @@ public class HadoopMonitor extends GeneralLooper<HadoopMonitor> {
 
     @Override
     protected void doAction() {
-        logger.debug("Monitoring Hadoop...");
         if (!RestClient.TrackingUI.isUpdated()) {
             RestClient.TrackingUI.tryUpdate(context.getCommService().getSystemAddresses());
         }

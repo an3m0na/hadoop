@@ -107,6 +107,8 @@ public class ClusterInfoCollector {
                     dataStore.delete(db, DataEntityType.APP, appId);
                     dataStore.delete(db, DataEntityType.JOB, "appId", appId);
                     dataStore.delete(db, DataEntityType.TASK, "appId", appId);
+                    dataStore.delete(db, DataEntityType.JOB_CONF, finalJob.getId());
+                    dataStore.delete(db, DataEntityType.COUNTER, finalJob.getId());
                     dataStore.store(db, DataEntityType.APP_HISTORY, app);
                     dataStore.store(db, DataEntityType.JOB_HISTORY, finalJob);
                     dataStore.store(db, DataEntityType.JOB_CONF_HISTORY, jobConf);
@@ -122,8 +124,6 @@ public class ClusterInfoCollector {
     }
 
     private void updateAppInfo(final AppProfile app) {
-        logger.debug("Updating " + app.getId() + " info");
-
         dataStore.updateOrStore(db, DataEntityType.APP, app);
         if (historyEnabled) {
             dataStore.store(db, DataEntityType.HISTORY,

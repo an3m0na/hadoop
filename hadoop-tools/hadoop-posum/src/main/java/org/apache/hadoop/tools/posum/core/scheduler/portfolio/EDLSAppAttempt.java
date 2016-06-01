@@ -2,6 +2,8 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaAppAttempt;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
@@ -15,11 +17,23 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicat
 public class EDLSAppAttempt extends ExtCaAppAttempt {
     private static final Log logger = LogFactory.getLog(EDLSAppAttempt.class);
 
-    private Long deadline;
-    private Double slowdown;
+    public enum Type {
+        DC, //deadline constrained application
+        BC // batch application
+    }
 
-    public EDLSAppAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
-        super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
+    private Long submitTime;
+    private Long deadline = 0L;
+    private Long executionTime = 1L;
+    private Long minExecTime = 0L;
+    private String jobId;
+    private Type type;
+
+    public EDLSAppAttempt(Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+        super(posumConf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
+        if (posumConf != null)
+            minExecTime = posumConf.getLong(POSUMConfiguration.MIN_EXEC_TIME,
+                    POSUMConfiguration.MIN_EXEC_TIME_DEFAULT);
     }
 
     public EDLSAppAttempt(ExtCaAppAttempt inner) {
@@ -29,8 +43,11 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
     @Override
     public String toString() {
         return super.toString() +
+                "\n      JobId: " + jobId +
+                "\n      SubmitTime: " + submitTime +
                 "\n      Deadline: " + deadline +
-                "\n      Slowdown: " + slowdown;
+                "\n      Remaining: " + getRemaining() +
+                "\n      Slowdown: " + executionTime;
     }
 
     @Override
@@ -40,7 +57,8 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
         if (appAttempt instanceof EDLSAppAttempt) {
             EDLSAppAttempt edlsApp = (EDLSAppAttempt) appAttempt;
             setDeadline(edlsApp.getDeadline());
-            setSlowdown(edlsApp.getSlowdown());
+            setSubmitTime(edlsApp.getSubmitTime());
+            setExecutionTime(edlsApp.getExecutionTime());
         }
     }
 
@@ -53,10 +71,45 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
     }
 
     public Double getSlowdown() {
-        return slowdown;
+        if (executionTime == 0)
+            return 0.0;
+        long waitTime = System.currentTimeMillis() - submitTime;
+        return 1.0 * waitTime / Math.max(executionTime, minExecTime);
     }
 
-    public void setSlowdown(Double slowdown) {
-        this.slowdown = slowdown;
+    public Long getRemaining() {
+        return deadline - System.currentTimeMillis();
+    }
+
+    public Long getSubmitTime() {
+        return submitTime;
+    }
+
+    public void setSubmitTime(Long submitTime) {
+        this.submitTime = submitTime;
+    }
+
+    public void setExecutionTime(Long executionTime) {
+        this.executionTime = executionTime;
+    }
+
+    public Long getExecutionTime() {
+        return executionTime;
+    }
+
+    public String getJobId() {
+        return jobId;
+    }
+
+    public void setJobId(String jobId) {
+        this.jobId = jobId;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
     }
 }
