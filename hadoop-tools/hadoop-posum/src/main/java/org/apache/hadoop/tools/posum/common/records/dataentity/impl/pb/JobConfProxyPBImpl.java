@@ -22,18 +22,16 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
         builder = viaProto ? JobConfProxyProto.newBuilder(proto) : JobConfProxyProto.newBuilder();
     }
 
-    JobConf conf;
+    private JobConf conf;
+    private Map<String, String> propertyMap;
 
     @Override
     void buildProto() {
         maybeInitBuilder();
-        if (conf != null) {
-            Map<String, String> map = new HashMap<>(conf.size());
-            for (Map.Entry<String, String> prop : conf) {
-                map.put(prop.getKey(), prop.getValue());
-            }
+        propertyMap = getPropertyMap();
+        if (propertyMap != null) {
             StringStringMapPayloadPBImpl mapPayloadPB = new StringStringMapPayloadPBImpl();
-            mapPayloadPB.setEntries(map);
+            mapPayloadPB.setEntries(propertyMap);
             builder.setProperties(mapPayloadPB.getProto());
         }
         proto = builder.build();
@@ -60,12 +58,6 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
     }
 
     @Override
-    public void setConf(JobConf conf) {
-        this.conf = conf;
-
-    }
-
-    @Override
     public String getConfPath() {
         JobConfProxyProtoOrBuilder p = viaProto ? proto : builder;
         return p.getConfPath();
@@ -79,20 +71,45 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
     }
 
     @Override
-    public String getEntry(String name) {
-        return getConf().get(name);
+    public void setConf(JobConf conf) {
+        this.conf = conf;
     }
 
     @Override
     public JobConf getConf() {
-        if (this.conf == null) {
-            JobConfProxyProtoOrBuilder p = viaProto ? proto : builder;
-            this.conf = new JobConf(true);
-            StringStringMapPayloadPBImpl mapPayloadPB = new StringStringMapPayloadPBImpl(p.getProperties());
-            for (Map.Entry<String, String> prop : mapPayloadPB.getEntries().entrySet()) {
+        if (conf == null) {
+            conf = new JobConf();
+            for (Map.Entry<String, String> prop : getPropertyMap().entrySet()) {
                 conf.set(prop.getKey(), prop.getValue());
             }
         }
-        return this.conf;
+        return conf;
+    }
+
+    public Map<String, String> getPropertyMap() {
+        if (propertyMap == null) {
+            if (conf != null) {
+                propertyMap = new HashMap<>(conf.size());
+                for (Map.Entry<String, String> prop : conf) {
+                    propertyMap.put(prop.getKey(), prop.getValue());
+                }
+            } else {
+                JobConfProxyProtoOrBuilder p = viaProto ? proto : builder;
+                StringStringMapPayloadPBImpl mapPayloadPB = new StringStringMapPayloadPBImpl(p.getProperties());
+                propertyMap = mapPayloadPB.getEntries();
+            }
+        }
+        return propertyMap;
+    }
+
+    public void setPropertyMap(Map<String, String> propertyMap) {
+        this.propertyMap = propertyMap;
+    }
+
+    @Override
+    public String getEntry(String name) {
+        if (conf != null)
+            return conf.get(name);
+        return getPropertyMap().get(name);
     }
 }

@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.database.monitor;
 
+import com.mongodb.DuplicateKeyException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -65,8 +66,8 @@ public class ClusterInfoCollector {
                     moveAppToHistory(app);
                 } else {
                     logger.trace("App " + app.getId() + " is running");
-                    running.add(app.getId());
                     updateAppInfo(app);
+                    running.add(app.getId());
                 }
             }
         }
@@ -85,33 +86,43 @@ public class ClusterInfoCollector {
         if (jobs.size() > 1)
             throw new POSUMException("Unexpected number of jobs for mapreduce app " + appId);
         else if (jobs.size() < 1) {
+            // there is no running record of the job
             job = api.getFinishedJobInfo(appId);
             jobId = job.getId();
         } else {
+            // update the running info with the history info
             jobId = jobs.get(0).getId();
             job = api.getFinishedJobInfo(appId, jobId);
         }
         final JobProfile finalJob = job;
-        final List<TaskProfile> tasks = api.getFinishedTasksInfo(appId, jobId);
+        final JobConfProxy jobConf = api.getFinishedJobConf(jobId);
+        final CountersProxy jobCounters = api.getFinishedJobCounters(jobId);
+        final List<TaskProfile> tasks = api.getFinishedTasksInfo(jobId);
 
         // move info in database
         dataStore.runTransaction(db, new DataTransaction() {
             @Override
             public void run() throws Exception {
-                dataStore.delete(db, DataEntityType.APP, appId);
-                dataStore.delete(db, DataEntityType.JOB, "appId", appId);
-                dataStore.delete(db, DataEntityType.TASK, "appId", appId);
-                dataStore.updateOrStore(db, DataEntityType.APP_HISTORY, app);
-                dataStore.updateOrStore(db, DataEntityType.JOB_HISTORY, finalJob);
-                for (TaskProfile task : tasks) {
-                    dataStore.updateOrStore(db, DataEntityType.TASK_HISTORY, task);
+                try {
+                    dataStore.delete(db, DataEntityType.APP, appId);
+                    dataStore.delete(db, DataEntityType.JOB, "appId", appId);
+                    dataStore.delete(db, DataEntityType.TASK, "appId", appId);
+                    dataStore.store(db, DataEntityType.APP_HISTORY, app);
+                    dataStore.store(db, DataEntityType.JOB_HISTORY, finalJob);
+                    dataStore.store(db, DataEntityType.JOB_CONF_HISTORY, jobConf);
+                    dataStore.store(db, DataEntityType.COUNTER_HISTORY, jobCounters);
+                    for (TaskProfile task : tasks) {
+                        dataStore.store(db, DataEntityType.TASK_HISTORY, task);
+                    }
+                }catch (Exception e){
+                    logger.error("Could not move app data to history", e);
                 }
             }
         });
     }
 
     private void updateAppInfo(final AppProfile app) {
-        logger.trace("Updating " + app.getId() + " info");
+        logger.debug("Updating " + app.getId() + " info");
 
         dataStore.updateOrStore(db, DataEntityType.APP, app);
         if (historyEnabled) {
@@ -125,6 +136,7 @@ public class ClusterInfoCollector {
             if (job == null)
                 logger.warn("Could not find job for " + app.getId());
             else {
+                final CountersProxy jobCounters = api.getRunningJobCounters(app.getId(), job.getId());
                 final List<TaskProfile> tasks = api.getRunningTasksInfo(job);
                 Integer mapDuration = 0, reduceDuration = 0, avgDuration = 0, mapNo = 0, reduceNo = 0, avgNo = 0;
                 for (TaskProfile task : tasks) {
@@ -154,6 +166,7 @@ public class ClusterInfoCollector {
                     @Override
                     public void run() throws Exception {
                         dataStore.updateOrStore(db, DataEntityType.JOB, job);
+                        dataStore.updateOrStore(db, DataEntityType.COUNTER, jobCounters);
                         for (TaskProfile task : tasks) {
                             dataStore.updateOrStore(db, DataEntityType.TASK, task);
                         }
@@ -165,6 +178,8 @@ public class ClusterInfoCollector {
                             new HistoryProfilePBImpl<>(DataEntityType.APP, app));
                     dataStore.store(db, DataEntityType.HISTORY,
                             new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
+                    dataStore.store(db, DataEntityType.HISTORY,
+                            new HistoryProfilePBImpl<>(DataEntityType.COUNTER, jobCounters));
                     for (TaskProfile task : tasks) {
                         dataStore.store(db, DataEntityType.HISTORY,
                                 new HistoryProfilePBImpl<>(DataEntityType.TASK, task));
@@ -173,15 +188,18 @@ public class ClusterInfoCollector {
             }
         } else {
             //app is not yet tracked
-            logger.trace(" pp " + app.getId() + " is not tracked");
-            try {
-                JobProfile job = getAndStoreSubmittedJobInfo(conf, app.getId(), app.getUser(), dataStore, db);
-                if (historyEnabled) {
-                    dataStore.store(db, DataEntityType.HISTORY,
-                            new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
+            logger.trace("App " + app.getId() + " is not tracked");
+            if (!running.contains(app.getId())) {
+                // get job info directly from the conf in the staging dir
+                try {
+                    JobProfile job = getAndStoreSubmittedJobInfo(conf, app.getId(), app.getUser(), dataStore, db);
+                    if (historyEnabled) {
+                        dataStore.store(db, DataEntityType.HISTORY,
+                                new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
+                    }
+                } catch (Exception e) {
+                    logger.error("Could not get job info from staging dir!", e);
                 }
-            } catch (Exception e) {
-                logger.error("Could not get job info from staging dir!", e);
             }
         }
     }
@@ -197,8 +215,10 @@ public class ClusterInfoCollector {
             @Override
             public void run() throws Exception {
                 try {
-                    store.store(db, DataEntityType.JOB_CONF, confProxy);
                     store.store(db, DataEntityType.JOB, job);
+                    store.store(db, DataEntityType.JOB_CONF, confProxy);
+                } catch (DuplicateKeyException e) {
+                    // this is possible; do nothing
                 } catch (Exception e) {
                     logger.warn("Exception occurred when storing new job info", e);
                 }
@@ -234,7 +254,7 @@ public class ClusterInfoCollector {
         Path jobConfDir = null;
         try {
             jobConfDir = new Path(new URI(jobConfDirPath));
-            logger.debug("Checking file path: " + jobConfDir);
+            logger.trace("Checking file path: " + jobConfDir);
             String jobId = jobConfDir.getName();
             //DANGER We assume there can only be one job / application
             return getJobProfileFromConf(appId, Utils.parseJobId(appId, jobId), fs, confProxy.getConf(), jobConfDir);
@@ -250,7 +270,7 @@ public class ClusterInfoCollector {
                 user != null ? user : UserGroupInformation.getCurrentUser().getUserName());
         confPath = fs.makeQualified(confPath);
 
-        logger.debug("Looking in staging path: " + confPath);
+        logger.trace("Looking in staging path: " + confPath);
         FileStatus[] statuses = fs.listStatus(confPath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
@@ -263,7 +283,7 @@ public class ClusterInfoCollector {
             throw new POSUMException("Wrong number of job profile directories for: " + appId);
 
         Path jobConfDir = statuses[0].getPath();
-        logger.debug("Checking file path: " + jobConfDir);
+        logger.trace("Checking file path: " + jobConfDir);
         JobConf jobConf = new JobConf(new Path(jobConfDir, "job.xml"));
         JobConfProxy proxy = Records.newRecord(JobConfProxy.class);
         proxy.setId(jobConfDir.getName());

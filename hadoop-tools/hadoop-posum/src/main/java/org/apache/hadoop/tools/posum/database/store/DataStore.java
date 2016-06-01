@@ -38,8 +38,11 @@ public class DataStore {
                 DataEntityType.APP,
                 DataEntityType.APP_HISTORY,
                 DataEntityType.JOB,
-                DataEntityType.JOB_CONF,
                 DataEntityType.JOB_HISTORY,
+                DataEntityType.JOB_CONF,
+                DataEntityType.JOB_CONF_HISTORY,
+                DataEntityType.COUNTER,
+                DataEntityType.COUNTER_HISTORY,
                 DataEntityType.TASK,
                 DataEntityType.TASK_HISTORY,
                 DataEntityType.HISTORY);

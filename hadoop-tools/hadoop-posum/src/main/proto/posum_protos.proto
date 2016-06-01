@@ -24,10 +24,14 @@ enum EntityTypeProto {
     TYPE_APP = 0;
     TYPE_JOB = 1;
     TYPE_TASK = 2;
-    TYPE_APP_HISTORY = 3;
-    TYPE_JOB_HISTORY = 4;
-    TYPE_TASK_HISTORY = 5;
-    TYPE_HISTORY = 6;
+    TYPE_JOB_CONF = 3;
+    TYPE_COUNTER = 4;
+    TYPE_APP_HISTORY = 5;
+    TYPE_JOB_HISTORY = 6;
+    TYPE_TASK_HISTORY = 7;
+    TYPE_JOB_CONF_HISTORY = 8;
+    TYPE_COUNTER_HISTORY = 9;
+    TYPE_HISTORY = 10;
 }
 
 message AppProfileProto {
@@ -245,4 +249,21 @@ message RegistrationRequestProto {
 
 message StringStringMapPayloadProto {
     repeated StringStringMapProto entries = 1;
+}
+
+message CountersProxyProto {
+    required string id = 1;
+    repeated CounterGroupInfoPayloadProto groups = 2;
+}
+
+message CounterGroupInfoPayloadProto {
+    required string name = 1;
+    repeated CounterInfoPayloadProto counters = 2;
+}
+
+message CounterInfoPayloadProto {
+    required string name = 1;
+    optional int64 total = 2;
+    optional int64 map = 3;
+    optional int64 reduce = 4;
 }
