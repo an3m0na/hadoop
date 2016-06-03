@@ -22,33 +22,10 @@ public class EDLSSharePolicy extends EDLSPolicy<EDLSSharePolicy> {
         CapacitySchedulerConfiguration capacityConf = new CapacitySchedulerConfiguration(conf);
         capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, 0);
         capacityConf.setQueues("root", new String[]{"default", "deadline", "batch"});
-        float deadlinePriority = pluginConf.getFloat(POSUMConfiguration.DC_PRIORITY,
-                POSUMConfiguration.DC_PRIORITY_DEFAULT);
         capacityConf.setCapacity("root.default", 0);
         capacityConf.set("root.default.state", QueueState.STOPPED.getStateName());
-        capacityConf.setCapacity("root.deadline", 100 * deadlinePriority);
-        capacityConf.setCapacity("root.batch", 100 * (1 - deadlinePriority));
+        capacityConf.setCapacity("root." + DEADLINE_QUEUE, 100 * deadlinePriority);
+        capacityConf.setCapacity("root." + BATCH_QUEUE, 100 * (1 - deadlinePriority));
         return capacityConf;
-    }
-
-    @Override
-    protected String resolveQueue(String queue,
-                                  ApplicationId applicationId,
-                                  String user,
-                                  boolean isAppRecovering,
-                                  ReservationId reservationID) {
-
-        JobProfile job = fetchJobProfile(applicationId.toString(), user);
-        if (job == null) {
-            return "batch";
-        }
-        if (EDLSAppAttempt.Type.DC.name().equals(job.getFlexField(EDLSAppAttempt.Type.class.getName())))
-            return "deadline";
-        return "batch";
-    }
-
-    @Override
-    protected String resolveMoveQueue(String queue, ApplicationId applicationId, String user) {
-        return resolveQueue(queue, applicationId, user, false, null);
     }
 }
