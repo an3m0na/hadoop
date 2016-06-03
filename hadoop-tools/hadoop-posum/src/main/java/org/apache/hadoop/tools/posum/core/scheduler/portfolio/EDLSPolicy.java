@@ -3,13 +3,8 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.TaskCounter;
-import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.field.CounterGroupInfoPayload;
-import org.apache.hadoop.tools.posum.common.records.field.CounterInfoPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaSchedulerNode;
@@ -24,6 +19,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaS
 import java.util.Comparator;
 import java.util.Map;
 
+
 /**
  * Created by ane on 5/31/16.
  */
@@ -31,9 +27,11 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
 
     protected Log logger;
 
+    protected final String DEADLINE_QUEUE = "deadline", BATCH_QUEUE = "batch";
     protected final String DEADLINE_FLEX_KEY = EDLSPolicy.class.getName() + ".deadline";
     private long lastCheck = 0;
     private long maxCheck;
+    protected float deadlinePriority = POSUMConfiguration.DC_PRIORITY_DEFAULT;
 
     public EDLSPolicy(Class<E> eClass) {
         super(EDLSAppAttempt.class, ExtCaSchedulerNode.class, eClass.getName(), true);
@@ -45,6 +43,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         super.initializePlugin(conf, commService);
         maxCheck = conf.getLong(POSUMConfiguration.REPRIORITIZE_INTERVAL,
                 POSUMConfiguration.REPRIORITIZE_INTERVAL_DEFAULT);
+        deadlinePriority = conf.getFloat(POSUMConfiguration.DC_PRIORITY, POSUMConfiguration.DC_PRIORITY_DEFAULT);
     }
 
     @Override
@@ -53,15 +52,25 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, 0);
         return capacityConf;
     }
-
     @Override
-    protected String resolveQueue(String queue, ApplicationId applicationId, String user, boolean isAppRecovering, ReservationId reservationID) {
-        return YarnConfiguration.DEFAULT_QUEUE_NAME;
+    protected String resolveQueue(String queue,
+                                  ApplicationId applicationId,
+                                  String user,
+                                  boolean isAppRecovering,
+                                  ReservationId reservationID) {
+
+        JobProfile job = fetchJobProfile(applicationId.toString(), user);
+        if (job == null) {
+            return BATCH_QUEUE;
+        }
+        if (EDLSAppAttempt.Type.DC.name().equals(job.getFlexField(EDLSAppAttempt.Type.class.getName())))
+            return DEADLINE_QUEUE;
+        return BATCH_QUEUE;
     }
 
     @Override
     protected String resolveMoveQueue(String queue, ApplicationId applicationId, String user) {
-        return YarnConfiguration.DEFAULT_QUEUE_NAME;
+        return resolveQueue(queue, applicationId, user, false, null);
     }
 
     protected JobProfile fetchJobProfile(String appId, String user) {
