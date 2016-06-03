@@ -47,7 +47,8 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
                 "\n      SubmitTime: " + submitTime +
                 "\n      Deadline: " + deadline +
                 "\n      Remaining: " + getRemaining() +
-                "\n      Slowdown: " + executionTime;
+                "\n      ExectionTiem: " + executionTime +
+                "\n      Slowdown: " + getSlowdown();
     }
 
     @Override
@@ -56,6 +57,7 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
         super.transferStateFromPreviousAttempt(appAttempt);
         if (appAttempt instanceof EDLSAppAttempt) {
             EDLSAppAttempt edlsApp = (EDLSAppAttempt) appAttempt;
+            setJobId(edlsApp.getJobId());
             setDeadline(edlsApp.getDeadline());
             setSubmitTime(edlsApp.getSubmitTime());
             setExecutionTime(edlsApp.getExecutionTime());

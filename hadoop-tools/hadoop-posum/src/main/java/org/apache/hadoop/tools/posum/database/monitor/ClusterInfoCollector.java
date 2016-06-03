@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.database.monitor;
 
 import com.mongodb.DuplicateKeyException;
+import org.apache.avro.Schema;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -9,7 +10,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapreduce.TypeConverter;
+import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.split.JobSplit;
 import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
@@ -17,6 +18,8 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.mapreduce.v2.util.MRApps;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
+import org.apache.hadoop.tools.posum.common.records.field.CounterGroupInfoPayload;
+import org.apache.hadoop.tools.posum.common.records.field.CounterInfoPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
@@ -98,6 +101,9 @@ public class ClusterInfoCollector {
         final JobConfProxy jobConf = api.getFinishedJobConf(jobId);
         final CountersProxy jobCounters = api.getFinishedJobCounters(jobId);
         final List<TaskProfile> tasks = api.getFinishedTasksInfo(jobId);
+        final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
+        for (TaskProfile task : tasks)
+            taskCounters.add(api.getFinishedTaskCounters(jobId, task.getId()));
 
         // move info in database
         dataStore.runTransaction(db, new DataTransaction() {
@@ -116,7 +122,10 @@ public class ClusterInfoCollector {
                     for (TaskProfile task : tasks) {
                         dataStore.store(db, DataEntityType.TASK_HISTORY, task);
                     }
-                }catch (Exception e){
+                    for (CountersProxy counters : taskCounters) {
+                        dataStore.store(db, DataEntityType.COUNTER_HISTORY, counters);
+                    }
+                } catch (Exception e) {
                     logger.error("Could not move app data to history", e);
                 }
             }
@@ -138,35 +147,90 @@ public class ClusterInfoCollector {
             else {
                 final CountersProxy jobCounters = api.getRunningJobCounters(app.getId(), job.getId());
                 final List<TaskProfile> tasks = api.getRunningTasksInfo(job);
-                Integer mapDuration = 0, reduceDuration = 0, avgDuration = 0, mapNo = 0, reduceNo = 0, avgNo = 0;
+                final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
+                long mapDuration = 0, reduceDuration = 0, avgDuration = 0;
+                int mapNo = 0, reduceNo = 0, avgNo = 0;
+                long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
                 for (TaskProfile task : tasks) {
+                    CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
+                    if (counters != null) {
+                        taskCounters.add(counters);
+                        for (CounterGroupInfoPayload group : counters.getCounterGroup()) {
+                            if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
+                                for (CounterInfoPayload counter : group.getCounter()) {
+                                    switch (counter.getName()) {
+                                        case "MAP_OUTPUT_BYTES":
+                                            if (task.getType().equals(TaskType.MAP))
+                                                task.setOutputBytes(counter.getTotalCounterValue());
+                                            break;
+                                        case "REDUCE_SHUFFLE_BYTES":
+                                            if (task.getType().equals(TaskType.REDUCE))
+                                                task.setInputBytes(counter.getTotalCounterValue());
+                                            break;
+                                    }
+                                }
+                            if (FileSystemCounter.class.getName().equals(group.getCounterGroupName()))
+                                for (CounterInfoPayload counter : group.getCounter()) {
+                                    switch (counter.getName()) {
+                                        case "FILE_BYTES_READ":
+                                            if (task.getType().equals(TaskType.MAP))
+                                                task.setOutputBytes(task.getOutputBytes() +
+                                                        counter.getTotalCounterValue());
+                                            break;
+                                        case "HDFS_BYTES_READ":
+                                            if (task.getType().equals(TaskType.MAP))
+                                                task.setInputBytes(task.getInputBytes() +
+                                                        counter.getTotalCounterValue());
+                                            break;
+                                        case "HDFS_BYTES_WRITTEN":
+                                            if (task.getType().equals(TaskType.REDUCE))
+                                                task.setOutputBytes(task.getOutputBytes() +
+                                                        counter.getTotalCounterValue());
+                                            break;
+                                    }
+                                }
+                        }
+                    }
                     Integer duration = task.getDuration();
                     if (duration > 0) {
+                        // task has finished
                         if (TaskType.MAP.equals(task.getType())) {
                             mapDuration += task.getDuration();
                             mapNo++;
+                            mapInputSize += task.getInputBytes();
+                            mapOutputSize += task.getOutputBytes();
                         }
                         if (TaskType.REDUCE.equals(task.getType())) {
                             reduceDuration += task.getDuration();
                             reduceNo++;
+                            reduceInputSize += task.getInputBytes();
+                            reduceOutputSize += task.getOutputBytes();
                         }
                         avgDuration += duration;
                         avgNo++;
                     }
-                    if (avgNo > 0) {
-                        job.setAvgTaskDuration(avgDuration / avgNo);
-                        if (mapNo > 0)
-                            job.setAvgMapDuration(mapDuration / mapNo);
-                        if (reduceNo > 0)
-                            job.setAvgReduceDuration(reduceDuration / reduceNo);
-                    }
                 }
+
+                if (avgNo > 0) {
+                    job.setAvgTaskDuration(avgDuration / avgNo);
+                    if (mapNo > 0)
+                        job.setAvgMapDuration(mapDuration / mapNo);
+                    if (reduceNo > 0)
+                        job.setAvgReduceDuration(reduceDuration / reduceNo);
+                }
+
+                job.setInputBytes(mapInputSize);
+                job.setMapOutputBytes(mapOutputSize);
+                job.setReduceInputBytes(reduceInputSize);
+                job.setOutputBytes(reduceOutputSize);
 
                 dataStore.runTransaction(db, new DataTransaction() {
                     @Override
                     public void run() throws Exception {
                         dataStore.updateOrStore(db, DataEntityType.JOB, job);
                         dataStore.updateOrStore(db, DataEntityType.COUNTER, jobCounters);
+                        for (CountersProxy counters : taskCounters)
+                            dataStore.updateOrStore(db, DataEntityType.COUNTER, counters);
                         for (TaskProfile task : tasks) {
                             dataStore.updateOrStore(db, DataEntityType.TASK, task);
                         }
@@ -211,6 +275,12 @@ public class ClusterInfoCollector {
                                                          final DataEntityDB db) throws IOException {
         final JobConfProxy confProxy = getSubmittedJobConf(conf, appId, user);
         final JobProfile job = getSubmittedJobInfo(confProxy, appId);
+        job.setTotalMapTasks(job.getInputSplits());
+        int reduces = 0;
+        String reducesString = confProxy.getEntry(MRJobConfig.NUM_REDUCES);
+        if (reducesString != null && reducesString.length() > 0)
+            reduces = Integer.valueOf(reducesString);
+        job.setTotalReduceTasks(reduces);
         store.runTransaction(db, new DataTransaction() {
             @Override
             public void run() throws Exception {

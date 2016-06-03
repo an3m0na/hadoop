@@ -3,14 +3,9 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.TaskCounter;
-import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.field.CounterGroupInfoPayload;
-import org.apache.hadoop.tools.posum.common.records.field.CounterInfoPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaSchedulerNode;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
@@ -19,25 +14,26 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.LeafQueue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 
 import java.util.Comparator;
-import java.util.Map;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
- * Created by ane on 5/31/16.
+ * Created by ane on 1/22/16.
  */
-public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacityScheduler<EDLSAppAttempt, ExtCaSchedulerNode> {
+public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAttempt, ExtCaSchedulerNode> {
 
-    protected Log logger;
 
-    protected final String DEADLINE_FLEX_KEY = EDLSPolicy.class.getName() + ".deadline";
+    private static Log logger = LogFactory.getLog(ShortestRTFirstPolicy.class);
+
     private long lastCheck = 0;
     private long maxCheck;
 
-    public EDLSPolicy(Class<E> eClass) {
-        super(EDLSAppAttempt.class, ExtCaSchedulerNode.class, eClass.getName(), true);
-        logger = LogFactory.getLog(eClass);
+    public ShortestRTFirstPolicy() {
+        super(SRTFAppAttempt.class, ExtCaSchedulerNode.class, ShortestRTFirstPolicy.class.getName(), true);
     }
 
     @Override
@@ -74,51 +70,41 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
             logger.error("Could not retrieve job info for " + appId);
             return null;
         }
-        Map<String, String> flexFields = job.getFlexFields();
-        String typeString = flexFields.get(EDLSAppAttempt.Type.class.getName());
-        if (typeString == null) {
-            // first initialization
-            JobConfProxy confProxy = db.getJobConf(job.getId());
-            String deadlineString = confProxy.getEntry(POSUMConfiguration.APP_DEADLINE);
-            if (deadlineString != null && deadlineString.length() > 0) {
-                flexFields.put(DEADLINE_FLEX_KEY, deadlineString);
-                flexFields.put(EDLSAppAttempt.Type.class.getName(), EDLSAppAttempt.Type.DC.name());
-            } else {
-                flexFields.put(EDLSAppAttempt.Type.class.getName(), EDLSAppAttempt.Type.BC.name());
-            }
-        }
         return job;
     }
 
     @Override
-    protected void updateAppPriority(EDLSAppAttempt app) {
+    protected void updateAppPriority(SRTFAppAttempt app) {
         logger.debug("Updating app priority");
         try {
-            if (EDLSAppAttempt.Type.DC.equals(app.getType()))
-                // application should already be initialized; do nothing
-                return;
-            DBInterface db = commService.getDB();
-            if (db == null)
-                // DataMaster is not connected; do nothing
-                return;
             String appId = app.getApplicationId().toString();
             JobProfile job = fetchJobProfile(appId, app.getUser());
-            if (app.getType() == null) {
+            if (app.getJobId() == null) {
                 if (job == null)
                     // something went wrong; do nothing
                     return;
                 app.setJobId(job.getId());
                 app.setSubmitTime(job.getSubmitTime());
-                EDLSAppAttempt.Type type =
-                        EDLSAppAttempt.Type.valueOf(job.getFlexField(EDLSAppAttempt.Type.class.getName()));
-                app.setType(type);
-                if (EDLSAppAttempt.Type.DC.equals(type)) {
-                    app.setDeadline(Long.valueOf(job.getFlexField(DEADLINE_FLEX_KEY)));
-                }
             }
-            app.setExecutionTime(job.getAvgMapDuration() * job.getCompletedMaps() +
-                    job.getAvgReduceDuration() * job.getCompletedReduces());
-            // this is a batch job; update its slowdown
+            if (job.getAvgMapDuration() != 0) {
+                Long totalWork = job.getAvgMapDuration() * job.getTotalMapTasks();
+                Long remainingWork = totalWork - job.getAvgMapDuration() * job.getCompletedMaps();
+                if (job.getTotalReduceTasks() > 0) {
+                    // there is reduce work to be done; get average task duration
+                    long avgReduceDuration = job.getAvgReduceDuration();
+                    if (avgReduceDuration == 0 && job.getAvgSplitSize() != null) {
+                        // estimate avg reduce time
+                        long totalReduceInputSize =
+                                job.getMapOutputBytes() / job.getCompletedMaps() * job.getTotalMapTasks();
+                        long reducerInputSize = totalReduceInputSize / job.getTotalReduceTasks();
+                        avgReduceDuration = job.getAvgMapDuration() * reducerInputSize / job.getAvgSplitSize();
+                    }
+                    remainingWork += avgReduceDuration * (job.getTotalReduceTasks() - job.getCompletedReduces());
+                    totalWork += avgReduceDuration * job.getTotalReduceTasks();
+                }
+                app.setRemainingWork(remainingWork);
+                app.setTotalWork(totalWork);
+            }
         } catch (Exception e) {
             logger.debug("Could not update app priority for : " + app.getApplicationId(), e);
         }
@@ -131,22 +117,8 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
             public int compare(FiCaSchedulerApp o1, FiCaSchedulerApp o2) {
                 if (o1.getApplicationId().equals(o2.getApplicationId()))
                     return 0;
-                EDLSAppAttempt edls1 = (EDLSAppAttempt) o1, edls2 = (EDLSAppAttempt) o2;
-                if (EDLSAppAttempt.Type.DC.equals(edls1.getType()) && EDLSAppAttempt.Type.DC.equals(edls2.getType()))
-                    // both dc jobs, earliest deadline first
-                    return new Long(edls1.getRemaining() - edls2.getRemaining()).intValue();
-                if (EDLSAppAttempt.Type.DC.equals(edls1.getType()))
-                    // only elds1 is dc, it has priority
-                    return -1;
-                if (EDLSAppAttempt.Type.DC.equals(edls2.getType()))
-                    // only elds2 is dc, it has priority
-                    return 1;
-                // both are bc jobs
-                if (edls1.getSlowdown().equals(edls2.getSlowdown()))
-                    // apply FIFO
-                    return edls1.getApplicationId().compareTo(edls2.getApplicationId());
-                // largest slowdown first
-                return new Double(Math.signum(edls2.getSlowdown() - edls1.getSlowdown())).intValue();
+                SRTFAppAttempt srtf1 = (SRTFAppAttempt) o1, srtf2 = (SRTFAppAttempt) o2;
+                return srtf1.getConsumptionDeficit() - srtf2.getConsumptionDeficit();
             }
         };
     }
@@ -160,4 +132,26 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         }
         return false;
     }
+
+    protected void updateApplicationPriorities(LeafQueue queue, String applicationSetName) {
+        if (!applicationSetName.equals("activeApplications"))
+            return;
+        Set<FiCaSchedulerApp> apps = Utils.readField(queue, LeafQueue.class, applicationSetName);
+        // calculate remaining times for each application and compute sum
+        Double invertedSum = 0.0;
+        for (Iterator<FiCaSchedulerApp> i = apps.iterator(); i.hasNext(); ) {
+            SRTFAppAttempt app = (SRTFAppAttempt) i.next();
+            updateAppPriority(app);
+            if (app.getRemainingWork() != null)
+                invertedSum += 1.0 / app.getRemainingTime(getMinimumResourceCapability());
+        }
+        for (Iterator<FiCaSchedulerApp> i = apps.iterator(); i.hasNext(); ) {
+            SRTFAppAttempt app = (SRTFAppAttempt) i.next();
+            // remove, update and add to resort
+            i.remove();
+            app.calculateDeficit(getMinimumResourceCapability(), getClusterResource(), invertedSum);
+            apps.add(app);
+        }
+    }
 }
+
