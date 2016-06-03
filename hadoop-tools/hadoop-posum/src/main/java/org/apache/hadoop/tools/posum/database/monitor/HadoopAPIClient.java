@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
@@ -36,6 +37,11 @@ public class HadoopAPIClient {
     private static class JobCountersWrapper {
         public CountersProxyPBImpl jobCounters;
     }
+
+    private static class TaskCountersWrapper {
+        public CountersProxyPBImpl jobTaskCounters;
+    }
+
 
     public HadoopAPIClient(Configuration conf) {
         restClient = new RestClient();
@@ -144,10 +150,10 @@ public class HadoopAPIClient {
             job.setTotalMapTasks(rawJob.get("mapsTotal").asInt());
             job.setTotalReduceTasks(rawJob.get("reducesTotal").asInt());
             job.setUberized(rawJob.get("uberized").asBoolean());
-            job.setAvgMapDuration(rawJob.get("avgMapTime").asInt());
-            job.setAvgReduceDuration(rawJob.get("avgReduceTime").asInt());
-            job.setAvgShuffleDuration(rawJob.get("avgShuffleTime").asInt());
-            job.setAvgMergeDuration(rawJob.get("avgMergeTime").asInt());
+            job.setAvgMapDuration(rawJob.get("avgMapTime").asLong());
+            job.setAvgReduceDuration(rawJob.get("avgReduceTime").asLong());
+            job.setAvgShuffleDuration(rawJob.get("avgShuffleTime").asLong());
+            job.setAvgMergeDuration(rawJob.get("avgMergeTime").asLong());
             return job;
         } catch (IOException e) {
             logger.debug("[" + getClass().getSimpleName() + "] Exception parsing JSON string", e);
@@ -268,6 +274,17 @@ public class HadoopAPIClient {
         return null;
     }
 
+    public CountersProxy getRunningTaskCounters(String appId, String jobId, String taskId) {
+        try {
+            TaskCountersWrapper wrapper = restClient.getInfo(TaskCountersWrapper.class,
+                    RestClient.TrackingUI.AM, "jobs/%s/tasks/%s/counters", new String[]{appId, jobId, taskId});
+            return wrapper.jobTaskCounters;
+        } catch (Exception e) {
+            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing counters from AM", e);
+        }
+        return null;
+    }
+
     public Map<String, String> getJobConfProperties(String appId, String jobId, Map<String, String> requested) {
 
         try {
@@ -327,6 +344,17 @@ public class HadoopAPIClient {
             JobCountersWrapper wrapper = restClient.getInfo(JobCountersWrapper.class,
                     RestClient.TrackingUI.HISTORY, "jobs/%s/counters", new String[]{jobId});
             return wrapper.jobCounters;
+        } catch (Exception e) {
+            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing counters from HISTORY", e);
+        }
+        return null;
+    }
+
+    public CountersProxy getFinishedTaskCounters(String jobId, String taskId) {
+        try {
+            TaskCountersWrapper wrapper = restClient.getInfo(TaskCountersWrapper.class,
+                    RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/counters", new String[]{jobId, taskId});
+            return wrapper.jobTaskCounters;
         } catch (Exception e) {
             logger.debug("[" + getClass().getSimpleName() + "] Exception parsing counters from HISTORY", e);
         }

@@ -1,6 +1,5 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity;
 
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 
 import java.util.Map;
@@ -37,6 +36,14 @@ public interface JobProfile extends GeneralDataEntity {
     void setTotalReduceTasks(Integer totalReduceTasks);
 
     void setInputBytes(Long inputBytes);
+
+    Long getMapOutputBytes();
+
+    void setMapOutputBytes(Long bytes);
+
+    Long getReduceInputBytes();
+
+    void setReduceInputBytes(Long bytes);
 
     Long getOutputBytes();
 
@@ -90,25 +97,25 @@ public interface JobProfile extends GeneralDataEntity {
 
     Long getAvgSplitSize();
 
-    Integer getAvgMapDuration();
+    Long getAvgMapDuration();
 
-    void setAvgMapDuration(Integer avgMapDuration);
+    void setAvgMapDuration(Long avgMapDuration);
 
-    Integer getAvgReduceDuration();
+    Long getAvgReduceDuration();
 
-    void setAvgReduceDuration(Integer avgReduceDuration);
+    void setAvgReduceDuration(Long avgReduceDuration);
 
-    Integer getAvgTaskDuration();
+    Long getAvgTaskDuration();
 
-    void setAvgTaskDuration(Integer avgTaskDuration);
+    void setAvgTaskDuration(Long avgTaskDuration);
 
-    void setAvgShuffleDuration(Integer avgShuffleDuration);
+    void setAvgShuffleDuration(Long avgShuffleDuration);
 
-    Integer getAvgShuffleDuration();
+    Long getAvgShuffleDuration();
 
-    void setAvgMergeDuration(Integer avgMergeDuration);
+    void setAvgMergeDuration(Long avgMergeDuration);
 
-    Integer getAvgMergeDuration();
+    Long getAvgMergeDuration();
 
     void setQueue(String queue);
 
