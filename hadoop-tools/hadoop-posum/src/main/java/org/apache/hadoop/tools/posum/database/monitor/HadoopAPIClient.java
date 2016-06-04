@@ -249,6 +249,7 @@ public class HadoopAPIClient {
                 TaskProfile task = Records.newRecord(TaskProfile.class);
                 task.setId(rawTask.get("id").asText());
                 task.setAppId(job.getAppId());
+                task.setJobId(job.getId());
                 task.setType(rawTask.get("type").asText());
                 task.setStartTime(rawTask.get("startTime").asLong());
                 task.setFinishTime(rawTask.get("finishTime").asLong());
