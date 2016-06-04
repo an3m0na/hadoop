@@ -267,6 +267,8 @@ public class HadoopAPIClient {
         try {
             JobCountersWrapper wrapper = restClient.getInfo(JobCountersWrapper.class,
                     RestClient.TrackingUI.AM, "jobs/%s/counters", new String[]{appId, jobId});
+            if (wrapper == null)
+                return null;
             return wrapper.jobCounters;
         } catch (Exception e) {
             logger.debug("[" + getClass().getSimpleName() + "] Exception parsing counters from AM", e);
@@ -278,6 +280,8 @@ public class HadoopAPIClient {
         try {
             TaskCountersWrapper wrapper = restClient.getInfo(TaskCountersWrapper.class,
                     RestClient.TrackingUI.AM, "jobs/%s/tasks/%s/counters", new String[]{appId, jobId, taskId});
+            if (wrapper == null)
+                return null;
             return wrapper.jobTaskCounters;
         } catch (Exception e) {
             logger.debug("[" + getClass().getSimpleName() + "] Exception parsing counters from AM", e);
@@ -343,6 +347,8 @@ public class HadoopAPIClient {
         try {
             JobCountersWrapper wrapper = restClient.getInfo(JobCountersWrapper.class,
                     RestClient.TrackingUI.HISTORY, "jobs/%s/counters", new String[]{jobId});
+            if (wrapper == null)
+                return null;
             return wrapper.jobCounters;
         } catch (Exception e) {
             logger.debug("[" + getClass().getSimpleName() + "] Exception parsing counters from HISTORY", e);
@@ -354,6 +360,8 @@ public class HadoopAPIClient {
         try {
             TaskCountersWrapper wrapper = restClient.getInfo(TaskCountersWrapper.class,
                     RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/counters", new String[]{jobId, taskId});
+            if (wrapper == null)
+                return null;
             return wrapper.jobTaskCounters;
         } catch (Exception e) {
             logger.debug("[" + getClass().getSimpleName() + "] Exception parsing counters from HISTORY", e);

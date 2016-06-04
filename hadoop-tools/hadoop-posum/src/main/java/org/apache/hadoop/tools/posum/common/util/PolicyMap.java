@@ -76,7 +76,9 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
         FIFO(FifoPolicy.class),
         DATA(DataOrientedPolicy.class),
         EDLS_SH(EDLSSharePolicy.class),
-        LOCF(LocalityFirstPolicy.class);
+        EDLS_PR(EDLSPriorityPolicy.class),
+        LOCF(LocalityFirstPolicy.class),
+        SRTF(ShortestRTFirstPolicy.class);
 
         Class<? extends PluginPolicy> implClass;
 

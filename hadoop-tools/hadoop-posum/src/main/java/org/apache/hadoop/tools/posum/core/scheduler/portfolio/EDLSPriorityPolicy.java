@@ -36,8 +36,7 @@ public class EDLSPriorityPolicy extends EDLSPolicy<EDLSPriorityPolicy> {
     protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf) {
         CapacitySchedulerConfiguration capacityConf = new CapacitySchedulerConfiguration(conf);
         capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, 0);
-        capacityConf.setCapacity("root.default", 0);
-        capacityConf.set("root.default.state", QueueState.STOPPED.getStateName());
+        capacityConf.setQueues("root", new String[]{DEADLINE_QUEUE, BATCH_QUEUE});
         capacityConf.setCapacity("root." + DEADLINE_QUEUE, 50);
         capacityConf.setCapacity("root." + BATCH_QUEUE, 50);
         return capacityConf;
@@ -67,22 +66,28 @@ public class EDLSPriorityPolicy extends EDLSPolicy<EDLSPriorityPolicy> {
     @Override
     protected void allocateContainersToNode(FiCaSchedulerNode node) {
         float die = random.nextFloat();
+        boolean refresh = false;
         if (die < deadlinePriority) {
-            if (priorityQueue.equals(DEADLINE_QUEUE))
-                return;
-            priorityQueue = DEADLINE_QUEUE;
+            if (!priorityQueue.equals(DEADLINE_QUEUE)) {
+                refresh = true;
+                priorityQueue = DEADLINE_QUEUE;
+            }
         } else {
-            if (priorityQueue.equals(BATCH_QUEUE))
-                return;
-            priorityQueue = BATCH_QUEUE;
+            if (!priorityQueue.equals(BATCH_QUEUE)) {
+                refresh = true;
+                priorityQueue = BATCH_QUEUE;
+            }
         }
-        // remove queues and add them again to refresh priority
-        ParentQueue root = readField("root");
-        for (Iterator<CSQueue> iter = root.getChildQueues().iterator(); iter.hasNext(); ) {
-            CSQueue current = iter.next();
-            iter.remove();
-            root.getChildQueues().add(current);
+        if (refresh) {
+            // remove queues and add them again to refresh priority
+            ParentQueue root = readField("root");
+            for (Iterator<CSQueue> iter = root.getChildQueues().iterator(); iter.hasNext(); ) {
+                CSQueue current = iter.next();
+                iter.remove();
+                root.getChildQueues().add(current);
+            }
         }
+        super.allocateContainersToNode(node);
     }
 }
 

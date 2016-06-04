@@ -123,6 +123,8 @@ public class ClusterInfoCollector {
                         dataStore.store(db, DataEntityType.TASK_HISTORY, task);
                     }
                     for (CountersProxy counters : taskCounters) {
+                        if (counters == null)
+                            continue;
                         dataStore.store(db, DataEntityType.COUNTER_HISTORY, counters);
                     }
                 } catch (Exception e) {
