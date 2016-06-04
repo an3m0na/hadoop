@@ -21,7 +21,9 @@ public class SRTFAppAttempt extends ExtCaAppAttempt {
     private String jobId;
     private Long totalWork;
     private Long remainingWork;
-    private Integer consumptionDeficit;
+    // FIXME: in the future should be resources, not just memory ints
+    private Integer resourceDeficit;
+    private Integer desiredResource;
 
     public SRTFAppAttempt(Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
         super(posumConf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
@@ -38,7 +40,8 @@ public class SRTFAppAttempt extends ExtCaAppAttempt {
                 "\n      SubmitTime: " + submitTime +
                 "\n      TotalWork: " + totalWork +
                 "\n      RemainingWork: " + remainingWork +
-                "\n      ConsumptionDeficit: " + consumptionDeficit;
+                "\n      DesiredResource: " + desiredResource +
+                "\n      ResourceDeficit: " + resourceDeficit;
     }
 
     @Override
@@ -51,7 +54,7 @@ public class SRTFAppAttempt extends ExtCaAppAttempt {
             setJobId(srtfApp.getJobId());
             setTotalWork(srtfApp.getTotalWork());
             setRemainingWork(srtfApp.getTotalWork());
-            setConsumptionDeficit(srtfApp.getConsumptionDeficit());
+            setResourceDeficit(srtfApp.getResourceDeficit());
         }
     }
 
@@ -79,12 +82,12 @@ public class SRTFAppAttempt extends ExtCaAppAttempt {
         this.remainingWork = remainingWork;
     }
 
-    public Integer getConsumptionDeficit() {
-        return consumptionDeficit;
+    public Integer getResourceDeficit() {
+        return resourceDeficit;
     }
 
-    public void setConsumptionDeficit(Integer consumptionDeficit) {
-        this.consumptionDeficit = consumptionDeficit;
+    public void setResourceDeficit(Integer resourceDeficit) {
+        this.resourceDeficit = resourceDeficit;
     }
 
     public Long getRemainingTime(Resource minAllocation) {
@@ -106,7 +109,8 @@ public class SRTFAppAttempt extends ExtCaAppAttempt {
             long timeIfAlone = totalWork / totalSlots;
             desired *= (elapsedTime + remainingTime) / timeIfAlone;
         }
-        consumptionDeficit = getCurrentConsumption().getMemory() - desired.intValue();
+        desiredResource = desired.intValue();
+        resourceDeficit = getCurrentConsumption().getMemory() - desiredResource;
     }
 
     public Long getTotalWork() {
@@ -116,4 +120,5 @@ public class SRTFAppAttempt extends ExtCaAppAttempt {
     public void setTotalWork(Long totalWork) {
         this.totalWork = totalWork;
     }
+
 }

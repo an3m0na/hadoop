@@ -118,7 +118,7 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
                 if (o1.getApplicationId().equals(o2.getApplicationId()))
                     return 0;
                 SRTFAppAttempt srtf1 = (SRTFAppAttempt) o1, srtf2 = (SRTFAppAttempt) o2;
-                return srtf1.getConsumptionDeficit() - srtf2.getConsumptionDeficit();
+                return srtf1.getResourceDeficit() - srtf2.getResourceDeficit();
             }
         };
     }
