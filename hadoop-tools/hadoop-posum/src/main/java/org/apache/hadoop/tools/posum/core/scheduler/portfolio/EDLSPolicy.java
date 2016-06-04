@@ -27,7 +27,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
 
     protected Log logger;
 
-    protected final String DEADLINE_QUEUE = "deadline", BATCH_QUEUE = "batch";
+    protected final String DEADLINE_QUEUE = "deadline", BATCH_QUEUE = "default";
     protected final String DEADLINE_FLEX_KEY = EDLSPolicy.class.getName() + ".deadline";
     private long lastCheck = 0;
     private long maxCheck;

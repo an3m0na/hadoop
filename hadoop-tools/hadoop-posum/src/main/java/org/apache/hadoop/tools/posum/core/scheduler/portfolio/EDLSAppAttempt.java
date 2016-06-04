@@ -23,8 +23,8 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
     }
 
     private Long submitTime;
-    private Long deadline = 0L;
-    private Long executionTime = 1L;
+    private Long deadline;
+    private Long executionTime;
     private Long minExecTime = 0L;
     private String jobId;
     private Type type;
@@ -47,7 +47,7 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
                 "\n      SubmitTime: " + submitTime +
                 "\n      Deadline: " + deadline +
                 "\n      Remaining: " + getRemaining() +
-                "\n      ExectionTiem: " + executionTime +
+                "\n      ExectionTime: " + executionTime +
                 "\n      Slowdown: " + getSlowdown();
     }
 
@@ -80,6 +80,8 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
     }
 
     public Long getRemaining() {
+        if (deadline == null)
+            return -1L;
         return deadline - System.currentTimeMillis();
     }
 

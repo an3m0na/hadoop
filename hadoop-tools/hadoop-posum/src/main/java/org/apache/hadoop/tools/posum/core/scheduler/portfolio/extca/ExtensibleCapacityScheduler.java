@@ -361,7 +361,7 @@ public abstract class ExtensibleCapacityScheduler<
                 updateApplicationPriorities(this.<CSQueue>readField("root"));
             }
         }
-        printQueues();
+        LOG.debug(printQueues());
         invokeMethod("allocateContainersToNode", new Class<?>[]{FiCaSchedulerNode.class}, node);
     }
 
@@ -430,7 +430,6 @@ public abstract class ExtensibleCapacityScheduler<
                 NodeUpdateSchedulerEvent nodeUpdatedEvent = (NodeUpdateSchedulerEvent) event;
                 RMNode node = nodeUpdatedEvent.getRMNode();
                 invokeMethod("nodeUpdate", new Class<?>[]{RMNode.class}, node);
-                LOG.trace(printQueues());
                 //FIXME uncomment if scheduleAsynchronously becomes available
 //                if (!scheduleAsynchronously) {
                 allocateContainersToNode(getNode(node.getNodeID()));

@@ -21,9 +21,7 @@ public class EDLSSharePolicy extends EDLSPolicy<EDLSSharePolicy> {
     protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf) {
         CapacitySchedulerConfiguration capacityConf = new CapacitySchedulerConfiguration(conf);
         capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, 0);
-        capacityConf.setQueues("root", new String[]{"default", "deadline", "batch"});
-        capacityConf.setCapacity("root.default", 0);
-        capacityConf.set("root.default.state", QueueState.STOPPED.getStateName());
+        capacityConf.setQueues("root", new String[]{DEADLINE_QUEUE, BATCH_QUEUE});
         capacityConf.setCapacity("root." + DEADLINE_QUEUE, 100 * deadlinePriority);
         capacityConf.setCapacity("root." + BATCH_QUEUE, 100 * (1 - deadlinePriority));
         return capacityConf;
