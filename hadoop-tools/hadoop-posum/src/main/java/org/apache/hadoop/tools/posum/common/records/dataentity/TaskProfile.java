@@ -1,6 +1,5 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity;
 
-import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 
 /**
@@ -26,19 +25,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 
      Long getFinishTime();
 
-//     Counters getCounters() {
-//        return counters;
-//    }
-//
-//     synchronized void setCounters(Counters counters) {
-//        this.counters = counters;
-//    }
-
      void setFinishTime(Long finishTime);
-
-     Long getExpectedInputBytes();
-
-     void setExpectedInputBytes(Long expectedInputBytes);
 
      void setType(String type);
 

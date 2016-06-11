@@ -215,8 +215,9 @@ public class ClusterInfoCollector {
 
                 if (avgNo > 0) {
                     job.setAvgTaskDuration(avgDuration / avgNo);
-                    if (mapNo > 0)
+                    if (mapNo > 0) {
                         job.setAvgMapDuration(mapDuration / mapNo);
+                    }
                     if (reduceNo > 0)
                         job.setAvgReduceDuration(reduceDuration / reduceNo);
                 }
@@ -315,7 +316,7 @@ public class ClusterInfoCollector {
         profile.setAppId(appId);
         profile.setName(conf.getJobName());
         profile.setUser(conf.getUser());
-        profile.setInputBytes(inputLength);
+        profile.setTotalInputBytes(inputLength);
         profile.setInputSplits(taskSplitMetaInfo.length);
         return profile;
     }

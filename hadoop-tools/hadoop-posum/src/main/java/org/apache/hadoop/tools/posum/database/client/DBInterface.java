@@ -20,6 +20,8 @@ public interface DBInterface {
 
     <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams);
 
+    <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams, int offset, int limit);
+
     /* Generic modifiers */
 
     <T extends GeneralDataEntity> String store(DataEntityType collection, T toInsert);
@@ -36,8 +38,6 @@ public interface DBInterface {
     /* Custom accessors */
 
     JobProfile getJobProfileForApp(String appId, String user);
-
-    List<JobProfile> getComparableProfiles(String user, int count);
 
     JobConfProxy getJobConf(String jobId);
 

@@ -254,7 +254,6 @@ public class HadoopAPIClient {
                 task.setStartTime(rawTask.get("startTime").asLong());
                 task.setFinishTime(rawTask.get("finishTime").asLong());
                 task.setReportedProgress(new Double(rawTask.get("progress").asDouble()).floatValue());
-                task.setExpectedInputBytes(job.getAvgSplitSize());
                 tasks.add(task);
             }
             return tasks;

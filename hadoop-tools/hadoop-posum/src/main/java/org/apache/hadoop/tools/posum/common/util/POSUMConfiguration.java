@@ -37,14 +37,14 @@ public class POSUMConfiguration {
     public static final String POSUM_MONITOR_HEARTBEAT_MS = MONITOR_PREFIX + "posum.heartbeat.ms";
     public static final int POSUM_MONITOR_HEARTBEAT_MS_DEFAULT = 2000;
 
-    public static final String BUFFER = PREDICTOR_PREFIX + "buffer";
-    public static final int BUFFER_DEFAULT = 2;
+    public static final String PREDICTION_BUFFER = PREDICTOR_PREFIX + "buffer";
+    public static final int PREDICTION_BUFFER_DEFAULT = 5;
 
     public static final String AVERAGE_JOB_DURATION = PREDICTOR_PREFIX + "avgJobDuration";
-    public static final int AVERAGE_JOB_DURATION_DEFAULT = 300000;
+    public static final long AVERAGE_JOB_DURATION_DEFAULT = 300000;
 
     public static final String AVERAGE_TASK_DURATION = PREDICTOR_PREFIX + "avgTaskDuration";
-    public static final int AVERAGE_TASK_DURATION_DEFAULT = 20000;
+    public static final int AVERAGE_TASK_DURATION_DEFAULT = 10000;
 
     public static final String PREDICTOR_CLASS = PREDICTOR_PREFIX + "class";
 

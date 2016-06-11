@@ -35,6 +35,12 @@ public interface JobProfile extends GeneralDataEntity {
 
     void setTotalReduceTasks(Integer totalReduceTasks);
 
+    Long getTotalInputBytes();
+
+    void setTotalInputBytes(Long inputBytes);
+
+    Long getInputBytes();
+
     void setInputBytes(Long inputBytes);
 
     Long getMapOutputBytes();
@@ -92,10 +98,6 @@ public interface JobProfile extends GeneralDataEntity {
     Integer getInputSplits();
 
     void setInputSplits(Integer inputSplits);
-
-    Long getInputBytes();
-
-    Long getAvgSplitSize();
 
     Long getAvgMapDuration();
 

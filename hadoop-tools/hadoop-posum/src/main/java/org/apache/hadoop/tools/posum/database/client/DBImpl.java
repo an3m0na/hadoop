@@ -41,6 +41,11 @@ public class DBImpl implements DBInterface {
     }
 
     @Override
+    public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams, int offset, int limit) {
+        return client.find(db, collection, queryParams, offset, limit);
+    }
+
+    @Override
     public <T extends GeneralDataEntity> String store(DataEntityType collection, T toInsert) {
         return client.store(db, collection, toInsert);
     }
@@ -70,11 +75,6 @@ public class DBImpl implements DBInterface {
     @Override
     public JobProfile getJobProfileForApp(String appId, String user) {
         return client.getJobProfileForApp(db, appId, user);
-    }
-
-    @Override
-    public List<JobProfile> getComparableProfiles(String user, int count) {
-        return client.getComparableProfiles(db, user, count);
     }
 
     @Override
