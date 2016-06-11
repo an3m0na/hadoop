@@ -7,32 +7,37 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 /**
  * Created by ane on 2/24/16.
  */
- public interface AppProfile extends GeneralDataEntity {
+public interface AppProfile extends GeneralDataEntity {
 
-     Long getStartTime();
+    Long getStartTime();
 
-     void setStartTime(Long startTime);
+    void setStartTime(Long startTime);
 
-     String getUser();
+    String getUser();
 
-     void setUser(String user);
-     String getName();
+    void setUser(String user);
 
-     void setName(String name);
+    String getName();
 
-     YarnApplicationState getState();
+    void setName(String name);
 
-     void setState(YarnApplicationState state);
+    YarnApplicationState getState();
 
-     FinalApplicationStatus getStatus();
+    void setState(YarnApplicationState state);
 
-     void setStatus(FinalApplicationStatus status);
+    FinalApplicationStatus getStatus();
 
-     Long getFinishTime();
+    void setStatus(FinalApplicationStatus status);
 
-     void setFinishTime(Long finishTime);
+    Long getFinishTime();
 
-     RestClient.TrackingUI getTrackingUI();
+    void setFinishTime(Long finishTime);
 
-     void setTrackingUI(RestClient.TrackingUI trackingUI);
+    RestClient.TrackingUI getTrackingUI();
+
+    void setTrackingUI(RestClient.TrackingUI trackingUI);
+
+    void setQueue(String queue);
+
+    String getQueue();
 }

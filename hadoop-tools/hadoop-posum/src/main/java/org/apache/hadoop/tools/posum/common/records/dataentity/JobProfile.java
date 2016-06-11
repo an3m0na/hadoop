@@ -2,10 +2,12 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 
+import java.util.Map;
+
 /**
  * Created by ane on 2/8/16.
  */
- public interface JobProfile extends GeneralDataEntity {
+public interface JobProfile extends GeneralDataEntity {
 
     //NOT INCLUDED:
 //    <failedReduceAttempts>0</failedReduceAttempts>
@@ -15,96 +17,113 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 //    <killedMapAttempts>0</killedMapAttempts>
 //    <successfulMapAttempts>30</successfulMapAttempts>
 
-     String getName();
+    String getName();
 
-     void setName(String name);
+    void setName(String name);
 
-     Long getStartTime();
+    Long getStartTime();
 
-     void setStartTime(Long startTime);
+    void setStartTime(Long startTime);
 
-     Long getFinishTime();
+    Long getFinishTime();
 
-     void setFinishTime(Long finishTime);
+    void setFinishTime(Long finishTime);
 
-     Integer getDuration();
+    Integer getDuration();
 
-     void setTotalMapTasks(Integer totalMapTasks);
+    void setTotalMapTasks(Integer totalMapTasks);
 
-     void setTotalReduceTasks(Integer totalReduceTasks);
+    void setTotalReduceTasks(Integer totalReduceTasks);
 
-     void setInputBytes(Long inputBytes);
+    void setInputBytes(Long inputBytes);
 
-     Long getOutputBytes();
+    Long getMapOutputBytes();
 
-     void setOutputBytes(Long outputBytes);
+    void setMapOutputBytes(Long bytes);
 
-     String getUser();
+    Long getReduceInputBytes();
 
-     void setUser(String user);
+    void setReduceInputBytes(Long bytes);
 
-     Long getSubmitTime();
+    Long getOutputBytes();
 
-     void setSubmitTime(Long submitTime);
+    void setOutputBytes(Long outputBytes);
 
-     Integer getTotalMapTasks();
+    String getUser();
 
-     Integer getTotalReduceTasks();
+    void setUser(String user);
 
-     String getAppId();
+    Long getSubmitTime();
 
-     void setAppId(String appId);
+    void setSubmitTime(Long submitTime);
 
-     JobState getState();
+    Integer getTotalMapTasks();
 
-     void setState(JobState state);
+    Integer getTotalReduceTasks();
 
-     Float getMapProgress();
+    String getAppId();
 
-     void setMapProgress(Float mapProgress);
+    void setAppId(String appId);
 
-     Float getReduceProgress();
+    JobState getState();
 
-     void setReduceProgress(Float reduceProgress);
+    void setState(JobState state);
 
-     Integer getCompletedMaps();
+    Float getMapProgress();
 
-     void setCompletedMaps(Integer completedMaps);
+    void setMapProgress(Float mapProgress);
 
-     Integer getCompletedReduces();
+    Float getReduceProgress();
 
-     void setCompletedReduces(Integer completedReduces);
+    void setReduceProgress(Float reduceProgress);
 
-     Boolean isUberized();
+    Integer getCompletedMaps();
 
-     void setUberized(Boolean uberized);
+    void setCompletedMaps(Integer completedMaps);
 
-     Integer getInputSplits();
+    Integer getCompletedReduces();
 
-     void setInputSplits(Integer inputSplits);
+    void setCompletedReduces(Integer completedReduces);
 
-     Long getInputBytes();
+    Boolean isUberized();
 
-     Long getAvgSplitSize();
+    void setUberized(Boolean uberized);
 
-     Integer getAvgMapDuration();
+    Integer getInputSplits();
 
-     void setAvgMapDuration(Integer avgMapDuration);
+    void setInputSplits(Integer inputSplits);
 
-     Integer getAvgReduceDuration();
+    Long getInputBytes();
 
-     void setAvgReduceDuration(Integer avgReduceDuration);
+    Long getAvgSplitSize();
 
-     Integer getAvgTaskDuration();
+    Long getAvgMapDuration();
 
-     void setAvgTaskDuration(Integer avgTaskDuration);
+    void setAvgMapDuration(Long avgMapDuration);
 
-     void setAvgShuffleDuration(Integer avgShuffleDuration);
+    Long getAvgReduceDuration();
 
-     Integer getAvgShuffleDuration();
+    void setAvgReduceDuration(Long avgReduceDuration);
 
-     void setAvgMergeDuration(Integer avgMergeDuration);
+    Long getAvgTaskDuration();
 
-     Integer getAvgMergeDuration();
+    void setAvgTaskDuration(Long avgTaskDuration);
 
+    void setAvgShuffleDuration(Long avgShuffleDuration);
+
+    Long getAvgShuffleDuration();
+
+    void setAvgMergeDuration(Long avgMergeDuration);
+
+    Long getAvgMergeDuration();
+
+    void setQueue(String queue);
+
+    String getQueue();
+
+    void addFlexField(String name, String value);
+
+    String getFlexField(String name);
+
+    Map<String, String> getFlexFields();
 }

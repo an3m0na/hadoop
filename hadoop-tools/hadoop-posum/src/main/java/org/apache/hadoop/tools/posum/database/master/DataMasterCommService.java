@@ -110,9 +110,9 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                     JobForAppPayload jobForAppPayload = (JobForAppPayload) request.getPayload();
                     JobProfile jobProfile =
                             dmContext.getDataStore().getJobProfileForApp(jobForAppPayload.getEntityDB(),
-                                    jobForAppPayload.getAppId());
+                                    jobForAppPayload.getAppId(), jobForAppPayload.getUser());
                     entityPayload = SingleEntityPayload.newInstance(DataEntityType.JOB, jobProfile);
-                    logger.debug("Returning profile" + jobProfile);
+                    logger.debug("Returning profile " + jobProfile);
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
                 default:
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY,

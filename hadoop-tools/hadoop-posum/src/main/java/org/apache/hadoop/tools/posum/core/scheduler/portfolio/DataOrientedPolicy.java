@@ -4,92 +4,75 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSQueue;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SQSchedulerNode;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq.SingleQueuePolicy;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaSchedulerNode;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.*;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 
 import java.util.*;
 
 /**
  * Created by ane on 1/22/16.
  */
-public class DataOrientedPolicy extends SingleQueuePolicy<
-        DOSAppAttempt,
-        SQSchedulerNode,
-        SQSQueue,
-        DataOrientedPolicy> {
+public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttempt, ExtCaSchedulerNode> {
 
     private static Log logger = LogFactory.getLog(DataOrientedPolicy.class);
 
     public DataOrientedPolicy() {
-        super(DOSAppAttempt.class, SQSchedulerNode.class, SQSQueue.class, DataOrientedPolicy.class);
+        super(DOSAppAttempt.class, ExtCaSchedulerNode.class, DataOrientedPolicy.class.getName(), true);
     }
 
     @Override
-    protected void validateConf(Configuration conf) {
-        super.validateConf(conf);
-        //TODO maybe add smth
+    protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf) {
+        CapacitySchedulerConfiguration capacityConf = new CapacitySchedulerConfiguration(conf);
+        capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, 0);
+        return capacityConf;
     }
 
     @Override
-    protected Comparator<SchedulerApplication<DOSAppAttempt>> initQueueComparator() {
-        return new Comparator<SchedulerApplication<DOSAppAttempt>>() {
+    public Comparator<FiCaSchedulerApp> getApplicationComparator() {
+        return new Comparator<FiCaSchedulerApp>() {
             @Override
-            public int compare(SchedulerApplication<DOSAppAttempt> a1, SchedulerApplication<DOSAppAttempt> a2) {
-                if (a1.getCurrentAppAttempt() == null)
-                    return 1;
-                if (a2.getCurrentAppAttempt() == null)
-                    return -1;
-                if (a1.getCurrentAppAttempt().getApplicationId()
-                        .equals(a2.getCurrentAppAttempt().getApplicationId()))
+            public int compare(FiCaSchedulerApp a1, FiCaSchedulerApp a2) {
+                if (a1.getApplicationId()
+                        .equals(a2.getApplicationId()))
                     return 0;
-                if (a1.getCurrentAppAttempt().getTotalInputSize() == null)
+                DOSAppAttempt dosa1 = (DOSAppAttempt) a1;
+                DOSAppAttempt dosa2 = (DOSAppAttempt) a2;
+                if (dosa1.getTotalInputSize() == null)
                     return 1;
-                if (a2.getCurrentAppAttempt().getTotalInputSize() == null) {
+                if (dosa2.getTotalInputSize() == null) {
                     return -1;
                 }
-                return new Long(a1.getCurrentAppAttempt().getTotalInputSize() -
-                        a2.getCurrentAppAttempt().getTotalInputSize()).intValue();
+                return new Long(dosa1.getTotalInputSize() -
+                        dosa2.getTotalInputSize()).intValue();
             }
         };
     }
 
     @Override
-    protected synchronized void initScheduler(Configuration conf) {
-        super.initScheduler(conf);
-        //TODO maybe add smth
-    }
-
-    @Override
-    protected void updateAppPriority(SchedulerApplication<DOSAppAttempt> app) {
+    protected void updateAppPriority(DOSAppAttempt app) {
         logger.debug("Updating app priority");
         try {
-            String appId = app.getCurrentAppAttempt().getApplicationId().toString();
-            if (app.getCurrentAppAttempt().getTotalInputSize() != null)
+            String appId = app.getApplicationId().toString();
+            if (app.getTotalInputSize() != null)
                 return;
             DBInterface db = commService.getDB();
             if (db != null) {
-                JobProfile job = db.getJobProfileForApp(appId);
+                JobProfile job = db.getJobProfileForApp(appId, app.getUser());
                 if (job != null) {
                     Long size = job.getInputBytes();
                     if (size != null && size > 0) {
                         logger.debug("Read input size for " + appId + ": " + size);
-                        app.getCurrentAppAttempt().setInputSplits(job.getInputSplits());
-                        app.getCurrentAppAttempt().setTotalInputSize(size);
+                        app.setInputSplits(job.getInputSplits());
+                        app.setTotalInputSize(size);
                     }
                 }
             }
         } catch (Exception e) {
-            logger.debug("Could not read input size for: " + app.getCurrentAppAttempt().getApplicationId(), e);
-        }
-    }
-
-    @Override
-    protected void assignFromQueue(SQSchedulerNode node) {
-        for (SchedulerApplication<DOSAppAttempt> app : orderedApps) {
-            assignToApp(node, app);
+            logger.debug("Could not update app priority for : " + app.getApplicationId(), e);
         }
     }
 }

@@ -4,8 +4,11 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.field.impl.pb.StringStringMapPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProtoOrBuilder;
+
+import java.util.Map;
 
 /**
  * Created by ane on 3/21/16.
@@ -18,9 +21,14 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
         builder = viaProto ? JobProfileProto.newBuilder(proto) : JobProfileProto.newBuilder();
     }
 
+    private Map<String, String> flexMap;
+
     @Override
     void buildProto() {
-        proto = builder.build();
+        maybeInitBuilder();
+        StringStringMapPayloadPBImpl flexFields = new StringStringMapPayloadPBImpl();
+        flexFields.setEntries(flexMap);
+        proto = builder.setFlexFields(flexFields.getProto()).build();
     }
 
     @Override
@@ -121,6 +129,31 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
             builder.setInputBytes(inputBytes);
     }
 
+    @Override
+    public Long getMapOutputBytes() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getMapOutputBytes();
+    }
+
+    @Override
+    public void setMapOutputBytes(Long bytes) {
+        maybeInitBuilder();
+        if (bytes != null)
+            builder.setMapOutputBytes(bytes);
+    }
+
+    @Override
+    public Long getReduceInputBytes() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getReduceInputBytes();
+    }
+
+    @Override
+    public void setReduceInputBytes(Long bytes) {
+        maybeInitBuilder();
+        if (bytes != null)
+            builder.setReduceInputBytes(bytes);
+    }
     @Override
     public Long getOutputBytes() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
@@ -280,67 +313,100 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
-    public Integer getAvgMapDuration() {
+    public Long getAvgMapDuration() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getAvgMapDuration();
     }
 
     @Override
-    public void setAvgMapDuration(Integer avgMapDuration) {
+    public void setAvgMapDuration(Long avgMapDuration) {
         maybeInitBuilder();
         if (avgMapDuration != null)
             builder.setAvgMapDuration(avgMapDuration);
     }
 
     @Override
-    public Integer getAvgReduceDuration() {
+    public Long getAvgReduceDuration() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getAvgReduceDuration();
     }
 
     @Override
-    public void setAvgReduceDuration(Integer avgReduceDuration) {
+    public void setAvgReduceDuration(Long avgReduceDuration) {
         maybeInitBuilder();
         if (avgReduceDuration != null)
             builder.setAvgReduceDuration(avgReduceDuration);
     }
 
     @Override
-    public Integer getAvgTaskDuration() {
+    public Long getAvgTaskDuration() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getAvgTaskDuration();
     }
 
     @Override
-    public void setAvgTaskDuration(Integer avgTaskDuration) {
+    public void setAvgTaskDuration(Long avgTaskDuration) {
         maybeInitBuilder();
         if (avgTaskDuration != null)
             builder.setAvgTaskDuration(avgTaskDuration);
     }
 
     @Override
-    public void setAvgShuffleDuration(Integer avgShuffleDuration) {
+    public void setAvgShuffleDuration(Long avgShuffleDuration) {
         maybeInitBuilder();
         if (avgShuffleDuration != null)
             builder.setAvgShuffleDuration(avgShuffleDuration);
     }
 
     @Override
-    public Integer getAvgShuffleDuration() {
+    public Long getAvgShuffleDuration() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getAvgShuffleDuration();
     }
 
     @Override
-    public void setAvgMergeDuration(Integer avgMergeDuration) {
+    public void setAvgMergeDuration(Long avgMergeDuration) {
         maybeInitBuilder();
         if (avgMergeDuration != null)
             builder.setAvgMergeDuration(avgMergeDuration);
     }
 
     @Override
-    public Integer getAvgMergeDuration() {
+    public Long getAvgMergeDuration() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getAvgMergeDuration();
+    }
+
+    @Override
+    public void setQueue(String queue) {
+        maybeInitBuilder();
+        if (queue != null) {
+            builder.setQueue(queue);
+        }
+    }
+
+    @Override
+    public String getQueue() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getQueue();
+    }
+
+    @Override
+    public void addFlexField(String name, String value) {
+        getFlexFields().put(name, value);
+    }
+
+    @Override
+    public String getFlexField(String name) {
+        return getFlexFields().get(name);
+    }
+
+    @Override
+    public Map<String, String> getFlexFields() {
+        if (flexMap == null) {
+            JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+            flexMap = new StringStringMapPayloadPBImpl(p.getFlexFields()).getEntries();
+        }
+        return flexMap;
     }
 }

@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.field;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
@@ -8,9 +9,10 @@ import org.apache.hadoop.yarn.util.Records;
  */
 public abstract class JobForAppPayload {
 
-    public static JobForAppPayload newInstance(DataEntityDB db, String appId) {
+    public static JobForAppPayload newInstance(DataEntityDB db, String appId, String user) {
         JobForAppPayload request = Records.newRecord(JobForAppPayload.class);
         request.setEntityDB(db);
+        request.setUser(user);
         request.setAppId(appId);
         return request;
     }
@@ -23,5 +25,8 @@ public abstract class JobForAppPayload {
 
     public abstract void setAppId(String id);
 
+    public abstract String getUser();
+
+    public abstract void setUser(String user);
 
 }

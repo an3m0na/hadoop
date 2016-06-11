@@ -34,7 +34,7 @@ public class Simulation extends Thread {
     public void run() {
         //TODO actual code
         try {
-            sleep(3000);
+            sleep(5000);
             simulator.simulationDone(SimulationResult.newInstance(policy,
                     CompoundScore.newInstance(Math.random() * 10, 0.0, 0.0)));
         } catch (InterruptedException e) {
