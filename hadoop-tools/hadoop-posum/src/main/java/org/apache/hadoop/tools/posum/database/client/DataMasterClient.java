@@ -5,7 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.field.JobForAppPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
@@ -14,18 +14,13 @@ import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
-import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
 import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -98,12 +93,12 @@ public class DataMasterClient extends AbstractService {
         }
     }
 
-    public JobProfile getJobProfileForApp(DataEntityDB db, String appId) {
+    public JobProfile getJobProfileForApp(DataEntityDB db, String appId, String user) {
         logger.debug("Getting job profile for app " + appId);
         try {
             SingleEntityPayload payload = Utils.handleError("getJobProfileForApp",
                     dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.JOB_FOR_APP,
-                            JobForAppPayload.newInstance(db, appId)))
+                            JobForAppPayload.newInstance(db, appId, user)))
             ).getPayload();
             if (payload != null)
                 return (JobProfile) payload.getEntity();
@@ -155,5 +150,9 @@ public class DataMasterClient extends AbstractService {
 
     public DBInterface bindTo(DataEntityDB db){
         return new DBImpl(db, this);
+    }
+
+    public JobConfProxy getJobConf(DataEntityDB db, String jobId) {
+        return findById(db, DataEntityType.JOB_CONF, jobId);
     }
 }

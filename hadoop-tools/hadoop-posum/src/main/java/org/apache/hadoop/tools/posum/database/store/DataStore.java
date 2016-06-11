@@ -3,11 +3,13 @@ package org.apache.hadoop.tools.posum.database.store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
+import org.apache.hadoop.yarn.util.Records;
 import org.mongojack.DBQuery;
 
 import java.util.List;
@@ -37,6 +39,10 @@ public class DataStore {
                 DataEntityType.APP_HISTORY,
                 DataEntityType.JOB,
                 DataEntityType.JOB_HISTORY,
+                DataEntityType.JOB_CONF,
+                DataEntityType.JOB_CONF_HISTORY,
+                DataEntityType.COUNTER,
+                DataEntityType.COUNTER_HISTORY,
                 DataEntityType.TASK,
                 DataEntityType.TASK_HISTORY,
                 DataEntityType.HISTORY);
@@ -92,22 +98,18 @@ public class DataStore {
         }
     }
 
-    public JobProfile getJobProfileForApp(DataEntityDB db, String appId) {
-        locks.get(db.getId()).readLock().lock();
+    public JobProfile getJobProfileForApp(final DataEntityDB db, String appId, String user) {
         List<JobProfile> profiles;
-        try {
-            profiles = conn.findObjects(db, DataEntityType.JOB, "appId", appId);
-        } finally {
-            locks.get(db.getId()).readLock().unlock();
-        }
+        profiles = find(db, DataEntityType.JOB, "appId", appId);
         if (profiles.size() == 1)
             return profiles.get(0);
         if (profiles.size() > 1)
             throw new YarnRuntimeException("Found too many profiles in database for app " + appId);
 
-        //if not found, force the reading of the configuration
+        // if not found, force the reading of the configuration
+        // we need this because the information needs to be in the database for certain schedulers
         try {
-            return ClusterInfoCollector.getSubmittedJobInfo(conf, appId);
+            return ClusterInfoCollector.getAndStoreSubmittedJobInfo(conf, appId, user, this, db);
         } catch (Exception e) {
             logger.debug("Could not retrieve job info for app " + appId, e);
         }

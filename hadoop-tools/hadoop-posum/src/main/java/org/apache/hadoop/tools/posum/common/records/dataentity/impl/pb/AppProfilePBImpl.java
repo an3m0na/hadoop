@@ -150,4 +150,18 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
         else
             builder.setTrackingUI(AppProfileProto.AppTrackingUIProto.UI_NULL);
     }
+
+    @Override
+    public void setQueue(String queue) {
+        maybeInitBuilder();
+        if(queue != null) {
+            builder.setQueue(queue);
+        }
+    }
+
+    @Override
+    public String getQueue() {
+        AppProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getQueue();
+    }
 }

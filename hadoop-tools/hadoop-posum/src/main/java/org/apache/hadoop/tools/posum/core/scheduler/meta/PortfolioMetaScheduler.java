@@ -55,7 +55,7 @@ public class PortfolioMetaScheduler extends
     private PolicyMap policies;
 
     private PolicyMap.PolicyInfo currentPolicyInfo;
-    private PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode, ?> currentPolicy;
+    private PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode> currentPolicy;
     private ReadWriteLock lock = new ReentrantReadWriteLock();
     private Lock readLock = lock.readLock();
     private Lock writeLock = lock.writeLock();
@@ -105,6 +105,7 @@ public class PortfolioMetaScheduler extends
                 if (oldPolicy != null) {
                     currentPolicy.transferStateFromPolicy(oldPolicy);
                     if (isInState(STATE.STARTED)) {
+                        oldPolicy.stop();
                         logger.debug("Starting current policy");
                         currentPolicy.start();
                     }
@@ -208,7 +209,8 @@ public class PortfolioMetaScheduler extends
         } finally {
             readLock.unlock();
         }
-        webApp.stop();
+        if (webApp != null)
+            webApp.stop();
     }
 
     @Override

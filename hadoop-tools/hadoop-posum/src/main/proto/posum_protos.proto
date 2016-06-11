@@ -24,10 +24,14 @@ enum EntityTypeProto {
     TYPE_APP = 0;
     TYPE_JOB = 1;
     TYPE_TASK = 2;
-    TYPE_APP_HISTORY = 3;
-    TYPE_JOB_HISTORY = 4;
-    TYPE_TASK_HISTORY = 5;
-    TYPE_HISTORY = 6;
+    TYPE_JOB_CONF = 3;
+    TYPE_COUNTER = 4;
+    TYPE_APP_HISTORY = 5;
+    TYPE_JOB_HISTORY = 6;
+    TYPE_TASK_HISTORY = 7;
+    TYPE_JOB_CONF_HISTORY = 8;
+    TYPE_COUNTER_HISTORY = 9;
+    TYPE_HISTORY = 10;
 }
 
 message AppProfileProto {
@@ -36,9 +40,10 @@ message AppProfileProto {
     optional int64 finishTime = 3;
     optional string user = 4;
     optional string name = 5;
-    optional AppStateProto state = 6;
-    optional AppStatusProto status = 7;
-    optional AppTrackingUIProto trackingUI = 8;
+    optional string queue = 6;
+    optional AppStateProto state = 7;
+    optional AppStatusProto status = 8;
+    optional AppTrackingUIProto trackingUI = 9;
 
     enum AppStateProto {
         STATE_NULL = 0;
@@ -73,25 +78,29 @@ message JobProfileProto {
     optional string name = 2;
     optional string appId = 3;
     optional string user = 4;
-    optional int32 totalMapTasks = 5;
-    optional int32 totalReduceTasks = 6;
-    optional int32 inputSplits = 7; // only from conf
-    optional int64 inputBytes = 8; // only from conf
-    optional int64 outputBytes = 9; // only in history
-    optional int64 submitTime = 10; // only in history
-    optional int64 startTime = 11;
-    optional int64 finishTime = 12;
-    optional JobStateProto state = 13;
-    optional float mapProgress = 14;
-    optional float reduceProgress = 15;
-    optional int32 completedMaps = 16;
-    optional int32 completedReduces = 17;
-    optional bool uberized = 18;
-    optional int32 avgMapDuration = 19;
-    optional int32 avgReduceDuration = 20;
-    optional int32 avgTaskDuration = 21;
-    optional int32 avgShuffleDuration = 22;
-    optional int32 avgMergeDuration = 23;
+    optional string queue = 5;
+    optional int32 totalMapTasks = 6;
+    optional int32 totalReduceTasks = 7;
+    optional int32 inputSplits = 8; // only from conf
+    optional int64 inputBytes = 9; // only from conf
+    optional int64 mapOutputBytes = 10;
+    optional int64 reduceInputBytes = 11;
+    optional int64 outputBytes = 12;
+    optional int64 submitTime = 13;
+    optional int64 startTime = 14;
+    optional int64 finishTime = 15;
+    optional JobStateProto state = 16;
+    optional float mapProgress = 17;
+    optional float reduceProgress = 18;
+    optional int32 completedMaps = 19;
+    optional int32 completedReduces = 20;
+    optional bool uberized = 21;
+    optional int64 avgMapDuration = 22;
+    optional int64 avgReduceDuration = 23;
+    optional int64 avgTaskDuration = 24;
+    optional int64 avgShuffleDuration = 25;
+    optional int64 avgMergeDuration = 26;
+    optional StringStringMapPayloadProto flexFields = 27;
 
     enum JobStateProto {
         STATE_NULL = 0;
@@ -103,6 +112,12 @@ message JobProfileProto {
         STATE_KILLED = 6;
         STATE_ERROR = 7;
     }
+}
+
+message JobConfProxyProto {
+    required string id = 1;
+    optional StringStringMapPayloadProto properties = 2;
+    optional string confPath = 3;
 }
 
 message TaskProfileProto {
@@ -149,15 +164,16 @@ message EntityPropertyProto {
     }
 }
 
-message EntityByIdPayloadProto {
-    required EntityDBProto entityDB = 1;
-    required EntityTypeProto entityType = 2;
-    required string id = 3;
-}
-
 message JobForAppPayloadProto {
     required EntityDBProto entityDB = 1;
-    required string appId = 2;
+    optional string user = 2;
+    required string appId = 3;
+}
+
+message EntityByIdPayloadProto {
+    required EntityDBProto entityDB = 1;
+    optional EntityTypeProto entityType = 2;
+    required string id = 3;
 }
 
 message SingleEntityPayloadProto {
@@ -233,6 +249,23 @@ message RegistrationRequestProto {
     }
 }
 
-message StringStringMapPayloadProto{
+message StringStringMapPayloadProto {
     repeated StringStringMapProto entries = 1;
+}
+
+message CountersProxyProto {
+    required string id = 1;
+    repeated CounterGroupInfoPayloadProto groups = 2;
+}
+
+message CounterGroupInfoPayloadProto {
+    required string name = 1;
+    repeated CounterInfoPayloadProto counters = 2;
+}
+
+message CounterInfoPayloadProto {
+    required string name = 1;
+    optional int64 total = 2;
+    optional int64 map = 3;
+    optional int64 reduce = 4;
 }

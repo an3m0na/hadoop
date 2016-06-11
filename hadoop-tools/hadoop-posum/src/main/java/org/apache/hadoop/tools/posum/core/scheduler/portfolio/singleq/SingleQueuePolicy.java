@@ -4,7 +4,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
+import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -43,7 +45,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
         N extends SQSchedulerNode,
         Q extends SQSQueue,
         S extends SingleQueuePolicy<A, N, Q, S>>
-        extends PluginPolicy<A, N, S> {
+        extends PluginPolicy<A, N> {
 
     private static Log LOG = LogFactory.getLog(SingleQueuePolicy.class);
 
@@ -61,7 +63,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     protected ConcurrentSkipListSet<SchedulerApplication<A>> orderedApps;
 
     public SingleQueuePolicy(Class<A> aClass, Class<N> nClass, Class<Q> qClass, Class<S> sClass) {
-        super(aClass, nClass, sClass);
+        super(aClass, nClass, sClass.getName());
         this.qClass = qClass;
     }
 
@@ -868,7 +870,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
         printQueue();
     }
 
-    @Override
+
     public void assumeState(PluginPolicyState state) {
         this.usedResource = state.usedResource;
         this.clusterResource = state.clusterResource;
@@ -897,10 +899,22 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
         printQueue();
     }
 
-    @Override
     public PluginPolicyState exportState() {
         return new PluginPolicyState(this.usedResource, this.queue, this.nodes, this.applications, this.clusterResource, getMaximumResourceCapability(), this.usePortForNodeName);
     }
 
+    public void transferStateFromPolicy(SingleQueuePolicy other) {
+        assumeState(other.exportState());
+    }
+
+    @Override
+    public void transferStateFromPolicy(PluginPolicy other) {
+        if (PluginPolicy.class.isAssignableFrom(SingleQueuePolicy.class)) {
+            transferStateFromPolicy((SingleQueuePolicy) other);
+            return;
+        }
+        //TODO
+        throw new POSUMException("Cannot transfer state from unknown policy " + other.getClass().getName());
+    }
 }
 

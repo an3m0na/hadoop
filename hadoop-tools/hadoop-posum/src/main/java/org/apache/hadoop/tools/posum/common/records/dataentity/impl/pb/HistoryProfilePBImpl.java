@@ -9,6 +9,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.HistoryProfile;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.HistoryProfileProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.HistoryProfileProtoOrBuilder;
+import org.bson.types.ObjectId;
 
 /**
  * Created by ane on 3/21/16.
@@ -23,7 +24,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
     public HistoryProfilePBImpl(DataEntityType type, T original) {
         super();
         long timestamp = System.currentTimeMillis();
-        setId(timestamp + "_" + original.getId());
+        setId(ObjectId.get().toHexString());
         setType(type);
         setTimestamp(timestamp);
         setOriginal(original);

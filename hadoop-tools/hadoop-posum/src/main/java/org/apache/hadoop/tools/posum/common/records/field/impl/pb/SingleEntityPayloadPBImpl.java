@@ -87,7 +87,7 @@ public class SingleEntityPayloadPBImpl extends SingleEntityPayload {
     @Override
     public GeneralDataEntity getEntity() {
         SingleEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        if (p.getEntity() != null) {
+        if (p.hasEntity()) {
             try {
                 Class eClass = getEntityType().getMappedClass();
                 return ((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(p.getEntity());
