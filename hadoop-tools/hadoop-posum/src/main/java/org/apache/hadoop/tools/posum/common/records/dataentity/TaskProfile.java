@@ -5,51 +5,59 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 /**
  * Created by ane on 2/8/16.
  */
- public interface TaskProfile extends GeneralDataEntity {
+public interface TaskProfile extends GeneralDataEntity {
 
-     Long getInputBytes();
+    Long getInputBytes();
 
-     void setInputBytes(Long inputBytes);
+    void setInputBytes(Long inputBytes);
 
-     Long getOutputBytes();
+    Long getOutputBytes();
 
-     void setOutputBytes(Long outputBytes);
+    void setOutputBytes(Long outputBytes);
 
-     Integer getDuration();
+    Integer getDuration();
 
-     TaskType getType();
+    TaskType getType();
 
-     Long getStartTime();
+    Long getStartTime();
 
-     void setStartTime(Long startTime);
+    void setStartTime(Long startTime);
 
-     Long getFinishTime();
+    Long getFinishTime();
 
-     void setFinishTime(Long finishTime);
+    void setFinishTime(Long finishTime);
 
-     void setType(String type);
+    void setType(String type);
 
-     void setReportedProgress(Float reportedProgress);
+    void setReportedProgress(Float reportedProgress);
 
-     Long getInputRecords();
+    Long getInputRecords();
 
-     void setInputRecords(Long inputRecords);
+    void setInputRecords(Long inputRecords);
 
-     Long getOutputRecords();
+    Long getOutputRecords();
 
-     void setOutputRecords(Long outputRecords);
+    void setOutputRecords(Long outputRecords);
 
-     String getAppId();
+    String getAppId();
 
-     void setAppId(String appId);
+    void setAppId(String appId);
 
-     String getJobId();
+    String getJobId();
 
-     void setJobId(String jobId);
+    void setJobId(String jobId);
 
-     Float getReportedProgress();
+    Float getReportedProgress();
 
-     void setSuccessfulAttempt(String successfulAttempt);
+    void setSuccessfulAttempt(String successfulAttempt);
 
-     String getSuccessfulAttempt();
+    String getSuccessfulAttempt();
+
+    Long getShuffleTime();
+
+    void setShuffleTime(Long time);
+
+    Long getMergeTime();
+
+    void setMergeTime(Long time);
 }

@@ -200,4 +200,30 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getSuccessfulAttempt();
     }
+
+    @Override
+    public Long getShuffleTime() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getShuffleTime();
+    }
+
+    @Override
+    public void setShuffleTime(Long time) {
+        maybeInitBuilder();
+        if (time != null)
+            builder.setShuffleTime(time);
+    }
+
+    @Override
+    public Long getMergeTime() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getMergeTime();
+    }
+
+    @Override
+    public void setMergeTime(Long time) {
+        maybeInitBuilder();
+        if (time != null)
+            builder.setMergeTime(time);
+    }
 }
