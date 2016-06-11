@@ -12,10 +12,10 @@ import java.util.List;
 public abstract class MultiEntityPayload {
 
     public static MultiEntityPayload newInstance(DataEntityType type, List<GeneralDataEntity> entities) {
-        MultiEntityPayload response = Records.newRecord(MultiEntityPayload.class);
-        response.setEntityType(type);
-        response.setEntities(entities);
-        return response;
+        MultiEntityPayload payload = Records.newRecord(MultiEntityPayload.class);
+        payload.setEntityType(type);
+        payload.setEntities(entities);
+        return payload;
     }
 
     public abstract DataEntityType getEntityType();

@@ -17,6 +17,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.Capacity
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -89,12 +90,14 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
             // first initialization
             JobConfProxy confProxy = db.getJobConf(job.getId());
             String deadlineString = confProxy.getEntry(POSUMConfiguration.APP_DEADLINE);
+            Map<String, String> newFields = new HashMap<>(2);
             if (deadlineString != null && deadlineString.length() > 0) {
-                flexFields.put(DEADLINE_FLEX_KEY, deadlineString);
-                flexFields.put(EDLSAppAttempt.Type.class.getName(), EDLSAppAttempt.Type.DC.name());
+                newFields.put(DEADLINE_FLEX_KEY, deadlineString);
+                newFields.put(EDLSAppAttempt.Type.class.getName(), EDLSAppAttempt.Type.DC.name());
             } else {
-                flexFields.put(EDLSAppAttempt.Type.class.getName(), EDLSAppAttempt.Type.BC.name());
+                newFields.put(EDLSAppAttempt.Type.class.getName(), EDLSAppAttempt.Type.BC.name());
             }
+            commService.getDB().saveFlexFields(job.getId(), newFields);
         }
         return job;
     }

@@ -117,6 +117,20 @@ public class DataStore {
 
     }
 
+    public void saveFlexFields(final DataEntityDB db, String jobId, Map<String, String> newFields) {
+        locks.get(db.getId()).writeLock().lock();
+        try {
+            JobProfile job = findById(db, DataEntityType.JOB, jobId);
+            if (job == null)
+                throw new YarnRuntimeException("Flex-fields for job " + jobId + " were not found");
+
+            job.getFlexFields().putAll(newFields);
+            store(db, DataEntityType.JOB, job);
+        } finally {
+            locks.get(db.getId()).writeLock().unlock();
+        }
+    }
+
     public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert) {
         locks.get(db.getId()).writeLock().lock();
         try {

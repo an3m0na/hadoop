@@ -8,10 +8,10 @@ import org.apache.hadoop.yarn.util.Records;
 public abstract class SimulationResult implements Comparable<SimulationResult> {
 
     public static SimulationResult newInstance(String policyName, CompoundScore score) {
-        SimulationResult response = Records.newRecord(SimulationResult.class);
-        response.setPolicyName(policyName);
-        response.setScore(score);
-        return response;
+        SimulationResult result = Records.newRecord(SimulationResult.class);
+        result.setPolicyName(policyName);
+        result.setScore(score);
+        return result;
     }
 
     public abstract String getPolicyName();

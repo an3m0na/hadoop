@@ -6,17 +6,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.common.records.field.JobForAppPayload;
+import org.apache.hadoop.tools.posum.common.records.field.*;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
-import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
@@ -108,6 +105,11 @@ public class DataMasterClient extends AbstractService {
         }
     }
 
+    public void saveFlexFields(DataEntityDB db, String jobId, Map<String, String> newFields) {
+        sendSimpleRequest("saveFlexFields", SimpleRequest.newInstance(SimpleRequest.Type.SAVE_FLEX_FIELDS,
+                SaveFlexFieldsPayload.newInstance(db, jobId, newFields)));
+    }
+
     public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert) {
         //TODO
         return null;
@@ -148,7 +150,7 @@ public class DataMasterClient extends AbstractService {
         logger.info("Successfully connected to Data Master");
     }
 
-    public DBInterface bindTo(DataEntityDB db){
+    public DBInterface bindTo(DataEntityDB db) {
         return new DBImpl(db, this);
     }
 

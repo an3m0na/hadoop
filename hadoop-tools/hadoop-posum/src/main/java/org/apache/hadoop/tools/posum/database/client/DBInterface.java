@@ -40,5 +40,7 @@ public interface DBInterface {
     List<JobProfile> getComparableProfiles(String user, int count);
 
     JobConfProxy getJobConf(String jobId);
+
+    void saveFlexFields(String jobId, Map<String, String> newFields);
 }
 
