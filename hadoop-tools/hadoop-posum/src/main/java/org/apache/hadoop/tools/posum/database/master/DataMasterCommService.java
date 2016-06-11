@@ -9,13 +9,10 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
-import org.apache.hadoop.tools.posum.common.records.field.JobForAppPayload;
+import org.apache.hadoop.tools.posum.common.records.field.*;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
-import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
@@ -152,6 +149,14 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                 case LOG_POLICY_CHANGE:
                     dmContext.getDataStore().storeLogEntry(
                             new LogEntry<>(LogEntry.Type.POLICY_CHANGE, request.getPayload()));
+                    break;
+                case SAVE_FLEX_FIELDS:
+                    SaveFlexFieldsPayload saveFlexFieldsPayload = (SaveFlexFieldsPayload) request.getPayload();
+                    dmContext.getDataStore().saveFlexFields(
+                            saveFlexFieldsPayload.getEntityDB(),
+                            saveFlexFieldsPayload.getJobId(),
+                            saveFlexFieldsPayload.getNewFields()
+                    );
                     break;
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());

@@ -10,11 +10,11 @@ import org.apache.hadoop.yarn.util.Records;
 public abstract class EntityByIdPayload {
 
     public static EntityByIdPayload newInstance(DataEntityDB db, DataEntityType type, String id) {
-        EntityByIdPayload request = Records.newRecord(EntityByIdPayload.class);
-        request.setEntityDB(db);
-        request.setEntityType(type);
-        request.setId(id);
-        return request;
+        EntityByIdPayload payload = Records.newRecord(EntityByIdPayload.class);
+        payload.setEntityDB(db);
+        payload.setEntityType(type);
+        payload.setId(id);
+        return payload;
     }
 
     public abstract DataEntityDB getEntityDB();

@@ -10,9 +10,9 @@ import java.util.Map;
 public abstract class StringStringMapPayload {
 
     public static StringStringMapPayload newInstance(Map<String, String> map) {
-        StringStringMapPayload property = Records.newRecord(StringStringMapPayload.class);
-        property.setEntries(map);
-        return property;
+        StringStringMapPayload payload = Records.newRecord(StringStringMapPayload.class);
+        payload.setEntries(map);
+        return payload;
     }
 
     public abstract void addEntry(String key, String value);

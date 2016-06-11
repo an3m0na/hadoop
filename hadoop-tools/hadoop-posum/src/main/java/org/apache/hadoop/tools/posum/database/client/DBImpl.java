@@ -81,4 +81,9 @@ public class DBImpl implements DBInterface {
     public JobConfProxy getJobConf(String jobId) {
         return client.getJobConf(db, jobId);
     }
+
+    @Override
+    public void saveFlexFields(String jobId, Map<String, String> newFields) {
+        client.saveFlexFields(db, jobId, newFields);
+    }
 }

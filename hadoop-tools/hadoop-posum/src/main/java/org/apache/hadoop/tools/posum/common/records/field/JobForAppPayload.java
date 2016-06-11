@@ -10,11 +10,11 @@ import org.apache.hadoop.yarn.util.Records;
 public abstract class JobForAppPayload {
 
     public static JobForAppPayload newInstance(DataEntityDB db, String appId, String user) {
-        JobForAppPayload request = Records.newRecord(JobForAppPayload.class);
-        request.setEntityDB(db);
-        request.setUser(user);
-        request.setAppId(appId);
-        return request;
+        JobForAppPayload payload = Records.newRecord(JobForAppPayload.class);
+        payload.setEntityDB(db);
+        payload.setUser(user);
+        payload.setAppId(appId);
+        return payload;
     }
 
     public abstract DataEntityDB getEntityDB();

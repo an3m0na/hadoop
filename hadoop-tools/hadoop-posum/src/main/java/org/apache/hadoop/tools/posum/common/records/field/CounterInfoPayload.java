@@ -12,12 +12,12 @@ import org.apache.hadoop.yarn.util.Records;
 public abstract class CounterInfoPayload {
 
     public static CounterInfoPayload newInstance(String name, long total, long map, long reduce) {
-        CounterInfoPayload ret = Records.newRecord(CounterInfoPayload.class);
-        ret.setName(name);
-        ret.setTotalCounterValue(total);
-        ret.setMapCounterValue(map);
-        ret.setReduceCounterValue(reduce);
-        return ret;
+        CounterInfoPayload payload = Records.newRecord(CounterInfoPayload.class);
+        payload.setName(name);
+        payload.setTotalCounterValue(total);
+        payload.setMapCounterValue(map);
+        payload.setReduceCounterValue(reduce);
+        return payload;
     }
 
     public abstract long getReduceCounterValue();

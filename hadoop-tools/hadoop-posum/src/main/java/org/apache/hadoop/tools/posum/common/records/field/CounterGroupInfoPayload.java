@@ -14,10 +14,10 @@ import java.util.List;
 public abstract class CounterGroupInfoPayload {
 
     public static CounterGroupInfoPayload newInstance(String name, List<CounterInfoPayload> counter) {
-        CounterGroupInfoPayload ret = Records.newRecord(CounterGroupInfoPayload.class);
-        ret.setCounterGroupName(name);
-        ret.setCounter(counter);
-        return ret;
+        CounterGroupInfoPayload payload = Records.newRecord(CounterGroupInfoPayload.class);
+        payload.setCounterGroupName(name);
+        payload.setCounter(counter);
+        return payload;
     }
 
     public abstract List<CounterInfoPayload> getCounter();

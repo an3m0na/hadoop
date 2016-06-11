@@ -164,6 +164,12 @@ message EntityPropertyProto {
     }
 }
 
+message SaveFlexFieldsPayloadProto {
+    required EntityDBProto entityDB = 1;
+    required string jobId = 2;
+    required StringStringMapPayloadProto newFields = 3;
+}
+
 message JobForAppPayloadProto {
     required EntityDBProto entityDB = 1;
     optional string user = 2;
@@ -201,9 +207,10 @@ message SimpleRequestProto {
         REQ_CHANGE_POLICY = 1;
         REQ_ENTITY_BY_ID = 2;
         REQ_JOB_FOR_APP = 3;
-        REQ_START = 4;
-        REQ_LOG_POLICY_CHANGE = 5;
-        REQ_SYSTEM_ADDRESSES = 6;
+        REQ_SAVE_FLEX_FIELDS = 4;
+        REQ_START = 5;
+        REQ_LOG_POLICY_CHANGE = 6;
+        REQ_SYSTEM_ADDRESSES = 7;
     }
 }
 

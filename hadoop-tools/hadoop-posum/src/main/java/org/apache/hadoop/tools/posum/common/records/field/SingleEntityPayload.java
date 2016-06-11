@@ -10,10 +10,10 @@ import org.apache.hadoop.yarn.util.Records;
 public abstract class SingleEntityPayload {
 
     public static SingleEntityPayload newInstance(DataEntityType type, GeneralDataEntity object) {
-        SingleEntityPayload response = Records.newRecord(SingleEntityPayload.class);
-        response.setEntityType(type);
-        response.setEntity(object);
-        return response;
+        SingleEntityPayload payload = Records.newRecord(SingleEntityPayload.class);
+        payload.setEntityType(type);
+        payload.setEntity(object);
+        return payload;
     }
 
     public abstract DataEntityType getEntityType();
