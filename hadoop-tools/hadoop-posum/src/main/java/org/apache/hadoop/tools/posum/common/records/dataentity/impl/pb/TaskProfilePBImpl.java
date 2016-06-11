@@ -128,19 +128,6 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     }
 
     @Override
-    public Long getExpectedInputBytes() {
-        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getExpectedInputBytes();
-    }
-
-    @Override
-    public void setExpectedInputBytes(Long expectedInputBytes) {
-        maybeInitBuilder();
-        if (expectedInputBytes != null)
-            builder.setExpectedInputBytes(expectedInputBytes);
-    }
-
-    @Override
     public void setType(String type) {
         maybeInitBuilder();
         if (type != null)

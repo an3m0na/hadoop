@@ -17,11 +17,11 @@ public abstract class JobBehaviorPredictor {
         this.conf = conf;
     }
 
-    public abstract Integer predictJobDuration(String jobId);
+    public abstract Long predictJobDuration(String jobId);
 
-    public abstract Integer predictTaskDuration(String jobId, TaskType type);
+    public abstract Long predictTaskDuration(String jobId, TaskType type);
 
-    public abstract Integer predictTaskDuration(String jobId, String taskId);
+    public abstract Long predictTaskDuration(String jobId, String taskId);
 
     public void setDataStore(DBInterface dataStore) {
         this.dataStore = dataStore;

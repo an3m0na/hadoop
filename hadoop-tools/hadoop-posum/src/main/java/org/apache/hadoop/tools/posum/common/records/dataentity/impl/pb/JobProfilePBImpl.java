@@ -123,6 +123,27 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
+    public Long getTotalInputBytes() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasTotalInputBytes())
+            return p.getTotalInputBytes();
+        else return null;
+    }
+
+    @Override
+    public void setTotalInputBytes(Long inputBytes) {
+        maybeInitBuilder();
+        if (inputBytes != null)
+            builder.setTotalInputBytes(inputBytes);
+    }
+
+    @Override
+    public Long getInputBytes() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getInputBytes();
+    }
+
+    @Override
     public void setInputBytes(Long inputBytes) {
         maybeInitBuilder();
         if (inputBytes != null)
@@ -154,6 +175,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
         if (bytes != null)
             builder.setReduceInputBytes(bytes);
     }
+
     @Override
     public Long getOutputBytes() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
@@ -299,17 +321,6 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
         maybeInitBuilder();
         if (inputSplits != null)
             builder.setInputSplits(inputSplits);
-    }
-
-    @Override
-    public Long getInputBytes() {
-        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getInputBytes();
-    }
-
-    @Override
-    public Long getAvgSplitSize() {
-        return null;
     }
 
     @Override

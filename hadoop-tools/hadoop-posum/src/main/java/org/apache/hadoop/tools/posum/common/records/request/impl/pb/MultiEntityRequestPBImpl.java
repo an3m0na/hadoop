@@ -162,4 +162,28 @@ public class MultiEntityRequestPBImpl extends MultiEntityRequest {
         this.properties = new HashMap<>();
         this.properties.putAll(properties);
     }
+
+    @Override
+    public int getLimit() {
+        MultiEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getLimit();
+    }
+
+    @Override
+    public void setLimit(int limit) {
+        maybeInitBuilder();
+        builder.setLimit(limit);
+    }
+
+    @Override
+    public int getOffset() {
+        MultiEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getOffset();
+    }
+
+    @Override
+    public void setOffset(int offset) {
+        maybeInitBuilder();
+        builder.setOffset(offset);
+    }
 }

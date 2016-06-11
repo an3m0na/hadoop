@@ -92,12 +92,13 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
                 if (job.getTotalReduceTasks() > 0) {
                     // there is reduce work to be done; get average task duration
                     long avgReduceDuration = job.getAvgReduceDuration();
-                    if (avgReduceDuration == 0 && job.getAvgSplitSize() != null) {
+                    long avgMapSize = job.getInputBytes() / job.getTotalMapTasks();
+                    if (avgReduceDuration == 0 && avgMapSize != 0) {
                         // estimate avg reduce time
                         long totalReduceInputSize =
                                 job.getMapOutputBytes() / job.getCompletedMaps() * job.getTotalMapTasks();
                         long reducerInputSize = totalReduceInputSize / job.getTotalReduceTasks();
-                        avgReduceDuration = job.getAvgMapDuration() * reducerInputSize / job.getAvgSplitSize();
+                        avgReduceDuration = job.getAvgMapDuration() * reducerInputSize / avgMapSize;
                     }
                     remainingWork += avgReduceDuration * (job.getTotalReduceTasks() - job.getCompletedReduces());
                     totalWork += avgReduceDuration * job.getTotalReduceTasks();

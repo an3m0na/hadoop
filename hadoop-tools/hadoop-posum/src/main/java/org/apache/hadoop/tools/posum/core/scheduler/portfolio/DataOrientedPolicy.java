@@ -63,7 +63,7 @@ public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttemp
             if (db != null) {
                 JobProfile job = db.getJobProfileForApp(appId, app.getUser());
                 if (job != null) {
-                    Long size = job.getInputBytes();
+                    Long size = job.getTotalInputBytes();
                     if (size != null && size > 0) {
                         logger.debug("Read input size for " + appId + ": " + size);
                         app.setInputSplits(job.getInputSplits());

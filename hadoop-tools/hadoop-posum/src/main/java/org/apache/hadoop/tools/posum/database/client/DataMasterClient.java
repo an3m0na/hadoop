@@ -80,8 +80,21 @@ public class DataMasterClient extends AbstractService {
 
     public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
         try {
-            MultiEntityPayload payload = Utils.handleError("findById",
+            MultiEntityPayload payload = Utils.handleError("find",
                     dmClient.listEntities(MultiEntityRequest.newInstance(db, collection, queryParams))).getPayload();
+            if (payload != null)
+                return (List<T>) payload.getEntities();
+            return null;
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
+    }
+
+    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams, int offset, int limit) {
+        try {
+            MultiEntityPayload payload = Utils.handleError("find",
+                    dmClient.listEntities(MultiEntityRequest.newInstance(db, collection, queryParams, offset, limit)))
+                    .getPayload();
             if (payload != null)
                 return (List<T>) payload.getEntities();
             return null;

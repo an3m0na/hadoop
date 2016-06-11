@@ -14,7 +14,14 @@ import java.util.Map;
 
 public abstract class MultiEntityRequest {
 
-    public static MultiEntityRequest newInstance(DataEntityDB db, DataEntityType type, Map<String, Object>  properties) {
+    public static MultiEntityRequest newInstance(DataEntityDB db, DataEntityType type, Map<String, Object> properties, int offset, int limit) {
+        MultiEntityRequest request = newInstance(db, type, properties);
+        request.setLimit(limit);
+        request.setOffset(offset);
+        return request;
+    }
+
+    public static MultiEntityRequest newInstance(DataEntityDB db, DataEntityType type, Map<String, Object> properties) {
         MultiEntityRequest request = Records.newRecord(MultiEntityRequest.class);
         request.setEntityDB(db);
         request.setEntityType(type);
@@ -34,5 +41,11 @@ public abstract class MultiEntityRequest {
 
     public abstract void setProperties(Map<String, Object> properties);
 
+    public abstract int getLimit();
 
+    public abstract void setLimit(int limit);
+
+    public abstract int getOffset();
+
+    public abstract void setOffset(int offset);
 }
