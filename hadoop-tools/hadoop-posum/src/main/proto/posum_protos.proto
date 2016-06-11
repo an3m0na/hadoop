@@ -134,6 +134,8 @@ message TaskProfileProto {
     optional TaskTypeProto type = 10;
     optional float reportedProgress = 11;
     optional string successfulAttempt = 12;
+    optional int64 shuffleTime = 13;
+    optional int64 mergeTime = 14;
 
     enum TaskTypeProto {
         TYPE_NULL = 0;

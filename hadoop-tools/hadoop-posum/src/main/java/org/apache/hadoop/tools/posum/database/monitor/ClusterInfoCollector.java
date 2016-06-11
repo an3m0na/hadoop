@@ -102,8 +102,11 @@ public class ClusterInfoCollector {
         final CountersProxy jobCounters = api.getFinishedJobCounters(jobId);
         final List<TaskProfile> tasks = api.getFinishedTasksInfo(jobId);
         final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
-        for (TaskProfile task : tasks)
+        for (TaskProfile task : tasks) {
+            if (task.getType().equals(TaskType.REDUCE))
+                api.addRunningAttemptInfo(task);
             taskCounters.add(api.getFinishedTaskCounters(jobId, task.getId()));
+        }
 
         // move info in database
         dataStore.runTransaction(db, new DataTransaction() {
@@ -150,9 +153,11 @@ public class ClusterInfoCollector {
                 final CountersProxy jobCounters = api.getRunningJobCounters(app.getId(), job.getId());
                 final List<TaskProfile> tasks = api.getRunningTasksInfo(job);
                 final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
-                long mapDuration = 0, reduceDuration = 0, avgDuration = 0;
+
+                long mapDuration = 0, reduceDuration = 0, shuffleDuration = 0, mergeDuration = 0, avgDuration = 0;
                 int mapNo = 0, reduceNo = 0, avgNo = 0;
                 long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
+
                 for (TaskProfile task : tasks) {
                     CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
                     if (counters != null) {
@@ -193,7 +198,12 @@ public class ClusterInfoCollector {
                                 }
                         }
                     }
+
+                    if (task.getType().equals(TaskType.REDUCE))
+                        api.addRunningAttemptInfo(task);
+
                     Integer duration = task.getDuration();
+
                     if (duration > 0) {
                         // task has finished
                         if (TaskType.MAP.equals(task.getType())) {
@@ -204,6 +214,8 @@ public class ClusterInfoCollector {
                         }
                         if (TaskType.REDUCE.equals(task.getType())) {
                             reduceDuration += task.getDuration();
+                            shuffleDuration += task.getShuffleTime();
+                            mergeDuration += task.getMergeTime();
                             reduceNo++;
                             reduceInputSize += task.getInputBytes();
                             reduceOutputSize += task.getOutputBytes();
@@ -218,8 +230,11 @@ public class ClusterInfoCollector {
                     if (mapNo > 0) {
                         job.setAvgMapDuration(mapDuration / mapNo);
                     }
-                    if (reduceNo > 0)
+                    if (reduceNo > 0) {
                         job.setAvgReduceDuration(reduceDuration / reduceNo);
+                        job.setAvgShuffleDuration(shuffleDuration / reduceNo);
+                        job.setAvgMergeDuration(mergeDuration / reduceNo);
+                    }
                 }
 
                 job.setInputBytes(mapInputSize);

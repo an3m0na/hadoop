@@ -9,6 +9,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.CountersProxyPBImpl;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
@@ -80,7 +81,7 @@ public class HadoopAPIClient {
             }
             return apps;
         } catch (IOException e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing JSON string", e);
+            logger.debug("Exception parsing JSON string", e);
             return Collections.emptyList();
         }
     }
@@ -118,7 +119,7 @@ public class HadoopAPIClient {
             }
             return getFinishedJobInfo(appId, lastRelatedJobId);
         } catch (IOException e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing JSON string", e);
+            logger.debug("Exception parsing JSON string", e);
             return null;
         }
     }
@@ -156,7 +157,7 @@ public class HadoopAPIClient {
             job.setAvgMergeDuration(rawJob.get("avgMergeTime").asLong());
             return job;
         } catch (IOException e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing JSON string", e);
+            logger.debug("Exception parsing JSON string", e);
             return null;
         }
     }
@@ -192,7 +193,7 @@ public class HadoopAPIClient {
             job.setUberized(rawJob.get("uberized").asBoolean());
             return job;
         } catch (IOException e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing JSON string", e);
+            logger.debug("Exception parsing JSON string", e);
             return null;
         }
     }
@@ -225,7 +226,7 @@ public class HadoopAPIClient {
             }
             return tasks;
         } catch (IOException e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing JSON string", e);
+            logger.debug("Exception parsing JSON string", e);
             return Collections.emptyList();
         }
     }
@@ -258,8 +259,64 @@ public class HadoopAPIClient {
             }
             return tasks;
         } catch (IOException e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing JSON string", e);
+            logger.debug("Exception parsing JSON string", e);
             return Collections.emptyList();
+        }
+    }
+
+    public void addRunningAttemptInfo(TaskProfile task) {
+        try {
+            String rawString = restClient.getInfo(String.class,
+                    RestClient.TrackingUI.AM, "jobs/%s/tasks/%s/attempts", new String[]{task.getAppId(), task.getJobId(), task.getId()});
+            if (rawString == null)
+                return;
+            JsonNode wrapper = mapper.readTree(rawString);
+            if (!wrapper.has("taskAttempts"))
+                return;
+            wrapper = wrapper.get("taskAttempts");
+            if (wrapper.isNull())
+                return;
+            JsonNode rawAttempts = wrapper.get("taskAttempt");
+            for (int i = 0; i < rawAttempts.size(); i++) {
+                JsonNode rawAttempt = rawAttempts.get(i);
+                if (TaskState.SUCCEEDED.name().equals(rawAttempt.get("state").asText())) {
+                    if (rawAttempt.has("elapsedShuffleTime"))
+                        task.setShuffleTime(rawAttempt.get("elapsedShuffleTime").asLong());
+                    if (rawAttempt.has("elapsedMergeTime"))
+                        task.setMergeTime(rawAttempt.get("elapsedMergeTime").asLong());
+                    return;
+                }
+            }
+        } catch (IOException e) {
+            logger.debug("Exception parsing JSON string", e);
+        }
+    }
+
+    public void addFinishedAttemptInfo(TaskProfile task) {
+        try {
+            String rawString = restClient.getInfo(String.class,
+                    RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/attempts", new String[]{task.getAppId(), task.getJobId(), task.getId()});
+            if (rawString == null)
+                return;
+            JsonNode wrapper = mapper.readTree(rawString);
+            if (!wrapper.has("taskAttempts"))
+                return;
+            wrapper = wrapper.get("taskAttempts");
+            if (wrapper.isNull())
+                return;
+            JsonNode rawAttempts = wrapper.get("taskAttempt");
+            for (int i = 0; i < rawAttempts.size(); i++) {
+                JsonNode rawAttempt = rawAttempts.get(i);
+                if (TaskState.SUCCEEDED.name().equals(rawAttempt.get("state").asText())) {
+                    if (rawAttempt.has("elapsedShuffleTime"))
+                        task.setShuffleTime(rawAttempt.get("elapsedShuffleTime").asLong());
+                    if (rawAttempt.has("elapsedMergeTime"))
+                        task.setMergeTime(rawAttempt.get("elapsedMergeTime").asLong());
+                    return;
+                }
+            }
+        } catch (IOException e) {
+            logger.debug("Exception parsing JSON string", e);
         }
     }
 
@@ -271,7 +328,7 @@ public class HadoopAPIClient {
                 return null;
             return wrapper.jobCounters;
         } catch (Exception e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing counters from AM", e);
+            logger.debug("Exception parsing counters from AM", e);
         }
         return null;
     }
@@ -284,7 +341,7 @@ public class HadoopAPIClient {
                 return null;
             return wrapper.jobTaskCounters;
         } catch (Exception e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing counters from AM", e);
+            logger.debug("Exception parsing counters from AM", e);
         }
         return null;
     }
@@ -307,9 +364,9 @@ public class HadoopAPIClient {
             }
             return ret;
         } catch (WebApplicationException e) {
-            logger.error("[" + getClass().getSimpleName() + "] Could not get job conf for " + jobId, e);
+            logger.error("Could not get job conf for " + jobId, e);
         } catch (IOException e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing JSON string", e);
+            logger.debug("Exception parsing JSON string", e);
         }
         return null;
     }
@@ -338,7 +395,7 @@ public class HadoopAPIClient {
             conf.setPropertyMap(map);
             return conf;
         } catch (IOException e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing JSON string", e);
+            logger.debug("Exception parsing JSON string", e);
             return null;
         }
     }
@@ -351,7 +408,7 @@ public class HadoopAPIClient {
                 return null;
             return wrapper.jobCounters;
         } catch (Exception e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing counters from HISTORY", e);
+            logger.debug("Exception parsing counters from HISTORY", e);
         }
         return null;
     }
@@ -364,7 +421,7 @@ public class HadoopAPIClient {
                 return null;
             return wrapper.jobTaskCounters;
         } catch (Exception e) {
-            logger.debug("[" + getClass().getSimpleName() + "] Exception parsing counters from HISTORY", e);
+            logger.debug("Exception parsing counters from HISTORY", e);
         }
         return null;
     }
