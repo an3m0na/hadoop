@@ -18,7 +18,8 @@ public enum DataEntityType {
     JOB_CONF_HISTORY("job_confs_history", JobConfProxyPBImpl.class),
     POSUM_STATS("posum_stats", LogEntry.class),
     COUNTER("counters", CountersProxyPBImpl.class),
-    COUNTER_HISTORY("counters_history", CountersProxyPBImpl.class);
+    COUNTER_HISTORY("counters_history", CountersProxyPBImpl.class),
+    LOG_PREDICTOR("predictor_log", CountersProxyPBImpl.class);
 
     private String label;
     private Class<? extends GeneralDataEntity> mappedClass;

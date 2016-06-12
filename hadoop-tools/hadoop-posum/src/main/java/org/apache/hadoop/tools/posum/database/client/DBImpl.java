@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.database.client;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,16 +12,16 @@ import java.util.Map;
  */
 public class DBImpl implements DBInterface {
     private final DataEntityDB db;
-    private final DataMasterClient client;
+    private final DataClientInterface client;
 
-    public DBImpl(DataEntityDB db, DataMasterClient client) {
+    public DBImpl(DataEntityDB db, DataClientInterface client) {
         this.db = db;
         this.client = client;
     }
 
     @Override
     public <T extends GeneralDataEntity> List<T> list(DataEntityType collection) {
-        return client.find(db, collection, new HashMap<String, Object>());
+        return client.find(db, collection, null, 0, 0);
     }
 
     @Override
@@ -35,21 +36,17 @@ public class DBImpl implements DBInterface {
 
     @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value) {
-        Map<String, Object> queryParams = new HashMap<>(1);
-        queryParams.put(field, value);
-        return client.find(db, collection, queryParams);
+        return find(collection, field, value, 0, 0);
     }
 
     @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value, int offset, int limit) {
-        Map<String, Object> queryParams = new HashMap<>(1);
-        queryParams.put(field, value);
-        return find(collection, queryParams, offset, limit);
+        return find(collection, Collections.singletonMap(field, value), offset, limit);
     }
 
     @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams) {
-        return client.find(db, collection, queryParams);
+        return client.find(db, collection, queryParams, 0, 0);
     }
 
     @Override
@@ -74,9 +71,7 @@ public class DBImpl implements DBInterface {
 
     @Override
     public void delete(DataEntityType collection, String field, Object value) {
-        Map<String, Object> queryParams = new HashMap<>(1);
-        queryParams.put(field, value);
-        client.delete(db, collection, queryParams);
+        client.delete(db, collection, Collections.singletonMap(field, value));
     }
 
     @Override
@@ -91,7 +86,7 @@ public class DBImpl implements DBInterface {
 
     @Override
     public JobConfProxy getJobConf(String jobId) {
-        return client.getJobConf(db, jobId);
+        return client.findById(db, DataEntityType.JOB_CONF, jobId);
     }
 
     @Override

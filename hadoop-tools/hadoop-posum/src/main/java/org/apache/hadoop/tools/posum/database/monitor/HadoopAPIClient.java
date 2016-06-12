@@ -278,13 +278,16 @@ public class HadoopAPIClient {
             JsonNode rawAttempts = wrapper.get("taskAttempt");
             for (int i = 0; i < rawAttempts.size(); i++) {
                 JsonNode rawAttempt = rawAttempts.get(i);
-                if (TaskState.SUCCEEDED.name().equals(rawAttempt.get("state").asText())) {
+                String state = rawAttempt.get("state").asText();
+                if (TaskState.RUNNING.name().equals(state) || TaskState.SUCCEEDED.name().equals(state)) {
                     if (rawAttempt.has("elapsedShuffleTime"))
                         task.setShuffleTime(rawAttempt.get("elapsedShuffleTime").asLong());
                     if (rawAttempt.has("elapsedMergeTime"))
                         task.setMergeTime(rawAttempt.get("elapsedMergeTime").asLong());
                     if (rawAttempt.has("elapsedReduceTime"))
                         task.setReduceTime(rawAttempt.get("elapsedReduceTime").asLong());
+                    if (rawAttempt.has("nodeHttpAddress"))
+                        task.setHttpAddress(rawAttempt.get("nodeHttpAddress").asText());
                     return;
                 }
             }

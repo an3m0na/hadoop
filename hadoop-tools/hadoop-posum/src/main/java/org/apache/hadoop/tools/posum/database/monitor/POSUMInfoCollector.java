@@ -4,15 +4,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
-import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.field.TaskPrediction;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by ane on 2/4/16.
@@ -25,25 +25,43 @@ public class POSUMInfoCollector {
     private final DataEntityDB db = DataEntityDB.getLogs();
     private final DataStore dataStore;
     private final Configuration conf;
-    private final boolean persistMetrics;
+    private final boolean fineGrained;
     private final PolicyMap policyMap;
     private long lastCollectTime = 0;
+    private long lastPrediction = 0;
+    private long predictionTimeout = 0;
+    private JobBehaviorPredictor predictor;
 
 
     POSUMInfoCollector(Configuration conf, DataStore dataStore) {
         this.dataStore = dataStore;
         this.conf = conf;
-        persistMetrics = conf.getBoolean(POSUMConfiguration.MONITOR_PERSIST_METRICS,
-                POSUMConfiguration.MONITOR_PERSIST_METRICS_DEFAULT);
+        fineGrained = conf.getBoolean(POSUMConfiguration.FINE_GRAINED_MONITOR,
+                POSUMConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
         api = new POSUMAPIClient(conf);
         this.policyMap = new PolicyMap(conf);
+        predictor = JobBehaviorPredictor.newInstance(conf);
+        predictor.initialize(dataStore.bindTo(DataEntityDB.getMain()));
+        predictionTimeout = conf.getLong(POSUMConfiguration.PREDICTOR_TIMEOUT,
+                POSUMConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
     }
 
     void collect() {
         long now = System.currentTimeMillis();
-        if (persistMetrics) {
+        if (fineGrained) {
             //TODO get metrics from all services and persist to database
+            if (now - lastPrediction > predictionTimeout) {
+                // make new predictions
+                List<String> taskIds = dataStore.listIds(DataEntityDB.getMain(), DataEntityType.TASK, null);
+                for (String taskId : taskIds) {
+                    Long duration = predictor.predictTaskDuration(taskId);
+                    dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                            TaskPrediction.newInstance(taskId, duration)));
+                }
+            }
         }
+
+        // aggregate policy change decisions
         List<LogEntry<String>> policyChanges = dataStore.findLogs(LogEntry.Type.POLICY_CHANGE, lastCollectTime, now);
         if (policyChanges.size() > 0) {
             if (policyMap.getSchedulingStart() == 0)

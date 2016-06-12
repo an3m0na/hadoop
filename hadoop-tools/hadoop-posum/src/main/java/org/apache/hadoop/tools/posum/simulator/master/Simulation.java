@@ -2,8 +2,11 @@ package org.apache.hadoop.tools.posum.simulator.master;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.field.CompoundScore;
 import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 
 /**
@@ -16,13 +19,16 @@ public class Simulation extends Thread {
     private SimulatorImpl simulator;
     private String policy;
     private JobBehaviorPredictor predictor;
+    private DataMasterClient dataClient;
 
 
-    public Simulation(SimulatorImpl simulator, String policy, JobBehaviorPredictor predictor) {
-        //TODO set up simulation
+    public Simulation(SimulatorImpl simulator, String policy, SimulationMasterContext context) {
         this.simulator = simulator;
         this.policy = policy;
-        this.predictor = predictor;
+        this.predictor = JobBehaviorPredictor.newInstance(context.getConf());
+        this.dataClient = context.getCommService().getDataClient();
+        //TODO set up simulation
+        predictor.initialize(dataClient.bindTo(DataEntityDB.newInstance(DataEntityDB.Type.SIMULATION, policy)));
     }
 
     void exit() {

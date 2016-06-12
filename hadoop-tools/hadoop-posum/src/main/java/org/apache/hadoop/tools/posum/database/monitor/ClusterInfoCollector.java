@@ -26,6 +26,7 @@ import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataTransaction;
+import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 
@@ -82,7 +83,9 @@ public class ClusterInfoCollector {
         finished.add(appId);
 
         // gather app info
-        List<JobProfile> jobs = dataStore.find(db, DataEntityType.JOB, "appId", appId);
+
+        List<JobProfile> jobs =
+                dataStore.find(db, DataEntityType.JOB, Collections.singletonMap("appId", (Object) appId), 0, 0);
         JobProfile job;
         String jobId;
         if (jobs.size() > 1)
@@ -113,8 +116,8 @@ public class ClusterInfoCollector {
             public void run() throws Exception {
                 try {
                     dataStore.delete(db, DataEntityType.APP, appId);
-                    dataStore.delete(db, DataEntityType.JOB, "appId", appId);
-                    dataStore.delete(db, DataEntityType.TASK, "appId", appId);
+                    dataStore.delete(db, DataEntityType.JOB, Collections.singletonMap("appId", (Object) appId));
+                    dataStore.delete(db, DataEntityType.TASK, Collections.singletonMap("appId", (Object) appId));
                     dataStore.delete(db, DataEntityType.JOB_CONF, finalJob.getId());
                     dataStore.delete(db, DataEntityType.COUNTER, finalJob.getId());
                     dataStore.store(db, DataEntityType.APP_HISTORY, app);
@@ -224,6 +227,11 @@ public class ClusterInfoCollector {
                             reduceNo++;
                             reduceInputSize += task.getInputBytes();
                             reduceOutputSize += task.getOutputBytes();
+                            if (job.getSplitLocations() != null) {
+                                int splitIndex = Utils.parseTaskId(task.getAppId(), task.getId()).getId();
+                                if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
+                                    task.setLocal(true);
+                            }
                         }
                         avgDuration += duration;
                         avgNo++;
@@ -331,8 +339,10 @@ public class ClusterInfoCollector {
                 jobSubmitDir);
 
         long inputLength = 0;
+        List<String> splitLocations = new ArrayList<>(taskSplitMetaInfo.length);
         for (JobSplit.TaskSplitMetaInfo aTaskSplitMetaInfo : taskSplitMetaInfo) {
             inputLength += aTaskSplitMetaInfo.getInputDataLength();
+            splitLocations.add(StringUtils.join(" ", aTaskSplitMetaInfo.getLocations()));
         }
 
         JobProfile profile = Records.newRecord(JobProfile.class);
@@ -344,6 +354,7 @@ public class ClusterInfoCollector {
         profile.setInputSplits(taskSplitMetaInfo.length);
         profile.setMapperClass(conf.get("mapred.mapper.class"));
         profile.setReducerClass(conf.get("mapred.reducer.class"));
+        profile.setSplitLocations(splitLocations);
         return profile;
     }
 

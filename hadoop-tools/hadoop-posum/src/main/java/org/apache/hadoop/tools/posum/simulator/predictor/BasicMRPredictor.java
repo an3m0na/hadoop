@@ -1,11 +1,11 @@
 package org.apache.hadoop.tools.posum.simulator.predictor;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,15 +15,6 @@ import java.util.Map;
  * Created by ane on 2/9/16.
  */
 public class BasicMRPredictor extends JobBehaviorPredictor {
-
-    public BasicMRPredictor(Configuration conf) {
-        super(conf);
-    }
-
-    @Override
-    public void preparePredictor() {
-
-    }
 
     private List<JobProfile> getComparableProfiles(JobProfile job) {
         // get past jobs with the same name
@@ -101,7 +92,11 @@ public class BasicMRPredictor extends JobBehaviorPredictor {
     }
 
     @Override
-    public Long predictTaskDuration(String jobId, String taskId) {
-        return predictTaskDuration(jobId, Utils.getTaskTypeFromId(taskId));
+    public Long predictTaskDuration(String taskId) {
+        TaskProfile task = getDataStore().findById(DataEntityType.TASK, taskId);
+        if (task == null)
+            throw new POSUMException("Task could not be found with id: " + taskId);
+        return predictTaskDuration(task.getJobId(), task.getType());
     }
+
 }

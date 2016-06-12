@@ -8,6 +8,7 @@ import org.apache.hadoop.tools.posum.common.records.field.impl.pb.StringStringMa
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProtoOrBuilder;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -455,6 +456,19 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
         if (name != null) {
             builder.setReducerClass(name);
         }
+    }
+
+    @Override
+    public List<String> getSplitLocations() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getSplitLocationsList();
+    }
+
+    @Override
+    public void setSplitLocations(List<String> locations) {
+        maybeInitBuilder();
+        builder.clearSplitLocations();
+        builder.addAllSplitLocations(locations);
     }
 
     @Override
