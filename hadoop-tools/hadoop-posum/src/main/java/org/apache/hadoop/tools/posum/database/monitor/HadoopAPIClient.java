@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
@@ -152,9 +151,9 @@ public class HadoopAPIClient {
             job.setTotalReduceTasks(rawJob.get("reducesTotal").asInt());
             job.setUberized(rawJob.get("uberized").asBoolean());
             job.setAvgMapDuration(rawJob.get("avgMapTime").asLong());
-            job.setAvgReduceDuration(rawJob.get("avgReduceTime").asLong());
-            job.setAvgShuffleDuration(rawJob.get("avgShuffleTime").asLong());
-            job.setAvgMergeDuration(rawJob.get("avgMergeTime").asLong());
+            job.setAvgReduceTime(rawJob.get("avgReduceTime").asLong());
+            job.setAvgShuffleTime(rawJob.get("avgShuffleTime").asLong());
+            job.setAvgMergeTime(rawJob.get("avgMergeTime").asLong());
             return job;
         } catch (IOException e) {
             logger.debug("Exception parsing JSON string", e);
@@ -284,6 +283,8 @@ public class HadoopAPIClient {
                         task.setShuffleTime(rawAttempt.get("elapsedShuffleTime").asLong());
                     if (rawAttempt.has("elapsedMergeTime"))
                         task.setMergeTime(rawAttempt.get("elapsedMergeTime").asLong());
+                    if (rawAttempt.has("elapsedReduceTime"))
+                        task.setReduceTime(rawAttempt.get("elapsedReduceTime").asLong());
                     return;
                 }
             }
@@ -312,6 +313,8 @@ public class HadoopAPIClient {
                         task.setShuffleTime(rawAttempt.get("elapsedShuffleTime").asLong());
                     if (rawAttempt.has("elapsedMergeTime"))
                         task.setMergeTime(rawAttempt.get("elapsedMergeTime").asLong());
+                    if (rawAttempt.has("elapsedReduceTime"))
+                        task.setReduceTime(rawAttempt.get("elapsedReduceTime").asLong());
                     return;
                 }
             }

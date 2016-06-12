@@ -24,6 +24,11 @@ public class DBImpl implements DBInterface {
     }
 
     @Override
+    public List<String> listIds(DataEntityType collection, Map<String, Object> queryParams) {
+        return client.listIds(db, collection, queryParams);
+    }
+
+    @Override
     public <T extends GeneralDataEntity> T findById(DataEntityType collection, String id) {
         return client.findById(db, collection, id);
     }
@@ -33,6 +38,13 @@ public class DBImpl implements DBInterface {
         Map<String, Object> queryParams = new HashMap<>(1);
         queryParams.put(field, value);
         return client.find(db, collection, queryParams);
+    }
+
+    @Override
+    public <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value, int offset, int limit) {
+        Map<String, Object> queryParams = new HashMap<>(1);
+        queryParams.put(field, value);
+        return find(collection, queryParams, offset, limit);
     }
 
     @Override
@@ -83,7 +95,7 @@ public class DBImpl implements DBInterface {
     }
 
     @Override
-    public void saveFlexFields(String jobId, Map<String, String> newFields) {
-        client.saveFlexFields(db, jobId, newFields);
+    public void saveFlexFields(String jobId, Map<String, String> newFields, boolean forHistory) {
+        client.saveFlexFields(db, jobId, newFields, forHistory);
     }
 }

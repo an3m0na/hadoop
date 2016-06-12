@@ -1,14 +1,13 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import com.mongodb.DBCollection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.bson.Document;
-import org.mongojack.DBQuery;
-import org.mongojack.JacksonDBCollection;
-import org.mongojack.WriteResult;
+import org.mongojack.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -109,16 +108,31 @@ public class MongoJackConnector extends MongoConnector {
         return this.<T>getCollection(db, collection).find(DBQuery.is(field, value)).toArray();
     }
 
-    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, DBQuery.Query query) {
-        if (query == null)
-            return this.<T>getCollection(db, collection).find().toArray();
-        return this.<T>getCollection(db, collection).find(query).toArray();
+    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, DBQuery.Query query, String... fieldProjections) {
+        JacksonDBCollection<T, String> dbCollection = getCollection(db, collection);
+        DBCursor<T> cursor = query == null ? dbCollection.find(DBProjection.include(fieldProjections)) :
+                dbCollection.find(query, DBProjection.include(fieldProjections));
+        return cursor.toArray();
     }
 
-    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
+    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams, String... fieldProjections) {
+        return findObjects(db, collection, composeQuery(queryParams), fieldProjections);
+    }
+
+    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, DBQuery.Query query, int offset, int limit) {
+        JacksonDBCollection<T, String> dbCollection = getCollection(db, collection);
+        DBCursor<T> cursor = query == null ? dbCollection.find() : dbCollection.find(query);
+        if (offset != 0)
+            cursor.skip(offset);
+        if (limit != 0)
+            cursor.limit(limit);
+        return cursor.toArray();
+    }
+
+    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams, int offset, int limit) {
         if (queryParams == null || queryParams.size() == 0)
             return this.<T>getCollection(db, collection).find().toArray();
-        return findObjects(db, collection, composeQuery(queryParams));
+        return findObjects(db, collection, composeQuery(queryParams), offset, limit);
     }
 
     String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) {

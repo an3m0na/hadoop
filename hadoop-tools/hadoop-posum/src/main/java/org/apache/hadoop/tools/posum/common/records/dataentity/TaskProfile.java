@@ -60,4 +60,12 @@ public interface TaskProfile extends GeneralDataEntity {
     Long getMergeTime();
 
     void setMergeTime(Long time);
+
+    Long getReduceTime();
+
+    void setReduceTime(Long time);
+
+    Boolean isLocal();
+
+    void setLocal(Boolean local);
 }

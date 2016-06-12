@@ -93,7 +93,7 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public Integer getDuration() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        if(p.hasStartTime() && p.hasFinishTime())
+        if (p.hasStartTime() && p.hasFinishTime())
             return Long.valueOf(p.getFinishTime() - p.getStartTime()).intValue();
         else
             return -1;
@@ -225,5 +225,33 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
         maybeInitBuilder();
         if (time != null)
             builder.setMergeTime(time);
+    }
+
+    @Override
+    public Long getReduceTime() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getReduceTime();
+    }
+
+    @Override
+    public void setReduceTime(Long time) {
+        maybeInitBuilder();
+        if (time != null)
+            builder.setReduceTime(time);
+    }
+
+    @Override
+    public Boolean isLocal() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasLocal())
+            return p.getLocal();
+        return false;
+    }
+
+    @Override
+    public void setLocal(Boolean local) {
+        maybeInitBuilder();
+        if (local != null)
+            builder.setLocal(local);
     }
 }

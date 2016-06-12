@@ -14,9 +14,13 @@ public interface DBInterface {
 
     <T extends GeneralDataEntity> List<T> list(DataEntityType collection);
 
+    List<String> listIds(DataEntityType collection, Map<String, Object> queryParams);
+
     <T extends GeneralDataEntity> T findById(DataEntityType collection, String id);
 
     <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value);
+
+    <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value, int offset, int limit);
 
     <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams);
 
@@ -41,6 +45,6 @@ public interface DBInterface {
 
     JobConfProxy getJobConf(String jobId);
 
-    void saveFlexFields(String jobId, Map<String, String> newFields);
+    void saveFlexFields(String jobId, Map<String, String> newFields, boolean forHistory);
 }
 

@@ -99,9 +99,12 @@ message JobProfileProto {
     optional int64 avgMapDuration = 23;
     optional int64 avgReduceDuration = 24;
     optional int64 avgTaskDuration = 25;
-    optional int64 avgShuffleDuration = 26;
-    optional int64 avgMergeDuration = 27;
-    optional StringStringMapPayloadProto flexFields = 28;
+    optional int64 avgShuffleTime = 26;
+    optional int64 avgMergeTime = 27;
+    optional int64 avgReduceTime = 28;
+    optional string mapperClass = 29;
+    optional string reducerClass = 30;
+    optional StringStringMapPayloadProto flexFields = 31;
 
     enum JobStateProto {
         STATE_NULL = 0;
@@ -136,6 +139,8 @@ message TaskProfileProto {
     optional string successfulAttempt = 12;
     optional int64 shuffleTime = 13;
     optional int64 mergeTime = 14;
+    optional int64 reduceTime = 15;
+    optional bool local = 16;
 
     enum TaskTypeProto {
         TYPE_NULL = 0;
@@ -169,6 +174,7 @@ message SaveFlexFieldsPayloadProto {
     required EntityDBProto entityDB = 1;
     required string jobId = 2;
     required StringStringMapPayloadProto newFields = 3;
+    optional bool forHistory = 4;
 }
 
 message JobForAppPayloadProto {
@@ -188,7 +194,7 @@ message SingleEntityPayloadProto {
     optional bytes entity = 2;
 }
 
-message MultiEntityRequestProto {
+message SearchRequestProto {
     required EntityDBProto entityDB = 1;
     required EntityTypeProto entityType = 2;
     repeated EntityPropertyProto properties = 3;
@@ -229,6 +235,7 @@ message SimpleResponseProto {
         RESP_SINGLE_ENTITY = 1;
         RESP_MULTI_ENTITY = 2;
         RESP_STRING_STRING_MAP = 3;
+        RESP_STRING_LIST = 4;
     }
 }
 
@@ -261,6 +268,10 @@ message RegistrationRequestProto {
 
 message StringStringMapPayloadProto {
     repeated StringStringMapProto entries = 1;
+}
+
+message StringListPayloadProto {
+    repeated string entries = 1;
 }
 
 message CountersProxyProto {

@@ -12,6 +12,7 @@ import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.util.Records;
 import org.mongojack.DBQuery;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,11 +79,21 @@ public class DataStore {
         }
     }
 
-    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType
-            collection, Map<String, Object> queryParams) {
+    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
+                                                      DataEntityType collection,
+                                                      Map<String, Object> queryParams,
+                                                      int offset,
+                                                      int limit) {
         locks.get(db.getId()).readLock().lock();
         try {
-            return conn.findObjects(db, collection, queryParams);
+            // TODO use offset and limit
+            return conn.findObjects(
+                    db,
+                    collection,
+                    queryParams == null ? Collections.<String, Object>emptyMap() : queryParams,
+                    offset,
+                    limit
+            );
         } finally {
             locks.get(db.getId()).readLock().unlock();
         }
@@ -92,6 +103,21 @@ public class DataStore {
         locks.get(db.getId()).readLock().lock();
         try {
             return conn.findObjects(db, collection, (DBQuery.Query) null);
+        } finally {
+            locks.get(db.getId()).readLock().unlock();
+
+        }
+    }
+
+    public List<String> listIds(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
+        locks.get(db.getId()).readLock().lock();
+        try {
+            return conn.findObjects(
+                    db,
+                    collection,
+                    queryParams == null ? Collections.<String, Object>emptyMap() : queryParams,
+                    "_id"
+            );
         } finally {
             locks.get(db.getId()).readLock().unlock();
 
@@ -117,15 +143,16 @@ public class DataStore {
 
     }
 
-    public void saveFlexFields(final DataEntityDB db, String jobId, Map<String, String> newFields) {
+    public void saveFlexFields(final DataEntityDB db, String jobId, Map<String, String> newFields, boolean forHistory) {
         locks.get(db.getId()).writeLock().lock();
         try {
-            JobProfile job = findById(db, DataEntityType.JOB, jobId);
+            DataEntityType type = forHistory ? DataEntityType.JOB_HISTORY : DataEntityType.JOB;
+            JobProfile job = findById(db, type, jobId);
             if (job == null)
                 throw new YarnRuntimeException("Flex-fields for job " + jobId + " were not found");
 
             job.getFlexFields().putAll(newFields);
-            store(db, DataEntityType.JOB, job);
+            store(db, type, job);
         } finally {
             locks.get(db.getId()).writeLock().unlock();
         }
@@ -138,11 +165,6 @@ public class DataStore {
         } finally {
             locks.get(db.getId()).writeLock().unlock();
         }
-    }
-
-    public List<JobProfile> getComparableProfiles(DataEntityDB db, String user, int count) {
-        //TODO
-        return null;
     }
 
     public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityType collection, T

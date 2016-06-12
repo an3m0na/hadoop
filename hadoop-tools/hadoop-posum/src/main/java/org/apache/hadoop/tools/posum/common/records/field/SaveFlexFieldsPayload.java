@@ -10,11 +10,12 @@ import java.util.Map;
  */
 public abstract class SaveFlexFieldsPayload {
 
-    public static SaveFlexFieldsPayload newInstance(DataEntityDB db, String appId, Map<String, String> newFields) {
+    public static SaveFlexFieldsPayload newInstance(DataEntityDB db, String appId, Map<String, String> newFields, boolean forHistory) {
         SaveFlexFieldsPayload payload = Records.newRecord(SaveFlexFieldsPayload.class);
         payload.setEntityDB(db);
         payload.setJobId(appId);
         payload.setNewFields(newFields);
+        payload.setForHistory(forHistory);
         return payload;
     }
 
@@ -29,5 +30,9 @@ public abstract class SaveFlexFieldsPayload {
     public abstract Map<String, String> getNewFields();
 
     public abstract void setNewFields(Map<String, String> newFields);
+
+    public abstract boolean getForHistory();
+
+    public abstract void setForHistory(boolean forHistory);
 
 }

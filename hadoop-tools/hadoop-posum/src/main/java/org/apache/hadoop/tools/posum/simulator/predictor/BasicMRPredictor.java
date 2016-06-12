@@ -20,24 +20,27 @@ public class BasicMRPredictor extends JobBehaviorPredictor {
         super(conf);
     }
 
+    @Override
+    public void preparePredictor() {
+
+    }
 
     private List<JobProfile> getComparableProfiles(JobProfile job) {
         // get past jobs with the same name
-        Map<String, Object> params = new HashMap<>(1);
-        params.put("name", job.getName());
         List<JobProfile> comparable = getDataStore().find(
                 DataEntityType.JOB_HISTORY,
-                params,
+                "name",
+                job.getName(),
                 0,
                 conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
                         POSUMConfiguration.PREDICTION_BUFFER_DEFAULT)
         );
         if (comparable.size() < 1) {
-            params = new HashMap<>(1);
-            params.put("user", job.getUser());
+            // get past jobs at least by the same user
             comparable = getDataStore().find(
                     DataEntityType.JOB,
-                    params,
+                    "user",
+                    job.getUser(),
                     0,
                     conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
                             POSUMConfiguration.PREDICTION_BUFFER_DEFAULT)
@@ -66,6 +69,7 @@ public class BasicMRPredictor extends JobBehaviorPredictor {
                         POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
                 durations.put(TaskType.MAP, defaultDuration);
                 durations.put(TaskType.REDUCE, defaultDuration);
+                return durations;
             }
 
             long mapTime = 0, reduceTime = 0;
@@ -82,6 +86,11 @@ public class BasicMRPredictor extends JobBehaviorPredictor {
             durations.put(TaskType.REDUCE, reduceTime / comparable.size());
         }
         return durations;
+    }
+
+    @Override
+    public Long predictLocalMapTaskDuration(String jobId) {
+        return predictTaskDuration(jobId, TaskType.MAP);
     }
 
     @Override

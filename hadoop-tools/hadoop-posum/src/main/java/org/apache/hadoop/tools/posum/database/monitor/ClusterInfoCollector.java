@@ -1,7 +1,6 @@
 package org.apache.hadoop.tools.posum.database.monitor;
 
 import com.mongodb.DuplicateKeyException;
-import org.apache.avro.Schema;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -154,58 +153,63 @@ public class ClusterInfoCollector {
                 final List<TaskProfile> tasks = api.getRunningTasksInfo(job);
                 final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
 
-                long mapDuration = 0, reduceDuration = 0, shuffleDuration = 0, mergeDuration = 0, avgDuration = 0;
+                long mapDuration = 0, reduceDuration = 0, reduceTime = 0, shuffleTime = 0, mergeTime = 0, avgDuration = 0;
                 int mapNo = 0, reduceNo = 0, avgNo = 0;
                 long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
 
                 for (TaskProfile task : tasks) {
-                    CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
-                    if (counters != null) {
-                        taskCounters.add(counters);
-                        for (CounterGroupInfoPayload group : counters.getCounterGroup()) {
-                            if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
-                                for (CounterInfoPayload counter : group.getCounter()) {
-                                    switch (counter.getName()) {
-                                        case "MAP_OUTPUT_BYTES":
-                                            if (task.getType().equals(TaskType.MAP))
-                                                task.setOutputBytes(counter.getTotalCounterValue());
-                                            break;
-                                        case "REDUCE_SHUFFLE_BYTES":
-                                            if (task.getType().equals(TaskType.REDUCE))
-                                                task.setInputBytes(counter.getTotalCounterValue());
-                                            break;
-                                    }
-                                }
-                            if (FileSystemCounter.class.getName().equals(group.getCounterGroupName()))
-                                for (CounterInfoPayload counter : group.getCounter()) {
-                                    switch (counter.getName()) {
-                                        case "FILE_BYTES_READ":
-                                            if (task.getType().equals(TaskType.MAP))
-                                                task.setOutputBytes(task.getOutputBytes() +
-                                                        counter.getTotalCounterValue());
-                                            break;
-                                        case "HDFS_BYTES_READ":
-                                            if (task.getType().equals(TaskType.MAP))
-                                                task.setInputBytes(task.getInputBytes() +
-                                                        counter.getTotalCounterValue());
-                                            break;
-                                        case "HDFS_BYTES_WRITTEN":
-                                            if (task.getType().equals(TaskType.REDUCE))
-                                                task.setOutputBytes(task.getOutputBytes() +
-                                                        counter.getTotalCounterValue());
-                                            break;
-                                    }
-                                }
-                        }
-                    }
-
-                    if (task.getType().equals(TaskType.REDUCE))
-                        api.addRunningAttemptInfo(task);
-
                     Integer duration = task.getDuration();
-
                     if (duration > 0) {
-                        // task has finished
+                        // task has finished; get statistics
+
+                        if (task.getType().equals(TaskType.REDUCE))
+                            api.addRunningAttemptInfo(task);
+
+                        CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
+                        if (counters != null) {
+                            taskCounters.add(counters);
+                            for (CounterGroupInfoPayload group : counters.getCounterGroup()) {
+                                if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
+                                    for (CounterInfoPayload counter : group.getCounter()) {
+                                        switch (counter.getName()) {
+                                            case "MAP_OUTPUT_BYTES":
+                                                if (task.getType().equals(TaskType.MAP))
+                                                    task.setOutputBytes(counter.getTotalCounterValue());
+                                                break;
+                                            case "REDUCE_SHUFFLE_BYTES":
+                                                if (task.getType().equals(TaskType.REDUCE))
+                                                    task.setInputBytes(counter.getTotalCounterValue());
+                                                break;
+                                        }
+                                    }
+                                if (FileSystemCounter.class.getName().equals(group.getCounterGroupName()))
+                                    for (CounterInfoPayload counter : group.getCounter()) {
+                                        switch (counter.getName()) {
+                                            case "FILE_BYTES_READ":
+                                                if (task.getType().equals(TaskType.MAP))
+                                                    task.setOutputBytes(task.getOutputBytes() +
+                                                            counter.getTotalCounterValue());
+                                                break;
+                                            case "HDFS_BYTES_READ":
+                                                if (task.getType().equals(TaskType.MAP)) {
+                                                    task.setInputBytes(task.getInputBytes() +
+                                                            counter.getTotalCounterValue());
+                                                    if (counter.getTotalCounterValue() > 0)
+                                                        task.setLocal(false);
+                                                    else
+                                                        task.setLocal(true);
+                                                }
+                                                break;
+                                            case "HDFS_BYTES_WRITTEN":
+                                                if (task.getType().equals(TaskType.REDUCE))
+                                                    task.setOutputBytes(task.getOutputBytes() +
+                                                            counter.getTotalCounterValue());
+                                                break;
+                                        }
+                                    }
+                            }
+                        }
+
                         if (TaskType.MAP.equals(task.getType())) {
                             mapDuration += task.getDuration();
                             mapNo++;
@@ -214,8 +218,9 @@ public class ClusterInfoCollector {
                         }
                         if (TaskType.REDUCE.equals(task.getType())) {
                             reduceDuration += task.getDuration();
-                            shuffleDuration += task.getShuffleTime();
-                            mergeDuration += task.getMergeTime();
+                            reduceTime += task.getReduceTime();
+                            shuffleTime += task.getShuffleTime();
+                            mergeTime += task.getMergeTime();
                             reduceNo++;
                             reduceInputSize += task.getInputBytes();
                             reduceOutputSize += task.getOutputBytes();
@@ -232,8 +237,9 @@ public class ClusterInfoCollector {
                     }
                     if (reduceNo > 0) {
                         job.setAvgReduceDuration(reduceDuration / reduceNo);
-                        job.setAvgShuffleDuration(shuffleDuration / reduceNo);
-                        job.setAvgMergeDuration(mergeDuration / reduceNo);
+                        job.setAvgShuffleTime(shuffleTime / reduceNo);
+                        job.setAvgMergeTime(mergeTime / reduceNo);
+                        job.setAvgReduceTime(reduceTime / reduceNo);
                     }
                 }
 
@@ -241,6 +247,9 @@ public class ClusterInfoCollector {
                 job.setMapOutputBytes(mapOutputSize);
                 job.setReduceInputBytes(reduceInputSize);
                 job.setOutputBytes(reduceOutputSize);
+                // update in case of discrepancy
+                job.setCompletedMaps(mapNo);
+                job.setCompletedReduces(reduceNo);
 
                 dataStore.runTransaction(db, new DataTransaction() {
                     @Override
@@ -333,6 +342,8 @@ public class ClusterInfoCollector {
         profile.setUser(conf.getUser());
         profile.setTotalInputBytes(inputLength);
         profile.setInputSplits(taskSplitMetaInfo.length);
+        profile.setMapperClass(conf.get("mapred.mapper.class"));
+        profile.setReducerClass(conf.get("mapred.reducer.class"));
         return profile;
     }
 
