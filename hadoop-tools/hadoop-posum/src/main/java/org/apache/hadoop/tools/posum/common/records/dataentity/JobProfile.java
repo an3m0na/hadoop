@@ -111,13 +111,17 @@ public interface JobProfile extends GeneralDataEntity {
 
     void setAvgTaskDuration(Long avgTaskDuration);
 
-    void setAvgShuffleDuration(Long avgShuffleDuration);
+    void setAvgShuffleTime(Long time);
 
-    Long getAvgShuffleDuration();
+    Long getAvgShuffleTime();
 
-    void setAvgMergeDuration(Long avgMergeDuration);
+    void setAvgMergeTime(Long time);
 
-    Long getAvgMergeDuration();
+    Long getAvgMergeTime();
+
+    void setAvgReduceTime(Long time);
+
+    Long getAvgReduceTime();
 
     void setQueue(String queue);
 
@@ -128,4 +132,12 @@ public interface JobProfile extends GeneralDataEntity {
     String getFlexField(String name);
 
     Map<String, String> getFlexFields();
+
+    String getMapperClass();
+
+    void setMapperClass(String name);
+
+    String getReducerClass();
+
+    void setReducerClass(String name);
 }

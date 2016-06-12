@@ -13,7 +13,7 @@ import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
-import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
@@ -81,9 +81,21 @@ public class DataMasterClient extends AbstractService {
     public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
         try {
             MultiEntityPayload payload = Utils.handleError("find",
-                    dmClient.listEntities(MultiEntityRequest.newInstance(db, collection, queryParams))).getPayload();
+                    dmClient.listEntities(SearchRequest.newInstance(db, collection, queryParams))).getPayload();
             if (payload != null)
                 return (List<T>) payload.getEntities();
+            return null;
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
+    }
+
+    public  List<String> listIds(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
+        try {
+            StringListPayload payload = Utils.handleError("listIds",
+                    dmClient.listIds(SearchRequest.newInstance(db, collection, queryParams))).getPayload();
+            if (payload != null)
+                return payload.getEntries();
             return null;
         } catch (IOException | YarnException e) {
             throw new POSUMException("Error during RPC call", e);
@@ -93,7 +105,7 @@ public class DataMasterClient extends AbstractService {
     public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams, int offset, int limit) {
         try {
             MultiEntityPayload payload = Utils.handleError("find",
-                    dmClient.listEntities(MultiEntityRequest.newInstance(db, collection, queryParams, offset, limit)))
+                    dmClient.listEntities(SearchRequest.newInstance(db, collection, queryParams, offset, limit)))
                     .getPayload();
             if (payload != null)
                 return (List<T>) payload.getEntities();
@@ -118,9 +130,9 @@ public class DataMasterClient extends AbstractService {
         }
     }
 
-    public void saveFlexFields(DataEntityDB db, String jobId, Map<String, String> newFields) {
+    public void saveFlexFields(DataEntityDB db, String jobId, Map<String, String> newFields, boolean forHistory) {
         sendSimpleRequest("saveFlexFields", SimpleRequest.newInstance(SimpleRequest.Type.SAVE_FLEX_FIELDS,
-                SaveFlexFieldsPayload.newInstance(db, jobId, newFields)));
+                SaveFlexFieldsPayload.newInstance(db, jobId, newFields, forHistory)));
     }
 
     public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert) {

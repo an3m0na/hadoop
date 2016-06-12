@@ -1,8 +1,9 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
+import org.apache.hadoop.tools.posum.common.records.field.StringListPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.StandardProtocol;
@@ -15,5 +16,6 @@ import java.io.IOException;
  */
 public interface DataMasterProtocol extends StandardProtocol {
     SimpleResponse<SingleEntityPayload> getEntity(SimpleRequest request) throws IOException, YarnException;
-    SimpleResponse<MultiEntityPayload> listEntities(MultiEntityRequest request) throws IOException, YarnException;
+    SimpleResponse<MultiEntityPayload> listEntities(SearchRequest request) throws IOException, YarnException;
+    SimpleResponse<StringListPayload> listIds(SearchRequest request) throws IOException, YarnException;
 }

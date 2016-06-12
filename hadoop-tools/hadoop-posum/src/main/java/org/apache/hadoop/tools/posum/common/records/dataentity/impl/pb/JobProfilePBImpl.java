@@ -343,11 +343,12 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
-    public void setAvgReduceDuration(Long avgReduceDuration) {
+    public void setAvgReduceDuration(Long duration) {
         maybeInitBuilder();
-        if (avgReduceDuration != null)
-            builder.setAvgReduceDuration(avgReduceDuration);
+        if (duration != null)
+            builder.setAvgReduceDuration(duration);
     }
+
 
     @Override
     public Long getAvgTaskDuration() {
@@ -363,29 +364,42 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
-    public void setAvgShuffleDuration(Long avgShuffleDuration) {
+    public void setAvgShuffleTime(Long avgShuffleDuration) {
         maybeInitBuilder();
         if (avgShuffleDuration != null)
-            builder.setAvgShuffleDuration(avgShuffleDuration);
+            builder.setAvgShuffleTime(avgShuffleDuration);
     }
 
     @Override
-    public Long getAvgShuffleDuration() {
+    public Long getAvgShuffleTime() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getAvgShuffleDuration();
+        return p.getAvgShuffleTime();
     }
 
     @Override
-    public void setAvgMergeDuration(Long avgMergeDuration) {
+    public void setAvgMergeTime(Long time) {
         maybeInitBuilder();
-        if (avgMergeDuration != null)
-            builder.setAvgMergeDuration(avgMergeDuration);
+        if (time != null)
+            builder.setAvgMergeTime(time);
     }
 
     @Override
-    public Long getAvgMergeDuration() {
+    public Long getAvgMergeTime() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getAvgMergeDuration();
+        return p.getAvgMergeTime();
+    }
+
+    @Override
+    public void setAvgReduceTime(Long time) {
+        maybeInitBuilder();
+        if (time != null)
+            builder.setAvgReduceTime(time);
+    }
+
+    @Override
+    public Long getAvgReduceTime() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getAvgReduceTime();
     }
 
     @Override
@@ -419,5 +433,33 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
             flexMap = new StringStringMapPayloadPBImpl(p.getFlexFields()).getEntries();
         }
         return flexMap;
+    }
+
+    @Override
+    public void setMapperClass(String name) {
+        maybeInitBuilder();
+        if (name != null) {
+            builder.setMapperClass(name);
+        }
+    }
+
+    @Override
+    public String getMapperClass() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getMapperClass();
+    }
+
+    @Override
+    public void setReducerClass(String name) {
+        maybeInitBuilder();
+        if (name != null) {
+            builder.setReducerClass(name);
+        }
+    }
+
+    @Override
+    public String getReducerClass() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getReducerClass();
     }
 }

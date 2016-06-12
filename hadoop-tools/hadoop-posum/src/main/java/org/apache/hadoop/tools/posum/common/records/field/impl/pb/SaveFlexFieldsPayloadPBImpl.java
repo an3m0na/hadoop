@@ -119,4 +119,16 @@ public class SaveFlexFieldsPayloadPBImpl extends SaveFlexFieldsPayload {
         this.newFields = newFields;
     }
 
+    @Override
+    public boolean getForHistory() {
+        SaveFlexFieldsPayloadProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getForHistory();
+    }
+
+    @Override
+    public void setForHistory(boolean forHistory) {
+        maybeInitBuilder();
+        builder.setForHistory(forHistory);
+    }
+
 }

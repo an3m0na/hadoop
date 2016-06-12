@@ -12,17 +12,17 @@ import java.util.Map;
  */
 
 
-public abstract class MultiEntityRequest {
+public abstract class SearchRequest {
 
-    public static MultiEntityRequest newInstance(DataEntityDB db, DataEntityType type, Map<String, Object> properties, int offset, int limit) {
-        MultiEntityRequest request = newInstance(db, type, properties);
+    public static SearchRequest newInstance(DataEntityDB db, DataEntityType type, Map<String, Object> properties, int offset, int limit) {
+        SearchRequest request = newInstance(db, type, properties);
         request.setLimit(limit);
         request.setOffset(offset);
         return request;
     }
 
-    public static MultiEntityRequest newInstance(DataEntityDB db, DataEntityType type, Map<String, Object> properties) {
-        MultiEntityRequest request = Records.newRecord(MultiEntityRequest.class);
+    public static SearchRequest newInstance(DataEntityDB db, DataEntityType type, Map<String, Object> properties) {
+        SearchRequest request = Records.newRecord(SearchRequest.class);
         request.setEntityDB(db);
         request.setEntityType(type);
         request.setProperties(properties);

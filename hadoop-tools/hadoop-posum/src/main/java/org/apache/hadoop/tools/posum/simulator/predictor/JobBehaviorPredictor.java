@@ -17,19 +17,24 @@ public abstract class JobBehaviorPredictor {
         this.conf = conf;
     }
 
+    public void initialize(DBInterface dataStore){
+        this.dataStore = dataStore;
+        preparePredictor();
+    }
+
+    public abstract void preparePredictor();
+
     public abstract Long predictJobDuration(String jobId);
+
+    public abstract Long predictLocalMapTaskDuration(String jobId);
 
     public abstract Long predictTaskDuration(String jobId, TaskType type);
 
     public abstract Long predictTaskDuration(String jobId, String taskId);
 
-    public void setDataStore(DBInterface dataStore) {
-        this.dataStore = dataStore;
-    }
-
     DBInterface getDataStore() {
         if (dataStore == null)
-            throw new POSUMException("DataStore not initialized in Simulator");
+            throw new POSUMException("DataStore not initialized in Predictor");
         return dataStore;
     }
 }
