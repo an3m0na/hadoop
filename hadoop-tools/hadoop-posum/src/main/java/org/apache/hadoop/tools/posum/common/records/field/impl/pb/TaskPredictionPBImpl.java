@@ -1,30 +1,32 @@
 package org.apache.hadoop.tools.posum.common.records.field.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.field.StringListPayload;
-import org.apache.hadoop.yarn.proto.POSUMProtos.StringListPayloadProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.StringListPayloadProtoOrBuilder;
+import org.apache.hadoop.tools.posum.common.records.field.EntityProperty;
+import org.apache.hadoop.tools.posum.common.records.field.TaskPrediction;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.yarn.proto.POSUMProtos.TaskPredictionProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.TaskPredictionProtoOrBuilder;
 
-import java.util.*;
+import java.io.IOException;
 
 /**
  * Created by ane on 3/20/16.
  */
-public class StringListPayloadPBImpl extends StringListPayload {
-    private StringListPayloadProto proto = StringListPayloadProto.getDefaultInstance();
-    private StringListPayloadProto.Builder builder = null;
+public class TaskPredictionPBImpl extends TaskPrediction {
+    private TaskPredictionProto proto = TaskPredictionProto.getDefaultInstance();
+    private TaskPredictionProto.Builder builder = null;
     private boolean viaProto = false;
 
-    public StringListPayloadPBImpl() {
-        builder = StringListPayloadProto.newBuilder();
+    public TaskPredictionPBImpl() {
+        builder = TaskPredictionProto.newBuilder();
     }
 
-    public StringListPayloadPBImpl(StringListPayloadProto proto) {
+    public TaskPredictionPBImpl(TaskPredictionProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public StringListPayloadProto getProto() {
+    public TaskPredictionProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -52,6 +54,7 @@ public class StringListPayloadPBImpl extends StringListPayload {
     }
 
     private void mergeLocalToBuilder() {
+
     }
 
     private void mergeLocalToProto() {
@@ -64,27 +67,34 @@ public class StringListPayloadPBImpl extends StringListPayload {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = StringListPayloadProto.newBuilder(proto);
+            builder = TaskPredictionProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
+
     @Override
-    public void addEntry(String value) {
-        getEntries().add(value);
+    public String getId() {
+        TaskPredictionProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getId();
     }
 
     @Override
-    public List<String> getEntries() {
-        StringListPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getEntriesList();
-    }
-
-    @Override
-    public void setEntries(List<String> entries) {
+    public void setId(String name) {
         maybeInitBuilder();
-        builder.clearEntries();
-        builder.addAllEntries(entries);
+        builder.setId(name);
+    }
+
+    @Override
+    public Long getDuration() {
+        TaskPredictionProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getDuration();
+    }
+
+    @Override
+    public void setDuration(Long duration) {
+        maybeInitBuilder();
+        builder.setDuration(duration);
     }
 
 }

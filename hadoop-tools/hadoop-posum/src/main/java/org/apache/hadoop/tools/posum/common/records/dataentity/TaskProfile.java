@@ -68,4 +68,8 @@ public interface TaskProfile extends GeneralDataEntity {
     Boolean isLocal();
 
     void setLocal(Boolean local);
+
+    void setHttpAddress(String address);
+
+    String getHttpAddress();
 }

@@ -73,7 +73,7 @@ public class TestPredictor {
                         .append("\t");
                 for (String task : job.getValue())
                     recordBuilder
-                            .append(task).append("=").append(predictor.predictTaskDuration(job.getKey(), task))
+                            .append(task).append("=").append(predictor.predictTaskDuration(task))
                             .append("\t");
                 recordBuilder.append("\n");
                 System.out.println(recordBuilder.toString());

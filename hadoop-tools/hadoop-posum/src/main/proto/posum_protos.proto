@@ -105,6 +105,7 @@ message JobProfileProto {
     optional string mapperClass = 29;
     optional string reducerClass = 30;
     optional StringStringMapPayloadProto flexFields = 31;
+    repeated string splitLocations = 32;
 
     enum JobStateProto {
         STATE_NULL = 0;
@@ -141,6 +142,7 @@ message TaskProfileProto {
     optional int64 mergeTime = 14;
     optional int64 reduceTime = 15;
     optional bool local = 16;
+    optional string httpAddress = 17;
 
     enum TaskTypeProto {
         TYPE_NULL = 0;
@@ -289,4 +291,9 @@ message CounterInfoPayloadProto {
     optional int64 total = 2;
     optional int64 map = 3;
     optional int64 reduce = 4;
+}
+
+message TaskPredictionProto {
+    required string id = 1;
+    optional int64 duration = 2;
 }

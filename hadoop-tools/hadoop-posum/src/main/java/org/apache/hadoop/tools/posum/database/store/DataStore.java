@@ -7,6 +7,9 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.database.client.DBImpl;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.client.DataClientInterface;
 import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.util.Records;
@@ -21,7 +24,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by ane on 2/9/16.
  */
-public class DataStore {
+public class DataStore implements DataClientInterface {
 
     private static Log logger = LogFactory.getLog(DataStore.class);
 
@@ -61,6 +64,7 @@ public class DataStore {
         this.conf = conf;
     }
 
+    @Override
     public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityType collection, String id) {
         locks.get(db.getId()).readLock().lock();
         try {
@@ -70,15 +74,7 @@ public class DataStore {
         }
     }
 
-    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType collection, String field, Object value) {
-        locks.get(db.getId()).readLock().lock();
-        try {
-            return conn.findObjects(db, collection, field, value);
-        } finally {
-            locks.get(db.getId()).readLock().unlock();
-        }
-    }
-
+    @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
                                                       DataEntityType collection,
                                                       Map<String, Object> queryParams,
@@ -99,16 +95,7 @@ public class DataStore {
         }
     }
 
-    public <T extends GeneralDataEntity> List<T> list(DataEntityDB db, DataEntityType collection) {
-        locks.get(db.getId()).readLock().lock();
-        try {
-            return conn.findObjects(db, collection, (DBQuery.Query) null);
-        } finally {
-            locks.get(db.getId()).readLock().unlock();
-
-        }
-    }
-
+    @Override
     public List<String> listIds(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
         locks.get(db.getId()).readLock().lock();
         try {
@@ -124,9 +111,10 @@ public class DataStore {
         }
     }
 
+    @Override
     public JobProfile getJobProfileForApp(final DataEntityDB db, String appId, String user) {
         List<JobProfile> profiles;
-        profiles = find(db, DataEntityType.JOB, "appId", appId);
+        profiles = find(db, DataEntityType.JOB, Collections.singletonMap("appId", (Object) appId), 0, 0);
         if (profiles.size() == 1)
             return profiles.get(0);
         if (profiles.size() > 1)
@@ -140,9 +128,9 @@ public class DataStore {
             logger.debug("Could not retrieve job info for app " + appId, e);
         }
         return null;
-
     }
 
+    @Override
     public void saveFlexFields(final DataEntityDB db, String jobId, Map<String, String> newFields, boolean forHistory) {
         locks.get(db.getId()).writeLock().lock();
         try {
@@ -158,6 +146,7 @@ public class DataStore {
         }
     }
 
+    @Override
     public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert) {
         locks.get(db.getId()).writeLock().lock();
         try {
@@ -167,6 +156,7 @@ public class DataStore {
         }
     }
 
+    @Override
     public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityType collection, T
             toUpdate) {
         locks.get(db.getId()).writeLock().lock();
@@ -177,6 +167,7 @@ public class DataStore {
         }
     }
 
+    @Override
     public void delete(DataEntityDB db, DataEntityType collection, String id) {
         locks.get(db.getId()).writeLock().lock();
         try {
@@ -186,15 +177,7 @@ public class DataStore {
         }
     }
 
-    public void delete(DataEntityDB db, DataEntityType collection, String field, Object value) {
-        locks.get(db.getId()).writeLock().lock();
-        try {
-            conn.deleteObjects(db, collection, field, value);
-        } finally {
-            locks.get(db.getId()).writeLock().unlock();
-        }
-    }
-
+    @Override
     public void delete(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
         locks.get(db.getId()).writeLock().lock();
         try {
@@ -202,6 +185,11 @@ public class DataStore {
         } finally {
             locks.get(db.getId()).writeLock().unlock();
         }
+    }
+
+    @Override
+    public DBInterface bindTo(DataEntityDB db) {
+        return new DBImpl(db, this);
     }
 
     public void runTransaction(DataEntityDB db, DataTransaction transaction) throws POSUMException {

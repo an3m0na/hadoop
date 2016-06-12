@@ -71,7 +71,6 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
         dataClient.init(getConfig());
         addIfService(dataClient);
         dataClient.start();
-
     }
 
     @Override

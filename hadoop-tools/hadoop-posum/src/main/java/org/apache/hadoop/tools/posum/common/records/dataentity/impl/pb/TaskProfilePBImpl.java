@@ -243,9 +243,7 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public Boolean isLocal() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        if (p.hasLocal())
-            return p.getLocal();
-        return false;
+        return p.getLocal();
     }
 
     @Override
@@ -253,5 +251,17 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
         maybeInitBuilder();
         if (local != null)
             builder.setLocal(local);
+    }
+
+    @Override
+    public void setHttpAddress(String address) {
+        maybeInitBuilder();
+        builder.setHttpAddress(address);
+    }
+
+    @Override
+    public String getHttpAddress() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getHttpAddress();
     }
 }

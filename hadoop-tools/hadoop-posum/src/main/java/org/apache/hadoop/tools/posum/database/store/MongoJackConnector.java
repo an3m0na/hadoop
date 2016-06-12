@@ -1,6 +1,5 @@
 package org.apache.hadoop.tools.posum.database.store;
 
-import com.mongodb.DBCollection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
@@ -42,7 +41,7 @@ public class MongoJackConnector extends MongoConnector {
                     type.getMappedClass(),
                     String.class));
         }
-        logger.debug("Collections are:" + collections);
+        logger.trace("Collections are:" + collections);
     }
 
     synchronized void dropDatabase(DataEntityDB db) {
@@ -84,10 +83,6 @@ public class MongoJackConnector extends MongoConnector {
         this.<T>getCollection(db, collection).removeById(id);
     }
 
-    <T> void deleteObjects(DataEntityDB db, DataEntityType collection, String field, Object value) {
-        this.<T>getCollection(db, collection).remove(DBQuery.is(field, value));
-    }
-
     private DBQuery.Query composeQuery(Map<String, Object> queryParams) {
         ArrayList<DBQuery.Query> paramList = new ArrayList<>(queryParams.size());
         for (Map.Entry<String, Object> param : queryParams.entrySet()) {
@@ -102,10 +97,6 @@ public class MongoJackConnector extends MongoConnector {
 
     <T> T findObjectById(DataEntityDB db, DataEntityType collection, String id) {
         return this.<T>getCollection(db, collection).findOneById(id);
-    }
-
-    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, String field, Object value) {
-        return this.<T>getCollection(db, collection).find(DBQuery.is(field, value)).toArray();
     }
 
     <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, DBQuery.Query query, String... fieldProjections) {

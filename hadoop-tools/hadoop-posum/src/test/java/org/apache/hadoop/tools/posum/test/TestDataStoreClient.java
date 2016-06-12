@@ -10,6 +10,7 @@ import org.apache.hadoop.yarn.util.Records;
 import org.junit.Test;
 
 import javax.xml.crypto.Data;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +95,7 @@ public class TestDataStoreClient {
         DataStore myStore = new DataStore(conf);
 
         String appId = "testHistoryApp";
-        myStore.delete(db, DataEntityType.HISTORY, "originalId", appId);
+        myStore.delete(db, DataEntityType.HISTORY, Collections.singletonMap("originalId", (Object)appId));
         AppProfile app = Records.newRecord(AppProfile.class);
         app.setId(appId);
         app.setStartTime(System.currentTimeMillis());
@@ -105,7 +106,7 @@ public class TestDataStoreClient {
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("originalId", appId);
-        List<HistoryProfile> profilesById = dataStore.find(db, DataEntityType.HISTORY, properties);
+        List<HistoryProfile> profilesById = dataStore.find(db, DataEntityType.HISTORY, properties, 0, 0);
         System.out.println(profilesById);
         assertTrue(profilesById.size() == 1);
         HistoryProfile otherHistory = profilesById.get(0);

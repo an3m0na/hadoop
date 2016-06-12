@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -140,4 +141,8 @@ public interface JobProfile extends GeneralDataEntity {
     String getReducerClass();
 
     void setReducerClass(String name);
+
+    List<String> getSplitLocations();
+
+    void setSplitLocations(List<String> locations);
 }
