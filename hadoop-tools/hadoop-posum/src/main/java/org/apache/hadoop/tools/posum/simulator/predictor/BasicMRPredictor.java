@@ -29,7 +29,7 @@ public class BasicMRPredictor extends JobBehaviorPredictor {
         if (comparable.size() < 1) {
             // get past jobs at least by the same user
             comparable = getDataStore().find(
-                    DataEntityType.JOB,
+                    DataEntityType.JOB_HISTORY,
                     "user",
                     job.getUser(),
                     0,

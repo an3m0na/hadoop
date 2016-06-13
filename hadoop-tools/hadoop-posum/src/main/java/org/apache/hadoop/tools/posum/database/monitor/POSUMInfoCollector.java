@@ -58,6 +58,7 @@ public class POSUMInfoCollector {
                     dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
                             TaskPrediction.newInstance(taskId, duration)));
                 }
+                lastPrediction = now;
             }
         }
 
