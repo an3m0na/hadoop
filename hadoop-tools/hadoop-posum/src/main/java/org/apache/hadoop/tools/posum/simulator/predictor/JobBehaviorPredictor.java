@@ -22,7 +22,7 @@ public abstract class JobBehaviorPredictor {
         );
 
         try {
-            JobBehaviorPredictor  predictor = predictorClass.getConstructor(Configuration.class).newInstance(conf);
+            JobBehaviorPredictor  predictor = predictorClass.newInstance();
             predictor.conf = conf;
             return predictor;
         } catch (Exception e) {

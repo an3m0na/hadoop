@@ -84,6 +84,8 @@ public class MongoJackConnector extends MongoConnector {
     }
 
     private DBQuery.Query composeQuery(Map<String, Object> queryParams) {
+        if (queryParams == null || queryParams.size() == 0)
+            return DBQuery.empty();
         ArrayList<DBQuery.Query> paramList = new ArrayList<>(queryParams.size());
         for (Map.Entry<String, Object> param : queryParams.entrySet()) {
             paramList.add(DBQuery.is(param.getKey(), param.getValue()));
@@ -121,8 +123,6 @@ public class MongoJackConnector extends MongoConnector {
     }
 
     <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams, int offset, int limit) {
-        if (queryParams == null || queryParams.size() == 0)
-            return this.<T>getCollection(db, collection).find().toArray();
         return findObjects(db, collection, composeQuery(queryParams), offset, limit);
     }
 

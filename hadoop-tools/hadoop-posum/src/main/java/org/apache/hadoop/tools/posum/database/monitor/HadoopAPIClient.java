@@ -178,6 +178,7 @@ public class HadoopAPIClient {
                 throw new POSUMException("Unexpected number of jobs for mapreduce app " + appId);
             JsonNode rawJob = rawJobs.get(0);
             JobProfile job = previousJob != null ? previousJob : Records.newRecord(JobProfile.class);
+            job.setAppId(appId);
             job.setQueue(queue);
             job.setSubmitTime(rawJob.get("startTime").asLong());
             job.setStartTime(job.getSubmitTime());
@@ -299,7 +300,7 @@ public class HadoopAPIClient {
     public void addFinishedAttemptInfo(TaskProfile task) {
         try {
             String rawString = restClient.getInfo(String.class,
-                    RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/attempts", new String[]{task.getAppId(), task.getJobId(), task.getId()});
+                    RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/attempts", new String[]{task.getJobId(), task.getId()});
             if (rawString == null)
                 return;
             JsonNode wrapper = mapper.readTree(rawString);
@@ -318,6 +319,8 @@ public class HadoopAPIClient {
                         task.setMergeTime(rawAttempt.get("elapsedMergeTime").asLong());
                     if (rawAttempt.has("elapsedReduceTime"))
                         task.setReduceTime(rawAttempt.get("elapsedReduceTime").asLong());
+                    if (rawAttempt.has("nodeHttpAddress"))
+                        task.setHttpAddress(rawAttempt.get("nodeHttpAddress").asText());
                     return;
                 }
             }

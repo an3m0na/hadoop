@@ -105,8 +105,7 @@ public class ClusterInfoCollector {
         final List<TaskProfile> tasks = api.getFinishedTasksInfo(jobId);
         final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
         for (TaskProfile task : tasks) {
-            if (task.getType().equals(TaskType.REDUCE))
-                api.addRunningAttemptInfo(task);
+            api.addFinishedAttemptInfo(task);
             taskCounters.add(api.getFinishedTaskCounters(jobId, task.getId()));
         }
 
@@ -165,8 +164,7 @@ public class ClusterInfoCollector {
                     if (duration > 0) {
                         // task has finished; get statistics
 
-                        if (task.getType().equals(TaskType.REDUCE))
-                            api.addRunningAttemptInfo(task);
+                        api.addRunningAttemptInfo(task);
 
                         CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
                         if (counters != null) {
