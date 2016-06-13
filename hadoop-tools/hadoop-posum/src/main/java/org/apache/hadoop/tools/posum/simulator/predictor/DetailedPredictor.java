@@ -284,12 +284,17 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             // if the typical shuffle rate is not calculated, we are missing information
             // compute averages based on history
             List<JobProfile> comparable = getComparableProfiles(job, TaskType.REDUCE);
-            if (comparable.size() < 1) {
-                // TODO add check and complete from map duration
-                logger.debug("No data to compute reduce for job " + job.getName() + ". Using default");
-                // return the default; there is nothing we can do
-                return conf.getLong(POSUMConfiguration.AVERAGE_JOB_DURATION,
-                        POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
+            if (comparable.size() < 1 || !comparable.get(0).getReducerClass().equals(job.getReducerClass())) {
+                if (job.getCompletedMaps() == 0) {
+                    logger.debug("No data to compute reduce for job " + job.getName() + ". Using default");
+                    // return the default; there is nothing we can do
+                    return conf.getLong(POSUMConfiguration.AVERAGE_JOB_DURATION,
+                            POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
+                }
+                logger.debug("Reduce duration computed based on map data for job" + job.getId());
+                double mapRate = 1.0 * job.getInputBytes() / job.getAvgMapDuration();
+                // we assume the reduce processing rate is the same as the average map processing rate
+                return Double.valueOf(inputPerTask / mapRate).longValue();
             } else {
                 // compute the reducer processing rates
                 Double avgMergeRate = 0.0, avgReduceRate = 0.0, avgShuffleRate = 0.0;
