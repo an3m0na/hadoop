@@ -437,6 +437,14 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
+    public String getReducerClass() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if(!p.hasReducerClass())
+            return null;
+        return p.getReducerClass();
+    }
+
+    @Override
     public void setMapperClass(String name) {
         maybeInitBuilder();
         if (name != null) {
@@ -447,6 +455,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public String getMapperClass() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if(!p.hasMapperClass())
+            return null;
         return p.getMapperClass();
     }
 
@@ -469,11 +479,5 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
         maybeInitBuilder();
         builder.clearSplitLocations();
         builder.addAllSplitLocations(locations);
-    }
-
-    @Override
-    public String getReducerClass() {
-        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getReducerClass();
     }
 }

@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.conf.Configuration;
 
 import java.util.Map;
 
@@ -14,9 +14,9 @@ public interface JobConfProxy extends GeneralDataEntity {
     String getEntry(String name);
 
     @JsonIgnore
-    JobConf getConf();
+    Configuration getConf();
 
-    void setConf(JobConf conf);
+    void setConf(Configuration conf);
 
     String getConfPath();
 

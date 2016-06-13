@@ -4,10 +4,7 @@ import com.mongodb.DuplicateKeyException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.split.JobSplit;
@@ -96,17 +93,54 @@ public class ClusterInfoCollector {
             jobId = job.getId();
         } else {
             // update the running info with the history info
-            jobId = jobs.get(0).getId();
-            job = api.getFinishedJobInfo(appId, jobId);
+            JobProfile previousJob = jobs.get(0);
+            jobId = previousJob.getId();
+            job = api.getFinishedJobInfo(appId, jobId, previousJob);
         }
         final JobProfile finalJob = job;
+
         final JobConfProxy jobConf = api.getFinishedJobConf(jobId);
         final CountersProxy jobCounters = api.getFinishedJobCounters(jobId);
+
+        if (jobCounters != null) {
+            for (CounterGroupInfoPayload group : jobCounters.getCounterGroup()) {
+                if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
+                    for (CounterInfoPayload counter : group.getCounter()) {
+                        switch (counter.getName()) {
+                            case "MAP_OUTPUT_BYTES":
+                                job.setMapOutputBytes(counter.getTotalCounterValue());
+                                break;
+                            case "REDUCE_SHUFFLE_BYTES":
+                                job.setReduceInputBytes(counter.getTotalCounterValue());
+                                break;
+                        }
+                    }
+                if (FileSystemCounter.class.getName().equals(group.getCounterGroupName()))
+                    for (CounterInfoPayload counter : group.getCounter()) {
+                        switch (counter.getName()) {
+                            case "FILE_BYTES_READ":
+                                job.setInputBytes(job.getInputBytes() + counter.getMapCounterValue());
+                                break;
+                            case "HDFS_BYTES_READ":
+                                job.setInputBytes(job.getInputBytes() + counter.getMapCounterValue());
+                                break;
+                            case "HDFS_BYTES_WRITTEN":
+                                job.setOutputBytes(job.getOutputBytes() + counter.getReduceCounterValue());
+                                break;
+                        }
+                    }
+            }
+        }
+
         final List<TaskProfile> tasks = api.getFinishedTasksInfo(jobId);
         final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
         for (TaskProfile task : tasks) {
             api.addFinishedAttemptInfo(task);
-            taskCounters.add(api.getFinishedTaskCounters(jobId, task.getId()));
+            CountersProxy counters = api.getFinishedTaskCounters(jobId, task.getId());
+            if (counters != null) {
+                taskCounters.add(counters);
+                parseTaskCounters(task, counters);
+            }
         }
 
         // move info in database
@@ -129,6 +163,7 @@ public class ClusterInfoCollector {
                     for (CountersProxy counters : taskCounters) {
                         if (counters == null)
                             continue;
+                        dataStore.delete(db, DataEntityType.COUNTER, counters.getId());
                         dataStore.store(db, DataEntityType.COUNTER_HISTORY, counters);
                     }
                 } catch (Exception e) {
@@ -136,6 +171,50 @@ public class ClusterInfoCollector {
                 }
             }
         });
+    }
+
+    private void parseTaskCounters(TaskProfile task, CountersProxy counters) {
+
+        for (CounterGroupInfoPayload group : counters.getCounterGroup()) {
+            if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
+                for (CounterInfoPayload counter : group.getCounter()) {
+                    switch (counter.getName()) {
+                        case "MAP_OUTPUT_BYTES":
+                            if (task.getType().equals(TaskType.MAP))
+                                task.setOutputBytes(counter.getTotalCounterValue());
+                            break;
+                        case "REDUCE_SHUFFLE_BYTES":
+                            if (task.getType().equals(TaskType.REDUCE))
+                                task.setInputBytes(counter.getTotalCounterValue());
+                            break;
+                    }
+                }
+            if (FileSystemCounter.class.getName().equals(group.getCounterGroupName()))
+                for (CounterInfoPayload counter : group.getCounter()) {
+                    switch (counter.getName()) {
+                        case "FILE_BYTES_READ":
+                            if (task.getType().equals(TaskType.MAP))
+                                task.setOutputBytes(task.getOutputBytes() +
+                                        counter.getTotalCounterValue());
+                            break;
+                        case "HDFS_BYTES_READ":
+                            if (task.getType().equals(TaskType.MAP)) {
+                                task.setInputBytes(task.getInputBytes() +
+                                        counter.getTotalCounterValue());
+                                if (counter.getTotalCounterValue() > 0)
+                                    task.setLocal(false);
+                                else
+                                    task.setLocal(true);
+                            }
+                            break;
+                        case "HDFS_BYTES_WRITTEN":
+                            if (task.getType().equals(TaskType.REDUCE))
+                                task.setOutputBytes(task.getOutputBytes() +
+                                        counter.getTotalCounterValue());
+                            break;
+                    }
+                }
+        }
     }
 
     private void updateAppInfo(final AppProfile app) {
@@ -151,9 +230,22 @@ public class ClusterInfoCollector {
             if (job == null)
                 logger.warn("Could not find job for " + app.getId());
             else {
+                JobConfProxy jobConf = null;
+                if (job.getMapperClass() == null) {
+                    try {
+                        jobConf = getSubmittedJobConf(conf, app.getId(), app.getUser());
+                        if (jobConf != null) {
+                            job.setMapperClass(jobConf.getEntry(MRJobConfig.MAP_CLASS_ATTR));
+                            job.setReducerClass(jobConf.getEntry(MRJobConfig.REDUCE_CLASS_ATTR));
+                        }
+                    } catch (IOException e) {
+                        logger.warn("Could not retrieve configuration for running job " + job.getId());
+                    }
+                }
                 final CountersProxy jobCounters = api.getRunningJobCounters(app.getId(), job.getId());
                 final List<TaskProfile> tasks = api.getRunningTasksInfo(job);
                 final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
+                final JobConfProxy finalJobConf = jobConf;
 
                 long mapDuration = 0, reduceDuration = 0, reduceTime = 0, shuffleTime = 0, mergeTime = 0, avgDuration = 0;
                 int mapNo = 0, reduceNo = 0, avgNo = 0;
@@ -169,46 +261,7 @@ public class ClusterInfoCollector {
                         CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
                         if (counters != null) {
                             taskCounters.add(counters);
-                            for (CounterGroupInfoPayload group : counters.getCounterGroup()) {
-                                if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
-                                    for (CounterInfoPayload counter : group.getCounter()) {
-                                        switch (counter.getName()) {
-                                            case "MAP_OUTPUT_BYTES":
-                                                if (task.getType().equals(TaskType.MAP))
-                                                    task.setOutputBytes(counter.getTotalCounterValue());
-                                                break;
-                                            case "REDUCE_SHUFFLE_BYTES":
-                                                if (task.getType().equals(TaskType.REDUCE))
-                                                    task.setInputBytes(counter.getTotalCounterValue());
-                                                break;
-                                        }
-                                    }
-                                if (FileSystemCounter.class.getName().equals(group.getCounterGroupName()))
-                                    for (CounterInfoPayload counter : group.getCounter()) {
-                                        switch (counter.getName()) {
-                                            case "FILE_BYTES_READ":
-                                                if (task.getType().equals(TaskType.MAP))
-                                                    task.setOutputBytes(task.getOutputBytes() +
-                                                            counter.getTotalCounterValue());
-                                                break;
-                                            case "HDFS_BYTES_READ":
-                                                if (task.getType().equals(TaskType.MAP)) {
-                                                    task.setInputBytes(task.getInputBytes() +
-                                                            counter.getTotalCounterValue());
-                                                    if (counter.getTotalCounterValue() > 0)
-                                                        task.setLocal(false);
-                                                    else
-                                                        task.setLocal(true);
-                                                }
-                                                break;
-                                            case "HDFS_BYTES_WRITTEN":
-                                                if (task.getType().equals(TaskType.REDUCE))
-                                                    task.setOutputBytes(task.getOutputBytes() +
-                                                            counter.getTotalCounterValue());
-                                                break;
-                                        }
-                                    }
-                            }
+                            parseTaskCounters(task, counters);
                         }
 
                         if (TaskType.MAP.equals(task.getType())) {
@@ -261,6 +314,14 @@ public class ClusterInfoCollector {
                     @Override
                     public void run() throws Exception {
                         dataStore.updateOrStore(db, DataEntityType.JOB, job);
+                        if (finalJobConf != null) {
+                            try {
+                                dataStore.store(db, DataEntityType.JOB_CONF, finalJobConf);
+                            } catch (DuplicateKeyException e) {
+                                // can happen; do nothing
+                            }
+                            logger.debug("Saved running configuration");
+                        }
                         dataStore.updateOrStore(db, DataEntityType.COUNTER, jobCounters);
                         for (CountersProxy counters : taskCounters)
                             dataStore.updateOrStore(db, DataEntityType.COUNTER, counters);
@@ -330,7 +391,7 @@ public class ClusterInfoCollector {
         return job;
     }
 
-    private static JobProfile getJobProfileFromConf(String appId, JobId jobId, FileSystem fs, JobConf conf, Path jobSubmitDir) throws IOException {
+    private static JobProfile getJobProfileFromConf(String appId, JobId jobId, FileSystem fs, Configuration conf, Path jobSubmitDir) throws IOException {
         JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = SplitMetaInfoReader.readSplitMetaInfo(
                 TypeConverter.fromYarn(jobId), fs,
                 conf,
@@ -346,12 +407,12 @@ public class ClusterInfoCollector {
         JobProfile profile = Records.newRecord(JobProfile.class);
         profile.setId(jobId.toString());
         profile.setAppId(appId);
-        profile.setName(conf.getJobName());
-        profile.setUser(conf.getUser());
+        profile.setName(conf.get(MRJobConfig.JOB_NAME));
+        profile.setUser(conf.get(MRJobConfig.USER_NAME));
         profile.setTotalInputBytes(inputLength);
         profile.setInputSplits(taskSplitMetaInfo.length);
-        profile.setMapperClass(conf.get("mapred.mapper.class"));
-        profile.setReducerClass(conf.get("mapred.reducer.class"));
+        profile.setMapperClass(conf.get(MRJobConfig.MAP_CLASS_ATTR));
+        profile.setReducerClass(conf.get(MRJobConfig.REDUCE_CLASS_ATTR));
         profile.setSplitLocations(splitLocations);
         return profile;
     }
@@ -392,7 +453,9 @@ public class ClusterInfoCollector {
 
         Path jobConfDir = statuses[0].getPath();
         logger.trace("Checking file path: " + jobConfDir);
-        JobConf jobConf = new JobConf(new Path(jobConfDir, "job.xml"));
+        Path jobConfPath = new Path(jobConfDir, "job.xml");
+        Configuration jobConf = new JobConf(false);
+        jobConf.addResource(fs.open(jobConfPath), jobConfPath.toString());
         JobConfProxy proxy = Records.newRecord(JobConfProxy.class);
         proxy.setId(jobConfDir.getName());
         proxy.setConfPath(jobConfDir.toUri().toString());
