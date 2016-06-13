@@ -95,7 +95,7 @@ public class BasicMRPredictor extends JobBehaviorPredictor {
         if (job.getAvgReduceDuration() != 0)
             return job.getAvgReduceDuration();
         List<JobProfile> comparable = getComparableProfiles(job, TaskType.REDUCE);
-        if (comparable.size() < 1 || !comparable.get(0).getName().equals(job.getName())) {
+        if (comparable.size() < 1 || !comparable.get(0).getReducerClass().equals(job.getReducerClass())) {
             // non-existent or irrelevant historical data
             if (job.getCompletedMaps() == 0) {
                 logger.debug("No data to compute reduce for job " + job.getName() + ". Using default");
