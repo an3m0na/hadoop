@@ -15,6 +15,7 @@ import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.apache.hadoop.yarn.util.Records;
 import org.mongojack.DBQuery;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,7 @@ public class DataStore implements DataClientInterface {
         conn.dropDatabase(logDb);
         conn.addDatabase(logDb,
                 DataEntityType.LOG_SCHEDULER,
+                DataEntityType.LOG_PREDICTOR,
                 DataEntityType.POSUM_STATS);
         locks.put(logDb.getId(), new ReentrantReadWriteLock());
         conn.addDatabase(simDb,
@@ -82,14 +84,7 @@ public class DataStore implements DataClientInterface {
                                                       int limit) {
         locks.get(db.getId()).readLock().lock();
         try {
-            // TODO use offset and limit
-            return conn.findObjects(
-                    db,
-                    collection,
-                    queryParams == null ? Collections.<String, Object>emptyMap() : queryParams,
-                    offset,
-                    limit
-            );
+            return conn.findObjects(db, collection, queryParams, offset, limit);
         } finally {
             locks.get(db.getId()).readLock().unlock();
         }
@@ -98,17 +93,17 @@ public class DataStore implements DataClientInterface {
     @Override
     public List<String> listIds(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
         locks.get(db.getId()).readLock().lock();
+        List rawList = Collections.emptyList();
         try {
-            return conn.findObjects(
-                    db,
-                    collection,
-                    queryParams == null ? Collections.<String, Object>emptyMap() : queryParams,
-                    "_id"
-            );
+            rawList = conn.findObjects(db, collection, queryParams, "_id");
         } finally {
             locks.get(db.getId()).readLock().unlock();
-
         }
+        List<String> ret = new ArrayList<>(rawList.size());
+        for (Object rawObject : rawList) {
+            ret.add(collection.getMappedClass().cast(rawObject).getId());
+        }
+        return ret;
     }
 
     @Override

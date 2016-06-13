@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.field.impl.pb;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.field.EntityProperty;
 import org.apache.hadoop.tools.posum.common.records.field.TaskPrediction;
@@ -12,6 +14,8 @@ import java.io.IOException;
 /**
  * Created by ane on 3/20/16.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public class TaskPredictionPBImpl extends TaskPrediction {
     private TaskPredictionProto proto = TaskPredictionProto.getDefaultInstance();
     private TaskPredictionProto.Builder builder = null;
@@ -26,6 +30,8 @@ public class TaskPredictionPBImpl extends TaskPrediction {
         viaProto = true;
     }
 
+    @JsonIgnore
+    @org.codehaus.jackson.annotate.JsonIgnore
     public TaskPredictionProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
