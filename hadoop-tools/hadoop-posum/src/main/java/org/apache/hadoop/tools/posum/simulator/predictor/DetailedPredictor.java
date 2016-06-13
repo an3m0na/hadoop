@@ -37,16 +37,19 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 Collections.<String, Object>emptyMap());
         for (String jobId : historyJobIds) {
             JobProfile job = dataStore.findById(DataEntityType.JOB_HISTORY, jobId);
-            List<TaskProfile> tasks = dataStore.find(DataEntityType.TASK_HISTORY, "jobId", jobId);
-            if (job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null) {
-                Map<String, String> fields = calculateFlexFields(job, tasks);
-                fields.put(FLEX_KEY_PREFIX + FlexKeys.PROFILED, "true");
-                dataStore.saveFlexFields(jobId, fields, false);
-            }
+            if (job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null)
+                completeProfile(job);
         }
     }
 
-    private Map<String, String> calculateFlexFields(JobProfile job, List<TaskProfile> tasks) {
+    private void completeProfile(JobProfile job) {
+        List<TaskProfile> tasks = getDataStore().find(DataEntityType.TASK_HISTORY, "jobId", job.getId());
+        Map<String, String> fields = calculateCurrentProfile(job, tasks);
+        fields.put(FLEX_KEY_PREFIX + FlexKeys.PROFILED, "true");
+        getDataStore().saveFlexFields(job.getId(), fields, true);
+    }
+
+    private Map<String, String> calculateCurrentProfile(JobProfile job, List<TaskProfile> tasks) {
 
         //WARNING! the job and tasks stats might not be consistent because they were queried separately
 
@@ -64,7 +67,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     // this is a finished map task; split stats into remote and local
                     if (mapFinish < task.getFinishTime())
                         mapFinish = task.getFinishTime();
-                    double newRate = task.getInputBytes() / task.getDuration();
+                    double newRate = 1.0 * task.getInputBytes() / task.getDuration();
                     if (task.isLocal()) {
                         mapLocalRate += newRate;
                         mapLocalNo++;
@@ -80,17 +83,19 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             }
             if (mapRemoteNo != 0 && mapRemoteRate != 0) {
                 fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.MAP_REMOTE,
-                        Double.toString(mapRemoteRate / mapLocalNo));
+                        Double.toString(mapRemoteRate / mapRemoteNo));
             }
             fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY,
-                    Double.toString(1.0 * job.getReduceInputBytes() / job.getInputBytes()));
+                    Double.toString(1.0 * job.getMapOutputBytes() / job.getInputBytes()));
             if (mapLocalNo + mapRemoteNo != job.getTotalMapTasks()) {
                 // map phase has not finished yet
                 mapFinish = Long.MAX_VALUE;
             }
+            logger.debug("mapFinish for " + job.getId() + " is " + mapFinish);
         }
 
         if (job.getCompletedReduces() > 0) {
+            logger.debug("Some reduces are complete for " + job.getId());
             for (TaskProfile task : tasks) {
                 if (task.getDuration() <= 0)
                     continue;
@@ -98,12 +103,12 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 if (task.getType().equals(TaskType.REDUCE)) {
                     // this is a finished reduce task; split stats into shuffle, merge and reduce
                     if (task.getReduceTime() > 0)
-                        reduceRate += task.getInputBytes() / task.getReduceTime();
+                        reduceRate += 1.0 * task.getInputBytes() / task.getReduceTime();
                     if (task.getMergeTime() > 0)
-                        mergeRate += task.getInputBytes() / task.getMergeTime();
+                        mergeRate += 1.0 * task.getInputBytes() / task.getMergeTime();
                     if (task.getStartTime() > mapFinish) {
                         // the task was not in the first reduce wave; store shuffle time under typical
-                        shuffleTypicalRate += task.getInputBytes() / task.getShuffleTime();
+                        shuffleTypicalRate += 1.0 * task.getInputBytes() / task.getShuffleTime();
                         typicalShuffleNo++;
                     } else {
                         // record only the time spent shuffling after map phase finished
@@ -115,14 +120,14 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.MERGE, Double.toString(mergeRate / reduceNo));
             if (shuffleFirstTime != 0) {
                 fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_FIRST,
-                        Double.toString(shuffleFirstTime / (reduceNo - typicalShuffleNo)));
+                        Long.toString(shuffleFirstTime / (reduceNo - typicalShuffleNo)));
             }
             if (shuffleTypicalRate != 0) {
                 fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_TYPICAL,
                         Double.toString(shuffleTypicalRate / reduceNo));
             }
-
         }
+        job.getFlexFields().putAll(fieldMap);
         return fieldMap;
     }
 
@@ -156,12 +161,12 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         JobProfile job = getDataStore().findById(DataEntityType.JOB, jobId);
 
         Map<String, String> flexFields =
-                calculateFlexFields(job, getDataStore().<TaskProfile>find(DataEntityType.TASK, "jobId", job.getId()));
+                calculateCurrentProfile(job, getDataStore().<TaskProfile>find(DataEntityType.TASK, "jobId", job.getId()));
 
         getDataStore().saveFlexFields(job.getId(), flexFields, false);
 
-        return predictMapTaskDuration(job, flexFields, true) * job.getTotalMapTasks() +
-                predictReduceTaskDuration(job, flexFields) * job.getTotalReduceTasks();
+        return predictMapTaskDuration(job, true) * job.getTotalMapTasks() +
+                predictReduceTaskDuration(job) * job.getTotalReduceTasks();
     }
 
     @Override
@@ -169,15 +174,15 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         JobProfile job = getDataStore().findById(DataEntityType.JOB, jobId);
 
         Map<String, String> flexFields =
-                calculateFlexFields(job, getDataStore().<TaskProfile>find(DataEntityType.TASK, "jobId", job.getId()));
+                calculateCurrentProfile(job, getDataStore().<TaskProfile>find(DataEntityType.TASK, "jobId", job.getId()));
 
         getDataStore().saveFlexFields(job.getId(), flexFields, false);
 
         if (type.equals(TaskType.MAP)) {
             // assuming the task is remote
-            return predictMapTaskDuration(job, flexFields, true);
+            return predictMapTaskDuration(job, true);
         } else {
-            return predictReduceTaskDuration(job, flexFields);
+            return predictReduceTaskDuration(job);
         }
     }
 
@@ -186,43 +191,82 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         JobProfile job = getDataStore().findById(DataEntityType.JOB, jobId);
 
         Map<String, String> flexFields =
-                calculateFlexFields(job, getDataStore().<TaskProfile>find(DataEntityType.TASK, "jobId", job.getId()));
+                calculateCurrentProfile(job, getDataStore().<TaskProfile>find(DataEntityType.TASK, "jobId", job.getId()));
 
         getDataStore().saveFlexFields(job.getId(), flexFields, false);
 
-        return predictMapTaskDuration(job, flexFields, false);
+        return predictMapTaskDuration(job, false);
     }
 
-    private Long predictMapTaskDuration(JobProfile job, Map<String, String> flexFields, boolean remote) {
+    private Long predictMapTaskDuration(JobProfile job, boolean remote) {
 
         String rateKey = FLEX_KEY_PREFIX + (remote ? FlexKeys.MAP_REMOTE : FlexKeys.MAP_LOCAL);
+        Map<String, String> flexFields = job.getFlexFields();
         String rateString = flexFields.get(rateKey);
 
         Double rate = 0.0;
         if (rateString == null) {
             // compute the average map processing rate from history
             List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
-            if (comparable.size() < 1)
+            if (comparable.size() < 1) {
+                logger.debug("No map history data for job " + job.getId() + ". Using default");
                 // return the default; there is nothing we can do
                 return conf.getLong(POSUMConfiguration.AVERAGE_JOB_DURATION,
                         POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
-            for (JobProfile profile : comparable)
-                rate += Double.valueOf(profile.getFlexField(rateKey));
-            rate /= comparable.size();
+            }
+            int numRates = 0;
+            for (JobProfile profile : comparable) {
+                if (profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null) {
+                    completeProfile(profile);
+                }
+                rateString = profile.getFlexField(rateKey);
+                if (rateString != null) {
+                    rate += Double.valueOf(rateString);
+                    numRates++;
+                }
+            }
+            rate /= numRates;
         } else {
             rate = Double.valueOf(rateString);
         }
         // multiply by how much input each task has
         long splitSize = job.getInputBytes() / job.getTotalMapTasks();
+        logger.debug("Map duration for " + job.getId() + " should be " + splitSize + " / " + rate);
         return Double.valueOf(splitSize / rate).longValue();
     }
 
-    private Long predictReduceTaskDuration(JobProfile job, Map<String, String> flexFields) {
+    private double calculateMapTaskSelectivity(JobProfile job) {
+        String selectivityString = job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY);
+        if (selectivityString != null)
+            // we know the current selectivity
+            return Double.valueOf(selectivityString);
+
+        // we have to compute selectivity from the map history
+        List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
+        if (comparable.size() < 1) {
+            return 1.0;
+        }
+        double avgSelectivity = 0;
+        for (JobProfile profile : comparable) {
+            if (profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null) {
+                completeProfile(profile);
+            }
+            avgSelectivity += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY));
+        }
+        return avgSelectivity / comparable.size();
+    }
+
+    private Long predictReduceTaskDuration(JobProfile job) {
 
         Double mergeRate = null, reduceRate = null, shuffleRate = null;
         Long shuffleTime = null;
 
+        // calculate how much input the task has
+        double reduceInputSize = job.getTotalInputBytes() * calculateMapTaskSelectivity(job);
+        double inputPerTask = reduceInputSize / job.getTotalReduceTasks();
+
         String flexString;
+        Map<String, String> flexFields = job.getFlexFields();
         flexString = flexFields.get(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_FIRST);
         if (flexString != null)
             shuffleTime = Long.valueOf(flexString);
@@ -241,6 +285,8 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             // compute averages based on history
             List<JobProfile> comparable = getComparableProfiles(job, TaskType.REDUCE);
             if (comparable.size() < 1) {
+                // TODO add check and complete from map duration
+                logger.debug("No data to compute reduce for job " + job.getName() + ". Using default");
                 // return the default; there is nothing we can do
                 return conf.getLong(POSUMConfiguration.AVERAGE_JOB_DURATION,
                         POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
@@ -248,15 +294,29 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 // compute the reducer processing rates
                 Double avgMergeRate = 0.0, avgReduceRate = 0.0, avgShuffleRate = 0.0;
                 Long avgShuffleTime = 0L;
+                int firstShuffles = 0, typicalShuffles = 0;
+                String rateString;
                 for (JobProfile profile : comparable) {
-                    avgShuffleTime += Long.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_FIRST));
-                    avgShuffleRate += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_TYPICAL));
+                    if (profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null) {
+                        completeProfile(profile);
+                    }
+                    rateString = profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_FIRST);
+                    if (rateString != null) {
+                        avgShuffleTime += Long.valueOf(rateString);
+                        firstShuffles++;
+                    }
+                    rateString = profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_TYPICAL);
+                    if (rateString != null) {
+                        avgShuffleRate += Double.valueOf(rateString);
+                        typicalShuffles++;
+                    }
                     avgMergeRate += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MERGE));
                     avgReduceRate += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.REDUCE));
                 }
-                shuffleRate = avgShuffleRate / comparable.size();
-                if (shuffleTime == null)
-                    shuffleTime = avgShuffleTime / comparable.size();
+                if (typicalShuffles > 0)
+                    shuffleRate = avgShuffleRate / typicalShuffles;
+                if (shuffleTime == null && firstShuffles > 0)
+                    shuffleTime = avgShuffleTime / firstShuffles;
                 if (mergeRate == null)
                     mergeRate = avgMergeRate / comparable.size();
                 if (reduceRate == null)
@@ -264,21 +324,24 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             }
         }
 
-        // calculate how much input the task has
-        double reduceInputSize = job.getTotalInputBytes() *
-                Double.valueOf(job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY));
-        double inputPerTask = reduceInputSize / job.getTotalReduceTasks();
-
-        if (job.getCompletedMaps().equals(job.getTotalMapTasks())) {
-            // this is not the first wave; shuffle time will be dependent on input
-            shuffleTime = Double.valueOf(inputPerTask / shuffleRate).longValue();
-
+        // if it is a typical shuffle or there is no first shuffle information
+        if (job.getCompletedMaps().equals(job.getTotalMapTasks()) || shuffleTime == null) {
+            // shuffle time will be dependent on input
+            if (shuffleRate != null)
+                shuffleTime = Double.valueOf(inputPerTask / shuffleRate).longValue();
+            else
+                // there is no first or typical shuffle information; shuffle should take at least as merge
+                shuffleTime = Double.valueOf(inputPerTask / mergeRate).longValue();
         }
-        if (shuffleTime == null || mergeRate == null || reduceRate == null)
+
+        if (mergeRate == null || reduceRate == null)
             throw new POSUMException("Something went wrong when calculating rates for prediction" +
                     " shuffleTime=" + shuffleTime +
                     " mergeRate" + mergeRate +
                     " reduceRate" + reduceRate);
+        logger.debug("Reduce duration for " + job.getId() + " should be " + shuffleTime + " + " +
+                inputPerTask + " / " + mergeRate + " + " +
+                inputPerTask + " / " + reduceRate);
         return shuffleTime + Double.valueOf(inputPerTask / mergeRate + inputPerTask / reduceRate).longValue();
     }
 

@@ -41,10 +41,10 @@ public class POSUMConfiguration {
     public static final int PREDICTION_BUFFER_DEFAULT = 5;
 
     public static final String AVERAGE_JOB_DURATION = PREDICTOR_PREFIX + "avgJobDuration";
-    public static final long AVERAGE_JOB_DURATION_DEFAULT = 300000;
+    public static final long AVERAGE_JOB_DURATION_DEFAULT = 360000;
 
     public static final String AVERAGE_TASK_DURATION = PREDICTOR_PREFIX + "avgTaskDuration";
-    public static final int AVERAGE_TASK_DURATION_DEFAULT = 10000;
+    public static final int AVERAGE_TASK_DURATION_DEFAULT = 6000;
 
     public static final String PREDICTOR_CLASS = PREDICTOR_PREFIX + "class";
     public static final String PREDICTOR_TIMEOUT = PREDICTOR_PREFIX + "timeout";

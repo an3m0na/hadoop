@@ -132,10 +132,10 @@ public class DataStore implements DataClientInterface {
             DataEntityType type = forHistory ? DataEntityType.JOB_HISTORY : DataEntityType.JOB;
             JobProfile job = findById(db, type, jobId);
             if (job == null)
-                throw new YarnRuntimeException("Flex-fields for job " + jobId + " were not found");
+                throw new POSUMException("Could not find job to save flex-fields: " + jobId);
 
             job.getFlexFields().putAll(newFields);
-            store(db, type, job);
+            updateOrStore(db, type, job);
         } finally {
             locks.get(db.getId()).writeLock().unlock();
         }
