@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.simulator.predictor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
@@ -17,6 +19,8 @@ import java.util.Map;
  * Created by ane on 2/9/16.
  */
 public class DetailedPredictor extends JobBehaviorPredictor {
+
+    private static final Log logger = LogFactory.getLog(DetailedPredictor.class);
 
     private static final String FLEX_KEY_PREFIX = DetailedPredictor.class.getSimpleName() + "::";
 
@@ -79,7 +83,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                         Double.toString(mapRemoteRate / mapLocalNo));
             }
             fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY,
-                    Double.toString(1.0 * job.getInputBytes() / job.getOutputBytes()));
+                    Double.toString(1.0 * job.getReduceInputBytes() / job.getInputBytes()));
             if (mapLocalNo + mapRemoteNo != job.getTotalMapTasks()) {
                 // map phase has not finished yet
                 mapFinish = Long.MAX_VALUE;
@@ -246,7 +250,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 Long avgShuffleTime = 0L;
                 for (JobProfile profile : comparable) {
                     avgShuffleTime += Long.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_FIRST));
-                    avgShuffleRate += Long.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_TYPICAL));
+                    avgShuffleRate += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_TYPICAL));
                     avgMergeRate += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MERGE));
                     avgReduceRate += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.REDUCE));
                 }
@@ -261,9 +265,9 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         }
 
         // calculate how much input the task has
-        long reduceInputSize = Double.valueOf(job.getTotalInputBytes() /
-                Double.valueOf(job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY))).longValue();
-        long inputPerTask = reduceInputSize / job.getTotalReduceTasks();
+        double reduceInputSize = job.getTotalInputBytes() *
+                Double.valueOf(job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY));
+        double inputPerTask = reduceInputSize / job.getTotalReduceTasks();
 
         if (job.getCompletedMaps().equals(job.getTotalMapTasks())) {
             // this is not the first wave; shuffle time will be dependent on input
@@ -275,8 +279,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     " shuffleTime=" + shuffleTime +
                     " mergeRate" + mergeRate +
                     " reduceRate" + reduceRate);
-        return shuffleTime + Double.valueOf(inputPerTask / mergeRate).longValue() +
-                Double.valueOf(inputPerTask / reduceRate).longValue();
+        return shuffleTime + Double.valueOf(inputPerTask / mergeRate + inputPerTask / reduceRate).longValue();
     }
 
     @Override

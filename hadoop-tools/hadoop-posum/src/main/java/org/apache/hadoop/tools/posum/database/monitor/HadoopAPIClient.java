@@ -110,20 +110,20 @@ public class HadoopAPIClient {
                 // the one with an identical timestamp with the appId
                 String jobId = rawJobs.get(i).get("id").asText();
                 if (expectedJobId.equals(jobId))
-                    return getFinishedJobInfo(appId, jobId);
+                    return getFinishedJobInfo(appId, jobId, null);
                 String[] parts = jobId.split("_");
                 if (realAppId.getClusterTimestamp() == Long.parseLong(parts[1])) {
                     lastRelatedJobId = jobId;
                 }
             }
-            return getFinishedJobInfo(appId, lastRelatedJobId);
+            return getFinishedJobInfo(appId, lastRelatedJobId, null);
         } catch (IOException e) {
             logger.debug("Exception parsing JSON string", e);
             return null;
         }
     }
 
-    public JobProfile getFinishedJobInfo(String appId, String jobId) {
+    public JobProfile getFinishedJobInfo(String appId, String jobId, JobProfile previousJob) {
         try {
             String rawString = restClient.getInfo(String.class,
                     RestClient.TrackingUI.HISTORY, "jobs/%s", new String[]{jobId});
@@ -135,7 +135,7 @@ public class HadoopAPIClient {
             JsonNode rawJob = wrapper.get("job");
             if (rawJob.isNull())
                 return null;
-            JobProfile job = Records.newRecord(JobProfile.class);
+            JobProfile job = previousJob != null ? previousJob : Records.newRecord(JobProfile.class);
             job.setId(rawJob.get("id").asText());
             job.setAppId(appId);
             job.setSubmitTime(rawJob.get("submitTime").asLong());

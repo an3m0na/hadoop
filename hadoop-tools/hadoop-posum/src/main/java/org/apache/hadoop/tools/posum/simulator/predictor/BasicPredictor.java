@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.simulator.predictor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
@@ -13,6 +15,8 @@ import java.util.List;
  * Created by ane on 2/9/16.
  */
 public class BasicPredictor extends JobBehaviorPredictor {
+
+    private static final Log logger = LogFactory.getLog(BasicPredictor.class);
 
     private List<JobProfile> getComparableProfiles(JobProfile job) {
         // get past jobs with the same name

@@ -36,4 +36,6 @@ public abstract class CounterInfoPayload {
 
     public abstract void setName(String name);
 
+    public abstract void setValue(long total);
+
 }
