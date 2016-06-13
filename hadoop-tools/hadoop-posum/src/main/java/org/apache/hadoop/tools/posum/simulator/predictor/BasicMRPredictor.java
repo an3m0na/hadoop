@@ -74,6 +74,23 @@ public class BasicMRPredictor extends JobBehaviorPredictor {
         return Double.valueOf(job.getTotalInputBytes() / avgMapRate).longValue();
     }
 
+    private double calculateMapTaskSelectivity(JobProfile job) {
+        if (job.getCompletedMaps() > 0)
+            // we know the current selectivity
+            return 1.0 * job.getMapOutputBytes() / job.getInputBytes();
+
+        // we have to compute selectivity from the map history
+        List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
+        if (comparable.size() < 1) {
+            return 1.0;
+        }
+        double avgSelectivity = 0;
+        for (JobProfile profile : comparable) {
+            avgSelectivity += 1.0 * profile.getMapOutputBytes() / profile.getInputBytes();
+        }
+        return avgSelectivity / comparable.size();
+    }
+
     private Long predictReduceTaskDuration(JobProfile job) {
         if (job.getAvgReduceDuration() != 0)
             return job.getAvgReduceDuration();
@@ -91,13 +108,14 @@ public class BasicMRPredictor extends JobBehaviorPredictor {
             // we assume the reduce processing rate is the same as the map processing rate
             return Double.valueOf(job.getTotalInputBytes() * selectivity / mapRate).longValue();
         }
-        double avgReduceRate = 0, avgSelectivity = 0;
+        // we have reduce history
+        // we need to compute the selectivity, either currently or from the map history
+        double avgSelectivity = calculateMapTaskSelectivity(job);
+        double avgReduceRate = 0;
         for (JobProfile profile : comparable) {
-            avgSelectivity += 1.0 * profile.getMapOutputBytes() / profile.getInputBytes();
             avgReduceRate += 1.0 * profile.getReduceInputBytes() / profile.getAvgReduceDuration();
         }
         avgReduceRate /= comparable.size();
-        avgSelectivity /= comparable.size();
         double inputPerTask = job.getTotalInputBytes() * avgSelectivity / job.getTotalReduceTasks();
         logger.debug("Reduce duration for " + job.getId() + " should be " + inputPerTask + " / " + avgReduceRate);
         return Double.valueOf(inputPerTask / avgReduceRate).longValue();
