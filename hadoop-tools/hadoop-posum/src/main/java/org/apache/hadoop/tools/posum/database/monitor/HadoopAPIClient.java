@@ -154,6 +154,7 @@ public class HadoopAPIClient {
             job.setAvgReduceTime(rawJob.get("avgReduceTime").asLong());
             job.setAvgShuffleTime(rawJob.get("avgShuffleTime").asLong());
             job.setAvgMergeTime(rawJob.get("avgMergeTime").asLong());
+            job.setAvgReduceDuration(job.getAvgShuffleTime() + job.getAvgMergeTime() + job.getAvgReduceTime());
             return job;
         } catch (IOException e) {
             logger.debug("Exception parsing JSON string", e);
