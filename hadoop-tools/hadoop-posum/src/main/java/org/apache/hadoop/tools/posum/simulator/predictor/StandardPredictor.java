@@ -14,9 +14,9 @@ import java.util.List;
 /**
  * Created by ane on 2/9/16.
  */
-public class BasicMRPredictor extends JobBehaviorPredictor {
+public class StandardPredictor extends JobBehaviorPredictor {
 
-    private static final Log logger = LogFactory.getLog(BasicMRPredictor.class);
+    private static final Log logger = LogFactory.getLog(StandardPredictor.class);
 
     private List<JobProfile> getComparableProfiles(JobProfile job, TaskType type) {
         // get past jobs with the same name
@@ -95,7 +95,7 @@ public class BasicMRPredictor extends JobBehaviorPredictor {
         if (job.getAvgReduceDuration() != 0)
             return job.getAvgReduceDuration();
         List<JobProfile> comparable = getComparableProfiles(job, TaskType.REDUCE);
-        if (comparable.size() < 1 || !comparable.get(0).getReducerClass().equals(job.getReducerClass())) {
+        if (comparable.size() < 1) {
             // non-existent or irrelevant historical data
             if (job.getCompletedMaps() == 0) {
                 logger.debug("No data to compute reduce for job " + job.getName() + ". Using default");

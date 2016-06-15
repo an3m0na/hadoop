@@ -284,7 +284,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             // if the typical shuffle rate is not calculated, we are missing information
             // compute averages based on history
             List<JobProfile> comparable = getComparableProfiles(job, TaskType.REDUCE);
-            if (comparable.size() < 1 || !comparable.get(0).getReducerClass().equals(job.getReducerClass())) {
+            if (comparable.size() < 1) {
                 if (job.getCompletedMaps() == 0) {
                     logger.debug("No data to compute reduce for job " + job.getName() + ". Using default");
                     // return the default; there is nothing we can do
