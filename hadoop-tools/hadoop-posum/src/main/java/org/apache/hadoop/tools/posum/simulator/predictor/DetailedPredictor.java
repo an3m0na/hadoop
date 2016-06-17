@@ -306,7 +306,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             // compute averages based on history
             List<JobProfile> comparable = getComparableProfiles(job, TaskType.REDUCE);
             if (comparable.size() < 1) {
-                handleNoReduceHistory(job, inputPerTask);
+                return handleNoReduceHistory(job, inputPerTask);
             } else {
                 // compute the reducer processing rates
                 Double avgMergeRate = 0.0, avgReduceRate = 0.0, avgShuffleRate = 0.0;
@@ -334,7 +334,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     avgReduceRate += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.REDUCE));
                 }
                 if (comparableNo < 1)
-                    handleNoReduceHistory(job, inputPerTask);
+                    return handleNoReduceHistory(job, inputPerTask);
                 if (typicalShuffles > 0)
                     shuffleRate = avgShuffleRate / typicalShuffles;
                 if (shuffleTime == null && firstShuffles > 0)
@@ -349,8 +349,8 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         if (mergeRate == null || reduceRate == null)
             throw new POSUMException("Something went wrong when calculating rates for prediction" +
                     " shuffleTime=" + shuffleTime +
-                    " mergeRate" + mergeRate +
-                    " reduceRate" + reduceRate);
+                    " mergeRate=" + mergeRate +
+                    " reduceRate=" + reduceRate);
 
         // if it is a typical shuffle or there is no first shuffle information
         if (job.getCompletedMaps().equals(job.getTotalMapTasks()) || shuffleTime == null) {
