@@ -68,18 +68,25 @@ public class POSUMInfoCollector {
                 // make new predictions
                 List<String> taskIds = dataStore.listIds(DataEntityDB.getMain(), DataEntityType.TASK, null);
                 for (String taskId : taskIds) {
+                    //durations can be null if the tasks are not found
+
 //                    Long duration = predictor.predictTaskDuration(taskId);
-//                    dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+//                    if(duration != null)
+//                      dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
 //                            TaskPrediction.newInstance(predictor.getClass().getSimpleName(), taskId, duration)));
+
                     Long duration = basicPredictor.predictTaskDuration(taskId);
-                    dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
-                            TaskPrediction.newInstance(basicPredictor.getClass().getSimpleName(), taskId, duration)));
+                    if (duration != null)
+                        dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                                TaskPrediction.newInstance(basicPredictor.getClass().getSimpleName(), taskId, duration)));
                     duration = standardPredictor.predictTaskDuration(taskId);
-                    dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
-                            TaskPrediction.newInstance(standardPredictor.getClass().getSimpleName(), taskId, duration)));
+                    if (duration != null)
+                        dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                                TaskPrediction.newInstance(standardPredictor.getClass().getSimpleName(), taskId, duration)));
                     duration = detailedPredictor.predictTaskDuration(taskId);
-                    dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
-                            TaskPrediction.newInstance(detailedPredictor.getClass().getSimpleName(), taskId, duration)));
+                    if (duration != null)
+                        dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                                TaskPrediction.newInstance(detailedPredictor.getClass().getSimpleName(), taskId, duration)));
                 }
                 lastPrediction = now;
             }

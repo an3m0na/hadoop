@@ -372,7 +372,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     public Long predictTaskDuration(String taskId) {
         TaskProfile task = getDataStore().findById(DataEntityType.TASK, taskId);
         if (task == null)
-            throw new POSUMException("Task could not be found with id: " + taskId);
+            return null;
         if (task.getType().equals(TaskType.MAP)) {
             if (task.isLocal())
                 return predictLocalMapTaskDuration(task.getJobId());

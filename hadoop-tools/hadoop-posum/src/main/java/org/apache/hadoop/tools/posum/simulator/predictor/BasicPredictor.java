@@ -83,7 +83,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
     public Long predictTaskDuration(String taskId) {
         TaskProfile task = getDataStore().findById(DataEntityType.TASK, taskId);
         if (task == null)
-            throw new POSUMException("Task could not be found with id: " + taskId);
+            return null;
         return predictTaskDuration(task.getJobId(), task.getType());
     }
 }
