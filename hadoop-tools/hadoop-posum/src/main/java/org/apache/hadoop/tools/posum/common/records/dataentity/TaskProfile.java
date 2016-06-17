@@ -15,7 +15,7 @@ public interface TaskProfile extends GeneralDataEntity {
 
     void setOutputBytes(Long outputBytes);
 
-    Integer getDuration();
+    Long getDuration();
 
     TaskType getType();
 

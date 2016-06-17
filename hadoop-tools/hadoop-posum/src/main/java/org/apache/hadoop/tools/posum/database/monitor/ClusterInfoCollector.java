@@ -46,6 +46,8 @@ public class ClusterInfoCollector {
     private final HadoopAPIClient api;
     private final Configuration conf;
     private final boolean historyEnabled;
+    private static final String OLD_MAP_CLASS_ATTR = "mapred.mapper.class";
+    private static final String OLD_REDUCE_CLASS_ATTR = "mapred.reducer.class";
 
     ClusterInfoCollector(Configuration conf, DataStore dataStore) {
         this.dataStore = dataStore;
@@ -232,11 +234,11 @@ public class ClusterInfoCollector {
             else {
                 JobConfProxy jobConf = null;
                 if (job.getMapperClass() == null) {
+                    logger.debug("Job lacks conf info. Getting conf for " + job.getId());
                     try {
                         jobConf = getSubmittedJobConf(conf, app.getId(), app.getUser());
                         if (jobConf != null) {
-                            job.setMapperClass(jobConf.getEntry(MRJobConfig.MAP_CLASS_ATTR));
-                            job.setReducerClass(jobConf.getEntry(MRJobConfig.REDUCE_CLASS_ATTR));
+                            setClassNamesFromConf(job, jobConf);
                         }
                     } catch (IOException e) {
                         logger.warn("Could not retrieve configuration for running job " + job.getId());
@@ -252,7 +254,7 @@ public class ClusterInfoCollector {
                 long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
 
                 for (TaskProfile task : tasks) {
-                    Integer duration = task.getDuration();
+                    Long duration = task.getDuration();
                     if (duration > 0) {
                         // task has finished; get statistics
 
@@ -269,6 +271,11 @@ public class ClusterInfoCollector {
                             mapNo++;
                             mapInputSize += task.getInputBytes();
                             mapOutputSize += task.getOutputBytes();
+                            if (job.getSplitLocations() != null) {
+                                int splitIndex = Utils.parseTaskId(task.getAppId(), task.getId()).getId();
+                                if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
+                                    task.setLocal(true);
+                            }
                         }
                         if (TaskType.REDUCE.equals(task.getType())) {
                             reduceDuration += task.getDuration();
@@ -278,11 +285,6 @@ public class ClusterInfoCollector {
                             reduceNo++;
                             reduceInputSize += task.getInputBytes();
                             reduceOutputSize += task.getOutputBytes();
-                            if (job.getSplitLocations() != null) {
-                                int splitIndex = Utils.parseTaskId(task.getAppId(), task.getId()).getId();
-                                if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
-                                    task.setLocal(true);
-                            }
                         }
                         avgDuration += duration;
                         avgNo++;
@@ -391,10 +393,14 @@ public class ClusterInfoCollector {
         return job;
     }
 
-    private static JobProfile getJobProfileFromConf(String appId, JobId jobId, FileSystem fs, Configuration conf, Path jobSubmitDir) throws IOException {
+    private static JobProfile getJobProfileFromConf(String appId,
+                                                    JobId jobId,
+                                                    FileSystem fs,
+                                                    JobConfProxy jobConfProxy,
+                                                    Path jobSubmitDir) throws IOException {
         JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = SplitMetaInfoReader.readSplitMetaInfo(
                 TypeConverter.fromYarn(jobId), fs,
-                conf,
+                jobConfProxy.getConf(),
                 jobSubmitDir);
 
         long inputLength = 0;
@@ -407,14 +413,24 @@ public class ClusterInfoCollector {
         JobProfile profile = Records.newRecord(JobProfile.class);
         profile.setId(jobId.toString());
         profile.setAppId(appId);
-        profile.setName(conf.get(MRJobConfig.JOB_NAME));
-        profile.setUser(conf.get(MRJobConfig.USER_NAME));
+        profile.setName(jobConfProxy.getEntry(MRJobConfig.JOB_NAME));
+        profile.setUser(jobConfProxy.getEntry(MRJobConfig.USER_NAME));
         profile.setTotalInputBytes(inputLength);
         profile.setInputSplits(taskSplitMetaInfo.length);
-        profile.setMapperClass(conf.get(MRJobConfig.MAP_CLASS_ATTR));
-        profile.setReducerClass(conf.get(MRJobConfig.REDUCE_CLASS_ATTR));
+        setClassNamesFromConf(profile, jobConfProxy);
         profile.setSplitLocations(splitLocations);
         return profile;
+    }
+
+    private static void setClassNamesFromConf(JobProfile profile, JobConfProxy conf) {
+        String classString = conf.getEntry(MRJobConfig.MAP_CLASS_ATTR);
+        if (classString == null)
+            classString = conf.getEntry(OLD_MAP_CLASS_ATTR);
+        profile.setMapperClass(classString);
+        classString = conf.getEntry(MRJobConfig.REDUCE_CLASS_ATTR);
+        if (classString == null)
+            classString = conf.getEntry(OLD_REDUCE_CLASS_ATTR);
+        profile.setReducerClass(classString);
     }
 
     private static JobProfile getSubmittedJobInfo(JobConfProxy confProxy, String appId) throws IOException {
@@ -423,36 +439,35 @@ public class ClusterInfoCollector {
         Path jobConfDir = null;
         try {
             jobConfDir = new Path(new URI(jobConfDirPath));
-            logger.trace("Checking file path: " + jobConfDir);
             String jobId = jobConfDir.getName();
             //DANGER We assume there can only be one job / application
-            return getJobProfileFromConf(appId, Utils.parseJobId(appId, jobId), fs, confProxy.getConf(), jobConfDir);
+            return getJobProfileFromConf(appId, Utils.parseJobId(appId, jobId), fs, confProxy, jobConfDir);
         } catch (URISyntaxException e) {
             throw new POSUMException("Invalid jobConfDir path " + jobConfDirPath, e);
         }
     }
 
-    private static JobConfProxy getSubmittedJobConf(Configuration conf, String appId, String user) throws IOException {
+    private static JobConfProxy getSubmittedJobConf(Configuration conf, final String appId, String user) throws IOException {
         final ApplicationId actualAppId = Utils.parseApplicationId(appId);
         FileSystem fs = FileSystem.get(conf);
         Path confPath = MRApps.getStagingAreaDir(conf,
                 user != null ? user : UserGroupInformation.getCurrentUser().getUserName());
         confPath = fs.makeQualified(confPath);
 
-        logger.trace("Looking in staging path: " + confPath);
+        logger.debug("Looking in staging path: " + confPath);
         FileStatus[] statuses = fs.listStatus(confPath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
-                return path.toString().contains("job_" + actualAppId.getClusterTimestamp());
+                return path.toString().contains(appId.replace("application", "job"));
             }
         });
 
         //DANGER We assume there can only be one job / application
         if (statuses.length != 1)
-            throw new POSUMException("Wrong number of job profile directories for: " + appId);
+            throw new POSUMException("Wrong number of job profile directories for: " + appId + ": " + statuses.length);
 
         Path jobConfDir = statuses[0].getPath();
-        logger.trace("Checking file path: " + jobConfDir);
+        logger.debug("Checking file path for conf: " + jobConfDir);
         Path jobConfPath = new Path(jobConfDir, "job.xml");
         Configuration jobConf = new JobConf(false);
         jobConf.addResource(fs.open(jobConfPath), jobConfPath.toString());
