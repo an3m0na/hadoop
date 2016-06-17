@@ -30,7 +30,7 @@ public interface JobProfile extends GeneralDataEntity {
 
     void setFinishTime(Long finishTime);
 
-    Integer getDuration();
+    Long getDuration();
 
     void setTotalMapTasks(Integer totalMapTasks);
 

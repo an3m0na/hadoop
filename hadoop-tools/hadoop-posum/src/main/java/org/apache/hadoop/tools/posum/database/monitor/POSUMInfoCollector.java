@@ -9,8 +9,12 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.field.TaskPrediction;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
+import org.apache.hadoop.tools.posum.simulator.predictor.DetailedPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
+import org.apache.hadoop.tools.posum.simulator.predictor.StandardPredictor;
 
 import java.util.List;
 
@@ -30,7 +34,11 @@ public class POSUMInfoCollector {
     private long lastCollectTime = 0;
     private long lastPrediction = 0;
     private long predictionTimeout = 0;
-    private JobBehaviorPredictor predictor;
+    //TODO use only this predictor for regular experiments
+    //    private JobBehaviorPredictor predictor;
+    private JobBehaviorPredictor basicPredictor;
+    private JobBehaviorPredictor standardPredictor;
+    private JobBehaviorPredictor detailedPredictor;
 
 
     POSUMInfoCollector(Configuration conf, DataStore dataStore) {
@@ -40,8 +48,14 @@ public class POSUMInfoCollector {
                 POSUMConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
         api = new POSUMAPIClient(conf);
         this.policyMap = new PolicyMap(conf);
-        predictor = JobBehaviorPredictor.newInstance(conf);
-        predictor.initialize(dataStore.bindTo(DataEntityDB.getMain()));
+        DBInterface predictorDb = dataStore.bindTo(DataEntityDB.getMain());
+//        predictor = JobBehaviorPredictor.newInstance(conf);
+        basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
+        basicPredictor.initialize(predictorDb);
+        standardPredictor = JobBehaviorPredictor.newInstance(conf, StandardPredictor.class);
+        standardPredictor.initialize(predictorDb);
+        detailedPredictor = JobBehaviorPredictor.newInstance(conf, DetailedPredictor.class);
+        detailedPredictor.initialize(predictorDb);
         predictionTimeout = conf.getLong(POSUMConfiguration.PREDICTOR_TIMEOUT,
                 POSUMConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
     }
@@ -54,9 +68,18 @@ public class POSUMInfoCollector {
                 // make new predictions
                 List<String> taskIds = dataStore.listIds(DataEntityDB.getMain(), DataEntityType.TASK, null);
                 for (String taskId : taskIds) {
-                    Long duration = predictor.predictTaskDuration(taskId);
+//                    Long duration = predictor.predictTaskDuration(taskId);
+//                    dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+//                            TaskPrediction.newInstance(predictor.getClass().getSimpleName(), taskId, duration)));
+                    Long duration = basicPredictor.predictTaskDuration(taskId);
                     dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
-                            TaskPrediction.newInstance(taskId, duration)));
+                            TaskPrediction.newInstance(basicPredictor.getClass().getSimpleName(), taskId, duration)));
+                    duration = standardPredictor.predictTaskDuration(taskId);
+                    dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                            TaskPrediction.newInstance(standardPredictor.getClass().getSimpleName(), taskId, duration)));
+                    duration = detailedPredictor.predictTaskDuration(taskId);
+                    dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                            TaskPrediction.newInstance(detailedPredictor.getClass().getSimpleName(), taskId, duration)));
                 }
                 lastPrediction = now;
             }

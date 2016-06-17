@@ -14,15 +14,18 @@ public abstract class JobBehaviorPredictor {
     protected Configuration conf;
     private DBInterface dataStore;
 
-    public static JobBehaviorPredictor newInstance(Configuration conf){
-        Class<? extends JobBehaviorPredictor> predictorClass = conf.getClass(
+    public static JobBehaviorPredictor newInstance(Configuration conf) {
+        return newInstance(conf, conf.getClass(
                 POSUMConfiguration.PREDICTOR_CLASS,
                 BasicPredictor.class,
                 JobBehaviorPredictor.class
-        );
+        ));
+    }
 
+    public static JobBehaviorPredictor newInstance(Configuration conf,
+                                                   Class<? extends JobBehaviorPredictor> predictorClass) {
         try {
-            JobBehaviorPredictor  predictor = predictorClass.newInstance();
+            JobBehaviorPredictor predictor = predictorClass.newInstance();
             predictor.conf = conf;
             return predictor;
         } catch (Exception e) {
@@ -30,7 +33,7 @@ public abstract class JobBehaviorPredictor {
         }
     }
 
-    public  void initialize(DBInterface dataStore){
+    public void initialize(DBInterface dataStore) {
         this.dataStore = dataStore;
     }
 

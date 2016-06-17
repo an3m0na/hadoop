@@ -294,6 +294,7 @@ message CounterInfoPayloadProto {
 }
 
 message TaskPredictionProto {
-    required string id = 1;
-    optional int64 duration = 2;
+    required string predictor = 1;
+    required string id = 2;
+    optional int64 duration = 3;
 }
