@@ -24,7 +24,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryPr
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.util.StringUtils;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.io.IOException;
@@ -340,6 +339,7 @@ public class ClusterInfoCollector {
                         new HistoryProfilePBImpl<>(DataEntityType.APP, app));
                 dataStore.store(db, DataEntityType.HISTORY,
                         new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
+                if(jobCounters != null)
                 dataStore.store(db, DataEntityType.HISTORY,
                         new HistoryProfilePBImpl<>(DataEntityType.COUNTER, jobCounters));
                 for (TaskProfile task : tasks) {
@@ -354,7 +354,7 @@ public class ClusterInfoCollector {
                 // get job info directly from the conf in the staging dir
                 try {
                     JobProfile job = getAndStoreSubmittedJobInfo(conf, app.getId(), app.getUser(), dataStore, db);
-                    if (historyEnabled) {
+                    if (historyEnabled && job != null) {
                         dataStore.store(db, DataEntityType.HISTORY,
                                 new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
                     }
