@@ -108,8 +108,17 @@ public class ClusterInfoCollector {
                 if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
                     for (CounterInfoPayload counter : group.getCounter()) {
                         switch (counter.getName()) {
+                            // make sure to record map materialized (compressed) bytes if compression is enabled
+                            // this is because reduce_shuffle_bytes are also in compressed form
                             case "MAP_OUTPUT_BYTES":
-                                job.setMapOutputBytes(counter.getTotalCounterValue());
+                                Long previous = job.getMapOutputBytes();
+                                if (previous == null || previous == 0)
+                                    job.setMapOutputBytes(counter.getTotalCounterValue());
+                                break;
+                            case "MAP_OUTPUT_MATERIALIZED_BYTES":
+                                Long value = counter.getTotalCounterValue();
+                                if (value > 0)
+                                    job.setMapOutputBytes(value);
                                 break;
                             case "REDUCE_SHUFFLE_BYTES":
                                 job.setReduceInputBytes(counter.getTotalCounterValue());
@@ -180,9 +189,21 @@ public class ClusterInfoCollector {
             if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
                 for (CounterInfoPayload counter : group.getCounter()) {
                     switch (counter.getName()) {
+                        // make sure to record map materialized (compressed) bytes if compression is enabled
+                        // this is because reduce_shuffle_bytes are also in compressed form
                         case "MAP_OUTPUT_BYTES":
-                            if (task.getType().equals(TaskType.MAP))
-                                task.setOutputBytes(counter.getTotalCounterValue());
+                            if (task.getType().equals(TaskType.MAP)) {
+                                Long previous = task.getOutputBytes();
+                                if (previous == null || previous == 0)
+                                    task.setOutputBytes(counter.getTotalCounterValue());
+                            }
+                            break;
+                        case "MAP_OUTPUT_MATERIALIZED_BYTES":
+                            if (task.getType().equals(TaskType.MAP)) {
+                                Long value = counter.getTotalCounterValue();
+                                if (value > 0)
+                                    task.setOutputBytes(value);
+                            }
                             break;
                         case "REDUCE_SHUFFLE_BYTES":
                             if (task.getType().equals(TaskType.REDUCE))
@@ -339,9 +360,9 @@ public class ClusterInfoCollector {
                         new HistoryProfilePBImpl<>(DataEntityType.APP, app));
                 dataStore.store(db, DataEntityType.HISTORY,
                         new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
-                if(jobCounters != null)
-                dataStore.store(db, DataEntityType.HISTORY,
-                        new HistoryProfilePBImpl<>(DataEntityType.COUNTER, jobCounters));
+                if (jobCounters != null)
+                    dataStore.store(db, DataEntityType.HISTORY,
+                            new HistoryProfilePBImpl<>(DataEntityType.COUNTER, jobCounters));
                 for (TaskProfile task : tasks) {
                     dataStore.store(db, DataEntityType.HISTORY,
                             new HistoryProfilePBImpl<>(DataEntityType.TASK, task));
