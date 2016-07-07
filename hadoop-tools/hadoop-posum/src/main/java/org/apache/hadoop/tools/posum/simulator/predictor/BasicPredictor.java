@@ -19,14 +19,15 @@ public class BasicPredictor extends JobBehaviorPredictor {
     private static final Log logger = LogFactory.getLog(BasicPredictor.class);
 
     private List<JobProfile> getComparableProfiles(JobProfile job) {
+        int bufferLimit = conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
+                POSUMConfiguration.PREDICTION_BUFFER_DEFAULT);
         // get past jobs with the same name
         List<JobProfile> comparable = getDataStore().find(
                 DataEntityType.JOB_HISTORY,
                 "name",
                 job.getName(),
-                0,
-                conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
-                        POSUMConfiguration.PREDICTION_BUFFER_DEFAULT)
+                -bufferLimit,
+                bufferLimit
         );
         if (comparable.size() < 1) {
             // get past jobs at least by the same user
@@ -34,9 +35,8 @@ public class BasicPredictor extends JobBehaviorPredictor {
                     DataEntityType.JOB_HISTORY,
                     "user",
                     job.getUser(),
-                    0,
-                    conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
-                            POSUMConfiguration.PREDICTION_BUFFER_DEFAULT)
+                    -bufferLimit,
+                    bufferLimit
             );
         }
         return comparable;
@@ -64,6 +64,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
     @Override
     public Long predictTaskDuration(String jobId, TaskType type) {
         JobProfile job = getDataStore().findById(DataEntityType.JOB, jobId);
+
         Long currentAverage = TaskType.MAP.equals(type) ? job.getAvgMapDuration() : job.getAvgReduceDuration();
         if (currentAverage > 0)
             return currentAverage;
@@ -83,7 +84,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
     public Long predictTaskDuration(String taskId) {
         TaskProfile task = getDataStore().findById(DataEntityType.TASK, taskId);
         if (task == null)
-            return null;
+            throw new POSUMException("Task not found for id " + taskId);
         return predictTaskDuration(task.getJobId(), task.getType());
     }
 }

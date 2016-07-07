@@ -37,6 +37,8 @@ public abstract class JobBehaviorPredictor {
         this.dataStore = dataStore;
     }
 
+    /* WARNING! Prediction methods may throw exceptions if data model changes occur during computation (e.g. task finishes) */
+
     public abstract Long predictJobDuration(String jobId);
 
     public abstract Long predictLocalMapTaskDuration(String jobId);
