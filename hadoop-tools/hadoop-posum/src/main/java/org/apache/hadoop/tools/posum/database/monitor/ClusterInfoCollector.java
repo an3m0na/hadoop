@@ -6,6 +6,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.lib.IdentityMapper;
+import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.split.JobSplit;
 import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
@@ -448,10 +450,14 @@ public class ClusterInfoCollector {
         String classString = conf.getEntry(MRJobConfig.MAP_CLASS_ATTR);
         if (classString == null)
             classString = conf.getEntry(OLD_MAP_CLASS_ATTR);
+        if(classString == null)
+            profile.setReducerClass(IdentityMapper.class.getName());
         profile.setMapperClass(classString);
         classString = conf.getEntry(MRJobConfig.REDUCE_CLASS_ATTR);
         if (classString == null)
             classString = conf.getEntry(OLD_REDUCE_CLASS_ATTR);
+        if(classString == null)
+            profile.setReducerClass(IdentityReducer.class.getName());
         profile.setReducerClass(classString);
     }
 
