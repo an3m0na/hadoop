@@ -19,14 +19,15 @@ public class StandardPredictor extends JobBehaviorPredictor {
     private static final Log logger = LogFactory.getLog(StandardPredictor.class);
 
     private List<JobProfile> getComparableProfiles(JobProfile job, TaskType type) {
+        int bufferLimit = conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
+                POSUMConfiguration.PREDICTION_BUFFER_DEFAULT);
         // get past jobs with the same name
         List<JobProfile> comparable = getDataStore().find(
                 DataEntityType.JOB_HISTORY,
                 type.equals(TaskType.MAP) ? "mapperClass" : "reducerClass",
                 type.equals(TaskType.MAP) ? job.getMapperClass() : job.getReducerClass(),
-                0,
-                conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
-                        POSUMConfiguration.PREDICTION_BUFFER_DEFAULT)
+                -bufferLimit,
+                bufferLimit
         );
         if (comparable.size() < 1) {
             // get past jobs at least by the same user
@@ -34,9 +35,8 @@ public class StandardPredictor extends JobBehaviorPredictor {
                     DataEntityType.JOB_HISTORY,
                     "user",
                     job.getUser(),
-                    0,
-                    conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
-                            POSUMConfiguration.PREDICTION_BUFFER_DEFAULT)
+                    -bufferLimit,
+                    bufferLimit
             );
         }
         return comparable;
@@ -61,7 +61,7 @@ public class StandardPredictor extends JobBehaviorPredictor {
         // we have no information about this job; predict from history
         List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
         if (comparable.size() < 1) {
-            logger.debug("No map history data for job " + job.getId() + ". Using default");
+            logger.debug("No map history data for " + job.getId() + ". Using default");
             return conf.getLong(POSUMConfiguration.AVERAGE_JOB_DURATION,
                     POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
         }
@@ -71,9 +71,10 @@ public class StandardPredictor extends JobBehaviorPredictor {
             avgMapRate += 1.0 * Math.max(profile.getInputBytes(), profile.getTotalMapTasks()) / profile.getAvgMapDuration();
         }
         avgMapRate /= comparable.size();
-        logger.debug("Map duration for " + job.getId() + " should be " + job.getTotalInputBytes() + " / " + avgMapRate);
         // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-        return Double.valueOf(Math.max(job.getTotalInputBytes(), job.getTotalMapTasks()) / avgMapRate).longValue();
+        Double duration = Math.max(job.getTotalInputBytes(), job.getTotalMapTasks()) / avgMapRate;
+        logger.debug("Map duration for " + job.getId() + " should be " + job.getTotalInputBytes() + " / " + avgMapRate + " = " + duration);
+        return duration.longValue();
     }
 
     private double calculateMapTaskSelectivity(JobProfile job) {
@@ -97,20 +98,22 @@ public class StandardPredictor extends JobBehaviorPredictor {
 
     private Long handleNoReduceHistory(JobProfile job) {
         if (job.getCompletedMaps() == 0) {
-            logger.debug("No data to compute reduce for job " + job.getName() + ". Using default");
+            logger.debug("No data to compute reduce for " + job.getName() + ". Using default");
             return conf.getLong(POSUMConfiguration.AVERAGE_JOB_DURATION,
                     POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
         }
-        logger.debug("Reduce duration computed based on map data for job" + job.getId());
+
         //restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
         double mapRate = 1.0 * Math.max(job.getInputBytes(), job.getTotalMapTasks()) / job.getAvgMapDuration();
         double selectivity = 1.0 * job.getMapOutputBytes() / job.getInputBytes();
         // we assume the reduce processing rate is the same as the map processing rate
-        return Double.valueOf(Math.max(job.getTotalInputBytes(), 1) * selectivity / mapRate).longValue();
+        Double duration = Math.max(job.getTotalInputBytes(), 1) * selectivity / mapRate;
+        logger.debug("Reduce duration computed based on map data for " + job.getId() + " as " + duration + "from mapRate=" + mapRate + " and selectivity=" + selectivity);
+        return duration.longValue();
     }
 
     private Long predictReduceTaskDuration(JobProfile job) {
-        if(job.getTotalReduceTasks() < 1)
+        if (job.getTotalReduceTasks() < 1)
             throw new POSUMException("Job does not have reduce tasks for prediction");
 
         if (job.getAvgReduceDuration() != 0)
@@ -138,8 +141,9 @@ public class StandardPredictor extends JobBehaviorPredictor {
         avgReduceRate /= comparableNo;
         // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
         double inputPerTask = Math.max(job.getTotalInputBytes() * avgSelectivity / job.getTotalReduceTasks(), 1);
-        logger.debug("Reduce duration for " + job.getId() + " should be " + inputPerTask + " / " + avgReduceRate);
-        return Double.valueOf(inputPerTask / avgReduceRate).longValue();
+        Double duration = inputPerTask / avgReduceRate;
+        logger.debug("Reduce duration for " + job.getId() + " should be " + inputPerTask + " / " + avgReduceRate + "=" + duration);
+        return duration.longValue();
     }
 
     @Override
@@ -155,7 +159,7 @@ public class StandardPredictor extends JobBehaviorPredictor {
     public Long predictTaskDuration(String taskId) {
         TaskProfile task = getDataStore().findById(DataEntityType.TASK, taskId);
         if (task == null)
-            return null;
+            throw new POSUMException("Task not found for id " + taskId);
         return predictTaskDuration(task.getJobId(), task.getType());
     }
 

@@ -115,8 +115,11 @@ public class MongoJackConnector extends MongoConnector {
     <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, DBQuery.Query query, int offset, int limit) {
         JacksonDBCollection<T, String> dbCollection = getCollection(db, collection);
         DBCursor<T> cursor = query == null ? dbCollection.find() : dbCollection.find(query);
-        if (offset != 0)
-            cursor.skip(offset);
+        if (offset != 0) {
+            Long skipValue = offset > 0 ? offset : dbCollection.count() + offset;
+            if (skipValue > 0)
+                cursor.skip(skipValue.intValue());
+        }
         if (limit != 0)
             cursor.limit(limit);
         return cursor.toArray();
