@@ -50,7 +50,7 @@ public class ClusterInfoCollector {
     private static final String OLD_MAP_CLASS_ATTR = "mapred.mapper.class";
     private static final String OLD_REDUCE_CLASS_ATTR = "mapred.reducer.class";
 
-    ClusterInfoCollector(Configuration conf, DataStore dataStore) {
+    public ClusterInfoCollector(Configuration conf, DataStore dataStore) {
         this.dataStore = dataStore;
         this.api = new HadoopAPIClient(conf);
         this.conf = conf;
@@ -58,7 +58,7 @@ public class ClusterInfoCollector {
                 POSUMConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
     }
 
-    void collect() {
+    void refresh() {
         List<AppProfile> apps = api.getAppsInfo();
         logger.trace("Found " + apps.size() + " apps");
         for (AppProfile app : apps) {
@@ -249,28 +249,32 @@ public class ClusterInfoCollector {
         }
 
         if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-            JobProfile lastJobInfo = dataStore.getJobProfileForApp(db, app.getId(), app.getUser());
+            JobProfile lastJobInfo = getCurrentProfileForApp(app.getId(), app.getUser());
             final JobProfile job = api.getRunningJobInfo(app.getId(), app.getQueue(), lastJobInfo);
             if (job == null) {
                 logger.info("Could not find job for " + app.getId());
                 return;
             }
-            JobConfProxy jobConf = null;
-            if (job.getMapperClass() == null) {
-                logger.debug("Job lacks conf info. Getting conf for " + job.getId());
-                try {
-                    jobConf = getSubmittedJobConf(conf, app.getId(), app.getUser());
-                    if (jobConf != null) {
-                        setClassNamesFromConf(job, jobConf);
-                    }
-                } catch (IOException e) {
-                    logger.warn("Could not retrieve configuration for running job " + job.getId());
-                }
-            }
+//            JobConfProxy jobConf = null;
+//            if (job.getMapperClass() == null) {
+//                logger.debug("Job lacks conf info. Getting conf for " + job.getId());
+//                try {
+//                    jobConf = getSubmittedJobConf(conf, app.getId(), app.getUser());
+//                    if (jobConf != null) {
+//                        JobProfile jobAsInConf = getSubmittedJobInfo(jobConf, app.getId());
+//                        job.setMapperClass(jobAsInConf.getMapperClass());
+//                        job.setReducerClass(jobAsInConf.getReducerClass());
+//                        job.setTotalInputBytes(jobAsInConf.getTotalInputBytes());
+//                        job.setInputSplits(jobAsInConf.getInputSplits());
+//                    }
+//                } catch (IOException e) {
+//                    logger.warn("Could not retrieve configuration for running job " + job.getId());
+//                }
+//            }
             final CountersProxy jobCounters = api.getRunningJobCounters(app.getId(), job.getId());
             final List<TaskProfile> tasks = api.getRunningTasksInfo(job);
             final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
-            final JobConfProxy finalJobConf = jobConf;
+//            final JobConfProxy finalJobConf = jobConf;
 
             long mapDuration = 0, reduceDuration = 0, reduceTime = 0, shuffleTime = 0, mergeTime = 0, avgDuration = 0;
             int mapNo = 0, reduceNo = 0, avgNo = 0;
@@ -339,14 +343,14 @@ public class ClusterInfoCollector {
                 @Override
                 public void run() throws Exception {
                     dataStore.updateOrStore(db, DataEntityType.JOB, job);
-                    if (finalJobConf != null) {
-                        try {
-                            dataStore.store(db, DataEntityType.JOB_CONF, finalJobConf);
-                        } catch (DuplicateKeyException e) {
-                            // can happen; do nothing
-                        }
-                        logger.debug("Saved running configuration");
-                    }
+//                    if (finalJobConf != null) {
+//                        try {
+//                            dataStore.store(db, DataEntityType.JOB_CONF, finalJobConf);
+//                        } catch (DuplicateKeyException e) {
+//                             can happen; do nothing
+//                        }
+//                        logger.debug("Saved running configuration");
+//                    }
                     if (jobCounters != null)
                         dataStore.updateOrStore(db, DataEntityType.COUNTER, jobCounters);
                     for (CountersProxy counters : taskCounters)
@@ -376,7 +380,7 @@ public class ClusterInfoCollector {
             if (!running.contains(app.getId())) {
                 // get job info directly from the conf in the staging dir
                 try {
-                    JobProfile job = getAndStoreSubmittedJobInfo(conf, app.getId(), app.getUser(), dataStore, db);
+                    JobProfile job = getAndStoreSubmittedJobInfo(conf, app.getId(), app.getUser(), db);
                     if (historyEnabled && job != null) {
                         dataStore.store(db, DataEntityType.HISTORY,
                                 new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
@@ -388,10 +392,25 @@ public class ClusterInfoCollector {
         }
     }
 
-    public static JobProfile getAndStoreSubmittedJobInfo(Configuration conf,
+    public JobProfile getCurrentProfileForApp(String appId, String user) {
+        JobProfile profile = dataStore.getJobProfileForApp(db, appId, user);
+
+        if(profile != null)
+            return profile;
+
+        // if not found, force the reading of the configuration
+        try {
+            logger.debug("Forcing fetch of job info from conf for " + appId);
+            return getAndStoreSubmittedJobInfo(conf, appId, user, db);
+        } catch (Exception e) {
+            logger.debug("Could not retrieve job info for app " + appId, e);
+        }
+        return null;
+    }
+
+    public JobProfile getAndStoreSubmittedJobInfo(Configuration conf,
                                                          String appId,
                                                          String user,
-                                                         final DataStore store,
                                                          final DataEntityDB db) throws IOException {
         final JobConfProxy confProxy = getSubmittedJobConf(conf, appId, user);
         final JobProfile job = getSubmittedJobInfo(confProxy, appId);
@@ -401,12 +420,12 @@ public class ClusterInfoCollector {
         if (reducesString != null && reducesString.length() > 0)
             reduces = Integer.valueOf(reducesString);
         job.setTotalReduceTasks(reduces);
-        store.runTransaction(db, new DataTransaction() {
+        dataStore.runTransaction(db, new DataTransaction() {
             @Override
             public void run() throws Exception {
                 try {
-                    store.store(db, DataEntityType.JOB, job);
-                    store.store(db, DataEntityType.JOB_CONF, confProxy);
+                    dataStore.store(db, DataEntityType.JOB, job);
+                    dataStore.store(db, DataEntityType.JOB_CONF, confProxy);
                 } catch (DuplicateKeyException e) {
                     // this is possible; do nothing
                 } catch (Exception e) {

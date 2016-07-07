@@ -2,6 +2,8 @@ package org.apache.hadoop.tools.posum.database.master;
 
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
+import org.apache.hadoop.tools.posum.database.monitor.POSUMInfoCollector;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
@@ -13,6 +15,8 @@ public class DataMasterContext {
     private DummyTokenSecretManager tokenSecretManager;
     private DataStore dataStore;
     private DataMasterCommService commService;
+    private ClusterInfoCollector clusterInfo;
+    private POSUMInfoCollector posumInfo;
 
     public void setDispatcher(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -44,5 +48,21 @@ public class DataMasterContext {
 
     public DataMasterCommService getCommService() {
         return commService;
+    }
+
+    public ClusterInfoCollector getClusterInfo() {
+        return clusterInfo;
+    }
+
+    public void setClusterInfo(ClusterInfoCollector clusterInfo) {
+        this.clusterInfo = clusterInfo;
+    }
+
+    public POSUMInfoCollector getPosumInfo() {
+        return posumInfo;
+    }
+
+    public void setPosumInfo(POSUMInfoCollector posumInfo) {
+        this.posumInfo = posumInfo;
     }
 }
