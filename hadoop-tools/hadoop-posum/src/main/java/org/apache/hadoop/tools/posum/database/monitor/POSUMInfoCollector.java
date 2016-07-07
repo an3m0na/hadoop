@@ -41,7 +41,7 @@ public class POSUMInfoCollector {
     private JobBehaviorPredictor detailedPredictor;
 
 
-    POSUMInfoCollector(Configuration conf, DataStore dataStore) {
+   public POSUMInfoCollector(Configuration conf, DataStore dataStore) {
         this.dataStore = dataStore;
         this.conf = conf;
         fineGrained = conf.getBoolean(POSUMConfiguration.FINE_GRAINED_MONITOR,
@@ -60,7 +60,7 @@ public class POSUMInfoCollector {
                 POSUMConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
     }
 
-    void collect() {
+    void refresh() {
         long now = System.currentTimeMillis();
         if (fineGrained) {
             //TODO get metrics from all services and persist to database

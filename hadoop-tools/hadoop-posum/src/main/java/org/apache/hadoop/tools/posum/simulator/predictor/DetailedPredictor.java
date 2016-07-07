@@ -122,7 +122,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     }
                 }
             }
-            if(reduceNo > 0) {
+            if (reduceNo > 0) {
                 fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.REDUCE, Double.toString(reduceRate / reduceNo));
                 fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.MERGE, Double.toString(mergeRate / reduceNo));
                 if (shuffleFirstTime != 0) {
@@ -239,7 +239,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         }
         // multiply by how much input each task has
         // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-        long splitSize = Math.max(job.getInputBytes() / job.getTotalMapTasks(), 1);
+        long splitSize = Math.max(job.getTotalInputBytes() / job.getTotalMapTasks(), 1);
         Double duration = splitSize / rate;
         logger.debug("Map duration for " + job.getId() + " should be " + splitSize + " / " + rate + "=" + duration);
         return duration.longValue();
@@ -324,6 +324,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 for (JobProfile profile : comparable) {
                     if (profile.getTotalReduceTasks() < 1)
                         continue;
+                    logger.debug("Comparing reduce of " + job.getId() + " with " + profile.getId());
                     if (profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null) {
                         completeProfile(profile);
                     }
@@ -347,8 +348,10 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     shuffleRate = avgShuffleRate / typicalShuffles;
                 if (shuffleTime == null && firstShuffles > 0)
                     shuffleTime = avgShuffleTime / firstShuffles;
-                if (mergeRate == null)
+                if (mergeRate == null) {
+                    logger.debug("Overriding mergeRate");
                     mergeRate = avgMergeRate / comparableNo;
+                }
                 if (reduceRate == null)
                     reduceRate = avgReduceRate / comparableNo;
             }
