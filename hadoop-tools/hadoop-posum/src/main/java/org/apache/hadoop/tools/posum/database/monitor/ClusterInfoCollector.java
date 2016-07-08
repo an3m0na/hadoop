@@ -6,6 +6,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.lib.IdentityMapper;
+import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.split.JobSplit;
 import org.apache.hadoop.mapreduce.split.SplitMetaInfoReader;
@@ -24,7 +26,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryPr
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.util.StringUtils;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.io.IOException;
@@ -46,8 +47,10 @@ public class ClusterInfoCollector {
     private final HadoopAPIClient api;
     private final Configuration conf;
     private final boolean historyEnabled;
+    private static final String OLD_MAP_CLASS_ATTR = "mapred.mapper.class";
+    private static final String OLD_REDUCE_CLASS_ATTR = "mapred.reducer.class";
 
-    ClusterInfoCollector(Configuration conf, DataStore dataStore) {
+    public ClusterInfoCollector(Configuration conf, DataStore dataStore) {
         this.dataStore = dataStore;
         this.api = new HadoopAPIClient(conf);
         this.conf = conf;
@@ -55,7 +58,7 @@ public class ClusterInfoCollector {
                 POSUMConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
     }
 
-    void collect() {
+    void refresh() {
         List<AppProfile> apps = api.getAppsInfo();
         logger.trace("Found " + apps.size() + " apps");
         for (AppProfile app : apps) {
@@ -100,6 +103,7 @@ public class ClusterInfoCollector {
         final JobProfile finalJob = job;
 
         final JobConfProxy jobConf = api.getFinishedJobConf(jobId);
+        setClassNamesFromConf(job, jobConf);
         final CountersProxy jobCounters = api.getFinishedJobCounters(jobId);
 
         if (jobCounters != null) {
@@ -107,8 +111,17 @@ public class ClusterInfoCollector {
                 if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
                     for (CounterInfoPayload counter : group.getCounter()) {
                         switch (counter.getName()) {
+                            // make sure to record map materialized (compressed) bytes if compression is enabled
+                            // this is because reduce_shuffle_bytes are also in compressed form
                             case "MAP_OUTPUT_BYTES":
-                                job.setMapOutputBytes(counter.getTotalCounterValue());
+                                Long previous = job.getMapOutputBytes();
+                                if (previous == null || previous == 0)
+                                    job.setMapOutputBytes(counter.getTotalCounterValue());
+                                break;
+                            case "MAP_OUTPUT_MATERIALIZED_BYTES":
+                                Long value = counter.getTotalCounterValue();
+                                if (value > 0)
+                                    job.setMapOutputBytes(value);
                                 break;
                             case "REDUCE_SHUFFLE_BYTES":
                                 job.setReduceInputBytes(counter.getTotalCounterValue());
@@ -179,9 +192,21 @@ public class ClusterInfoCollector {
             if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
                 for (CounterInfoPayload counter : group.getCounter()) {
                     switch (counter.getName()) {
+                        // make sure to record map materialized (compressed) bytes if compression is enabled
+                        // this is because reduce_shuffle_bytes are also in compressed form
                         case "MAP_OUTPUT_BYTES":
-                            if (task.getType().equals(TaskType.MAP))
-                                task.setOutputBytes(counter.getTotalCounterValue());
+                            if (task.getType().equals(TaskType.MAP)) {
+                                Long previous = task.getOutputBytes();
+                                if (previous == null || previous == 0)
+                                    task.setOutputBytes(counter.getTotalCounterValue());
+                            }
+                            break;
+                        case "MAP_OUTPUT_MATERIALIZED_BYTES":
+                            if (task.getType().equals(TaskType.MAP)) {
+                                Long value = counter.getTotalCounterValue();
+                                if (value > 0)
+                                    task.setOutputBytes(value);
+                            }
                             break;
                         case "REDUCE_SHUFFLE_BYTES":
                             if (task.getType().equals(TaskType.REDUCE))
@@ -225,123 +250,122 @@ public class ClusterInfoCollector {
         }
 
         if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-            JobProfile lastJobInfo = dataStore.getJobProfileForApp(db, app.getId(), app.getUser());
+            JobProfile lastJobInfo = getCurrentProfileForApp(app.getId(), app.getUser());
             final JobProfile job = api.getRunningJobInfo(app.getId(), app.getQueue(), lastJobInfo);
-            if (job == null)
-                logger.warn("Could not find job for " + app.getId());
-            else {
-                JobConfProxy jobConf = null;
-                if (job.getMapperClass() == null) {
-                    try {
-                        jobConf = getSubmittedJobConf(conf, app.getId(), app.getUser());
-                        if (jobConf != null) {
-                            job.setMapperClass(jobConf.getEntry(MRJobConfig.MAP_CLASS_ATTR));
-                            job.setReducerClass(jobConf.getEntry(MRJobConfig.REDUCE_CLASS_ATTR));
-                        }
-                    } catch (IOException e) {
-                        logger.warn("Could not retrieve configuration for running job " + job.getId());
+            if (job == null) {
+                if (api.checkAppFinished(app))
+                    moveAppToHistory(app);
+                return;
+            }
+            final CountersProxy jobCounters = api.getRunningJobCounters(app.getId(), job.getId());
+            if (jobCounters == null) {
+                if (api.checkAppFinished(app))
+                    moveAppToHistory(app);
+                return;
+            }
+            final List<TaskProfile> tasks = api.getRunningTasksInfo(job);
+            if (tasks == null) {
+                if (api.checkAppFinished(app))
+                    moveAppToHistory(app);
+                return;
+            }
+            final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
+
+            long mapDuration = 0, reduceDuration = 0, reduceTime = 0, shuffleTime = 0, mergeTime = 0, avgDuration = 0;
+            int mapNo = 0, reduceNo = 0, avgNo = 0;
+            long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
+
+            for (TaskProfile task : tasks) {
+                Long duration = task.getDuration();
+                if (duration > 0) {
+                    // task has finished; get statistics
+
+                    if (!api.addRunningAttemptInfo(task)) {
+                        if (api.checkAppFinished(app))
+                            moveAppToHistory(app);
+                        return;
                     }
+
+                    CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
+
+                    if (counters == null) {
+                        if (api.checkAppFinished(app))
+                            moveAppToHistory(app);
+                        return;
+                    }
+
+                    taskCounters.add(counters);
+                    parseTaskCounters(task, counters);
+
+                    if (TaskType.MAP.equals(task.getType())) {
+                        mapDuration += task.getDuration();
+                        mapNo++;
+                        mapInputSize += task.getInputBytes();
+                        mapOutputSize += task.getOutputBytes();
+                        if (job.getSplitLocations() != null) {
+                            int splitIndex = Utils.parseTaskId(task.getAppId(), task.getId()).getId();
+                            if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
+                                task.setLocal(true);
+                        }
+                    }
+                    if (TaskType.REDUCE.equals(task.getType())) {
+                        reduceDuration += task.getDuration();
+                        reduceTime += task.getReduceTime();
+                        shuffleTime += task.getShuffleTime();
+                        mergeTime += task.getMergeTime();
+                        reduceNo++;
+                        reduceInputSize += task.getInputBytes();
+                        reduceOutputSize += task.getOutputBytes();
+                    }
+                    avgDuration += duration;
+                    avgNo++;
                 }
-                final CountersProxy jobCounters = api.getRunningJobCounters(app.getId(), job.getId());
-                final List<TaskProfile> tasks = api.getRunningTasksInfo(job);
-                final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
-                final JobConfProxy finalJobConf = jobConf;
+            }
 
-                long mapDuration = 0, reduceDuration = 0, reduceTime = 0, shuffleTime = 0, mergeTime = 0, avgDuration = 0;
-                int mapNo = 0, reduceNo = 0, avgNo = 0;
-                long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
-
-                for (TaskProfile task : tasks) {
-                    Integer duration = task.getDuration();
-                    if (duration > 0) {
-                        // task has finished; get statistics
-
-                        api.addRunningAttemptInfo(task);
-
-                        CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
-                        if (counters != null) {
-                            taskCounters.add(counters);
-                            parseTaskCounters(task, counters);
-                        }
-
-                        if (TaskType.MAP.equals(task.getType())) {
-                            mapDuration += task.getDuration();
-                            mapNo++;
-                            mapInputSize += task.getInputBytes();
-                            mapOutputSize += task.getOutputBytes();
-                        }
-                        if (TaskType.REDUCE.equals(task.getType())) {
-                            reduceDuration += task.getDuration();
-                            reduceTime += task.getReduceTime();
-                            shuffleTime += task.getShuffleTime();
-                            mergeTime += task.getMergeTime();
-                            reduceNo++;
-                            reduceInputSize += task.getInputBytes();
-                            reduceOutputSize += task.getOutputBytes();
-                            if (job.getSplitLocations() != null) {
-                                int splitIndex = Utils.parseTaskId(task.getAppId(), task.getId()).getId();
-                                if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
-                                    task.setLocal(true);
-                            }
-                        }
-                        avgDuration += duration;
-                        avgNo++;
-                    }
+            if (avgNo > 0) {
+                job.setAvgTaskDuration(avgDuration / avgNo);
+                if (mapNo > 0) {
+                    job.setAvgMapDuration(mapDuration / mapNo);
                 }
-
-                if (avgNo > 0) {
-                    job.setAvgTaskDuration(avgDuration / avgNo);
-                    if (mapNo > 0) {
-                        job.setAvgMapDuration(mapDuration / mapNo);
-                    }
-                    if (reduceNo > 0) {
-                        job.setAvgReduceDuration(reduceDuration / reduceNo);
-                        job.setAvgShuffleTime(shuffleTime / reduceNo);
-                        job.setAvgMergeTime(mergeTime / reduceNo);
-                        job.setAvgReduceTime(reduceTime / reduceNo);
-                    }
+                if (reduceNo > 0) {
+                    job.setAvgReduceDuration(reduceDuration / reduceNo);
+                    job.setAvgShuffleTime(shuffleTime / reduceNo);
+                    job.setAvgMergeTime(mergeTime / reduceNo);
+                    job.setAvgReduceTime(reduceTime / reduceNo);
                 }
+            }
 
-                job.setInputBytes(mapInputSize);
-                job.setMapOutputBytes(mapOutputSize);
-                job.setReduceInputBytes(reduceInputSize);
-                job.setOutputBytes(reduceOutputSize);
-                // update in case of discrepancy
-                job.setCompletedMaps(mapNo);
-                job.setCompletedReduces(reduceNo);
+            job.setInputBytes(mapInputSize);
+            job.setMapOutputBytes(mapOutputSize);
+            job.setReduceInputBytes(reduceInputSize);
+            job.setOutputBytes(reduceOutputSize);
+            // update in case of discrepancy
+            job.setCompletedMaps(mapNo);
+            job.setCompletedReduces(reduceNo);
 
-                dataStore.runTransaction(db, new DataTransaction() {
-                    @Override
-                    public void run() throws Exception {
-                        dataStore.updateOrStore(db, DataEntityType.JOB, job);
-                        if (finalJobConf != null) {
-                            try {
-                                dataStore.store(db, DataEntityType.JOB_CONF, finalJobConf);
-                            } catch (DuplicateKeyException e) {
-                                // can happen; do nothing
-                            }
-                            logger.debug("Saved running configuration");
-                        }
-                        dataStore.updateOrStore(db, DataEntityType.COUNTER, jobCounters);
-                        for (CountersProxy counters : taskCounters)
-                            dataStore.updateOrStore(db, DataEntityType.COUNTER, counters);
-                        for (TaskProfile task : tasks) {
-                            dataStore.updateOrStore(db, DataEntityType.TASK, task);
-                        }
-                    }
-                });
-
-                if (historyEnabled) {
-                    dataStore.store(db, DataEntityType.HISTORY,
-                            new HistoryProfilePBImpl<>(DataEntityType.APP, app));
-                    dataStore.store(db, DataEntityType.HISTORY,
-                            new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
-                    dataStore.store(db, DataEntityType.HISTORY,
-                            new HistoryProfilePBImpl<>(DataEntityType.COUNTER, jobCounters));
+            dataStore.runTransaction(db, new DataTransaction() {
+                @Override
+                public void run() throws Exception {
+                    dataStore.updateOrStore(db, DataEntityType.JOB, job);
+                    dataStore.updateOrStore(db, DataEntityType.COUNTER, jobCounters);
+                    for (CountersProxy counters : taskCounters)
+                        dataStore.updateOrStore(db, DataEntityType.COUNTER, counters);
                     for (TaskProfile task : tasks) {
-                        dataStore.store(db, DataEntityType.HISTORY,
-                                new HistoryProfilePBImpl<>(DataEntityType.TASK, task));
+                        dataStore.updateOrStore(db, DataEntityType.TASK, task);
                     }
+                }
+            });
+
+            if (historyEnabled) {
+                dataStore.store(db, DataEntityType.HISTORY,
+                        new HistoryProfilePBImpl<>(DataEntityType.APP, app));
+                dataStore.store(db, DataEntityType.HISTORY,
+                        new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
+                dataStore.store(db, DataEntityType.HISTORY,
+                        new HistoryProfilePBImpl<>(DataEntityType.COUNTER, jobCounters));
+                for (TaskProfile task : tasks) {
+                    dataStore.store(db, DataEntityType.HISTORY,
+                            new HistoryProfilePBImpl<>(DataEntityType.TASK, task));
                 }
             }
         } else {
@@ -350,8 +374,8 @@ public class ClusterInfoCollector {
             if (!running.contains(app.getId())) {
                 // get job info directly from the conf in the staging dir
                 try {
-                    JobProfile job = getAndStoreSubmittedJobInfo(conf, app.getId(), app.getUser(), dataStore, db);
-                    if (historyEnabled) {
+                    JobProfile job = getAndStoreSubmittedJobInfo(conf, app.getId(), app.getUser(), db);
+                    if (historyEnabled && job != null) {
                         dataStore.store(db, DataEntityType.HISTORY,
                                 new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
                     }
@@ -362,11 +386,26 @@ public class ClusterInfoCollector {
         }
     }
 
-    public static JobProfile getAndStoreSubmittedJobInfo(Configuration conf,
-                                                         String appId,
-                                                         String user,
-                                                         final DataStore store,
-                                                         final DataEntityDB db) throws IOException {
+    public JobProfile getCurrentProfileForApp(String appId, String user) {
+        JobProfile profile = dataStore.getJobProfileForApp(db, appId, user);
+
+        if (profile != null)
+            return profile;
+
+        // if not found, force the reading of the configuration
+        try {
+            logger.debug("Forcing fetch of job info from conf for " + appId);
+            return getAndStoreSubmittedJobInfo(conf, appId, user, db);
+        } catch (Exception e) {
+            logger.debug("Could not retrieve job info for app " + appId, e);
+        }
+        return null;
+    }
+
+    public JobProfile getAndStoreSubmittedJobInfo(Configuration conf,
+                                                  String appId,
+                                                  String user,
+                                                  final DataEntityDB db) throws IOException {
         final JobConfProxy confProxy = getSubmittedJobConf(conf, appId, user);
         final JobProfile job = getSubmittedJobInfo(confProxy, appId);
         job.setTotalMapTasks(job.getInputSplits());
@@ -375,12 +414,12 @@ public class ClusterInfoCollector {
         if (reducesString != null && reducesString.length() > 0)
             reduces = Integer.valueOf(reducesString);
         job.setTotalReduceTasks(reduces);
-        store.runTransaction(db, new DataTransaction() {
+        dataStore.runTransaction(db, new DataTransaction() {
             @Override
             public void run() throws Exception {
                 try {
-                    store.store(db, DataEntityType.JOB, job);
-                    store.store(db, DataEntityType.JOB_CONF, confProxy);
+                    dataStore.store(db, DataEntityType.JOB, job);
+                    dataStore.store(db, DataEntityType.JOB_CONF, confProxy);
                 } catch (DuplicateKeyException e) {
                     // this is possible; do nothing
                 } catch (Exception e) {
@@ -391,10 +430,14 @@ public class ClusterInfoCollector {
         return job;
     }
 
-    private static JobProfile getJobProfileFromConf(String appId, JobId jobId, FileSystem fs, Configuration conf, Path jobSubmitDir) throws IOException {
+    private static JobProfile getJobProfileFromConf(String appId,
+                                                    JobId jobId,
+                                                    FileSystem fs,
+                                                    JobConfProxy jobConfProxy,
+                                                    Path jobSubmitDir) throws IOException {
         JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = SplitMetaInfoReader.readSplitMetaInfo(
                 TypeConverter.fromYarn(jobId), fs,
-                conf,
+                jobConfProxy.getConf(),
                 jobSubmitDir);
 
         long inputLength = 0;
@@ -407,14 +450,28 @@ public class ClusterInfoCollector {
         JobProfile profile = Records.newRecord(JobProfile.class);
         profile.setId(jobId.toString());
         profile.setAppId(appId);
-        profile.setName(conf.get(MRJobConfig.JOB_NAME));
-        profile.setUser(conf.get(MRJobConfig.USER_NAME));
+        profile.setName(jobConfProxy.getEntry(MRJobConfig.JOB_NAME));
+        profile.setUser(jobConfProxy.getEntry(MRJobConfig.USER_NAME));
         profile.setTotalInputBytes(inputLength);
         profile.setInputSplits(taskSplitMetaInfo.length);
-        profile.setMapperClass(conf.get(MRJobConfig.MAP_CLASS_ATTR));
-        profile.setReducerClass(conf.get(MRJobConfig.REDUCE_CLASS_ATTR));
+        setClassNamesFromConf(profile, jobConfProxy);
         profile.setSplitLocations(splitLocations);
         return profile;
+    }
+
+    private static void setClassNamesFromConf(JobProfile profile, JobConfProxy conf) {
+        String classString = conf.getEntry(MRJobConfig.MAP_CLASS_ATTR);
+        if (classString == null)
+            classString = conf.getEntry(OLD_MAP_CLASS_ATTR);
+        if (classString == null)
+            profile.setReducerClass(IdentityMapper.class.getName());
+        profile.setMapperClass(classString);
+        classString = conf.getEntry(MRJobConfig.REDUCE_CLASS_ATTR);
+        if (classString == null)
+            classString = conf.getEntry(OLD_REDUCE_CLASS_ATTR);
+        if (classString == null)
+            profile.setReducerClass(IdentityReducer.class.getName());
+        profile.setReducerClass(classString);
     }
 
     private static JobProfile getSubmittedJobInfo(JobConfProxy confProxy, String appId) throws IOException {
@@ -423,36 +480,38 @@ public class ClusterInfoCollector {
         Path jobConfDir = null;
         try {
             jobConfDir = new Path(new URI(jobConfDirPath));
-            logger.trace("Checking file path: " + jobConfDir);
             String jobId = jobConfDir.getName();
             //DANGER We assume there can only be one job / application
-            return getJobProfileFromConf(appId, Utils.parseJobId(appId, jobId), fs, confProxy.getConf(), jobConfDir);
+            return getJobProfileFromConf(appId, Utils.parseJobId(appId, jobId), fs, confProxy, jobConfDir);
         } catch (URISyntaxException e) {
             throw new POSUMException("Invalid jobConfDir path " + jobConfDirPath, e);
         }
     }
 
-    private static JobConfProxy getSubmittedJobConf(Configuration conf, String appId, String user) throws IOException {
-        final ApplicationId actualAppId = Utils.parseApplicationId(appId);
+    private static JobConfProxy getSubmittedJobConf(Configuration conf, final String appId, String user) throws IOException {
         FileSystem fs = FileSystem.get(conf);
         Path confPath = MRApps.getStagingAreaDir(conf,
                 user != null ? user : UserGroupInformation.getCurrentUser().getUserName());
         confPath = fs.makeQualified(confPath);
 
-        logger.trace("Looking in staging path: " + confPath);
+        logger.debug("Looking in staging path: " + confPath);
         FileStatus[] statuses = fs.listStatus(confPath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
-                return path.toString().contains("job_" + actualAppId.getClusterTimestamp());
+                return path.toString().contains(appId.replace("application", "job"));
             }
         });
 
         //DANGER We assume there can only be one job / application
-        if (statuses.length != 1)
-            throw new POSUMException("Wrong number of job profile directories for: " + appId);
+        if (statuses.length != 1) {
+            if (statuses.length > 1)
+                throw new POSUMException("Too many conf directories found for " + appId);
+            logger.warn("Job conf dir not found for: " + appId);
+            return null;
+        }
 
         Path jobConfDir = statuses[0].getPath();
-        logger.trace("Checking file path: " + jobConfDir);
+        logger.debug("Checking file path for conf: " + jobConfDir);
         Path jobConfPath = new Path(jobConfDir, "job.xml");
         Configuration jobConf = new JobConf(false);
         jobConf.addResource(fs.open(jobConfPath), jobConfPath.toString());

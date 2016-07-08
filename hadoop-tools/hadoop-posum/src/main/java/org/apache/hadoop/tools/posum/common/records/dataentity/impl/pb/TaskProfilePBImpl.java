@@ -91,12 +91,9 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     }
 
     @Override
-    public Integer getDuration() {
+    public Long getDuration() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        if (p.hasStartTime() && p.hasFinishTime())
-            return Long.valueOf(p.getFinishTime() - p.getStartTime()).intValue();
-        else
-            return -1;
+        return Math.max(0, p.getFinishTime() - p.getStartTime());
     }
 
     @Override

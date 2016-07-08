@@ -86,6 +86,18 @@ public class TaskPredictionPBImpl extends TaskPrediction {
     }
 
     @Override
+    public void setPredictor(String predictor) {
+        maybeInitBuilder();
+        builder.setPredictor(predictor);
+    }
+
+    @Override
+    public String getPredictor() {
+        TaskPredictionProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getPredictor();
+    }
+
+    @Override
     public void setId(String name) {
         maybeInitBuilder();
         builder.setId(name);

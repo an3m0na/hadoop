@@ -105,8 +105,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
-    public Integer getDuration() {
-        return new Long(Math.min(0, getFinishTime() - getStartTime())).intValue();
+    public Long getDuration() {
+        return Math.max(0, getFinishTime() - getStartTime());
     }
 
     @Override
