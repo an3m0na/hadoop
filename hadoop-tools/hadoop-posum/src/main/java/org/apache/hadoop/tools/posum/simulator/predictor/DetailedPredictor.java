@@ -378,16 +378,4 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 inputPerTask + " / " + reduceRate + "=" + duration);
         return duration.longValue();
     }
-
-    @Override
-    public Long predictTaskDuration(String taskId) {
-        TaskProfile task = getDataStore().findById(DataEntityType.TASK, taskId);
-        if (task == null)
-            throw new POSUMException("Task not found for id " + taskId);
-        if (task.getType().equals(TaskType.MAP)) {
-            if (task.isLocal())
-                return predictLocalMapTaskDuration(task.getJobId());
-        }
-        return predictTaskDuration(task.getJobId(), task.getType());
-    }
 }

@@ -252,29 +252,23 @@ public class ClusterInfoCollector {
             JobProfile lastJobInfo = getCurrentProfileForApp(app.getId(), app.getUser());
             final JobProfile job = api.getRunningJobInfo(app.getId(), app.getQueue(), lastJobInfo);
             if (job == null) {
-                logger.info("Could not find job for " + app.getId());
+                if (api.checkAppFinished(app))
+                    moveAppToHistory(app);
                 return;
             }
-//            JobConfProxy jobConf = null;
-//            if (job.getMapperClass() == null) {
-//                logger.debug("Job lacks conf info. Getting conf for " + job.getId());
-//                try {
-//                    jobConf = getSubmittedJobConf(conf, app.getId(), app.getUser());
-//                    if (jobConf != null) {
-//                        JobProfile jobAsInConf = getSubmittedJobInfo(jobConf, app.getId());
-//                        job.setMapperClass(jobAsInConf.getMapperClass());
-//                        job.setReducerClass(jobAsInConf.getReducerClass());
-//                        job.setTotalInputBytes(jobAsInConf.getTotalInputBytes());
-//                        job.setInputSplits(jobAsInConf.getInputSplits());
-//                    }
-//                } catch (IOException e) {
-//                    logger.warn("Could not retrieve configuration for running job " + job.getId());
-//                }
-//            }
             final CountersProxy jobCounters = api.getRunningJobCounters(app.getId(), job.getId());
+            if (jobCounters == null) {
+                if (api.checkAppFinished(app))
+                    moveAppToHistory(app);
+                return;
+            }
             final List<TaskProfile> tasks = api.getRunningTasksInfo(job);
+            if (tasks == null) {
+                if (api.checkAppFinished(app))
+                    moveAppToHistory(app);
+                return;
+            }
             final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
-//            final JobConfProxy finalJobConf = jobConf;
 
             long mapDuration = 0, reduceDuration = 0, reduceTime = 0, shuffleTime = 0, mergeTime = 0, avgDuration = 0;
             int mapNo = 0, reduceNo = 0, avgNo = 0;
@@ -285,13 +279,22 @@ public class ClusterInfoCollector {
                 if (duration > 0) {
                     // task has finished; get statistics
 
-                    api.addRunningAttemptInfo(task);
+                    if (!api.addRunningAttemptInfo(task)) {
+                        if (api.checkAppFinished(app))
+                            moveAppToHistory(app);
+                        return;
+                    }
 
                     CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
-                    if (counters != null) {
-                        taskCounters.add(counters);
-                        parseTaskCounters(task, counters);
+
+                    if (counters == null) {
+                        if (api.checkAppFinished(app))
+                            moveAppToHistory(app);
+                        return;
                     }
+
+                    taskCounters.add(counters);
+                    parseTaskCounters(task, counters);
 
                     if (TaskType.MAP.equals(task.getType())) {
                         mapDuration += task.getDuration();
@@ -343,16 +346,7 @@ public class ClusterInfoCollector {
                 @Override
                 public void run() throws Exception {
                     dataStore.updateOrStore(db, DataEntityType.JOB, job);
-//                    if (finalJobConf != null) {
-//                        try {
-//                            dataStore.store(db, DataEntityType.JOB_CONF, finalJobConf);
-//                        } catch (DuplicateKeyException e) {
-//                             can happen; do nothing
-//                        }
-//                        logger.debug("Saved running configuration");
-//                    }
-                    if (jobCounters != null)
-                        dataStore.updateOrStore(db, DataEntityType.COUNTER, jobCounters);
+                    dataStore.updateOrStore(db, DataEntityType.COUNTER, jobCounters);
                     for (CountersProxy counters : taskCounters)
                         dataStore.updateOrStore(db, DataEntityType.COUNTER, counters);
                     for (TaskProfile task : tasks) {
@@ -366,9 +360,8 @@ public class ClusterInfoCollector {
                         new HistoryProfilePBImpl<>(DataEntityType.APP, app));
                 dataStore.store(db, DataEntityType.HISTORY,
                         new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
-                if (jobCounters != null)
-                    dataStore.store(db, DataEntityType.HISTORY,
-                            new HistoryProfilePBImpl<>(DataEntityType.COUNTER, jobCounters));
+                dataStore.store(db, DataEntityType.HISTORY,
+                        new HistoryProfilePBImpl<>(DataEntityType.COUNTER, jobCounters));
                 for (TaskProfile task : tasks) {
                     dataStore.store(db, DataEntityType.HISTORY,
                             new HistoryProfilePBImpl<>(DataEntityType.TASK, task));
@@ -395,7 +388,7 @@ public class ClusterInfoCollector {
     public JobProfile getCurrentProfileForApp(String appId, String user) {
         JobProfile profile = dataStore.getJobProfileForApp(db, appId, user);
 
-        if(profile != null)
+        if (profile != null)
             return profile;
 
         // if not found, force the reading of the configuration
@@ -409,9 +402,9 @@ public class ClusterInfoCollector {
     }
 
     public JobProfile getAndStoreSubmittedJobInfo(Configuration conf,
-                                                         String appId,
-                                                         String user,
-                                                         final DataEntityDB db) throws IOException {
+                                                  String appId,
+                                                  String user,
+                                                  final DataEntityDB db) throws IOException {
         final JobConfProxy confProxy = getSubmittedJobConf(conf, appId, user);
         final JobProfile job = getSubmittedJobInfo(confProxy, appId);
         job.setTotalMapTasks(job.getInputSplits());
@@ -469,13 +462,13 @@ public class ClusterInfoCollector {
         String classString = conf.getEntry(MRJobConfig.MAP_CLASS_ATTR);
         if (classString == null)
             classString = conf.getEntry(OLD_MAP_CLASS_ATTR);
-        if(classString == null)
+        if (classString == null)
             profile.setReducerClass(IdentityMapper.class.getName());
         profile.setMapperClass(classString);
         classString = conf.getEntry(MRJobConfig.REDUCE_CLASS_ATTR);
         if (classString == null)
             classString = conf.getEntry(OLD_REDUCE_CLASS_ATTR);
-        if(classString == null)
+        if (classString == null)
             profile.setReducerClass(IdentityReducer.class.getName());
         profile.setReducerClass(classString);
     }
