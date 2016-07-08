@@ -103,6 +103,7 @@ public class ClusterInfoCollector {
         final JobProfile finalJob = job;
 
         final JobConfProxy jobConf = api.getFinishedJobConf(jobId);
+        setClassNamesFromConf(job, jobConf);
         final CountersProxy jobCounters = api.getFinishedJobCounters(jobId);
 
         if (jobCounters != null) {
