@@ -52,7 +52,7 @@ public abstract class JobBehaviorPredictor {
         if (task == null)
             throw new POSUMException("Task not found for id " + taskId);
         if(task.getDuration() > 0)
-            throw new POSUMException("Task has already finished" + taskId);
+            throw new POSUMException("Task has already finished: " + taskId);
         return predictTaskDuration(task.getJobId(), task.getType());
     }
 
