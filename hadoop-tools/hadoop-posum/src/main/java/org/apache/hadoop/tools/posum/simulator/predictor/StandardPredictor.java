@@ -154,13 +154,4 @@ public class StandardPredictor extends JobBehaviorPredictor {
         }
         return predictReduceTaskDuration(job);
     }
-
-    @Override
-    public Long predictTaskDuration(String taskId) {
-        TaskProfile task = getDataStore().findById(DataEntityType.TASK, taskId);
-        if (task == null)
-            throw new POSUMException("Task not found for id " + taskId);
-        return predictTaskDuration(task.getJobId(), task.getType());
-    }
-
 }
