@@ -68,7 +68,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     if (mapFinish < task.getFinishTime())
                         mapFinish = task.getFinishTime();
                     // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-                    double newRate = 1.0 * Math.max(task.getInputBytes(), 1) / task.getDuration();
+                    double newRate = 1.0 * Math.max(job.getTotalInputBytes()/job.getTotalMapTasks(), 1) / task.getDuration();
                     if (task.isLocal()) {
                         mapLocalRate += newRate;
                         mapLocalNo++;
@@ -88,7 +88,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             }
             fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY,
                     // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-                    Double.toString(1.0 * job.getMapOutputBytes() / Math.max(job.getInputBytes(), job.getTotalMapTasks())));
+                    Double.toString(1.0 * job.getMapOutputBytes() / Math.max(job.getTotalInputBytes(), job.getTotalMapTasks())));
             if (mapLocalNo + mapRemoteNo != job.getTotalMapTasks()) {
                 // map phase has not finished yet
                 mapFinish = Long.MAX_VALUE;
@@ -247,9 +247,11 @@ public class DetailedPredictor extends JobBehaviorPredictor {
 
     private double calculateMapTaskSelectivity(JobProfile job) {
         String selectivityString = job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY);
-        if (selectivityString != null)
+        if (selectivityString != null) {
             // we know the current selectivity
+            logger.debug("Using own selectivity: " + selectivityString);
             return Double.valueOf(selectivityString);
+        }
 
         // we have to compute selectivity from the map history
         List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
@@ -261,6 +263,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             if (profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null) {
                 completeProfile(profile);
             }
+            logger.debug("Comparing " + job.getId() + " with other for selectivity: " + profile.getId());
             avgSelectivity += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY));
         }
         return avgSelectivity / comparable.size();
@@ -274,7 +277,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
         }
         //restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-        double mapRate = 1.0 * Math.max(job.getInputBytes(), job.getTotalMapTasks()) / job.getAvgMapDuration();
+        double mapRate = 1.0 * Math.max(job.getTotalInputBytes(), job.getTotalMapTasks()) / job.getAvgMapDuration();
         // we assume the reduce processing rate is the same as the average map processing rate
         Double duration = inputPerTask / mapRate;
         logger.debug("Reduce duration computed based on map data for " + job.getId() + " as " + duration + "from mapRate=" + mapRate + " and inputPerTask=" + inputPerTask);
@@ -348,10 +351,8 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     shuffleRate = avgShuffleRate / typicalShuffles;
                 if (shuffleTime == null && firstShuffles > 0)
                     shuffleTime = avgShuffleTime / firstShuffles;
-                if (mergeRate == null) {
-                    logger.debug("Overriding mergeRate");
+                if (mergeRate == null)
                     mergeRate = avgMergeRate / comparableNo;
-                }
                 if (reduceRate == null)
                     reduceRate = avgReduceRate / comparableNo;
             }

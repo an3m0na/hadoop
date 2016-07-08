@@ -68,7 +68,7 @@ public class StandardPredictor extends JobBehaviorPredictor {
         double avgMapRate = 0;
         for (JobProfile profile : comparable) {
             //restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-            avgMapRate += 1.0 * Math.max(profile.getInputBytes(), profile.getTotalMapTasks()) / profile.getAvgMapDuration();
+            avgMapRate += 1.0 * Math.max(profile.getTotalInputBytes(), profile.getTotalMapTasks()) / profile.getAvgMapDuration();
         }
         avgMapRate /= comparable.size();
         // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
@@ -81,7 +81,7 @@ public class StandardPredictor extends JobBehaviorPredictor {
         if (job.getCompletedMaps() > 0)
             // we know the current selectivity
             // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-            return 1.0 * job.getMapOutputBytes() / Math.max(job.getInputBytes(), job.getTotalMapTasks());
+            return 1.0 * job.getMapOutputBytes() / Math.max(job.getTotalInputBytes(), job.getTotalMapTasks());
 
         // we have to compute selectivity from the map history
         List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
@@ -91,7 +91,7 @@ public class StandardPredictor extends JobBehaviorPredictor {
         double avgSelectivity = 0;
         for (JobProfile profile : comparable) {
             // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-            avgSelectivity += 1.0 * profile.getMapOutputBytes() / Math.max(profile.getInputBytes(), profile.getTotalMapTasks());
+            avgSelectivity += 1.0 * profile.getMapOutputBytes() / Math.max(profile.getTotalInputBytes(), profile.getTotalMapTasks());
         }
         return avgSelectivity / comparable.size();
     }
@@ -104,8 +104,8 @@ public class StandardPredictor extends JobBehaviorPredictor {
         }
 
         //restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-        double mapRate = 1.0 * Math.max(job.getInputBytes(), job.getTotalMapTasks()) / job.getAvgMapDuration();
-        double selectivity = 1.0 * job.getMapOutputBytes() / job.getInputBytes();
+        double mapRate = 1.0 * Math.max(job.getTotalInputBytes(), job.getTotalMapTasks()) / job.getAvgMapDuration();
+        double selectivity = 1.0 * job.getMapOutputBytes() / job.getTotalInputBytes();
         // we assume the reduce processing rate is the same as the map processing rate
         Double duration = Math.max(job.getTotalInputBytes(), 1) * selectivity / mapRate;
         logger.debug("Reduce duration computed based on map data for " + job.getId() + " as " + duration + "from mapRate=" + mapRate + " and selectivity=" + selectivity);
