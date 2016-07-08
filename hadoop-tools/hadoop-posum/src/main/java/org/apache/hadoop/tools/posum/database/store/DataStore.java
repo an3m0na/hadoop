@@ -12,7 +12,6 @@ import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.client.DataClientInterface;
 import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
-import org.apache.hadoop.yarn.util.Records;
 import org.mongojack.DBQuery;
 
 import java.util.ArrayList;
@@ -113,15 +112,7 @@ public class DataStore implements DataClientInterface {
         if (profiles.size() == 1)
             return profiles.get(0);
         if (profiles.size() > 1)
-            throw new YarnRuntimeException("Found too many profiles in database for app " + appId);
-
-        // if not found, force the reading of the configuration
-        // we need this because the information needs to be in the database for certain schedulers
-        try {
-            return ClusterInfoCollector.getAndStoreSubmittedJobInfo(conf, appId, user, this, db);
-        } catch (Exception e) {
-            logger.debug("Could not retrieve job info for app " + appId, e);
-        }
+            throw new POSUMException("Found too many profiles in database for app " + appId);
         return null;
     }
 

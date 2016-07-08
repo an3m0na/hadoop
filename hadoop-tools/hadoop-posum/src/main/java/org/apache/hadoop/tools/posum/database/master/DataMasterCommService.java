@@ -6,16 +6,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.field.*;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
@@ -105,9 +102,12 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
                 case JOB_FOR_APP:
                     JobForAppPayload jobForAppPayload = (JobForAppPayload) request.getPayload();
-                    JobProfile jobProfile =
-                            dmContext.getDataStore().getJobProfileForApp(jobForAppPayload.getEntityDB(),
-                                    jobForAppPayload.getAppId(), jobForAppPayload.getUser());
+                    JobProfile jobProfile;
+                    if (jobForAppPayload.getEntityDB().equals(DataEntityDB.getMain()))
+                        // use the cluster info to force fetch if app is new
+                        jobProfile = dmContext.getClusterInfo().getCurrentProfileForApp(jobForAppPayload.getAppId(), jobForAppPayload.getUser());
+                    else
+                        jobProfile = dmContext.getDataStore().getJobProfileForApp(jobForAppPayload.getEntityDB(), jobForAppPayload.getAppId(), jobForAppPayload.getUser());
                     entityPayload = SingleEntityPayload.newInstance(DataEntityType.JOB, jobProfile);
                     logger.debug("Returning profile " + jobProfile);
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);

@@ -56,7 +56,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         Map<String, String> fieldMap = new HashMap<>(FlexKeys.values().length);
         long mapFinish = 0L;
         Double mapRemoteRate = 0.0, mapLocalRate = 0.0, shuffleTypicalRate = 0.0, mergeRate = 0.0, reduceRate = 0.0;
-        int mapRemoteNo = 0, mapLocalNo = 0, typicalShuffleNo = 0, reduceNo = 0;
+        int mapRemoteNo = 0, mapLocalNo = 0, typicalShuffleNo = 0, firstShuffleNo = 0, reduceNo = 0;
         Long shuffleFirstTime = 0L;
 
         if (job.getCompletedMaps() > 0) {
@@ -67,7 +67,8 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     // this is a finished map task; split stats into remote and local
                     if (mapFinish < task.getFinishTime())
                         mapFinish = task.getFinishTime();
-                    double newRate = 1.0 * task.getInputBytes() / task.getDuration();
+                    // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+                    double newRate = 1.0 * Math.max(job.getTotalInputBytes()/job.getTotalMapTasks(), 1) / task.getDuration();
                     if (task.isLocal()) {
                         mapLocalRate += newRate;
                         mapLocalNo++;
@@ -86,45 +87,52 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                         Double.toString(mapRemoteRate / mapRemoteNo));
             }
             fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY,
-                    Double.toString(1.0 * job.getMapOutputBytes() / job.getInputBytes()));
+                    // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+                    Double.toString(1.0 * job.getMapOutputBytes() / Math.max(job.getTotalInputBytes(), job.getTotalMapTasks())));
             if (mapLocalNo + mapRemoteNo != job.getTotalMapTasks()) {
                 // map phase has not finished yet
                 mapFinish = Long.MAX_VALUE;
             }
-            logger.debug("mapFinish for " + job.getId() + " is " + mapFinish);
         }
 
-        if (job.getCompletedReduces() > 0) {
-            logger.debug("Some reduces are complete for " + job.getId());
+        if (job.getCompletedReduces() > 0 && job.getTotalReduceTasks() > 0) {
             for (TaskProfile task : tasks) {
                 if (task.getDuration() <= 0)
                     continue;
                 reduceNo++;
                 if (task.getType().equals(TaskType.REDUCE)) {
                     // this is a finished reduce task; split stats into shuffle, merge and reduce
+                    double taskInputBytes = Math.max(task.getInputBytes(), 1);
                     if (task.getReduceTime() > 0)
-                        reduceRate += 1.0 * task.getInputBytes() / task.getReduceTime();
+                        reduceRate += taskInputBytes / task.getReduceTime();
                     if (task.getMergeTime() > 0)
-                        mergeRate += 1.0 * task.getInputBytes() / task.getMergeTime();
+                        mergeRate += taskInputBytes / task.getMergeTime();
                     if (task.getStartTime() > mapFinish) {
                         // the task was not in the first reduce wave; store shuffle time under typical
-                        shuffleTypicalRate += 1.0 * task.getInputBytes() / task.getShuffleTime();
+                        shuffleTypicalRate += taskInputBytes / task.getShuffleTime();
                         typicalShuffleNo++;
                     } else {
+                        logger.debug("When this happens, mapFinish is " + mapFinish);
+//                        if (mapFinish < Long.MAX_VALUE) {
+//                             map finished and this is a finished first shuffle
                         // record only the time spent shuffling after map phase finished
                         shuffleFirstTime += task.getShuffleTime() - (mapFinish - task.getStartTime());
+                        firstShuffleNo++;
+//                        }
                     }
                 }
             }
-            fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.REDUCE, Double.toString(reduceRate / reduceNo));
-            fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.MERGE, Double.toString(mergeRate / reduceNo));
-            if (shuffleFirstTime != 0) {
-                fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_FIRST,
-                        Long.toString(shuffleFirstTime / (reduceNo - typicalShuffleNo)));
-            }
-            if (shuffleTypicalRate != 0) {
-                fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_TYPICAL,
-                        Double.toString(shuffleTypicalRate / reduceNo));
+            if (reduceNo > 0) {
+                fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.REDUCE, Double.toString(reduceRate / reduceNo));
+                fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.MERGE, Double.toString(mergeRate / reduceNo));
+                if (shuffleFirstTime != 0) {
+                    fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_FIRST,
+                            Long.toString(shuffleFirstTime / firstShuffleNo));
+                }
+                if (shuffleTypicalRate != 0) {
+                    fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_TYPICAL,
+                            Double.toString(shuffleTypicalRate / typicalShuffleNo));
+                }
             }
         }
         job.getFlexFields().putAll(fieldMap);
@@ -133,14 +141,15 @@ public class DetailedPredictor extends JobBehaviorPredictor {
 
 
     private List<JobProfile> getComparableProfiles(JobProfile job, TaskType type) {
+        int bufferLimit = conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
+                POSUMConfiguration.PREDICTION_BUFFER_DEFAULT);
         // get past jobs with the same name
         List<JobProfile> comparable = getDataStore().find(
                 DataEntityType.JOB_HISTORY,
                 type.equals(TaskType.MAP) ? "mapperClass" : "reducerClass",
                 type.equals(TaskType.MAP) ? job.getMapperClass() : job.getReducerClass(),
-                0,
-                conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
-                        POSUMConfiguration.PREDICTION_BUFFER_DEFAULT)
+                -bufferLimit,
+                bufferLimit
         );
         if (comparable.size() < 1) {
             // get past jobs at least by the same user
@@ -148,9 +157,8 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     DataEntityType.JOB_HISTORY,
                     "user",
                     job.getUser(),
-                    0,
-                    conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
-                            POSUMConfiguration.PREDICTION_BUFFER_DEFAULT)
+                    -bufferLimit,
+                    bufferLimit
             );
         }
         return comparable;
@@ -209,10 +217,10 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             // compute the average map processing rate from history
             List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
             if (comparable.size() < 1) {
-                logger.debug("No map history data for job " + job.getId() + ". Using default");
+                logger.debug("No map history data for " + job.getId() + ". Using default");
                 // return the default; there is nothing we can do
-                return conf.getLong(POSUMConfiguration.AVERAGE_JOB_DURATION,
-                        POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
+                return conf.getLong(POSUMConfiguration.AVERAGE_TASK_DURATION,
+                        POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
             }
             int numRates = 0;
             for (JobProfile profile : comparable) {
@@ -230,16 +238,20 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             rate = Double.valueOf(rateString);
         }
         // multiply by how much input each task has
-        long splitSize = job.getInputBytes() / job.getTotalMapTasks();
-        logger.debug("Map duration for " + job.getId() + " should be " + splitSize + " / " + rate);
-        return Double.valueOf(splitSize / rate).longValue();
+        // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+        long splitSize = Math.max(job.getTotalInputBytes() / job.getTotalMapTasks(), 1);
+        Double duration = splitSize / rate;
+        logger.debug("Map duration for " + job.getId() + " should be " + splitSize + " / " + rate + "=" + duration);
+        return duration.longValue();
     }
 
     private double calculateMapTaskSelectivity(JobProfile job) {
         String selectivityString = job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY);
-        if (selectivityString != null)
+        if (selectivityString != null) {
             // we know the current selectivity
+            logger.debug("Using own selectivity: " + selectivityString);
             return Double.valueOf(selectivityString);
+        }
 
         // we have to compute selectivity from the map history
         List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
@@ -251,19 +263,39 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             if (profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null) {
                 completeProfile(profile);
             }
+            logger.debug("Comparing " + job.getId() + " with other for selectivity: " + profile.getId());
             avgSelectivity += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY));
         }
         return avgSelectivity / comparable.size();
     }
 
+    private Long handleNoReduceHistory(JobProfile job, double inputPerTask) {
+        if (job.getCompletedMaps() == 0) {
+            logger.debug("No data to compute reduce for " + job.getName() + ". Using default");
+            // return the default; there is nothing we can do
+            return conf.getLong(POSUMConfiguration.AVERAGE_TASK_DURATION,
+                    POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
+        }
+        //restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+        double mapRate = 1.0 * Math.max(job.getTotalInputBytes(), job.getTotalMapTasks()) / job.getAvgMapDuration();
+        // we assume the reduce processing rate is the same as the average map processing rate
+        Double duration = inputPerTask / mapRate;
+        logger.debug("Reduce duration computed based on map data for " + job.getId() + " as " + duration + "from mapRate=" + mapRate + " and inputPerTask=" + inputPerTask);
+        return duration.longValue();
+
+    }
+
     private Long predictReduceTaskDuration(JobProfile job) {
+        if (job.getTotalReduceTasks() < 1)
+            throw new POSUMException("Job does not have reduce tasks for prediction");
 
         Double mergeRate = null, reduceRate = null, shuffleRate = null;
         Long shuffleTime = null;
 
         // calculate how much input the task has
         double reduceInputSize = job.getTotalInputBytes() * calculateMapTaskSelectivity(job);
-        double inputPerTask = reduceInputSize / job.getTotalReduceTasks();
+        // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+        double inputPerTask = Math.max(reduceInputSize / job.getTotalReduceTasks(), 1);
 
         String flexString;
         Map<String, String> flexFields = job.getFlexFields();
@@ -285,26 +317,21 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             // compute averages based on history
             List<JobProfile> comparable = getComparableProfiles(job, TaskType.REDUCE);
             if (comparable.size() < 1) {
-                if (job.getCompletedMaps() == 0) {
-                    logger.debug("No data to compute reduce for job " + job.getName() + ". Using default");
-                    // return the default; there is nothing we can do
-                    return conf.getLong(POSUMConfiguration.AVERAGE_JOB_DURATION,
-                            POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
-                }
-                logger.debug("Reduce duration computed based on map data for job" + job.getId());
-                double mapRate = 1.0 * job.getInputBytes() / job.getAvgMapDuration();
-                // we assume the reduce processing rate is the same as the average map processing rate
-                return Double.valueOf(inputPerTask / mapRate).longValue();
+                return handleNoReduceHistory(job, inputPerTask);
             } else {
                 // compute the reducer processing rates
                 Double avgMergeRate = 0.0, avgReduceRate = 0.0, avgShuffleRate = 0.0;
                 Long avgShuffleTime = 0L;
-                int firstShuffles = 0, typicalShuffles = 0;
+                int comparableNo = 0, firstShuffles = 0, typicalShuffles = 0;
                 String rateString;
                 for (JobProfile profile : comparable) {
+                    if (profile.getTotalReduceTasks() < 1)
+                        continue;
+                    logger.debug("Comparing reduce of " + job.getId() + " with " + profile.getId());
                     if (profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null) {
                         completeProfile(profile);
                     }
+                    comparableNo++;
                     rateString = profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.SHUFFLE_FIRST);
                     if (rateString != null) {
                         avgShuffleTime += Long.valueOf(rateString);
@@ -318,16 +345,24 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     avgMergeRate += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MERGE));
                     avgReduceRate += Double.valueOf(profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.REDUCE));
                 }
+                if (comparableNo < 1)
+                    return handleNoReduceHistory(job, inputPerTask);
                 if (typicalShuffles > 0)
                     shuffleRate = avgShuffleRate / typicalShuffles;
                 if (shuffleTime == null && firstShuffles > 0)
                     shuffleTime = avgShuffleTime / firstShuffles;
                 if (mergeRate == null)
-                    mergeRate = avgMergeRate / comparable.size();
+                    mergeRate = avgMergeRate / comparableNo;
                 if (reduceRate == null)
-                    reduceRate = avgReduceRate / comparable.size();
+                    reduceRate = avgReduceRate / comparableNo;
             }
         }
+
+        if (mergeRate == null || reduceRate == null)
+            throw new POSUMException("Something went wrong when calculating rates for prediction" +
+                    " shuffleTime=" + shuffleTime +
+                    " mergeRate=" + mergeRate +
+                    " reduceRate=" + reduceRate);
 
         // if it is a typical shuffle or there is no first shuffle information
         if (job.getCompletedMaps().equals(job.getTotalMapTasks()) || shuffleTime == null) {
@@ -338,27 +373,10 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 // there is no first or typical shuffle information; shuffle should take at least as merge
                 shuffleTime = Double.valueOf(inputPerTask / mergeRate).longValue();
         }
-
-        if (mergeRate == null || reduceRate == null)
-            throw new POSUMException("Something went wrong when calculating rates for prediction" +
-                    " shuffleTime=" + shuffleTime +
-                    " mergeRate" + mergeRate +
-                    " reduceRate" + reduceRate);
+        Double duration = inputPerTask / mergeRate + inputPerTask / reduceRate;
         logger.debug("Reduce duration for " + job.getId() + " should be " + shuffleTime + " + " +
                 inputPerTask + " / " + mergeRate + " + " +
-                inputPerTask + " / " + reduceRate);
-        return shuffleTime + Double.valueOf(inputPerTask / mergeRate + inputPerTask / reduceRate).longValue();
-    }
-
-    @Override
-    public Long predictTaskDuration(String taskId) {
-        TaskProfile task = getDataStore().findById(DataEntityType.TASK, taskId);
-        if (task == null)
-            throw new POSUMException("Task could not be found with id: " + taskId);
-        if (task.getType().equals(TaskType.MAP)) {
-            if (task.isLocal())
-                return predictLocalMapTaskDuration(task.getJobId());
-        }
-        return predictTaskDuration(task.getJobId(), task.getType());
+                inputPerTask + " / " + reduceRate + "=" + duration);
+        return duration.longValue();
     }
 }

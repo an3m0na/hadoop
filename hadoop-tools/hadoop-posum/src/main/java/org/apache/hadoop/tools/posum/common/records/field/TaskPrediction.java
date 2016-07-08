@@ -7,12 +7,17 @@ import org.apache.hadoop.yarn.util.Records;
  */
 public abstract class TaskPrediction {
 
-    public static TaskPrediction newInstance(String taskId, Long duration) {
+    public static TaskPrediction newInstance(String predictor, String taskId, Long duration) {
         TaskPrediction result = Records.newRecord(TaskPrediction.class);
+        result.setPredictor(predictor);
         result.setId(taskId);
         result.setDuration(duration);
         return result;
     }
+
+    public abstract void setPredictor(String predictor);
+
+    public abstract String getPredictor();
 
     public abstract void setId(String id);
 
@@ -24,6 +29,6 @@ public abstract class TaskPrediction {
 
     @Override
     public String toString() {
-        return "TaskPrediction{" + getId() + "=" + getDuration() + "}";
+        return "TaskPrediction{" + getPredictor() + ": " + getId() + "=" + getDuration() + "}";
     }
 }
