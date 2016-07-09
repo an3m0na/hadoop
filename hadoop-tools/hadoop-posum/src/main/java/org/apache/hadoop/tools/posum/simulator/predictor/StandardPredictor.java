@@ -62,8 +62,8 @@ public class StandardPredictor extends JobBehaviorPredictor {
         List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
         if (comparable.size() < 1) {
             logger.debug("No map history data for " + job.getId() + ". Using default");
-            return conf.getLong(POSUMConfiguration.AVERAGE_JOB_DURATION,
-                    POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
+            return conf.getLong(POSUMConfiguration.AVERAGE_TASK_DURATION,
+                    POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
         }
         double avgMapRate = 0;
         for (JobProfile profile : comparable) {
@@ -99,8 +99,8 @@ public class StandardPredictor extends JobBehaviorPredictor {
     private Long handleNoReduceHistory(JobProfile job) {
         if (job.getCompletedMaps() == 0) {
             logger.debug("No data to compute reduce for " + job.getName() + ". Using default");
-            return conf.getLong(POSUMConfiguration.AVERAGE_JOB_DURATION,
-                    POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
+            return conf.getLong(POSUMConfiguration.AVERAGE_TASK_DURATION,
+                    POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
         }
 
         //restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
