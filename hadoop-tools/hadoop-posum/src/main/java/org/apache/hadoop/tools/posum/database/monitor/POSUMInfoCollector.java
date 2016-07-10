@@ -8,6 +8,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.field.TaskPrediction;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
@@ -41,7 +42,7 @@ public class POSUMInfoCollector {
     private JobBehaviorPredictor detailedPredictor;
 
 
-   public POSUMInfoCollector(Configuration conf, DataStore dataStore) {
+    public POSUMInfoCollector(Configuration conf, DataStore dataStore) {
         this.dataStore = dataStore;
         this.conf = conf;
         fineGrained = conf.getBoolean(POSUMConfiguration.FINE_GRAINED_MONITOR,
@@ -82,7 +83,10 @@ public class POSUMInfoCollector {
                         dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
                                 TaskPrediction.newInstance(basicPredictor.getClass().getSimpleName(), taskId, duration)));
                     } catch (Exception e) {
-                        logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
+                        if (!(e instanceof POSUMException))
+                            logger.error("Could not predict task duration for " + taskId + " due to: ", e);
+                        else if (!e.getMessage().equals("Task has already finished"))
+                            logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
                     }
                     try {
                         duration = standardPredictor.predictTaskDuration(taskId);
@@ -90,7 +94,10 @@ public class POSUMInfoCollector {
                         dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
                                 TaskPrediction.newInstance(standardPredictor.getClass().getSimpleName(), taskId, duration)));
                     } catch (Exception e) {
-                        logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
+                        if (!(e instanceof POSUMException))
+                            logger.error("Could not predict task duration for " + taskId + " due to: ", e);
+                        else if (!e.getMessage().equals("Task has already finished"))
+                            logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
                     }
                     try {
                         duration = detailedPredictor.predictTaskDuration(taskId);
@@ -98,7 +105,10 @@ public class POSUMInfoCollector {
                         dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
                                 TaskPrediction.newInstance(detailedPredictor.getClass().getSimpleName(), taskId, duration)));
                     } catch (Exception e) {
-                        logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
+                        if (!(e instanceof POSUMException))
+                            logger.error("Could not predict task duration for " + taskId + " due to: ", e);
+                        else if (!e.getMessage().equals("Task has already finished"))
+                            logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
                     }
                 }
                 lastPrediction = now;
