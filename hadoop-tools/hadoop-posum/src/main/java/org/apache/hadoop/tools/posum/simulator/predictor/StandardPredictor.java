@@ -78,15 +78,16 @@ public class StandardPredictor extends JobBehaviorPredictor {
     }
 
     private double calculateMapTaskSelectivity(JobProfile job) {
-        if (job.getCompletedMaps() > 0)
-            // we know the current selectivity
-            // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-            return 1.0 * job.getMapOutputBytes() / Math.max(job.getTotalInputBytes(), job.getTotalMapTasks());
-
-        // we have to compute selectivity from the map history
+        // we try to compute selectivity from the map history
         List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
-        if (comparable.size() < 1) {
-            return 1.0;
+        if (comparable.size() < 1 || !comparable.get(0).getMapperClass().equals(job.getMapperClass())) {
+            // there is no history, or it is not relevant for selectivity
+            if (job.getCompletedMaps() > 0)
+                // we know the current selectivity
+                // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+                return job.getMapOutputBytes() / Math.max(1.0 * job.getTotalInputBytes() / job.getCompletedMaps(), job.getCompletedMaps());
+            // we don't know anything about selectivity
+            return 0;
         }
         double avgSelectivity = 0;
         for (JobProfile profile : comparable) {
@@ -96,48 +97,64 @@ public class StandardPredictor extends JobBehaviorPredictor {
         return avgSelectivity / comparable.size();
     }
 
-    private Long handleNoReduceHistory(JobProfile job) {
-        if (job.getCompletedMaps() == 0) {
+    private Long handleNoReduceHistory(JobProfile job, Double avgSelectivity) {
+        if (avgSelectivity == 0 || job.getCompletedMaps() == 0) {
+            // our selectivity or map rate data is unreliable
+            // just return default duration
             logger.debug("No data to compute reduce for " + job.getName() + ". Using default");
             return conf.getLong(POSUMConfiguration.AVERAGE_TASK_DURATION,
                     POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
         }
 
-        //restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+        // calculate the current map rate and assume reduce rate is the same
+
+        // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
         double mapRate = 1.0 * Math.max(job.getTotalInputBytes(), job.getTotalMapTasks()) / job.getAvgMapDuration();
-        double selectivity = 1.0 * job.getMapOutputBytes() / job.getTotalInputBytes();
         // we assume the reduce processing rate is the same as the map processing rate
-        Double duration = Math.max(job.getTotalInputBytes(), 1) * selectivity / mapRate;
-        logger.debug("Reduce duration computed based on map data for " + job.getId() + " as " + duration + "from mapRate=" + mapRate + " and selectivity=" + selectivity);
+        Double inputPerTask = Math.max(job.getTotalInputBytes(), 1) * avgSelectivity / job.getTotalReduceTasks();
+        Double duration = inputPerTask / mapRate;
+        logger.debug("Reduce duration computed based on map data for " + job.getId() + " as " + duration + "from mapRate=" + mapRate + " and selectivity=" + avgSelectivity);
         return duration.longValue();
     }
 
     private Long predictReduceTaskDuration(JobProfile job) {
-        if (job.getTotalReduceTasks() < 1)
-            throw new POSUMException("Job does not have reduce tasks for prediction");
-
         if (job.getAvgReduceDuration() != 0)
             return job.getAvgReduceDuration();
+
+        // calculate average duration based on map selectivity and historical processing rates
+
+        double avgSelectivity = calculateMapTaskSelectivity(job);
+
         List<JobProfile> comparable = getComparableProfiles(job, TaskType.REDUCE);
         if (comparable.size() < 1) {
             // non-existent or irrelevant historical data
-            return handleNoReduceHistory(job);
+            return handleNoReduceHistory(job, avgSelectivity);
         }
-        // we have reduce history
-        // we need to compute the selectivity, either currently or from the map history
-        double avgSelectivity = calculateMapTaskSelectivity(job);
-        double avgReduceRate = 0;
+        boolean relevantHistory = comparable.get(0).getReducerClass().equals(job.getReducerClass());
+
+        // we have reduce history; calculate reduce rate
+        double avgReduceRate = 0, avgReduceDuration = 0;
         int comparableNo = 0;
         for (JobProfile profile : comparable) {
             if (profile.getTotalReduceTasks() < 1)
                 continue;
             comparableNo++;
-            // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-            avgReduceRate += 1.0 * Math.max(profile.getReduceInputBytes(), profile.getTotalReduceTasks()) / profile.getAvgReduceDuration();
+            if (avgSelectivity == 0 || !relevantHistory)
+                // our selectivity or reduce rate data is unreliable
+                // just compute average reduce duration of historical jobs
+                avgReduceDuration += profile.getAvgReduceDuration();
+            else
+                // calculate reduce rate; restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+                avgReduceRate += 1.0 * Math.max(profile.getReduceInputBytes(), profile.getTotalReduceTasks()) /
+                        profile.getAvgReduceDuration();
         }
         if (comparableNo < 1)
             // non-existent or irrelevant historical data
-            return handleNoReduceHistory(job);
+            return handleNoReduceHistory(job, avgSelectivity);
+        if (avgSelectivity == 0 || !relevantHistory)
+            // our selectivity or reduce rate data is unreliable
+            // just compute average reduce duration of historical jobs
+            return Double.valueOf(avgReduceDuration / comparableNo).longValue();
         avgReduceRate /= comparableNo;
         // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
         double inputPerTask = Math.max(job.getTotalInputBytes() * avgSelectivity / job.getTotalReduceTasks(), 1);
