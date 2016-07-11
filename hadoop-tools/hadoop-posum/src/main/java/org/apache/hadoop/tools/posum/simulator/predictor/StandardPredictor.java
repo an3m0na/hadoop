@@ -82,10 +82,12 @@ public class StandardPredictor extends JobBehaviorPredictor {
         List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
         if (comparable.size() < 1 || !comparable.get(0).getMapperClass().equals(job.getMapperClass())) {
             // there is no history, or it is not relevant for selectivity
-            if (job.getCompletedMaps() > 0)
+            if (job.getCompletedMaps() > 0) {
                 // we know the current selectivity
                 // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-                return job.getMapOutputBytes() / Math.max(1.0 * job.getTotalInputBytes() / job.getCompletedMaps(), job.getCompletedMaps());
+                Long parsedInputBytes = job.getCompletedMaps() * Math.max(job.getTotalInputBytes() / job.getTotalMapTasks(), 1);
+                return 1.0 * job.getMapOutputBytes() / parsedInputBytes;
+            }
             // we don't know anything about selectivity
             return 0;
         }
@@ -109,7 +111,8 @@ public class StandardPredictor extends JobBehaviorPredictor {
         // calculate the current map rate and assume reduce rate is the same
 
         // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-        double mapRate = 1.0 * Math.max(job.getTotalInputBytes(), job.getTotalMapTasks()) / job.getAvgMapDuration();
+        Long parsedInputBytes = job.getCompletedMaps() * Math.max(job.getTotalInputBytes() / job.getTotalMapTasks(), 1);
+        double mapRate = 1.0 * parsedInputBytes / job.getAvgMapDuration();
         // we assume the reduce processing rate is the same as the map processing rate
         Double inputPerTask = Math.max(job.getTotalInputBytes(), 1) * avgSelectivity / job.getTotalReduceTasks();
         Double duration = inputPerTask / mapRate;
@@ -143,10 +146,11 @@ public class StandardPredictor extends JobBehaviorPredictor {
                 // our selectivity or reduce rate data is unreliable
                 // just compute average reduce duration of historical jobs
                 avgReduceDuration += profile.getAvgReduceDuration();
-            else
+            else {
                 // calculate reduce rate; restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-                avgReduceRate += 1.0 * Math.max(profile.getReduceInputBytes(), profile.getTotalReduceTasks()) /
-                        profile.getAvgReduceDuration();
+                Double inputPerTask = 1.0 * Math.max(profile.getReduceInputBytes() / profile.getTotalReduceTasks(), 1);
+                avgReduceRate += inputPerTask / profile.getAvgReduceDuration();
+            }
         }
         if (comparableNo < 1)
             // non-existent or irrelevant historical data
