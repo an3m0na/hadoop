@@ -85,7 +85,7 @@ public class POSUMInfoCollector {
                     } catch (Exception e) {
                         if (!(e instanceof POSUMException))
                             logger.error("Could not predict task duration for " + taskId + " due to: ", e);
-                        else if (!e.getMessage().equals("Task has already finished"))
+                        else if (!e.getMessage().startsWith("Task has already finished"))
                             logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
                     }
                     try {
@@ -96,7 +96,7 @@ public class POSUMInfoCollector {
                     } catch (Exception e) {
                         if (!(e instanceof POSUMException))
                             logger.error("Could not predict task duration for " + taskId + " due to: ", e);
-                        else if (!e.getMessage().equals("Task has already finished"))
+                        else if (!e.getMessage().startsWith("Task has already finished"))
                             logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
                     }
                     try {
@@ -107,7 +107,7 @@ public class POSUMInfoCollector {
                     } catch (Exception e) {
                         if (!(e instanceof POSUMException))
                             logger.error("Could not predict task duration for " + taskId + " due to: ", e);
-                        else if (!e.getMessage().equals("Task has already finished"))
+                        else if (!e.getMessage().startsWith("Task has already finished"))
                             logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
                     }
                 }
