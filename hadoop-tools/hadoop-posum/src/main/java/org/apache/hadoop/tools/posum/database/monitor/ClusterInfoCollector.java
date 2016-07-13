@@ -149,6 +149,11 @@ public class ClusterInfoCollector {
         final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
         for (TaskProfile task : tasks) {
             api.addFinishedAttemptInfo(task);
+            if (job.getSplitLocations() != null && task.getHttpAddress() != null) {
+                int splitIndex = Utils.parseTaskId(task.getAppId(), task.getId()).getId();
+                if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
+                    task.setLocal(true);
+            }
             CountersProxy counters = api.getFinishedTaskCounters(jobId, task.getId());
             if (counters != null) {
                 taskCounters.add(counters);
@@ -226,10 +231,6 @@ public class ClusterInfoCollector {
                             if (task.getType().equals(TaskType.MAP)) {
                                 task.setInputBytes(task.getInputBytes() +
                                         counter.getTotalCounterValue());
-                                if (counter.getTotalCounterValue() > 0)
-                                    task.setLocal(false);
-                                else
-                                    task.setLocal(true);
                             }
                             break;
                         case "HDFS_BYTES_WRITTEN":
@@ -302,7 +303,7 @@ public class ClusterInfoCollector {
                         mapNo++;
                         mapInputSize += task.getInputBytes();
                         mapOutputSize += task.getOutputBytes();
-                        if (job.getSplitLocations() != null) {
+                        if (job.getSplitLocations() != null && task.getHttpAddress() != null) {
                             int splitIndex = Utils.parseTaskId(task.getAppId(), task.getId()).getId();
                             if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
                                 task.setLocal(true);
