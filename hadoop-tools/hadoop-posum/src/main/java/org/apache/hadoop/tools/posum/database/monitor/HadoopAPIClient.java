@@ -312,8 +312,11 @@ public class HadoopAPIClient {
                         task.setMergeTime(rawAttempt.get("elapsedMergeTime").asLong());
                     if (rawAttempt.has("elapsedReduceTime"))
                         task.setReduceTime(rawAttempt.get("elapsedReduceTime").asLong());
-                    if (rawAttempt.has("nodeHttpAddress"))
-                        task.setHttpAddress(rawAttempt.get("nodeHttpAddress").asText());
+                    if (rawAttempt.has("nodeHttpAddress")) {
+                        String[] addressParts = rawAttempt.get("nodeHttpAddress").asText().split(":");
+                        String host = addressParts.length > 2 ? addressParts[1] : addressParts[0];
+                        task.setHttpAddress(host.trim());
+                    }
                     return true;
                 }
             }
@@ -346,8 +349,11 @@ public class HadoopAPIClient {
                         task.setMergeTime(rawAttempt.get("elapsedMergeTime").asLong());
                     if (rawAttempt.has("elapsedReduceTime"))
                         task.setReduceTime(rawAttempt.get("elapsedReduceTime").asLong());
-                    if (rawAttempt.has("nodeHttpAddress"))
-                        task.setHttpAddress(rawAttempt.get("nodeHttpAddress").asText());
+                    if (rawAttempt.has("nodeHttpAddress")) {
+                        String[] addressParts = rawAttempt.get("nodeHttpAddress").asText().split(":");
+                        String host = addressParts.length > 2 ? addressParts[1] : addressParts[0];
+                        task.setHttpAddress(host.trim());
+                    }
                     return;
                 }
             }
