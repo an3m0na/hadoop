@@ -43,8 +43,6 @@ public abstract class JobBehaviorPredictor {
 
     public abstract Long predictJobDuration(String jobId);
 
-    public abstract Long predictLocalMapTaskDuration(String jobId);
-
     public abstract Long predictTaskDuration(String jobId, TaskType type);
 
     public Long predictTaskDuration(String taskId) {
