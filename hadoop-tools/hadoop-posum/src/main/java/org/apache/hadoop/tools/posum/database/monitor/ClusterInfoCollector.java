@@ -149,6 +149,7 @@ public class ClusterInfoCollector {
         final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
         for (TaskProfile task : tasks) {
             api.addFinishedAttemptInfo(task);
+            task.setAppId(appId);
             if (job.getSplitLocations() != null && task.getHttpAddress() != null) {
                 int splitIndex = Utils.parseTaskId(task.getAppId(), task.getId()).getId();
                 if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
@@ -277,6 +278,7 @@ public class ClusterInfoCollector {
             long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
 
             for (TaskProfile task : tasks) {
+                task.setAppId(app.getId());
                 Long duration = task.getDuration();
                 if (duration > 0) {
                     // task has finished; get statistics

@@ -305,7 +305,7 @@ public class HadoopAPIClient {
             for (int i = 0; i < rawAttempts.size(); i++) {
                 JsonNode rawAttempt = rawAttempts.get(i);
                 String state = rawAttempt.get("state").asText();
-                if (TaskState.RUNNING.name().equals(state) || TaskState.SUCCEEDED.name().equals(state)) {
+                if (!TaskState.FAILED.name().equals(state) && !TaskState.KILLED.name().equals(state)) {
                     if (rawAttempt.has("elapsedShuffleTime"))
                         task.setShuffleTime(rawAttempt.get("elapsedShuffleTime").asLong());
                     if (rawAttempt.has("elapsedMergeTime"))
