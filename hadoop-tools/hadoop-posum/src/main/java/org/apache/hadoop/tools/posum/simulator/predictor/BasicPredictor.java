@@ -57,11 +57,6 @@ public class BasicPredictor extends JobBehaviorPredictor {
     }
 
     @Override
-    public Long predictLocalMapTaskDuration(String jobId) {
-        return predictTaskDuration(jobId, TaskType.MAP);
-    }
-
-    @Override
     public Long predictTaskDuration(String jobId, TaskType type) {
         JobProfile job = getDataStore().findById(DataEntityType.JOB, jobId);
 

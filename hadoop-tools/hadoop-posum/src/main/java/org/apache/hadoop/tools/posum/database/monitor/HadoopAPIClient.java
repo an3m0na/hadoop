@@ -305,15 +305,18 @@ public class HadoopAPIClient {
             for (int i = 0; i < rawAttempts.size(); i++) {
                 JsonNode rawAttempt = rawAttempts.get(i);
                 String state = rawAttempt.get("state").asText();
-                if (TaskState.RUNNING.name().equals(state) || TaskState.SUCCEEDED.name().equals(state)) {
+                if (!TaskState.FAILED.name().equals(state) && !TaskState.KILLED.name().equals(state)) {
                     if (rawAttempt.has("elapsedShuffleTime"))
                         task.setShuffleTime(rawAttempt.get("elapsedShuffleTime").asLong());
                     if (rawAttempt.has("elapsedMergeTime"))
                         task.setMergeTime(rawAttempt.get("elapsedMergeTime").asLong());
                     if (rawAttempt.has("elapsedReduceTime"))
                         task.setReduceTime(rawAttempt.get("elapsedReduceTime").asLong());
-                    if (rawAttempt.has("nodeHttpAddress"))
-                        task.setHttpAddress(rawAttempt.get("nodeHttpAddress").asText());
+                    if (rawAttempt.has("nodeHttpAddress")) {
+                        String[] addressParts = rawAttempt.get("nodeHttpAddress").asText().split(":");
+                        String host = addressParts.length > 2 ? addressParts[1] : addressParts[0];
+                        task.setHttpAddress(host.trim());
+                    }
                     return true;
                 }
             }
@@ -346,8 +349,11 @@ public class HadoopAPIClient {
                         task.setMergeTime(rawAttempt.get("elapsedMergeTime").asLong());
                     if (rawAttempt.has("elapsedReduceTime"))
                         task.setReduceTime(rawAttempt.get("elapsedReduceTime").asLong());
-                    if (rawAttempt.has("nodeHttpAddress"))
-                        task.setHttpAddress(rawAttempt.get("nodeHttpAddress").asText());
+                    if (rawAttempt.has("nodeHttpAddress")) {
+                        String[] addressParts = rawAttempt.get("nodeHttpAddress").asText().split(":");
+                        String host = addressParts.length > 2 ? addressParts[1] : addressParts[0];
+                        task.setHttpAddress(host.trim());
+                    }
                     return;
                 }
             }
