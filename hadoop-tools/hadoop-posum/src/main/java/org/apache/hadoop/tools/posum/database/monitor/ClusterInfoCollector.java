@@ -149,6 +149,12 @@ public class ClusterInfoCollector {
         final List<CountersProxy> taskCounters = new ArrayList<>(tasks.size());
         for (TaskProfile task : tasks) {
             api.addFinishedAttemptInfo(task);
+            task.setAppId(appId);
+            if (job.getSplitLocations() != null && task.getHttpAddress() != null) {
+                int splitIndex = Utils.parseTaskId(task.getAppId(), task.getId()).getId();
+                if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
+                    task.setLocal(true);
+            }
             CountersProxy counters = api.getFinishedTaskCounters(jobId, task.getId());
             if (counters != null) {
                 taskCounters.add(counters);
@@ -226,10 +232,6 @@ public class ClusterInfoCollector {
                             if (task.getType().equals(TaskType.MAP)) {
                                 task.setInputBytes(task.getInputBytes() +
                                         counter.getTotalCounterValue());
-                                if (counter.getTotalCounterValue() > 0)
-                                    task.setLocal(false);
-                                else
-                                    task.setLocal(true);
                             }
                             break;
                         case "HDFS_BYTES_WRITTEN":
@@ -276,6 +278,7 @@ public class ClusterInfoCollector {
             long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
 
             for (TaskProfile task : tasks) {
+                task.setAppId(app.getId());
                 Long duration = task.getDuration();
                 if (duration > 0) {
                     // task has finished; get statistics
@@ -302,7 +305,7 @@ public class ClusterInfoCollector {
                         mapNo++;
                         mapInputSize += task.getInputBytes();
                         mapOutputSize += task.getOutputBytes();
-                        if (job.getSplitLocations() != null) {
+                        if (job.getSplitLocations() != null && task.getHttpAddress() != null) {
                             int splitIndex = Utils.parseTaskId(task.getAppId(), task.getId()).getId();
                             if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
                                 task.setLocal(true);
