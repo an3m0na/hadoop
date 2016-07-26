@@ -2,6 +2,9 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.yarn.util.Records;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.safeEquals;
+import static org.apache.hadoop.tools.posum.common.util.Utils.safeHashCode;
+
 /**
  * Created by ane on 5/17/16.
  */
@@ -23,6 +26,12 @@ public abstract class DataEntityDB {
         }
     }
 
+
+    public static DataEntityDB newInstance(Type type) {
+        DataEntityDB db = Records.newRecord(DataEntityDB.class);
+        db.setType(type);
+        return db;
+    }
 
     public static DataEntityDB newInstance(Type type, String view) {
         DataEntityDB db = Records.newRecord(DataEntityDB.class);
@@ -46,15 +55,15 @@ public abstract class DataEntityDB {
     }
 
     public static DataEntityDB getMain() {
-        return newInstance(Type.MAIN, null);
+        return newInstance(Type.MAIN);
     }
 
     public static DataEntityDB getLogs() {
-        return newInstance(Type.LOGS, null);
+        return newInstance(Type.LOGS);
     }
 
     public static DataEntityDB getSimulation() {
-        return newInstance(Type.SIMULATION, null);
+        return newInstance(Type.SIMULATION);
     }
 
     public Integer getId() {
@@ -63,6 +72,25 @@ public abstract class DataEntityDB {
 
     public boolean isView() {
         return getView() != null;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null)
+            return false;
+        if (other.getClass().isAssignableFrom(this.getClass())) {
+            DataEntityDB that = (DataEntityDB) other;
+            return safeEquals(this.getType(), that.getType()) &&
+                    safeEquals(this.getView(), that.getView());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = safeHashCode(getType());
+        result = 31 * result + safeHashCode(getView());
+        return result;
     }
 }
 

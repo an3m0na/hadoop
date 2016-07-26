@@ -60,8 +60,8 @@ public class DBImpl implements DBInterface {
     }
 
     @Override
-    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType apps, T toUpdate) {
-        return client.updateOrStore(db, apps, toUpdate);
+    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType collection, T toUpdate) {
+        return client.updateOrStore(db, collection, toUpdate);
     }
 
     @Override
