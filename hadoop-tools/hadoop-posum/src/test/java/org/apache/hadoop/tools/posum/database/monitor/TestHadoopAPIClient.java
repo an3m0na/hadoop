@@ -1,8 +1,8 @@
-package org.apache.hadoop.tools.posum.test;
+package org.apache.hadoop.tools.posum.database.monitor;
 
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
-import org.apache.hadoop.tools.posum.database.monitor.HadoopAPIClient;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -12,9 +12,9 @@ import java.util.Map;
 /**
  * Created by ane on 2/24/16.
  */
-public class TestRestClient {
+public class TestHadoopAPIClient {
 
-    HadoopAPIClient collector = new HadoopAPIClient(TestUtils.getConf());
+    private HadoopAPIClient collector = new HadoopAPIClient(POSUMConfiguration.newInstance());
 
     @Test
     public void testJobInfo() {

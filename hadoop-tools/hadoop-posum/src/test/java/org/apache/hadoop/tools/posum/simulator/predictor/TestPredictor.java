@@ -1,12 +1,11 @@
-package org.apache.hadoop.tools.posum.test;
+package org.apache.hadoop.tools.posum.simulator.predictor;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
-import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
-import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
+import org.apache.hadoop.tools.posum.test.MockDataMasterClient;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -23,7 +22,7 @@ public class TestPredictor {
 
     private JobBehaviorPredictor initPredictor(DBInterface dbInterface) {
 
-        conf = TestUtils.getConf();
+        conf = POSUMConfiguration.newInstance();
 
         Class<? extends JobBehaviorPredictor> predictorClass = conf.getClass(
                 POSUMConfiguration.PREDICTOR_CLASS,

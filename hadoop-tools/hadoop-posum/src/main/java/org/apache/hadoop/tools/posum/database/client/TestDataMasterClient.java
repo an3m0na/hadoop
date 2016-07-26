@@ -1,8 +1,9 @@
-package org.apache.hadoop.tools.posum.test;
+package org.apache.hadoop.tools.posum.database.client;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
@@ -20,13 +21,13 @@ import static org.junit.Assert.*;
 /**
  * Created by ane on 3/21/16.
  */
-public class TestDataStoreClient {
+public class TestDataMasterClient {
 
     private static final DataEntityDB db = DataEntityDB.getMain();
 
     @Test
     public void checkOneObject() {
-        Configuration conf = TestUtils.getConf();
+        Configuration conf = POSUMConfiguration.newInstance();
         DataMasterClient dataStore = new DataMasterClient(null);
         dataStore.init(conf);
         dataStore.start();
@@ -88,7 +89,7 @@ public class TestDataStoreClient {
 
     @Test
     public void checkMuliObject() {
-        Configuration conf = TestUtils.getConf();
+        Configuration conf = POSUMConfiguration.newInstance();
         DataMasterClient dataStore = new DataMasterClient(null);
         dataStore.init(conf);
         dataStore.start();
