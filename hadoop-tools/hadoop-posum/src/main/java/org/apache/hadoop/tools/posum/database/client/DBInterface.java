@@ -31,7 +31,7 @@ public interface DBInterface {
     <T extends GeneralDataEntity> String store(DataEntityType collection, T toInsert);
 
     //returns true if an existing object was overwritten
-    <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType apps, T toUpdate);
+    <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType collection, T toUpdate);
 
     void delete(DataEntityType collection, String id);
 

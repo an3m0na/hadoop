@@ -5,7 +5,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
 import org.apache.hadoop.tools.rumen.JobTraceReader;
 import org.apache.hadoop.tools.rumen.LoggedJob;
 import org.apache.hadoop.tools.rumen.LoggedTask;
@@ -16,18 +15,14 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by ane on 2/10/16.
+ * Created by ane on 7/26/16.
  */
-public class MockDataMasterClient extends DataMasterClient {
-
+//TODO rewrite this to make use of MockDataStoreImpl features
+public class MockDataStoreFromTrace extends MockDataStoreImpl {
     private List<JobProfile> jobList = new ArrayList<>();
     private Map<String, Map<String, TaskProfile>> taskMap = new HashMap<>();
     private long simulationTime = 0;
     private long currentTime = 0;
-
-    public MockDataMasterClient() {
-        super(null);
-    }
 
     public List<JobProfile> getJobList() {
         return jobList;
@@ -136,14 +131,15 @@ public class MockDataMasterClient extends DataMasterClient {
 
     }
 
-    private void storeIfMoreRecent(JobProfile job, TreeMap<Long, JobProfile> list) {
-        if (!list.isEmpty()) {
-            if (list.firstKey() < job.getFinishTime())
-                list.remove(list.firstKey());
-            else
-                return;
-        }
-        list.put(job.getFinishTime(), job);
+    public Map<String, List<String>> getFutureJobInfo() {
+        Map<String, List<String>> ret = new HashMap<>(jobList.size());
+        for (JobProfile job : jobList)
+            if (job.getFinishTime() > currentTime) {
+                List<String> tasks = new ArrayList<>(job.getTotalMapTasks() + job.getTotalReduceTasks());
+                tasks.addAll(taskMap.get(job.getId()).keySet());
+                ret.put(job.getId(), tasks);
+            }
+        return ret;
     }
 
     public List<JobProfile> getComparableProfiles(DataEntityDB db, String user, int count) {
@@ -166,14 +162,14 @@ public class MockDataMasterClient extends DataMasterClient {
         return ret;
     }
 
-    public Map<String, List<String>> getFutureJobInfo() {
-        Map<String, List<String>> ret = new HashMap<>(jobList.size());
-        for (JobProfile job : jobList)
-            if (job.getFinishTime() > currentTime) {
-                List<String> tasks = new ArrayList<>(job.getTotalMapTasks() + job.getTotalReduceTasks());
-                tasks.addAll(taskMap.get(job.getId()).keySet());
-                ret.put(job.getId(), tasks);
-            }
-        return ret;
+    private void storeIfMoreRecent(JobProfile job, TreeMap<Long, JobProfile> list) {
+        if (!list.isEmpty()) {
+            if (list.firstKey() < job.getFinishTime())
+                list.remove(list.firstKey());
+            else
+                return;
+        }
+        list.put(job.getFinishTime(), job);
     }
+
 }
