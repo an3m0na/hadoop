@@ -1,10 +1,11 @@
-package org.apache.hadoop.tools.posum.test;
+package org.apache.hadoop.tools.posum.database.store;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.util.Records;
@@ -15,13 +16,13 @@ import static org.junit.Assert.*;
 /**
  * Created by ane on 3/4/16.
  */
-public class TestDataStoreImpl {
+public class TestDataStore {
 
     private static final DataEntityDB db = DataEntityDB.getMain();
 
     @Test
     public void checkDatabase() {
-        DataStore dataStore = new DataStore(TestUtils.getConf());
+        DataStore dataStore = new DataStore(POSUMConfiguration.newInstance());
         dataStore.delete(db, DataEntityType.APP, "blabla1");
         dataStore.delete(db, DataEntityType.APP, "blabla2");
         AppProfile profile = Records.newRecord(AppProfile.class);
@@ -37,7 +38,7 @@ public class TestDataStoreImpl {
 
     @Test
     public void checkFinder() {
-        DataStore dataStore = new DataStore(TestUtils.getConf());
+        DataStore dataStore = new DataStore(POSUMConfiguration.newInstance());
         long time = System.currentTimeMillis();
         JobProfile job = Records.newRecord(JobProfile.class);
         job.setId("job_" + time + "_0000");
