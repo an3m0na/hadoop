@@ -16,9 +16,7 @@ import java.util.*;
  */
 public class MockDataStoreImpl implements MockDataStore {
 
-    private static final Long clusterTimestamp = System.currentTimeMillis();
     private Map<DataEntityDB, Map<DataEntityType, List<? extends GeneralDataEntity>>> storedEntities = new HashMap<>();
-    private Map<DataEntityDB, Map<DataEntityType, Integer>> currentIds;
 
     public MockDataStoreImpl() {
         for (DataEntityDB.Type type : DataEntityDB.Type.values()) {
@@ -78,7 +76,8 @@ public class MockDataStoreImpl implements MockDataStore {
             Map<String, Method> propertyReaders =
                     Utils.getBeanPropertyReaders(entities.get(0).getClass(), params.keySet());
             for (T entity : entities)
-                Utils.checkBeanPropertiesMatch(entity, propertyReaders, params);
+                if(Utils.checkBeanPropertiesMatch(entity, propertyReaders, params))
+                    results.add(entity);
         } catch (Exception e) {
             throw new POSUMException("Exception occured during findByParams " + e);
         }
@@ -89,6 +88,10 @@ public class MockDataStoreImpl implements MockDataStore {
     public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert) {
         if (toInsert.getId() == null) {
             toInsert.setId(ObjectId.get().toHexString());
+        } else {
+            if (findById(db, collection, toInsert.getId()) != null) {
+                throw new POSUMException("Duplicate id " + toInsert.getId());
+            }
         }
         this.getTypedEntities(db, collection).add(toInsert);
         return toInsert.getId();
