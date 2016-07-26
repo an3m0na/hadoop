@@ -6,6 +6,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.test.MockDataMasterClient;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -17,45 +18,44 @@ import java.util.Map;
 /**
  * Created by ane on 2/10/16.
  */
-public class TestPredictor {
-    Configuration conf;
+public abstract class TestPredictor<T extends JobBehaviorPredictor> {
+    protected Configuration conf = POSUMConfiguration.newInstance();
+    protected T predictor;
+    protected MockDataMasterClient dataStore;
+    protected Class<T> predictorClass;
 
-    private JobBehaviorPredictor initPredictor(DBInterface dbInterface) {
 
-        conf = POSUMConfiguration.newInstance();
-
-        Class<? extends JobBehaviorPredictor> predictorClass = conf.getClass(
-                POSUMConfiguration.PREDICTOR_CLASS,
-                BasicPredictor.class,
-                JobBehaviorPredictor.class
-        );
-
-        JobBehaviorPredictor predictor = null;
-        try {
-            predictor = predictorClass.getConstructor(Configuration.class, DBInterface.class)
-                    .newInstance(conf, dbInterface);
-        } catch (NoSuchMethodException |
-                InvocationTargetException |
-                InstantiationException |
-                IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return predictor;
+    public TestPredictor(Class<T> predictorClass) {
+        this.predictorClass = predictorClass;
     }
 
-    @Test
-    public void testPredictorAccuracy() {
+    @Before
+    public void setUp() throws Exception {
         MockDataMasterClient dataStore = new MockDataMasterClient();
         try {
             URL traceUrl = getClass().getClassLoader().getResource("2jobs2min-rumen-jh.json");
             if (traceUrl == null)
                 throw new RuntimeException("Trace file not found");
             dataStore.populateFromTrace(traceUrl.getFile());
+            System.out.println(dataStore.getJobList());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        JobBehaviorPredictor predictor = initPredictor(dataStore.bindTo(DataEntityDB.getMain()));
-        System.out.println(dataStore.getJobList());
+
+        try {
+            predictor = predictorClass.getConstructor(Configuration.class, DBInterface.class)
+                    .newInstance(conf, dataStore.bindTo(DataEntityDB.getMain()));
+        } catch (NoSuchMethodException |
+                InvocationTargetException |
+                InstantiationException |
+                IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Test
+    public void testPredictorAccuracy() {
         int heartbeat = conf.getInt(POSUMConfiguration.MASTER_HEARTBEAT_MS,
                 POSUMConfiguration.MASTER_HEARTBEAT_MS_DEFAULT);
         for (long i = 100000; i < dataStore.getSimulationTime(); i += heartbeat) {
@@ -78,6 +78,5 @@ public class TestPredictor {
                 System.out.println(recordBuilder.toString());
             }
         }
-
     }
 }
