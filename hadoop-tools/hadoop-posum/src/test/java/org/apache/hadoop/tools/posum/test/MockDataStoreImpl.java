@@ -6,6 +6,7 @@ import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.client.DBImpl;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.store.DataStoreExporter;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImporter;
 import org.bson.types.ObjectId;
 
@@ -206,6 +207,22 @@ public class MockDataStoreImpl implements MockDataStore {
 
     @Override
     public void exportData(String dataDumpPath) throws IOException {
+        new DataStoreExporter(this).exportTo(dataDumpPath);
+    }
 
+    @Override
+    public Map<DataEntityDB, List<DataEntityType>> listExistingCollections() {
+        Map<DataEntityDB, List<DataEntityType>> ret = new HashMap<>(storedEntities.size());
+        for (Map.Entry<DataEntityDB, Map<DataEntityType, Map<String, ? extends GeneralDataEntity>>> dbMapEntry :
+                storedEntities.entrySet()) {
+            List<DataEntityType> collections = new LinkedList<>();
+            for (Map.Entry<DataEntityType, Map<String, ? extends GeneralDataEntity>> collectionEntry :
+                    dbMapEntry.getValue().entrySet()) {
+                if (collectionEntry.getValue().size() > 0)
+                    collections.add(collectionEntry.getKey());
+            }
+            ret.put(dbMapEntry.getKey(), collections);
+        }
+        return ret;
     }
 }

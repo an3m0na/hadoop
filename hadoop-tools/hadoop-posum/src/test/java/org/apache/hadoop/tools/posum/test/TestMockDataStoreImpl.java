@@ -255,10 +255,15 @@ public class TestMockDataStoreImpl {
     }
 
     @Test
-    public void testDataImport() throws Exception {
-        dataStore.importData("/Users/ane/Desktop/importtest");
-        List<String> ids = db.listIds(DataEntityType.JOB_HISTORY, Collections.<String, Object>emptyMap());
-        assertEquals(2, ids.size());
-        assertArrayEquals(new String[]{"job_1468525450527_0001", "job_1468525450527_0003"}, ids.toArray());
+    public void testDataImportExport() throws Exception {
+        String dataDumpPath = "/Users/ane/Desktop/importtest";
+        dataStore.exportData(dataDumpPath);
+        dataStore.importData(dataDumpPath);
+        List<String> ids = db.listIds(DataEntityType.APP, Collections.<String, Object>emptyMap());
+        assertEquals(3, ids.size());
+        assertArrayEquals(new String[]{
+                ApplicationId.newInstance(clusterTimestamp, 1).toString(),
+                ApplicationId.newInstance(clusterTimestamp, 2).toString(),
+                ApplicationId.newInstance(clusterTimestamp, 3).toString()}, ids.toArray());
     }
 }
