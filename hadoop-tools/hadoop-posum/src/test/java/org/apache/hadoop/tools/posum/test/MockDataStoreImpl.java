@@ -6,9 +6,11 @@ import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.client.DBImpl;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.store.DataStoreImporter;
 import org.bson.types.ObjectId;
 
 import java.beans.IntrospectionException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -26,14 +28,14 @@ public class MockDataStoreImpl implements MockDataStore {
     private ConcurrentHashMap<Integer, ReentrantReadWriteLock> locks = new ConcurrentHashMap<>();
 
     public MockDataStoreImpl() {
-        for (DataEntityDB.Type type : DataEntityDB.Type.values()) {
+        for (DataEntityDB db : DataEntityDB.listByType()) {
             Map<DataEntityType, Map<String, ? extends GeneralDataEntity>> dbEntities = new HashMap<>();
             for (DataEntityType dataEntityType : DataEntityType.values()) {
                 dbEntities.put(dataEntityType, new LinkedHashMap<String, GeneralDataEntity>());
 
             }
-            storedEntities.put(DataEntityDB.newInstance(type), dbEntities);
-            locks.put(type.ordinal(), new ReentrantReadWriteLock());
+            storedEntities.put(db, dbEntities);
+            locks.put(db.getId(), new ReentrantReadWriteLock());
         }
     }
 
@@ -197,4 +199,13 @@ public class MockDataStoreImpl implements MockDataStore {
     }
 
 
+    @Override
+    public void importData(String dataDumpPath) throws IOException {
+        new DataStoreImporter(dataDumpPath).importTo(this);
+    }
+
+    @Override
+    public void exportData(String dataDumpPath) throws IOException {
+
+    }
 }

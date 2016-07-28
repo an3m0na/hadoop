@@ -41,4 +41,12 @@ public enum DataEntityType {
         return mappedClass;
     }
 
+    public static DataEntityType fromLabel(String label) {
+        for (DataEntityType type : DataEntityType.values()) {
+            if (type.getLabel().equals(label))
+                return type;
+        }
+        return null;
+    }
+
 }

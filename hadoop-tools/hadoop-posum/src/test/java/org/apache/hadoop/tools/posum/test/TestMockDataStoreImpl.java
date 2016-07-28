@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
  * Created by ane on 7/26/16.
  */
 public class TestMockDataStoreImpl {
+    private MockDataStore dataStore;
     private DBInterface db;
     private static final Long DURATION_UNIT = 60000L; // 1 minute
     private static final String JOB_NAME_ROOT = "Dummy Job";
@@ -29,7 +30,8 @@ public class TestMockDataStoreImpl {
 
     @Before
     public void setUp() throws Exception {
-        db = new MockDataStoreImpl().bindTo(DataEntityDB.getMain());
+        dataStore = new MockDataStoreImpl();
+        db = dataStore.bindTo(DataEntityDB.getMain());
 
         AppProfile app1 = Records.newRecord(AppProfile.class);
         ApplicationId app1Id = ApplicationId.newInstance(clusterTimestamp, 1);
@@ -119,7 +121,6 @@ public class TestMockDataStoreImpl {
         List<String> returnedAppIds = db.listIds(DataEntityType.APP, Collections.singletonMap("user", (Object) SECOND_USER));
         String appId2 = ApplicationId.newInstance(clusterTimestamp, 2).toString();
         String appId3 = ApplicationId.newInstance(clusterTimestamp, 3).toString();
-        Collections.sort(returnedAppIds);
         assertArrayEquals(new String[]{appId2, appId3}, returnedAppIds.toArray());
     }
 
@@ -145,10 +146,10 @@ public class TestMockDataStoreImpl {
     @Test
     public void testFindLimit() throws Exception {
         List<AppProfile> apps = db.find(DataEntityType.APP, Collections.singletonMap("finishTime",
-                (Object)(clusterTimestamp - DURATION_UNIT)));
+                (Object) (clusterTimestamp - DURATION_UNIT)));
         assertEquals(2, apps.size());
         apps = db.find(DataEntityType.APP, Collections.singletonMap("finishTime",
-                (Object)(clusterTimestamp - DURATION_UNIT)), 0, 1);
+                (Object) (clusterTimestamp - DURATION_UNIT)), 0, 1);
         assertEquals(1, apps.size());
         ApplicationId app2Id = ApplicationId.newInstance(clusterTimestamp, 2);
         assertEquals(app2Id.toString(), apps.get(0).getId());
@@ -157,10 +158,10 @@ public class TestMockDataStoreImpl {
     @Test
     public void testFindOffset() throws Exception {
         List<AppProfile> apps = db.find(DataEntityType.APP, Collections.singletonMap("finishTime",
-                (Object)(clusterTimestamp - DURATION_UNIT)));
+                (Object) (clusterTimestamp - DURATION_UNIT)));
         assertEquals(2, apps.size());
         apps = db.find(DataEntityType.APP, Collections.singletonMap("finishTime",
-                (Object)(clusterTimestamp - DURATION_UNIT)), 1, 0);
+                (Object) (clusterTimestamp - DURATION_UNIT)), 1, 0);
         assertEquals(1, apps.size());
         ApplicationId app3Id = ApplicationId.newInstance(clusterTimestamp, 3);
         assertEquals(app3Id.toString(), apps.get(0).getId());
@@ -169,10 +170,10 @@ public class TestMockDataStoreImpl {
     @Test
     public void testFindOffsetAndLimit() throws Exception {
         List<AppProfile> apps = db.find(DataEntityType.APP, Collections.singletonMap("finishTime",
-                (Object)(clusterTimestamp - DURATION_UNIT)));
+                (Object) (clusterTimestamp - DURATION_UNIT)));
         assertEquals(2, apps.size());
         apps = db.find(DataEntityType.APP, Collections.singletonMap("finishTime",
-                (Object)(clusterTimestamp - DURATION_UNIT)), -1, 2);
+                (Object) (clusterTimestamp - DURATION_UNIT)), -1, 2);
         assertEquals(1, apps.size());
         ApplicationId app3Id = ApplicationId.newInstance(clusterTimestamp, 3);
         assertEquals(app3Id.toString(), apps.get(0).getId());
@@ -224,7 +225,7 @@ public class TestMockDataStoreImpl {
         List<String> returnedJobIds = db.listIds(DataEntityType.JOB, Collections.<String, Object>emptyMap());
         assertEquals(3, returnedJobIds.size());
         String appId1 = ApplicationId.newInstance(clusterTimestamp, 1).toString();
-         returnedJobIds = db.listIds(DataEntityType.JOB, Collections.singletonMap("appId", (Object) appId1));
+        returnedJobIds = db.listIds(DataEntityType.JOB, Collections.singletonMap("appId", (Object) appId1));
         assertEquals(1, returnedJobIds.size());
         db.delete(DataEntityType.JOB, Collections.singletonMap("appId", (Object) appId1));
         returnedJobIds = db.listIds(DataEntityType.JOB, Collections.<String, Object>emptyMap());
@@ -251,5 +252,13 @@ public class TestMockDataStoreImpl {
         JobProfile job = db.findById(DataEntityType.JOB, jobId);
         assertEquals(1, job.getFlexFields().size());
         assertEquals(value, job.getFlexField(key));
+    }
+
+    @Test
+    public void testDataImport() throws Exception {
+        dataStore.importData("/Users/ane/Desktop/importtest");
+        List<String> ids = db.listIds(DataEntityType.JOB_HISTORY, Collections.<String, Object>emptyMap());
+        assertEquals(2, ids.size());
+        assertArrayEquals(new String[]{"job_1468525450527_0001", "job_1468525450527_0003"}, ids.toArray());
     }
 }
