@@ -10,6 +10,7 @@ import org.apache.hadoop.yarn.util.Records;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.*;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -256,8 +257,12 @@ public class TestMockDataStoreImpl {
 
     @Test
     public void testDataImportExport() throws Exception {
-        String dataDumpPath = "/Users/ane/Desktop/importtest";
+        String dataDumpPath = "testTmpDir";
         dataStore.exportData(dataDumpPath);
+        File tmpDir = new File(dataDumpPath);
+        assertTrue(tmpDir.exists() && tmpDir.isDirectory());
+        dataStore.clear();
+        assertEquals(0, db.listIds(DataEntityType.APP, Collections.<String, Object>emptyMap()).size());
         dataStore.importData(dataDumpPath);
         List<String> ids = db.listIds(DataEntityType.APP, Collections.<String, Object>emptyMap());
         assertEquals(3, ids.size());
@@ -265,5 +270,9 @@ public class TestMockDataStoreImpl {
                 ApplicationId.newInstance(clusterTimestamp, 1).toString(),
                 ApplicationId.newInstance(clusterTimestamp, 2).toString(),
                 ApplicationId.newInstance(clusterTimestamp, 3).toString()}, ids.toArray());
+        for (File file : tmpDir.listFiles()) {
+            assertTrue(file.delete());
+        }
+        assertTrue(tmpDir.delete());
     }
 }

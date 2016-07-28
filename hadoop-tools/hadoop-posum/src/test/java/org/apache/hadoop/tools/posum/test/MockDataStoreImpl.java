@@ -225,4 +225,15 @@ public class MockDataStoreImpl implements MockDataStore {
         }
         return ret;
     }
+
+    @Override
+    public void clear() {
+        for (Map.Entry<DataEntityDB, Map<DataEntityType, Map<String, ? extends GeneralDataEntity>>> dbMapEntry :
+                storedEntities.entrySet()) {
+            for (Map.Entry<DataEntityType, Map<String, ? extends GeneralDataEntity>> collectionEntry :
+                    dbMapEntry.getValue().entrySet()) {
+                collectionEntry.getValue().clear();
+            }
+        }
+    }
 }

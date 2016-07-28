@@ -31,13 +31,16 @@ public class DataStoreExporter {
 
     public void exportTo(String dumpPath) {
         File dumpDir = new File(dumpPath);
-        if (!dumpDir.exists() || !dumpDir.isDirectory())
-            throw new POSUMException("Data dump directory does not exist: " + dumpPath);
+        if (!dumpDir.exists())
+            if (!dumpDir.mkdirs())
+                throw new POSUMException("Could not create data dump directory: " + dumpPath);
         for (Map.Entry<DataEntityDB, List<DataEntityType>> dbMapEntry : collections.entrySet()) {
             for (DataEntityType collection : dbMapEntry.getValue()) {
                 List<GeneralDataEntity> entities =
                         dataStore.find(dbMapEntry.getKey(), collection, Collections.<String, Object>emptyMap(), 0, 0);
-                File outFile = new File("[" + dbMapEntry.getKey().getName() + "]" + collection.getLabel() + ".json");
+                File outFile = new File(dumpDir,
+                        "[" + dbMapEntry.getKey().getName() + "]" + collection.getLabel() + ".json");
+
                 try {
                     JsonFileWriter writer = new JsonFileWriter(outFile);
                     for (GeneralDataEntity entity : entities) {
