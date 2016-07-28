@@ -18,7 +18,7 @@ import java.util.*;
  * Created by ane on 7/26/16.
  */
 //TODO rewrite this to make use of MockDataStoreImpl features
-public class MockDataStoreFromTrace extends MockDataStoreImpl {
+public class SnapshotMockDS extends MockDataStoreImpl{// implements TraceSnapshotMockDS {
     private List<JobProfile> jobList = new ArrayList<>();
     private Map<String, Map<String, TaskProfile>> taskMap = new HashMap<>();
     private long simulationTime = 0;
@@ -54,11 +54,11 @@ public class MockDataStoreFromTrace extends MockDataStoreImpl {
         return profile;
     }
 
-    public void populateFromTrace(String inputTrace) throws IOException {
+    public void importData(String dataDumpPath) throws IOException {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", "file:///");
 
-        File fin = new File(inputTrace);
+        File fin = new File(dataDumpPath);
         JobTraceReader reader = new JobTraceReader(
                 new Path(fin.getAbsolutePath()), conf);
         LoggedJob job;
