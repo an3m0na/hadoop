@@ -54,8 +54,9 @@ public class DataStoreImporter {
                     GeneralDataEntity entity;
                     while ((entity = reader.getNext(entityClass)) != null)
                         dataStore.updateOrStore(dbMapEntry.getKey(), fileEntry.getKey(), entity);
+                    reader.close();
                 } catch (IOException e) {
-                    throw new POSUMException("Cannot parse file contents for " + fileEntry.getValue(), e);
+                    throw new POSUMException("Did not successfully parse file contents for " + fileEntry.getValue(), e);
                 }
             }
         }
