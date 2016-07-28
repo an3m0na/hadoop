@@ -10,4 +10,5 @@ import java.io.IOException;
 public interface MockDataStore extends DumpableDataClientInterface {
     void importData(String dataDumpPath) throws IOException;
     void exportData(String dataDumpPath) throws IOException;
+    void clear();
 }
