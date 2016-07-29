@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.field.impl.pb;
 
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
@@ -85,15 +85,15 @@ public class EntityByIdPayloadPBImpl extends EntityByIdPayload {
     }
 
     @Override
-    public DataEntityType getEntityType() {
+    public DataEntityCollection getEntityType() {
         EntityByIdPayloadProtoOrBuilder p = viaProto ? proto : builder;
         if (p.hasEntityType())
-            return DataEntityType.valueOf(p.getEntityType().name().substring("TYPE_".length()));
+            return DataEntityCollection.valueOf(p.getEntityType().name().substring("TYPE_".length()));
         return null;
     }
 
     @Override
-    public void setEntityType(DataEntityType type) {
+    public void setEntityType(DataEntityCollection type) {
         if (type == null)
             return;
         maybeInitBuilder();

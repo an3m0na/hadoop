@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.database.store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.bson.Document;
 import org.mongojack.*;
@@ -29,13 +29,13 @@ public class MongoJackConnector extends MongoConnector {
         super(databaseUrl);
     }
 
-    synchronized void addDatabase(DataEntityDB db, DataEntityType... types) {
+    synchronized void addDatabase(DataEntityDB db, DataEntityCollection... types) {
         Integer id = db.getId();
         if (db.isView()) {
             transientDbs.put(db.getName(), ++transientId);
             id = transientId;
         }
-        for (DataEntityType type : types) {
+        for (DataEntityCollection type : types) {
             collections.put(id * MAX_COLS + type.getId(), JacksonDBCollection.wrap(
                     client.getDB(db.getName()).getCollection(type.getLabel()),
                     type.getMappedClass(),
@@ -56,21 +56,21 @@ public class MongoJackConnector extends MongoConnector {
         client.getDB(db.getName()).dropDatabase();
     }
 
-    private <T> JacksonDBCollection<T, String> getCollection(DataEntityDB db, DataEntityType collection) {
+    private <T> JacksonDBCollection<T, String> getCollection(DataEntityDB db, DataEntityCollection collection) {
         Integer id = (db.isView() ? transientDbs.get(db.getName()) : db.getId()) * MAX_COLS + collection.getId();
         return (JacksonDBCollection<T, String>) collections.get(id);
     }
 
-    <T extends GeneralDataEntity> String insertObject(DataEntityDB db, DataEntityType collection, T object) {
+    <T extends GeneralDataEntity> String insertObject(DataEntityDB db, DataEntityCollection collection, T object) {
         WriteResult<T, String> result = this.<T>getCollection(db, collection).insert(object);
         return result.getSavedId();
     }
 
-    <T extends GeneralDataEntity> boolean updateObject(DataEntityDB db, DataEntityType collection, T object) {
+    <T extends GeneralDataEntity> boolean updateObject(DataEntityDB db, DataEntityCollection collection, T object) {
         return this.<T>getCollection(db, collection).updateById(object.getId(), object).getN() == 1;
     }
 
-    <T extends GeneralDataEntity> boolean upsertObject(DataEntityDB db, DataEntityType collection, T object) {
+    <T extends GeneralDataEntity> boolean upsertObject(DataEntityDB db, DataEntityCollection collection, T object) {
         Object upsertedId = this.<T>getCollection(db, collection)
                 .update(DBQuery.is("_id", object.getId()), object, true, false).getUpsertedId();
         if (object.getId() != null)
@@ -79,7 +79,7 @@ public class MongoJackConnector extends MongoConnector {
             return upsertedId != null;
     }
 
-    <T> void deleteObject(DataEntityDB db, DataEntityType collection, String id) {
+    <T> void deleteObject(DataEntityDB db, DataEntityCollection collection, String id) {
         this.<T>getCollection(db, collection).removeById(id);
     }
 
@@ -93,40 +93,40 @@ public class MongoJackConnector extends MongoConnector {
         return DBQuery.and(paramList.toArray(new DBQuery.Query[queryParams.size()]));
     }
 
-    <T> void deleteObject(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
+    <T> void deleteObject(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
         this.<T>getCollection(db, collection).remove(composeQuery(queryParams));
     }
 
-    <T> T findObjectById(DataEntityDB db, DataEntityType collection, String id) {
+    <T> T findObjectById(DataEntityDB db, DataEntityCollection collection, String id) {
         return this.<T>getCollection(db, collection).findOneById(id);
     }
 
-    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, DBQuery.Query query, String... fieldProjections) {
+    <T> List<T> findObjects(DataEntityDB db, DataEntityCollection collection, DBQuery.Query query, String... fieldProjections) {
         JacksonDBCollection<T, String> dbCollection = getCollection(db, collection);
         DBCursor<T> cursor = query == null ? dbCollection.find(DBProjection.include(fieldProjections)) :
                 dbCollection.find(query, DBProjection.include(fieldProjections));
         return cursor.toArray();
     }
 
-    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams, String... fieldProjections) {
+    <T> List<T> findObjects(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams, String... fieldProjections) {
         return findObjects(db, collection, composeQuery(queryParams), fieldProjections);
     }
 
-    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, DBQuery.Query query, int offset, int limit) {
+    <T> List<T> findObjects(DataEntityDB db, DataEntityCollection collection, DBQuery.Query query, int offsetOrZero, int limitOrZero) {
         JacksonDBCollection<T, String> dbCollection = getCollection(db, collection);
         DBCursor<T> cursor = query == null ? dbCollection.find() : dbCollection.find(query);
-        if (offset != 0) {
-            int skipValue = offset > 0 ? offset : cursor.count() + offset;
+        if (offsetOrZero != 0) {
+            int skipValue = offsetOrZero > 0 ? offsetOrZero : cursor.count() + offsetOrZero;
             if (skipValue > 0)
                 cursor.skip(skipValue);
         }
-        if (limit != 0)
-            cursor.limit(limit);
+        if (limitOrZero != 0)
+            cursor.limit(limitOrZero);
         return cursor.toArray();
     }
 
-    <T> List<T> findObjects(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams, int offset, int limit) {
-        return findObjects(db, collection, composeQuery(queryParams), offset, limit);
+    <T> List<T> findObjects(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams, int offsetOrZero, int limitOrZero) {
+        return findObjects(db, collection, composeQuery(queryParams), offsetOrZero, limitOrZero);
     }
 
     String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) {

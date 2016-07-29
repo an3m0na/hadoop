@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.request.impl.pb;
 
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.field.EntityProperty;
 import org.apache.hadoop.tools.posum.common.records.field.impl.pb.EntityPropertyPBImpl;
@@ -131,13 +131,13 @@ public class SearchRequestPBImpl extends SearchRequest {
     }
 
     @Override
-    public DataEntityType getEntityType() {
+    public DataEntityCollection getEntityType() {
         SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityType.valueOf(p.getEntityType().name().substring("TYPE_".length()));
+        return DataEntityCollection.valueOf(p.getEntityType().name().substring("TYPE_".length()));
     }
 
     @Override
-    public void setEntityType(DataEntityType type) {
+    public void setEntityType(DataEntityCollection type) {
         maybeInitBuilder();
         builder.setEntityType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
     }
@@ -164,26 +164,26 @@ public class SearchRequestPBImpl extends SearchRequest {
     }
 
     @Override
-    public int getLimit() {
+    public int getLimitOrZero() {
         SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
         return p.getLimit();
     }
 
     @Override
-    public void setLimit(int limit) {
+    public void setLimitOrZero(int limitOrZero) {
         maybeInitBuilder();
-        builder.setLimit(limit);
+        builder.setLimit(limitOrZero);
     }
 
     @Override
-    public int getOffset() {
+    public int getOffsetOrZero() {
         SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
         return p.getOffset();
     }
 
     @Override
-    public void setOffset(int offset) {
+    public void setOffsetOrZero(int offsetOrZero) {
         maybeInitBuilder();
-        builder.setOffset(offset);
+        builder.setOffset(offsetOrZero);
     }
 }

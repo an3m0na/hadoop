@@ -4,10 +4,8 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.util.Records;
 import org.junit.Test;
 
@@ -23,17 +21,17 @@ public class TestDataStore {
     @Test
     public void checkDatabase() {
         DataStore dataStore = new DataStore(POSUMConfiguration.newInstance());
-        dataStore.delete(db, DataEntityType.APP, "blabla1");
-        dataStore.delete(db, DataEntityType.APP, "blabla2");
+        dataStore.delete(db, DataEntityCollection.APP, "blabla1");
+        dataStore.delete(db, DataEntityCollection.APP, "blabla2");
         AppProfile profile = Records.newRecord(AppProfile.class);
         profile.setId("blabla1");
-        dataStore.store(db, DataEntityType.APP, profile);
+        dataStore.store(db, DataEntityCollection.APP, profile);
         profile.setFinishTime(System.currentTimeMillis());
-        dataStore.updateOrStore(db, DataEntityType.APP, profile);
+        dataStore.updateOrStore(db, DataEntityCollection.APP, profile);
         profile.setId("blabla2");
-        assertTrue(dataStore.updateOrStore(db, DataEntityType.APP, profile));
-        dataStore.delete(db, DataEntityType.APP, "blabla1");
-        dataStore.delete(db, DataEntityType.APP, "blabla2");
+        assertTrue(dataStore.updateOrStore(db, DataEntityCollection.APP, profile));
+        dataStore.delete(db, DataEntityCollection.APP, "blabla1");
+        dataStore.delete(db, DataEntityCollection.APP, "blabla2");
     }
 
     @Test
@@ -56,10 +54,10 @@ public class TestDataStore {
         job.setTotalReduceTasks(10);
         job.setUberized(false);
         try {
-            dataStore.store(db, DataEntityType.JOB, job);
-            assertEquals(job, dataStore.findById(db, DataEntityType.JOB, job.getId()));
+            dataStore.store(db, DataEntityCollection.JOB, job);
+            assertEquals(job, dataStore.findById(db, DataEntityCollection.JOB, job.getId()));
         } finally {
-            dataStore.delete(db, DataEntityType.JOB, job.getId());
+            dataStore.delete(db, DataEntityCollection.JOB, job.getId());
         }
     }
 }

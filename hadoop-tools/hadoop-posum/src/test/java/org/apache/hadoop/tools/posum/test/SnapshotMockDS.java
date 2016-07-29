@@ -117,13 +117,13 @@ public class SnapshotMockDS extends MockDataStoreImpl{// implements TraceSnapsho
     }
 
     @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityType collection, String id) {
-        if (DataEntityType.JOB.equals(collection)) {
+    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
+        if (DataEntityCollection.JOB.equals(collection)) {
             for (JobProfile job : jobList)
                 if (job.getId().equals(id))
                     return (T) snapshot(job);
         }
-        if (DataEntityType.TASK.equals(collection)) {
+        if (DataEntityCollection.TASK.equals(collection)) {
             JobId parent = Utils.parseTaskId(id).getJobId();
             return (T) taskMap.get(parent.toString()).get(id);
         }
