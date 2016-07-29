@@ -3,11 +3,9 @@ package org.apache.hadoop.tools.posum.simulator.predictor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
 
 import java.util.List;
 
@@ -23,7 +21,7 @@ public class StandardPredictor extends JobBehaviorPredictor {
                 POSUMConfiguration.PREDICTION_BUFFER_DEFAULT);
         // get past jobs with the same name
         List<JobProfile> comparable = getDataStore().find(
-                DataEntityType.JOB_HISTORY,
+                DataEntityCollection.JOB_HISTORY,
                 type.equals(TaskType.MAP) ? "mapperClass" : "reducerClass",
                 type.equals(TaskType.MAP) ? job.getMapperClass() : job.getReducerClass(),
                 -bufferLimit,
@@ -32,7 +30,7 @@ public class StandardPredictor extends JobBehaviorPredictor {
         if (comparable.size() < 1) {
             // get past jobs at least by the same user
             comparable = getDataStore().find(
-                    DataEntityType.JOB_HISTORY,
+                    DataEntityCollection.JOB_HISTORY,
                     "user",
                     job.getUser(),
                     -bufferLimit,
@@ -44,7 +42,7 @@ public class StandardPredictor extends JobBehaviorPredictor {
 
     @Override
     public Long predictJobDuration(String jobId) {
-        JobProfile job = getDataStore().findById(DataEntityType.JOB, jobId);
+        JobProfile job = getDataStore().findById(DataEntityCollection.JOB, jobId);
         return predictMapTaskDuration(job) * job.getTotalMapTasks() +
                 predictReduceTaskDuration(job) * job.getTotalReduceTasks();
     }
@@ -170,7 +168,7 @@ public class StandardPredictor extends JobBehaviorPredictor {
 
     @Override
     public Long predictTaskDuration(String jobId, TaskType type) {
-        JobProfile job = getDataStore().findById(DataEntityType.JOB, jobId);
+        JobProfile job = getDataStore().findById(DataEntityCollection.JOB, jobId);
         if (type.equals(TaskType.MAP)) {
             return predictMapTaskDuration(job);
         }

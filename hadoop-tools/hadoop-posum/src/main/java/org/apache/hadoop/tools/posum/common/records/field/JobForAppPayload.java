@@ -1,7 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.field;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
 import org.apache.hadoop.yarn.util.Records;
 
 /**

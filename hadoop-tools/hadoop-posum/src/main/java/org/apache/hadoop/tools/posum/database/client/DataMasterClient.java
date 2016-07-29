@@ -65,7 +65,7 @@ public class DataMasterClient extends AbstractService implements DataClientInter
     }
 
     @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityType collection, String id) {
+    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
         try {
             SingleEntityPayload payload = Utils.handleError("findById",
                     dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.ENTITY_BY_ID,
@@ -80,7 +80,7 @@ public class DataMasterClient extends AbstractService implements DataClientInter
     }
 
     @Override
-    public  List<String> listIds(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
+    public  List<String> listIds(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
         try {
             StringListPayload payload = Utils.handleError("listIds",
                     dmClient.listIds(SearchRequest.newInstance(db, collection, queryParams))).getPayload();
@@ -93,10 +93,10 @@ public class DataMasterClient extends AbstractService implements DataClientInter
     }
 
     @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams, int offset, int limit) {
+    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams, int offsetOrZero, int limitOrZero) {
         try {
             MultiEntityPayload payload = Utils.handleError("find",
-                    dmClient.listEntities(SearchRequest.newInstance(db, collection, queryParams, offset, limit)))
+                    dmClient.listEntities(SearchRequest.newInstance(db, collection, queryParams, offsetOrZero, limitOrZero)))
                     .getPayload();
             if (payload != null)
                 return (List<T>) payload.getEntities();
@@ -107,24 +107,24 @@ public class DataMasterClient extends AbstractService implements DataClientInter
     }
 
     @Override
-    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert) {
+    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert) {
         //TODO
         return null;
     }
 
     @Override
-    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityType apps, T toUpdate) {
+    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityCollection apps, T toUpdate) {
         //TODO
         return false;
     }
 
     @Override
-    public void delete(DataEntityDB db, DataEntityType collection, String id) {
+    public void delete(DataEntityDB db, DataEntityCollection collection, String id) {
         //TODO
     }
 
     @Override
-    public void delete(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
+    public void delete(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
         //TODO
     }
 

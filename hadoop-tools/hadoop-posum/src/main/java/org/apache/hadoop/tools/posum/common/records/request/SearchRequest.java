@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.request;
 
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.Map;
@@ -14,14 +14,14 @@ import java.util.Map;
 
 public abstract class SearchRequest {
 
-    public static SearchRequest newInstance(DataEntityDB db, DataEntityType type, Map<String, Object> properties, int offset, int limit) {
+    public static SearchRequest newInstance(DataEntityDB db, DataEntityCollection type, Map<String, Object> properties, int offsetOrZero, int limitOrZero) {
         SearchRequest request = newInstance(db, type, properties);
-        request.setLimit(limit);
-        request.setOffset(offset);
+        request.setLimitOrZero(limitOrZero);
+        request.setOffsetOrZero(offsetOrZero);
         return request;
     }
 
-    public static SearchRequest newInstance(DataEntityDB db, DataEntityType type, Map<String, Object> properties) {
+    public static SearchRequest newInstance(DataEntityDB db, DataEntityCollection type, Map<String, Object> properties) {
         SearchRequest request = Records.newRecord(SearchRequest.class);
         request.setEntityDB(db);
         request.setEntityType(type);
@@ -33,19 +33,19 @@ public abstract class SearchRequest {
 
     public abstract void setEntityDB(DataEntityDB db);
 
-    public abstract DataEntityType getEntityType();
+    public abstract DataEntityCollection getEntityType();
 
-    public abstract void setEntityType(DataEntityType type);
+    public abstract void setEntityType(DataEntityCollection type);
 
     public abstract Map<String, Object> getProperties();
 
     public abstract void setProperties(Map<String, Object> properties);
 
-    public abstract int getLimit();
+    public abstract int getLimitOrZero();
 
-    public abstract void setLimit(int limit);
+    public abstract void setLimitOrZero(int limitOrZero);
 
-    public abstract int getOffset();
+    public abstract int getOffsetOrZero();
 
-    public abstract void setOffset(int offset);
+    public abstract void setOffsetOrZero(int offsetOrZero);
 }

@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.simulator.predictor;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
@@ -46,7 +46,7 @@ public abstract class JobBehaviorPredictor {
     public abstract Long predictTaskDuration(String jobId, TaskType type);
 
     public Long predictTaskDuration(String taskId) {
-        TaskProfile task = getDataStore().findById(DataEntityType.TASK, taskId);
+        TaskProfile task = getDataStore().findById(DataEntityCollection.TASK, taskId);
         if (task == null)
             throw new POSUMException("Task not found for id " + taskId);
         if(task.getDuration() > 0)

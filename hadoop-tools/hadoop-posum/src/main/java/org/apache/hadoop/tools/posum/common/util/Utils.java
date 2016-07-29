@@ -14,17 +14,18 @@ import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleReques
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler;
 import org.apache.hadoop.yarn.util.Records;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * Created by ane on 3/3/16.
@@ -228,4 +229,61 @@ public class Utils {
             throw new POSUMException("Reflection error: ", e);
         }
     }
+
+    public static boolean safeEquals(Object o1, Object o2) {
+        if (o1 == null)
+            return o2 == null;
+        return o1.equals(o2);
+    }
+
+    public static int safeHashCode(Object o) {
+        return o == null ? 0 : o.hashCode();
+    }
+
+    public static boolean checkBeanPropertiesMatch(Object bean,
+                                                   Map<String, Object> propertyValues)
+            throws IntrospectionException, InvocationTargetException, IllegalAccessException {
+        return checkBeanPropertiesMatch(
+                bean,
+                getBeanPropertyReaders(bean.getClass(), propertyValues.keySet()),
+                propertyValues
+        );
+    }
+
+    public static Map<String, Method> getBeanPropertyReaders(Class beanClass,
+                                                             Set<String> propertyNames)
+            throws IntrospectionException {
+        Map<String, Method> ret = new HashMap<>(propertyNames.size());
+        PropertyDescriptor[] descriptors =
+                Introspector.getBeanInfo(beanClass, Object.class).getPropertyDescriptors();
+        for (String name : propertyNames) {
+            Method reader = findPropertyReader(descriptors, name);
+            if (reader == null)
+                throw new POSUMException("Could not find property reader for " + name + " in " + beanClass);
+            ret.put(name, reader);
+        }
+        return ret;
+    }
+
+    private static Method findPropertyReader(PropertyDescriptor[] propertyDescriptors, String propertyName) {
+        for (PropertyDescriptor pd : propertyDescriptors) {
+            if (propertyName.equals(pd.getName())) {
+                return pd.getReadMethod();
+            }
+        }
+        return null;
+    }
+
+    public static boolean checkBeanPropertiesMatch(Object bean,
+                                                   Map<String, Method> propertyReaders,
+                                                   Map<String, Object> propertyValues)
+            throws InvocationTargetException, IllegalAccessException {
+        for (Map.Entry<String, Object> property : propertyValues.entrySet()) {
+            if (!safeEquals(propertyReaders.get(property.getKey()).invoke(bean), property.getValue()))
+                return false;
+        }
+        return true;
+    }
+
+
 }

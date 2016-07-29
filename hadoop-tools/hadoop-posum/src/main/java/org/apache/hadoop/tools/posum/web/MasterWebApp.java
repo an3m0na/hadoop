@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.hadoop.tools.posum.common.util.JsonObject;
+import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
 import org.mortbay.jetty.Handler;
