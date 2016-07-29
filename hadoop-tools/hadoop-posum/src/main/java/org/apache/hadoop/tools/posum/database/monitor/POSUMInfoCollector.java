@@ -4,15 +4,20 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
-import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.field.TaskPrediction;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
+import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
+import org.apache.hadoop.tools.posum.simulator.predictor.DetailedPredictor;
+import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
+import org.apache.hadoop.tools.posum.simulator.predictor.StandardPredictor;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by ane on 2/4/16.
@@ -25,25 +30,92 @@ public class POSUMInfoCollector {
     private final DataEntityDB db = DataEntityDB.getLogs();
     private final DataStore dataStore;
     private final Configuration conf;
-    private final boolean persistMetrics;
+    private final boolean fineGrained;
     private final PolicyMap policyMap;
     private long lastCollectTime = 0;
+    private long lastPrediction = 0;
+    private long predictionTimeout = 0;
+    //TODO use only this predictor for regular experiments
+    //    private JobBehaviorPredictor predictor;
+    private JobBehaviorPredictor basicPredictor;
+    private JobBehaviorPredictor standardPredictor;
+    private JobBehaviorPredictor detailedPredictor;
 
 
-    POSUMInfoCollector(Configuration conf, DataStore dataStore) {
+    public POSUMInfoCollector(Configuration conf, DataStore dataStore) {
         this.dataStore = dataStore;
         this.conf = conf;
-        persistMetrics = conf.getBoolean(POSUMConfiguration.MONITOR_PERSIST_METRICS,
-                POSUMConfiguration.MONITOR_PERSIST_METRICS_DEFAULT);
+        fineGrained = conf.getBoolean(POSUMConfiguration.FINE_GRAINED_MONITOR,
+                POSUMConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
         api = new POSUMAPIClient(conf);
         this.policyMap = new PolicyMap(conf);
+        DBInterface predictorDb = dataStore.bindTo(DataEntityDB.getMain());
+//        predictor = JobBehaviorPredictor.newInstance(conf);
+        basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
+        basicPredictor.initialize(predictorDb);
+        standardPredictor = JobBehaviorPredictor.newInstance(conf, StandardPredictor.class);
+        standardPredictor.initialize(predictorDb);
+        detailedPredictor = JobBehaviorPredictor.newInstance(conf, DetailedPredictor.class);
+        detailedPredictor.initialize(predictorDb);
+        predictionTimeout = conf.getLong(POSUMConfiguration.PREDICTOR_TIMEOUT,
+                POSUMConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
     }
 
-    void collect() {
+    void refresh() {
         long now = System.currentTimeMillis();
-        if (persistMetrics) {
+        if (fineGrained) {
             //TODO get metrics from all services and persist to database
+            if (now - lastPrediction > predictionTimeout) {
+                // make new predictions
+                List<String> taskIds = dataStore.listIds(DataEntityDB.getMain(), DataEntityCollection.TASK, null);
+                for (String taskId : taskIds) {
+                    // prediction can throw exception if data model changes state during calculation
+//                    try {
+//                        Long duration = predictor.predictTaskDuration(taskId);
+//                        dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+//                                TaskPrediction.newInstance(predictor.getClass().getSimpleName(), taskId, duration)));
+//                    } catch (Exception e) {
+//                        logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
+//                    }
+                    Long duration;
+                    try {
+                        duration = basicPredictor.predictTaskDuration(taskId);
+                        dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                                TaskPrediction.newInstance(basicPredictor.getClass().getSimpleName(), taskId, duration)));
+                    } catch (Exception e) {
+                        if (!(e instanceof POSUMException))
+                            logger.error("Could not predict task duration for " + taskId + " due to: ", e);
+                        else if (!e.getMessage().startsWith("Task has already finished"))
+                            logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
+                    }
+                    try {
+                        duration = standardPredictor.predictTaskDuration(taskId);
+
+                        dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                                TaskPrediction.newInstance(standardPredictor.getClass().getSimpleName(), taskId, duration)));
+                    } catch (Exception e) {
+                        if (!(e instanceof POSUMException))
+                            logger.error("Could not predict task duration for " + taskId + " due to: ", e);
+                        else if (!e.getMessage().startsWith("Task has already finished"))
+                            logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
+                    }
+                    try {
+                        duration = detailedPredictor.predictTaskDuration(taskId);
+
+                        dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                                TaskPrediction.newInstance(detailedPredictor.getClass().getSimpleName(), taskId, duration)));
+                    } catch (Exception e) {
+                        if (!(e instanceof POSUMException))
+                            logger.error("Could not predict task duration for " + taskId + " due to: ", e);
+                        else if (!e.getMessage().startsWith("Task has already finished"))
+                            logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
+                    }
+                }
+                lastPrediction = now;
+            }
         }
+
+        // aggregate policy change decisions
         List<LogEntry<String>> policyChanges = dataStore.findLogs(LogEntry.Type.POLICY_CHANGE, lastCollectTime, now);
         if (policyChanges.size() > 0) {
             if (policyMap.getSchedulingStart() == 0)

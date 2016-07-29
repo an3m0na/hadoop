@@ -6,17 +6,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.common.records.field.JobForAppPayload;
+import org.apache.hadoop.tools.posum.common.records.field.*;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
-import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
-import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
+import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
@@ -27,7 +24,7 @@ import java.util.Map;
 /**
  * Created by ane on 2/9/16.
  */
-public class DataMasterClient extends AbstractService {
+public class DataMasterClient extends AbstractService implements DataClientInterface {
 
     private static Log logger = LogFactory.getLog(DataMasterClient.class);
 
@@ -67,7 +64,8 @@ public class DataMasterClient extends AbstractService {
         super.serviceStop();
     }
 
-    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityType collection, String id) {
+    @Override
+    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
         try {
             SingleEntityPayload payload = Utils.handleError("findById",
                     dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.ENTITY_BY_ID,
@@ -81,10 +79,25 @@ public class DataMasterClient extends AbstractService {
         }
     }
 
-    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
+    @Override
+    public  List<String> listIds(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
         try {
-            MultiEntityPayload payload = Utils.handleError("findById",
-                    dmClient.listEntities(MultiEntityRequest.newInstance(db, collection, queryParams))).getPayload();
+            StringListPayload payload = Utils.handleError("listIds",
+                    dmClient.listIds(SearchRequest.newInstance(db, collection, queryParams))).getPayload();
+            if (payload != null)
+                return payload.getEntries();
+            return null;
+        } catch (IOException | YarnException e) {
+            throw new POSUMException("Error during RPC call", e);
+        }
+    }
+
+    @Override
+    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams, int offsetOrZero, int limitOrZero) {
+        try {
+            MultiEntityPayload payload = Utils.handleError("find",
+                    dmClient.listEntities(SearchRequest.newInstance(db, collection, queryParams, offsetOrZero, limitOrZero)))
+                    .getPayload();
             if (payload != null)
                 return (List<T>) payload.getEntities();
             return null;
@@ -93,6 +106,34 @@ public class DataMasterClient extends AbstractService {
         }
     }
 
+    @Override
+    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert) {
+        //TODO
+        return null;
+    }
+
+    @Override
+    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityCollection apps, T toUpdate) {
+        //TODO
+        return false;
+    }
+
+    @Override
+    public void delete(DataEntityDB db, DataEntityCollection collection, String id) {
+        //TODO
+    }
+
+    @Override
+    public void delete(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
+        //TODO
+    }
+
+    @Override
+    public DBInterface bindTo(DataEntityDB db) {
+        return new DBImpl(db, this);
+    }
+
+    @Override
     public JobProfile getJobProfileForApp(DataEntityDB db, String appId, String user) {
         logger.debug("Getting job profile for app " + appId);
         try {
@@ -108,27 +149,10 @@ public class DataMasterClient extends AbstractService {
         }
     }
 
-    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert) {
-        //TODO
-        return null;
-    }
-
-    public List<JobProfile> getComparableProfiles(DataEntityDB db, String user, int count) {
-        //TODO
-        return null;
-    }
-
-    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityType apps, T toUpdate) {
-        //TODO
-        return false;
-    }
-
-    public void delete(DataEntityDB db, DataEntityType collection, String id) {
-        //TODO
-    }
-
-    public void delete(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
-        //TODO
+    @Override
+    public void saveFlexFields(DataEntityDB db, String jobId, Map<String, String> newFields, boolean forHistory) {
+        sendSimpleRequest("saveFlexFields", SimpleRequest.newInstance(SimpleRequest.Type.SAVE_FLEX_FIELDS,
+                SaveFlexFieldsPayload.newInstance(db, jobId, newFields, forHistory)));
     }
 
     public SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
@@ -148,11 +172,4 @@ public class DataMasterClient extends AbstractService {
         logger.info("Successfully connected to Data Master");
     }
 
-    public DBInterface bindTo(DataEntityDB db){
-        return new DBImpl(db, this);
-    }
-
-    public JobConfProxy getJobConf(DataEntityDB db, String jobId) {
-        return findById(db, DataEntityType.JOB_CONF, jobId);
-    }
 }

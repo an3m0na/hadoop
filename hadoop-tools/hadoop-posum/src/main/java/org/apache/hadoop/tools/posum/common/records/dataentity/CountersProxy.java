@@ -11,6 +11,8 @@ public interface CountersProxy extends GeneralDataEntity {
 
     List<CounterGroupInfoPayload> getCounterGroup();
 
-    void setCounterGroup( List<CounterGroupInfoPayload> counterGroups);
+    void setCounterGroup(List<CounterGroupInfoPayload> counterGroups);
+
+    void setTaskCounterGroup(List<CounterGroupInfoPayload> counterGroups);
 
 }

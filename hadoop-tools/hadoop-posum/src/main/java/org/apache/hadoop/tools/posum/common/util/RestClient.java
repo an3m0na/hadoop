@@ -62,12 +62,10 @@ public class RestClient {
             return labelMap.get(label);
         }
 
-        public static boolean isUpdated() {
-            return updated;
-        }
-
-        public static boolean tryUpdate(Map<Utils.POSUMProcess, String> addresses) {
-            String psAddress = addresses.get(Utils.POSUMProcess.SCHEDULER);
+        public synchronized static boolean checkUpdated(Map<Utils.POSUMProcess, String> addresses) {
+            if (updated)
+                return true;
+                String psAddress = addresses.get(Utils.POSUMProcess.SCHEDULER);
             if (psAddress == null)
                 return false;
             String pmAddress = addresses.get(Utils.POSUMProcess.PM);

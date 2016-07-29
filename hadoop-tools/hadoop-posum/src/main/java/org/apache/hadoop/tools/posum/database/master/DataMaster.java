@@ -5,7 +5,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.tools.posum.database.monitor.HadoopMonitor;
+import org.apache.hadoop.tools.posum.database.monitor.POSUMInfoCollector;
 import org.apache.hadoop.tools.posum.database.monitor.POSUMMonitor;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.tools.posum.web.DataMasterWebApp;
@@ -48,10 +50,12 @@ public class DataMaster extends CompositeService {
         addIfService(dmService);
         dmContext.setCommService(dmService);
 
+        dmContext.setClusterInfo(new ClusterInfoCollector(conf, dataStore));
         hadoopMonitor = new HadoopMonitor(dmContext);
         hadoopMonitor.init(conf);
         addIfService(hadoopMonitor);
 
+        dmContext.setPosumInfo(new POSUMInfoCollector(conf, dataStore));
         posumMonitor = new POSUMMonitor(dmContext);
         posumMonitor.init(conf);
         addIfService(posumMonitor);

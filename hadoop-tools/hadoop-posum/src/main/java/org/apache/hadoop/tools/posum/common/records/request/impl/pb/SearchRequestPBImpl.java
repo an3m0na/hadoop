@@ -2,14 +2,14 @@ package org.apache.hadoop.tools.posum.common.records.request.impl.pb;
 
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.field.EntityProperty;
 import org.apache.hadoop.tools.posum.common.records.field.impl.pb.EntityPropertyPBImpl;
-import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
+import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityRequestProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SearchRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SearchRequestProtoOrBuilder;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,24 +18,24 @@ import java.util.Map;
 /**
  * Created by ane on 3/20/16.
  */
-public class MultiEntityRequestPBImpl extends MultiEntityRequest {
+public class SearchRequestPBImpl extends SearchRequest {
 
-    private MultiEntityRequestProto proto = MultiEntityRequestProto.getDefaultInstance();
-    private MultiEntityRequestProto.Builder builder = null;
+    private SearchRequestProto proto = SearchRequestProto.getDefaultInstance();
+    private SearchRequestProto.Builder builder = null;
     private boolean viaProto = false;
 
     Map<String, Object> properties;
 
-    public MultiEntityRequestPBImpl() {
-        builder = MultiEntityRequestProto.newBuilder();
+    public SearchRequestPBImpl() {
+        builder = SearchRequestProto.newBuilder();
     }
 
-    public MultiEntityRequestPBImpl(MultiEntityRequestProto proto) {
+    public SearchRequestPBImpl(SearchRequestProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public MultiEntityRequestProto getProto() {
+    public SearchRequestProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -112,7 +112,7 @@ public class MultiEntityRequestPBImpl extends MultiEntityRequest {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = MultiEntityRequestProto.newBuilder(proto);
+            builder = SearchRequestProto.newBuilder(proto);
         }
         viaProto = false;
     }
@@ -120,7 +120,7 @@ public class MultiEntityRequestPBImpl extends MultiEntityRequest {
 
     @Override
     public DataEntityDB getEntityDB() {
-        MultiEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
+        SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
         return new DataEntityDBPBImpl(p.getEntityDB());
     }
 
@@ -131,21 +131,21 @@ public class MultiEntityRequestPBImpl extends MultiEntityRequest {
     }
 
     @Override
-    public DataEntityType getEntityType() {
-        MultiEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityType.valueOf(p.getEntityType().name().substring("TYPE_".length()));
+    public DataEntityCollection getEntityType() {
+        SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
+        return DataEntityCollection.valueOf(p.getEntityType().name().substring("TYPE_".length()));
     }
 
     @Override
-    public void setEntityType(DataEntityType type) {
+    public void setEntityType(DataEntityCollection type) {
         maybeInitBuilder();
-        builder.setEntityType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
+        builder.setEntityType(POSUMProtos.EntityCollectionProto.valueOf("TYPE_" + type.name()));
     }
 
     @Override
     public Map<String, Object> getProperties() {
         if (this.properties == null) {
-            MultiEntityRequestProtoOrBuilder p = viaProto ? proto : builder;
+            SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
             this.properties = new HashMap<>(p.getPropertiesCount());
             for (POSUMProtos.EntityPropertyProto propertyProto : p.getPropertiesList()) {
                 EntityProperty property = new EntityPropertyPBImpl(propertyProto);
@@ -161,5 +161,29 @@ public class MultiEntityRequestPBImpl extends MultiEntityRequest {
             return;
         this.properties = new HashMap<>();
         this.properties.putAll(properties);
+    }
+
+    @Override
+    public int getLimitOrZero() {
+        SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getLimit();
+    }
+
+    @Override
+    public void setLimitOrZero(int limitOrZero) {
+        maybeInitBuilder();
+        builder.setLimit(limitOrZero);
+    }
+
+    @Override
+    public int getOffsetOrZero() {
+        SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getOffset();
+    }
+
+    @Override
+    public void setOffsetOrZero(int offsetOrZero) {
+        maybeInitBuilder();
+        builder.setOffset(offsetOrZero);
     }
 }

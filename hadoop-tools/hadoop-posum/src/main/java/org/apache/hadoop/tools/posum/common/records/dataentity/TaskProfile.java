@@ -1,68 +1,75 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity;
 
-import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 
 /**
  * Created by ane on 2/8/16.
  */
- public interface TaskProfile extends GeneralDataEntity {
+public interface TaskProfile extends GeneralDataEntity {
 
-     Long getInputBytes();
+    Long getInputBytes();
 
-     void setInputBytes(Long inputBytes);
+    void setInputBytes(Long inputBytes);
 
-     Long getOutputBytes();
+    Long getOutputBytes();
 
-     void setOutputBytes(Long outputBytes);
+    void setOutputBytes(Long outputBytes);
 
-     Integer getDuration();
+    Long getDuration();
 
-     TaskType getType();
+    TaskType getType();
 
-     Long getStartTime();
+    Long getStartTime();
 
-     void setStartTime(Long startTime);
+    void setStartTime(Long startTime);
 
-     Long getFinishTime();
+    Long getFinishTime();
 
-//     Counters getCounters() {
-//        return counters;
-//    }
-//
-//     synchronized void setCounters(Counters counters) {
-//        this.counters = counters;
-//    }
+    void setFinishTime(Long finishTime);
 
-     void setFinishTime(Long finishTime);
+    void setType(String type);
 
-     Long getExpectedInputBytes();
+    void setReportedProgress(Float reportedProgress);
 
-     void setExpectedInputBytes(Long expectedInputBytes);
+    Long getInputRecords();
 
-     void setType(String type);
+    void setInputRecords(Long inputRecords);
 
-     void setReportedProgress(Float reportedProgress);
+    Long getOutputRecords();
 
-     Long getInputRecords();
+    void setOutputRecords(Long outputRecords);
 
-     void setInputRecords(Long inputRecords);
+    String getAppId();
 
-     Long getOutputRecords();
+    void setAppId(String appId);
 
-     void setOutputRecords(Long outputRecords);
+    String getJobId();
 
-     String getAppId();
+    void setJobId(String jobId);
 
-     void setAppId(String appId);
+    Float getReportedProgress();
 
-     String getJobId();
+    void setSuccessfulAttempt(String successfulAttempt);
 
-     void setJobId(String jobId);
+    String getSuccessfulAttempt();
 
-     Float getReportedProgress();
+    Long getShuffleTime();
 
-     void setSuccessfulAttempt(String successfulAttempt);
+    void setShuffleTime(Long time);
 
-     String getSuccessfulAttempt();
+    Long getMergeTime();
+
+    void setMergeTime(Long time);
+
+    Long getReduceTime();
+
+    void setReduceTime(Long time);
+
+    Boolean isLocal();
+
+    void setLocal(Boolean local);
+
+    void setHttpAddress(String address);
+
+    String getHttpAddress();
 }

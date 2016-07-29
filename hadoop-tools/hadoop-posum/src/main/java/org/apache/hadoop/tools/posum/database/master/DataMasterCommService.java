@@ -6,19 +6,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
-import org.apache.hadoop.tools.posum.common.records.field.JobForAppPayload;
+import org.apache.hadoop.tools.posum.common.records.dataentity.*;
+import org.apache.hadoop.tools.posum.common.records.field.*;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.request.MultiEntityRequest;
-import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
-import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
+import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
@@ -108,10 +102,13 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
                 case JOB_FOR_APP:
                     JobForAppPayload jobForAppPayload = (JobForAppPayload) request.getPayload();
-                    JobProfile jobProfile =
-                            dmContext.getDataStore().getJobProfileForApp(jobForAppPayload.getEntityDB(),
-                                    jobForAppPayload.getAppId(), jobForAppPayload.getUser());
-                    entityPayload = SingleEntityPayload.newInstance(DataEntityType.JOB, jobProfile);
+                    JobProfile jobProfile;
+                    if (jobForAppPayload.getEntityDB().equals(DataEntityDB.getMain()))
+                        // use the cluster info to force fetch if app is new
+                        jobProfile = dmContext.getClusterInfo().getCurrentProfileForApp(jobForAppPayload.getAppId(), jobForAppPayload.getUser());
+                    else
+                        jobProfile = dmContext.getDataStore().getJobProfileForApp(jobForAppPayload.getEntityDB(), jobForAppPayload.getAppId(), jobForAppPayload.getUser());
+                    entityPayload = SingleEntityPayload.newInstance(DataEntityCollection.JOB, jobProfile);
                     logger.debug("Returning profile " + jobProfile);
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
                 default:
@@ -126,13 +123,15 @@ public class DataMasterCommService extends CompositeService implements DataMaste
     }
 
     @Override
-    public SimpleResponse<MultiEntityPayload> listEntities(MultiEntityRequest request)
+    public SimpleResponse<MultiEntityPayload> listEntities(SearchRequest request)
             throws IOException, YarnException {
         try {
             List<GeneralDataEntity> ret =
                     dmContext.getDataStore().find(request.getEntityDB(),
                             request.getEntityType(),
-                            request.getProperties());
+                            request.getProperties(),
+                            request.getOffsetOrZero(),
+                            request.getLimitOrZero());
             MultiEntityPayload payload = MultiEntityPayload.newInstance(request.getEntityType(), ret);
             return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY, payload);
         } catch (Exception e) {
@@ -141,6 +140,24 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                     "Exception resolving request " + request, e);
         }
     }
+
+    @Override
+    public SimpleResponse<StringListPayload> listIds(SearchRequest request)
+            throws IOException, YarnException {
+        try {
+            List<String> ret =
+                    dmContext.getDataStore().listIds(request.getEntityDB(),
+                            request.getEntityType(),
+                            request.getProperties());
+            StringListPayload payload = StringListPayload.newInstance(ret);
+            return SimpleResponse.newInstance(SimpleResponse.Type.STRING_LIST, payload);
+        } catch (Exception e) {
+            logger.error("Exception resolving request", e);
+            return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY,
+                    "Exception resolving request " + request, e);
+        }
+    }
+
 
     @Override
     public SimpleResponse handleSimpleRequest(SimpleRequest request) {
@@ -152,6 +169,15 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                 case LOG_POLICY_CHANGE:
                     dmContext.getDataStore().storeLogEntry(
                             new LogEntry<>(LogEntry.Type.POLICY_CHANGE, request.getPayload()));
+                    break;
+                case SAVE_FLEX_FIELDS:
+                    SaveFlexFieldsPayload saveFlexFieldsPayload = (SaveFlexFieldsPayload) request.getPayload();
+                    dmContext.getDataStore().saveFlexFields(
+                            saveFlexFieldsPayload.getEntityDB(),
+                            saveFlexFieldsPayload.getJobId(),
+                            saveFlexFieldsPayload.getNewFields(),
+                            saveFlexFieldsPayload.getForHistory()
+                    );
                     break;
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());

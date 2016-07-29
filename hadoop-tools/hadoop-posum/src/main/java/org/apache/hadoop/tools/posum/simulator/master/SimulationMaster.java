@@ -27,6 +27,7 @@ public class SimulationMaster extends CompositeService {
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         smContext = new SimulationMasterContext();
+        smContext.setConf(conf);
 
         simulator = new SimulatorImpl(smContext);
         simulator.init(conf);

@@ -8,6 +8,7 @@ import org.apache.hadoop.tools.posum.common.records.field.impl.pb.StringStringMa
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProtoOrBuilder;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -104,8 +105,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
-    public Integer getDuration() {
-        return new Long(Math.min(0, getFinishTime() - getStartTime())).intValue();
+    public Long getDuration() {
+        return Math.max(0, getFinishTime() - getStartTime());
     }
 
     @Override
@@ -120,6 +121,27 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
         maybeInitBuilder();
         if (totalReduceTasks != null)
             builder.setTotalReduceTasks(totalReduceTasks);
+    }
+
+    @Override
+    public Long getTotalInputBytes() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasTotalInputBytes())
+            return p.getTotalInputBytes();
+        else return null;
+    }
+
+    @Override
+    public void setTotalInputBytes(Long inputBytes) {
+        maybeInitBuilder();
+        if (inputBytes != null)
+            builder.setTotalInputBytes(inputBytes);
+    }
+
+    @Override
+    public Long getInputBytes() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getInputBytes();
     }
 
     @Override
@@ -154,6 +176,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
         if (bytes != null)
             builder.setReduceInputBytes(bytes);
     }
+
     @Override
     public Long getOutputBytes() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
@@ -302,17 +325,6 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
-    public Long getInputBytes() {
-        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getInputBytes();
-    }
-
-    @Override
-    public Long getAvgSplitSize() {
-        return null;
-    }
-
-    @Override
     public Long getAvgMapDuration() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getAvgMapDuration();
@@ -332,11 +344,12 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
-    public void setAvgReduceDuration(Long avgReduceDuration) {
+    public void setAvgReduceDuration(Long duration) {
         maybeInitBuilder();
-        if (avgReduceDuration != null)
-            builder.setAvgReduceDuration(avgReduceDuration);
+        if (duration != null)
+            builder.setAvgReduceDuration(duration);
     }
+
 
     @Override
     public Long getAvgTaskDuration() {
@@ -352,29 +365,42 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
-    public void setAvgShuffleDuration(Long avgShuffleDuration) {
+    public void setAvgShuffleTime(Long avgShuffleDuration) {
         maybeInitBuilder();
         if (avgShuffleDuration != null)
-            builder.setAvgShuffleDuration(avgShuffleDuration);
+            builder.setAvgShuffleTime(avgShuffleDuration);
     }
 
     @Override
-    public Long getAvgShuffleDuration() {
+    public Long getAvgShuffleTime() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getAvgShuffleDuration();
+        return p.getAvgShuffleTime();
     }
 
     @Override
-    public void setAvgMergeDuration(Long avgMergeDuration) {
+    public void setAvgMergeTime(Long time) {
         maybeInitBuilder();
-        if (avgMergeDuration != null)
-            builder.setAvgMergeDuration(avgMergeDuration);
+        if (time != null)
+            builder.setAvgMergeTime(time);
     }
 
     @Override
-    public Long getAvgMergeDuration() {
+    public Long getAvgMergeTime() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getAvgMergeDuration();
+        return p.getAvgMergeTime();
+    }
+
+    @Override
+    public void setAvgReduceTime(Long time) {
+        maybeInitBuilder();
+        if (time != null)
+            builder.setAvgReduceTime(time);
+    }
+
+    @Override
+    public Long getAvgReduceTime() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getAvgReduceTime();
     }
 
     @Override
@@ -408,5 +434,50 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
             flexMap = new StringStringMapPayloadPBImpl(p.getFlexFields()).getEntries();
         }
         return flexMap;
+    }
+
+    @Override
+    public String getReducerClass() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if(!p.hasReducerClass())
+            return null;
+        return p.getReducerClass();
+    }
+
+    @Override
+    public void setMapperClass(String name) {
+        maybeInitBuilder();
+        if (name != null) {
+            builder.setMapperClass(name);
+        }
+    }
+
+    @Override
+    public String getMapperClass() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if(!p.hasMapperClass())
+            return null;
+        return p.getMapperClass();
+    }
+
+    @Override
+    public void setReducerClass(String name) {
+        maybeInitBuilder();
+        if (name != null) {
+            builder.setReducerClass(name);
+        }
+    }
+
+    @Override
+    public List<String> getSplitLocations() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getSplitLocationsList();
+    }
+
+    @Override
+    public void setSplitLocations(List<String> locations) {
+        maybeInitBuilder();
+        builder.clearSplitLocations();
+        builder.addAllSplitLocations(locations);
     }
 }

@@ -74,44 +74,48 @@ public class CounterInfoPayloadPBImpl extends CounterInfoPayload {
         viaProto = false;
     }
 
-    public void setName(String name){
+    public void setName(String name) {
         maybeInitBuilder();
         builder.setName(name);
     }
 
-    public String getName(){
+    public String getName() {
         CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
         return p.getName();
     }
 
-    public void setTotalCounterValue(long value){
+    public void setTotalCounterValue(long value) {
         maybeInitBuilder();
         builder.setTotal(value);
     }
 
-    public long getTotalCounterValue(){
+    public long getTotalCounterValue() {
         CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
         return p.getTotal();
     }
 
-    public void setMapCounterValue(long value){
+    public void setMapCounterValue(long value) {
         maybeInitBuilder();
         builder.setMap(value);
     }
 
-    public long getMapCounterValue(){
+    public long getMapCounterValue() {
         CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
         return p.getMap();
     }
 
-    public void setReduceCounterValue(long value){
+    public void setReduceCounterValue(long value) {
         maybeInitBuilder();
         builder.setReduce(value);
     }
 
-    public long getReduceCounterValue(){
+    public long getReduceCounterValue() {
         CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
         return p.getReduce();
     }
 
+    public void setValue(long value) {
+        maybeInitBuilder();
+        builder.setTotal(value);
+    }
 }

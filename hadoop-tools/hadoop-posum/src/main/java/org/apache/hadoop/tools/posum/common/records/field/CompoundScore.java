@@ -7,11 +7,11 @@ import org.apache.hadoop.yarn.util.Records;
  */
 public abstract class CompoundScore {
     public static CompoundScore newInstance(Double runtime, Double penalty, Double cost) {
-        CompoundScore response = Records.newRecord(CompoundScore.class);
-        response.setRuntime(runtime);
-        response.setPenalty(penalty);
-        response.setCost(cost);
-        return response;
+        CompoundScore payload = Records.newRecord(CompoundScore.class);
+        payload.setRuntime(runtime);
+        payload.setPenalty(penalty);
+        payload.setCost(cost);
+        return payload;
     }
 
     public abstract Double getRuntime();

@@ -1,10 +1,10 @@
 package org.apache.hadoop.tools.posum.simulator.predictor;
 
-import org.apache.hadoop.conf.Configuration;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 
 import java.util.List;
@@ -14,51 +14,62 @@ import java.util.List;
  */
 public class BasicPredictor extends JobBehaviorPredictor {
 
-    public BasicPredictor(Configuration conf) {
-        super(conf);
+    private static final Log logger = LogFactory.getLog(BasicPredictor.class);
+
+    private List<JobProfile> getComparableProfiles(JobProfile job) {
+        int bufferLimit = conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
+                POSUMConfiguration.PREDICTION_BUFFER_DEFAULT);
+        // get past jobs with the same name
+        List<JobProfile> comparable = getDataStore().find(
+                DataEntityCollection.JOB_HISTORY,
+                "name",
+                job.getName(),
+                -bufferLimit,
+                bufferLimit
+        );
+        if (comparable.size() < 1) {
+            // get past jobs at least by the same user
+            comparable = getDataStore().find(
+                    DataEntityCollection.JOB_HISTORY,
+                    "user",
+                    job.getUser(),
+                    -bufferLimit,
+                    bufferLimit
+            );
+        }
+        return comparable;
     }
 
     @Override
-    public Integer predictJobDuration(String jobId) {
-        Float duration = 0.0f;
-        JobProfile current = getDataStore().findById(DataEntityType.JOB, jobId);
-        List<JobProfile> comparable = getDataStore().getComparableProfiles(
-                current.getUser(),
-                conf.getInt(POSUMConfiguration.BUFFER,
-                        POSUMConfiguration.BUFFER_DEFAULT)
-        );
+    public Long predictJobDuration(String jobId) {
+        JobProfile job = getDataStore().findById(DataEntityCollection.JOB, jobId);
+        List<JobProfile> comparable = getComparableProfiles(job);
         if (comparable.size() < 1)
-            return conf.getInt(POSUMConfiguration.AVERAGE_JOB_DURATION,
+            return conf.getLong(POSUMConfiguration.AVERAGE_JOB_DURATION,
                     POSUMConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
+        Long duration = 0L;
         for (JobProfile profile : comparable)
             duration += profile.getDuration();
         duration /= comparable.size();
-        return duration.intValue();
+        return duration;
     }
 
     @Override
-    public Integer predictTaskDuration(String jobId, TaskType type) {
-        Float duration = 0.0f;
-        JobProfile current = getDataStore().findById(DataEntityType.JOB, jobId);
-        float currentAverage = TaskType.MAP.equals(type) ? current.getAvgMapDuration() : current.getAvgReduceDuration();
-        if (currentAverage > 0)
-            return new Float(currentAverage).intValue();
+    public Long predictTaskDuration(String jobId, TaskType type) {
+        JobProfile job = getDataStore().findById(DataEntityCollection.JOB, jobId);
 
-        List<JobProfile> comparable = getDataStore().getComparableProfiles(
-                current.getUser(),
-                conf.getInt(POSUMConfiguration.BUFFER, POSUMConfiguration.BUFFER_DEFAULT)
-        );
+        Long currentAverage = TaskType.MAP.equals(type) ? job.getAvgMapDuration() : job.getAvgReduceDuration();
+        if (currentAverage > 0)
+            return currentAverage;
+
+        List<JobProfile> comparable = getComparableProfiles(job);
         if (comparable.size() < 1)
-            return conf.getInt(POSUMConfiguration.AVERAGE_TASK_DURATION,
+            return conf.getLong(POSUMConfiguration.AVERAGE_TASK_DURATION,
                     POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
+        Long duration = 0L;
         for (JobProfile profile : comparable)
             duration += TaskType.MAP.equals(type) ? profile.getAvgMapDuration() : profile.getAvgReduceDuration();
         duration /= comparable.size();
-        return duration.intValue();
-    }
-
-    @Override
-    public Integer predictTaskDuration(String jobId, String taskId) {
-        return predictTaskDuration(jobId, Utils.getTaskTypeFromId(taskId));
+        return duration;
     }
 }
