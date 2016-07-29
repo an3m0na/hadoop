@@ -3,15 +3,12 @@ package org.apache.hadoop.tools.posum.database.store;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.database.client.DBImpl;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.client.DataClientInterface;
-import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
-import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 import org.mongojack.DBQuery;
 
 import java.util.ArrayList;
@@ -39,34 +36,34 @@ public class DataStore implements DataClientInterface {
         String url = conf.get(POSUMConfiguration.DATABASE_URL, POSUMConfiguration.DATABASE_URL_DEFAULT);
         conn = new MongoJackConnector(url);
         conn.addDatabase(mainDb,
-                DataEntityType.APP,
-                DataEntityType.APP_HISTORY,
-                DataEntityType.JOB,
-                DataEntityType.JOB_HISTORY,
-                DataEntityType.JOB_CONF,
-                DataEntityType.JOB_CONF_HISTORY,
-                DataEntityType.COUNTER,
-                DataEntityType.COUNTER_HISTORY,
-                DataEntityType.TASK,
-                DataEntityType.TASK_HISTORY,
-                DataEntityType.HISTORY);
+                DataEntityCollection.APP,
+                DataEntityCollection.APP_HISTORY,
+                DataEntityCollection.JOB,
+                DataEntityCollection.JOB_HISTORY,
+                DataEntityCollection.JOB_CONF,
+                DataEntityCollection.JOB_CONF_HISTORY,
+                DataEntityCollection.COUNTER,
+                DataEntityCollection.COUNTER_HISTORY,
+                DataEntityCollection.TASK,
+                DataEntityCollection.TASK_HISTORY,
+                DataEntityCollection.HISTORY);
         locks.put(mainDb.getId(), new ReentrantReadWriteLock());
         conn.dropDatabase(logDb);
         conn.addDatabase(logDb,
-                DataEntityType.LOG_SCHEDULER,
-                DataEntityType.LOG_PREDICTOR,
-                DataEntityType.POSUM_STATS);
+                DataEntityCollection.LOG_SCHEDULER,
+                DataEntityCollection.LOG_PREDICTOR,
+                DataEntityCollection.POSUM_STATS);
         locks.put(logDb.getId(), new ReentrantReadWriteLock());
         conn.addDatabase(simDb,
-                DataEntityType.APP,
-                DataEntityType.JOB,
-                DataEntityType.TASK);
+                DataEntityCollection.APP,
+                DataEntityCollection.JOB,
+                DataEntityCollection.TASK);
         locks.put(simDb.getId(), new ReentrantReadWriteLock());
         this.conf = conf;
     }
 
     @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityType collection, String id) {
+    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
         locks.get(db.getId()).readLock().lock();
         try {
             return conn.findObjectById(db, collection, id);
@@ -77,20 +74,20 @@ public class DataStore implements DataClientInterface {
 
     @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
-                                                      DataEntityType collection,
+                                                      DataEntityCollection collection,
                                                       Map<String, Object> queryParams,
-                                                      int offset,
-                                                      int limit) {
+                                                      int offsetOrZero,
+                                                      int limitOrZero) {
         locks.get(db.getId()).readLock().lock();
         try {
-            return conn.findObjects(db, collection, queryParams, offset, limit);
+            return conn.findObjects(db, collection, queryParams, offsetOrZero, limitOrZero);
         } finally {
             locks.get(db.getId()).readLock().unlock();
         }
     }
 
     @Override
-    public List<String> listIds(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
+    public List<String> listIds(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
         locks.get(db.getId()).readLock().lock();
         List rawList = Collections.emptyList();
         try {
@@ -108,7 +105,7 @@ public class DataStore implements DataClientInterface {
     @Override
     public JobProfile getJobProfileForApp(final DataEntityDB db, String appId, String user) {
         List<JobProfile> profiles;
-        profiles = find(db, DataEntityType.JOB, Collections.singletonMap("appId", (Object) appId), 0, 0);
+        profiles = find(db, DataEntityCollection.JOB, Collections.singletonMap("appId", (Object) appId), 0, 0);
         if (profiles.size() == 1)
             return profiles.get(0);
         if (profiles.size() > 1)
@@ -120,7 +117,7 @@ public class DataStore implements DataClientInterface {
     public void saveFlexFields(final DataEntityDB db, String jobId, Map<String, String> newFields, boolean forHistory) {
         locks.get(db.getId()).writeLock().lock();
         try {
-            DataEntityType type = forHistory ? DataEntityType.JOB_HISTORY : DataEntityType.JOB;
+            DataEntityCollection type = forHistory ? DataEntityCollection.JOB_HISTORY : DataEntityCollection.JOB;
             JobProfile job = findById(db, type, jobId);
             if (job == null)
                 throw new POSUMException("Could not find job to save flex-fields: " + jobId);
@@ -133,7 +130,7 @@ public class DataStore implements DataClientInterface {
     }
 
     @Override
-    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert) {
+    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert) {
         locks.get(db.getId()).writeLock().lock();
         try {
             return conn.insertObject(db, collection, toInsert);
@@ -143,7 +140,7 @@ public class DataStore implements DataClientInterface {
     }
 
     @Override
-    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityType collection, T
+    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityCollection collection, T
             toUpdate) {
         locks.get(db.getId()).writeLock().lock();
         try {
@@ -154,7 +151,7 @@ public class DataStore implements DataClientInterface {
     }
 
     @Override
-    public void delete(DataEntityDB db, DataEntityType collection, String id) {
+    public void delete(DataEntityDB db, DataEntityCollection collection, String id) {
         locks.get(db.getId()).writeLock().lock();
         try {
             conn.deleteObject(db, collection, id);
@@ -164,7 +161,7 @@ public class DataStore implements DataClientInterface {
     }
 
     @Override
-    public void delete(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams) {
+    public void delete(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
         locks.get(db.getId()).writeLock().lock();
         try {
             conn.deleteObject(db, collection, queryParams);

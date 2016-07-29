@@ -5,7 +5,7 @@ import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
 import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityPayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityPayloadProtoOrBuilder;
@@ -73,13 +73,13 @@ public class SingleEntityPayloadPBImpl extends SingleEntityPayload {
     }
 
     @Override
-    public DataEntityType getEntityType() {
+    public DataEntityCollection getEntityType() {
         SingleEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityType.valueOf(p.getEntityType().name().substring("TYPE_".length()));
+        return DataEntityCollection.valueOf(p.getEntityType().name().substring("TYPE_".length()));
     }
 
     @Override
-    public void setEntityType(DataEntityType type) {
+    public void setEntityType(DataEntityCollection type) {
         maybeInitBuilder();
         builder.setEntityType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
     }

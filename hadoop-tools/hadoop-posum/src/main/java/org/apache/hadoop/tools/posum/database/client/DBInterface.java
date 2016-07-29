@@ -12,32 +12,32 @@ public interface DBInterface {
 
     /* Generic accessors */
 
-    <T extends GeneralDataEntity> List<T> list(DataEntityType collection);
+    <T extends GeneralDataEntity> List<T> list(DataEntityCollection collection);
 
-    List<String> listIds(DataEntityType collection, Map<String, Object> queryParams);
+    List<String> listIds(DataEntityCollection collection, Map<String, Object> queryParams);
 
-    <T extends GeneralDataEntity> T findById(DataEntityType collection, String id);
+    <T extends GeneralDataEntity> T findById(DataEntityCollection collection, String id);
 
-    <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value);
+    <T extends GeneralDataEntity> List<T> find(DataEntityCollection collection, String field, Object value);
 
-    <T extends GeneralDataEntity> List<T> find(DataEntityType collection, String field, Object value, int offset, int limit);
+    <T extends GeneralDataEntity> List<T> find(DataEntityCollection collection, String field, Object value, int offsetOrZero, int limitOrZero);
 
-    <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams);
+    <T extends GeneralDataEntity> List<T> find(DataEntityCollection collection, Map<String, Object> queryParams);
 
-    <T extends GeneralDataEntity> List<T> find(DataEntityType collection, Map<String, Object> queryParams, int offset, int limit);
+    <T extends GeneralDataEntity> List<T> find(DataEntityCollection collection, Map<String, Object> queryParams, int offsetOrZero, int limitOrZero);
 
     /* Generic modifiers */
 
-    <T extends GeneralDataEntity> String store(DataEntityType collection, T toInsert);
+    <T extends GeneralDataEntity> String store(DataEntityCollection collection, T toInsert);
 
     //returns true if an existing object was overwritten
-    <T extends GeneralDataEntity> boolean updateOrStore(DataEntityType collection, T toUpdate);
+    <T extends GeneralDataEntity> boolean updateOrStore(DataEntityCollection collection, T toUpdate);
 
-    void delete(DataEntityType collection, String id);
+    void delete(DataEntityCollection collection, String id);
 
-    void delete(DataEntityType collection, String field, Object value);
+    void delete(DataEntityCollection collection, String field, Object value);
 
-    void delete(DataEntityType collection, Map<String, Object> queryParams);
+    void delete(DataEntityCollection collection, Map<String, Object> queryParams);
 
     /* Custom accessors */
 

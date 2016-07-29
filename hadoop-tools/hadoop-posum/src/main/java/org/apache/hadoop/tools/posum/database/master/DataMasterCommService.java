@@ -108,7 +108,7 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                         jobProfile = dmContext.getClusterInfo().getCurrentProfileForApp(jobForAppPayload.getAppId(), jobForAppPayload.getUser());
                     else
                         jobProfile = dmContext.getDataStore().getJobProfileForApp(jobForAppPayload.getEntityDB(), jobForAppPayload.getAppId(), jobForAppPayload.getUser());
-                    entityPayload = SingleEntityPayload.newInstance(DataEntityType.JOB, jobProfile);
+                    entityPayload = SingleEntityPayload.newInstance(DataEntityCollection.JOB, jobProfile);
                     logger.debug("Returning profile " + jobProfile);
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
                 default:
@@ -130,8 +130,8 @@ public class DataMasterCommService extends CompositeService implements DataMaste
                     dmContext.getDataStore().find(request.getEntityDB(),
                             request.getEntityType(),
                             request.getProperties(),
-                            request.getOffset(),
-                            request.getLimit());
+                            request.getOffsetOrZero(),
+                            request.getLimitOrZero());
             MultiEntityPayload payload = MultiEntityPayload.newInstance(request.getEntityType(), ret);
             return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY, payload);
         } catch (Exception e) {

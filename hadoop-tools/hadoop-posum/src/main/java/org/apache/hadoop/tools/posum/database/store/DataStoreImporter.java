@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.database.store;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.json.JsonFileReader;
@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * Created by ane on 7/28/16.
  */
 public class DataStoreImporter {
-    private Map<DataEntityDB, Map<DataEntityType, File>> dataFiles = new HashMap<>(DataEntityDB.Type.values().length);
+    private Map<DataEntityDB, Map<DataEntityCollection, File>> dataFiles = new HashMap<>(DataEntityDB.Type.values().length);
 
     public DataStoreImporter(String dumpPath) {
         File dumpDir = new File(dumpPath);
@@ -29,10 +29,10 @@ public class DataStoreImporter {
                 Matcher m = p.matcher(file.getName());
                 if (m.find()) {
                     DataEntityDB db = DataEntityDB.fromName(m.group(1));
-                    DataEntityType collection = DataEntityType.fromLabel(m.group(2));
+                    DataEntityCollection collection = DataEntityCollection.fromLabel(m.group(2));
                     if (db == null || collection == null)
                         continue;
-                    Map<DataEntityType, File> dbFiles = dataFiles.get(db);
+                    Map<DataEntityCollection, File> dbFiles = dataFiles.get(db);
                     if (dbFiles == null) {
                         dbFiles = new HashMap<>();
                         dataFiles.put(db, dbFiles);
@@ -46,8 +46,8 @@ public class DataStoreImporter {
     }
 
     public void importTo(DataClientInterface dataStore) {
-        for (Map.Entry<DataEntityDB, Map<DataEntityType, File>> dbMapEntry : dataFiles.entrySet()) {
-            for (Map.Entry<DataEntityType, File> fileEntry : dbMapEntry.getValue().entrySet()) {
+        for (Map.Entry<DataEntityDB, Map<DataEntityCollection, File>> dbMapEntry : dataFiles.entrySet()) {
+            for (Map.Entry<DataEntityCollection, File> fileEntry : dbMapEntry.getValue().entrySet()) {
                 try {
                     JsonFileReader reader = new JsonFileReader(fileEntry.getValue());
                     Class<? extends GeneralDataEntity> entityClass = fileEntry.getKey().getMappedClass();
