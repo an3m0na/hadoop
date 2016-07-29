@@ -139,7 +139,7 @@ public class SearchRequestPBImpl extends SearchRequest {
     @Override
     public void setEntityType(DataEntityCollection type) {
         maybeInitBuilder();
-        builder.setEntityType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
+        builder.setEntityType(POSUMProtos.EntityCollectionProto.valueOf("TYPE_" + type.name()));
     }
 
     @Override
