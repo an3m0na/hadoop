@@ -20,7 +20,7 @@ message EntityDBProto {
     }
 }
 
-enum EntityTypeProto {
+enum EntityCollectionProto {
     TYPE_APP = 0;
     TYPE_JOB = 1;
     TYPE_TASK = 2;
@@ -153,7 +153,7 @@ message TaskProfileProto {
 
 message HistoryProfileProto {
     required string id = 1;
-    required EntityTypeProto type = 2;
+    required EntityCollectionProto type = 2;
     required int64 timestamp = 3;
     required string originalId = 4;
     required bytes original = 5;
@@ -187,25 +187,25 @@ message JobForAppPayloadProto {
 
 message EntityByIdPayloadProto {
     required EntityDBProto entityDB = 1;
-    optional EntityTypeProto entityType = 2;
+    optional EntityCollectionProto entityType = 2;
     required string id = 3;
 }
 
 message SingleEntityPayloadProto {
-    required EntityTypeProto entityType = 1;
+    required EntityCollectionProto entityType = 1;
     optional bytes entity = 2;
 }
 
 message SearchRequestProto {
     required EntityDBProto entityDB = 1;
-    required EntityTypeProto entityType = 2;
+    required EntityCollectionProto entityType = 2;
     repeated EntityPropertyProto properties = 3;
     optional int32 offset = 4;
     optional int32 limit = 5;
 }
 
 message MultiEntityPayloadProto {
-    required EntityTypeProto entityType = 1;
+    required EntityCollectionProto entityType = 1;
     repeated bytes entities = 2;
 }
 

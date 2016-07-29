@@ -97,7 +97,7 @@ public class EntityByIdPayloadPBImpl extends EntityByIdPayload {
         if (type == null)
             return;
         maybeInitBuilder();
-        builder.setEntityType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
+        builder.setEntityType(POSUMProtos.EntityCollectionProto.valueOf("TYPE_" + type.name()));
     }
 
     @Override

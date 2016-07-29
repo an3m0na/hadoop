@@ -90,7 +90,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
     @Override
     public void setType(DataEntityCollection type) {
         maybeInitBuilder();
-        builder.setType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
+        builder.setType(POSUMProtos.EntityCollectionProto.valueOf("TYPE_" + type.name()));
     }
 
     @Override
