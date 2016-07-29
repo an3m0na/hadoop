@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.response;
 
+import org.apache.hadoop.tools.posum.common.records.field.impl.pb.StringListPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -14,7 +15,8 @@ public abstract class SimpleResponse<T> {
         VOID(VoidResponsePBImpl.class),
         SINGLE_ENTITY(SingleEntityResponsePBImpl.class),
         MULTI_ENTITY(MultiEntityResponsePBImpl.class),
-        STRING_STRING_MAP(StringStringMapResponsePBImpl.class);
+        STRING_STRING_MAP(StringStringMapResponsePBImpl.class),
+        STRING_LIST(StringListResponsePBImpl.class);
 
         private Class<? extends SimpleResponsePBImpl> implClass;
         private static final String prefix = "RESP_";

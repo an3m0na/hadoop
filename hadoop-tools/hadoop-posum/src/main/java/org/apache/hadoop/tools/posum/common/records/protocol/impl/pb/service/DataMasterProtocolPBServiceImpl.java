@@ -7,10 +7,11 @@ import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.MultiEntityResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SingleEntityResponsePBImpl;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.MultiEntityRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SearchRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.response.impl.pb.StringListResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SearchRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
@@ -40,11 +41,23 @@ public class DataMasterProtocolPBServiceImpl implements DataMasterProtocolPB {
 
     @Override
     public SimpleResponseProto listEntities(RpcController controller,
-                                                 MultiEntityRequestProto proto) throws ServiceException {
-        MultiEntityRequestPBImpl request = new MultiEntityRequestPBImpl(proto);
+                                                 SearchRequestProto proto) throws ServiceException {
+        SearchRequestPBImpl request = new SearchRequestPBImpl(proto);
         try {
             SimpleResponse response = real.listEntities(request);
             return ((MultiEntityResponsePBImpl) response).getProto();
+        } catch (YarnException | IOException e) {
+            throw new ServiceException(e);
+        }
+    }
+
+    @Override
+    public SimpleResponseProto listIds(RpcController controller,
+                                            SearchRequestProto proto) throws ServiceException {
+        SearchRequestPBImpl request = new SearchRequestPBImpl(proto);
+        try {
+            SimpleResponse response = real.listIds(request);
+            return ((StringListResponsePBImpl) response).getProto();
         } catch (YarnException | IOException e) {
             throw new ServiceException(e);
         }

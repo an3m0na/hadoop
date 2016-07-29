@@ -17,6 +17,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.Capacity
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -28,7 +29,8 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
     protected Log logger;
 
     protected final String DEADLINE_QUEUE = "deadline", BATCH_QUEUE = "default";
-    protected final String DEADLINE_FLEX_KEY = EDLSPolicy.class.getName() + ".deadline";
+    protected final String DEADLINE_FLEX_KEY = EDLSPolicy.class.getSimpleName() + "::DEADLINE";
+    protected final String TYPE_FLEX_KEY = EDLSPolicy.class.getSimpleName() + "::TYPE";
     private long lastCheck = 0;
     private long maxCheck;
     protected float deadlinePriority = POSUMConfiguration.DC_PRIORITY_DEFAULT;
@@ -63,7 +65,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         if (job == null) {
             return BATCH_QUEUE;
         }
-        if (EDLSAppAttempt.Type.DC.name().equals(job.getFlexField(EDLSAppAttempt.Type.class.getName())))
+        if (EDLSAppAttempt.Type.DC.name().equals(job.getFlexField(TYPE_FLEX_KEY)))
             return DEADLINE_QUEUE;
         return BATCH_QUEUE;
     }
@@ -84,17 +86,19 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
             return null;
         }
         Map<String, String> flexFields = job.getFlexFields();
-        String typeString = flexFields.get(EDLSAppAttempt.Type.class.getName());
+        String typeString = flexFields.get(TYPE_FLEX_KEY);
         if (typeString == null) {
             // first initialization
             JobConfProxy confProxy = db.getJobConf(job.getId());
             String deadlineString = confProxy.getEntry(POSUMConfiguration.APP_DEADLINE);
+            Map<String, String> newFields = new HashMap<>(2);
             if (deadlineString != null && deadlineString.length() > 0) {
-                flexFields.put(DEADLINE_FLEX_KEY, deadlineString);
-                flexFields.put(EDLSAppAttempt.Type.class.getName(), EDLSAppAttempt.Type.DC.name());
+                newFields.put(DEADLINE_FLEX_KEY, deadlineString);
+                newFields.put(TYPE_FLEX_KEY, EDLSAppAttempt.Type.DC.name());
             } else {
-                flexFields.put(EDLSAppAttempt.Type.class.getName(), EDLSAppAttempt.Type.BC.name());
+                newFields.put(TYPE_FLEX_KEY, EDLSAppAttempt.Type.BC.name());
             }
+            commService.getDB().saveFlexFields(job.getId(), newFields, false);
         }
         return job;
     }
@@ -119,7 +123,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
                 app.setJobId(job.getId());
                 app.setSubmitTime(job.getSubmitTime());
                 EDLSAppAttempt.Type type =
-                        EDLSAppAttempt.Type.valueOf(job.getFlexField(EDLSAppAttempt.Type.class.getName()));
+                        EDLSAppAttempt.Type.valueOf(job.getFlexField(TYPE_FLEX_KEY));
                 app.setType(type);
                 if (EDLSAppAttempt.Type.DC.equals(type)) {
                     app.setDeadline(Long.valueOf(job.getFlexField(DEADLINE_FLEX_KEY)));

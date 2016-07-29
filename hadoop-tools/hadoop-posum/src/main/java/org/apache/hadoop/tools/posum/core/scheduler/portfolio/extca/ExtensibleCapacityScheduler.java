@@ -361,7 +361,7 @@ public abstract class ExtensibleCapacityScheduler<
                 updateApplicationPriorities(this.<CSQueue>readField("root"));
             }
         }
-        LOG.debug(printQueues());
+        LOG.trace(printQueues());
         invokeMethod("allocateContainersToNode", new Class<?>[]{FiCaSchedulerNode.class}, node);
     }
 

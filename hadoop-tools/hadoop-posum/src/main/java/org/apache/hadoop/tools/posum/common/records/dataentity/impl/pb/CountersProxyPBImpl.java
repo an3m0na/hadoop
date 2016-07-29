@@ -96,4 +96,9 @@ public class CountersProxyPBImpl extends GeneralDataEntityPBImpl<CountersProxy, 
     public void setCounterGroup(List<CounterGroupInfoPayload> counterGroups) {
         this.counterGroup = counterGroups;
     }
+
+    @Override
+    public void setTaskCounterGroup(List<CounterGroupInfoPayload> counterGroups) {
+        this.counterGroup = counterGroups;
+    }
 }

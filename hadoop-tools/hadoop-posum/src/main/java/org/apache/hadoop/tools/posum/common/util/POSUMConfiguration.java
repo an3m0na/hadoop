@@ -37,16 +37,19 @@ public class POSUMConfiguration {
     public static final String POSUM_MONITOR_HEARTBEAT_MS = MONITOR_PREFIX + "posum.heartbeat.ms";
     public static final int POSUM_MONITOR_HEARTBEAT_MS_DEFAULT = 2000;
 
-    public static final String BUFFER = PREDICTOR_PREFIX + "buffer";
-    public static final int BUFFER_DEFAULT = 2;
+    public static final String PREDICTION_BUFFER = PREDICTOR_PREFIX + "buffer";
+    public static final int PREDICTION_BUFFER_DEFAULT = 5;
 
     public static final String AVERAGE_JOB_DURATION = PREDICTOR_PREFIX + "avgJobDuration";
-    public static final int AVERAGE_JOB_DURATION_DEFAULT = 300000;
+    public static final long AVERAGE_JOB_DURATION_DEFAULT = 360000;
 
     public static final String AVERAGE_TASK_DURATION = PREDICTOR_PREFIX + "avgTaskDuration";
-    public static final int AVERAGE_TASK_DURATION_DEFAULT = 20000;
+    public static final int AVERAGE_TASK_DURATION_DEFAULT = 6000;
 
     public static final String PREDICTOR_CLASS = PREDICTOR_PREFIX + "class";
+    public static final String PREDICTOR_TIMEOUT = PREDICTOR_PREFIX + "timeout";
+    public static final long PREDICTOR_TIMEOUT_DEFAULT = 10000;
+
 
     public static final String DATABASE_URL = DATABASE_PREFIX + "url";
     public static final String DATABASE_URL_DEFAULT = "127.0.0.1:27017";
@@ -114,8 +117,8 @@ public class POSUMConfiguration {
     public static final String SCHEDULER_METRICS_ON = SCHEDULER_PREFIX + "metrics.on";
     public static final boolean SCHEDULER_METRICS_ON_DEFAULT = true;
 
-    public static final String MONITOR_PERSIST_METRICS = MONITOR_PREFIX + "metrics.persist";
-    public static final boolean MONITOR_PERSIST_METRICS_DEFAULT = true;
+    public static final String FINE_GRAINED_MONITOR = MONITOR_PREFIX + "fine-grained";
+    public static final boolean FINE_GRAINED_MONITOR_DEFAULT = true;
 
     public static final String APP_DEADLINE = YarnConfiguration.YARN_PREFIX + "application.deadline";
     public static final long APP_DEADLINE_DEFAULT = 120000;

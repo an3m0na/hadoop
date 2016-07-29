@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.field.impl.pb.StringStringMapPayloadPBImpl;
@@ -22,7 +23,7 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
         builder = viaProto ? JobConfProxyProto.newBuilder(proto) : JobConfProxyProto.newBuilder();
     }
 
-    private JobConf conf;
+    private Configuration conf;
     private Map<String, String> propertyMap;
 
     @Override
@@ -71,12 +72,12 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
     }
 
     @Override
-    public void setConf(JobConf conf) {
+    public void setConf(Configuration conf) {
         this.conf = conf;
     }
 
     @Override
-    public JobConf getConf() {
+    public Configuration getConf() {
         if (conf == null) {
             conf = new JobConf();
             for (Map.Entry<String, String> prop : getPropertyMap().entrySet()) {

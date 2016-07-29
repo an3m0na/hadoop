@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.request;
 
 
+import org.apache.hadoop.tools.posum.common.records.field.SaveFlexFieldsPayload;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto.SimpleRequestTypeProto;
@@ -17,6 +18,7 @@ public abstract class SimpleRequest<T> {
         CHANGE_POLICY(StringRequestPBImpl.class),
         ENTITY_BY_ID(EntityByIdRequestPBImpl.class),
         JOB_FOR_APP(JobForAppRequestPBImpl.class),
+        SAVE_FLEX_FIELDS(SaveFlexFieldsRequestPBImpl.class),
         START(VoidRequestPBImpl.class),
         LOG_POLICY_CHANGE(StringRequestPBImpl.class),
         SYSTEM_ADDRESSES(VoidRequestPBImpl.class);

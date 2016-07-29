@@ -15,7 +15,6 @@ import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
 public class HadoopMonitor extends GeneralLooper<HadoopMonitor> {
     private static Log logger = LogFactory.getLog(HadoopMonitor.class);
 
-    private ClusterInfoCollector collector;
     private final DataMasterContext context;
 
     public HadoopMonitor(DataMasterContext context) {
@@ -28,14 +27,11 @@ public class HadoopMonitor extends GeneralLooper<HadoopMonitor> {
         super.serviceInit(conf);
         setSleepInterval(conf.getLong(POSUMConfiguration.CLUSTER_MONITOR_HEARTBEAT_MS,
                 POSUMConfiguration.CLUSTER_MONITOR_HEARTBEAT_MS_DEFAULT));
-        this.collector = new ClusterInfoCollector(conf, context.getDataStore());
     }
 
     @Override
     protected void doAction() {
-        if (!RestClient.TrackingUI.isUpdated()) {
-            RestClient.TrackingUI.tryUpdate(context.getCommService().getSystemAddresses());
-        }
-        collector.collect();
+        RestClient.TrackingUI.checkUpdated(context.getCommService().getSystemAddresses());
+        context.getClusterInfo().refresh();
     }
 }

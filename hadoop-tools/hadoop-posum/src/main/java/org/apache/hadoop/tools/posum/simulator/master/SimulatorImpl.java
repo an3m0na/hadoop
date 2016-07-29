@@ -24,7 +24,6 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
 
     private static Log logger = LogFactory.getLog(SimulatorImpl.class);
 
-    private JobBehaviorPredictor predictor;
     private SimulationMasterContext context;
     private PolicyMap policies;
     private Map<String, Simulation> simulationMap;
@@ -37,30 +36,13 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-
-
-        Class<? extends JobBehaviorPredictor> predictorClass = getConfig().getClass(
-                POSUMConfiguration.PREDICTOR_CLASS,
-                BasicPredictor.class,
-                JobBehaviorPredictor.class
-        );
-
-        try {
-            predictor = predictorClass.getConstructor(Configuration.class)
-                    .newInstance(conf);
-        } catch (Exception e) {
-            throw new POSUMException("Could not instantiate predictor type " + predictorClass.getName());
-        }
         policies = new PolicyMap(conf);
-
         super.serviceInit(conf);
     }
 
     @Override
     protected void serviceStart() throws Exception {
         super.serviceStart();
-        //TODO rethink this when simulation db is up
-//        predictor.setDataStore(context.getCommService().getDataClient().bindTo(DataEntityDB.getSimulation()));
     }
 
     @Override
@@ -69,7 +51,7 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
         simulationMap = new HashMap<>(policies.size());
         for (String policyName : policies.keySet()) {
             logger.trace("Starting simulation for " + policyName);
-            Simulation simulation = new Simulation(this, policyName, predictor);
+            Simulation simulation = new Simulation(this, policyName, context);
             simulationMap.put(policyName, simulation);
             simulation.start();
         }

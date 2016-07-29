@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,11 +30,17 @@ public interface JobProfile extends GeneralDataEntity {
 
     void setFinishTime(Long finishTime);
 
-    Integer getDuration();
+    Long getDuration();
 
     void setTotalMapTasks(Integer totalMapTasks);
 
     void setTotalReduceTasks(Integer totalReduceTasks);
+
+    Long getTotalInputBytes();
+
+    void setTotalInputBytes(Long inputBytes);
+
+    Long getInputBytes();
 
     void setInputBytes(Long inputBytes);
 
@@ -93,10 +100,6 @@ public interface JobProfile extends GeneralDataEntity {
 
     void setInputSplits(Integer inputSplits);
 
-    Long getInputBytes();
-
-    Long getAvgSplitSize();
-
     Long getAvgMapDuration();
 
     void setAvgMapDuration(Long avgMapDuration);
@@ -109,13 +112,17 @@ public interface JobProfile extends GeneralDataEntity {
 
     void setAvgTaskDuration(Long avgTaskDuration);
 
-    void setAvgShuffleDuration(Long avgShuffleDuration);
+    void setAvgShuffleTime(Long time);
 
-    Long getAvgShuffleDuration();
+    Long getAvgShuffleTime();
 
-    void setAvgMergeDuration(Long avgMergeDuration);
+    void setAvgMergeTime(Long time);
 
-    Long getAvgMergeDuration();
+    Long getAvgMergeTime();
+
+    void setAvgReduceTime(Long time);
+
+    Long getAvgReduceTime();
 
     void setQueue(String queue);
 
@@ -126,4 +133,16 @@ public interface JobProfile extends GeneralDataEntity {
     String getFlexField(String name);
 
     Map<String, String> getFlexFields();
+
+    String getMapperClass();
+
+    void setMapperClass(String name);
+
+    String getReducerClass();
+
+    void setReducerClass(String name);
+
+    List<String> getSplitLocations();
+
+    void setSplitLocations(List<String> locations);
 }

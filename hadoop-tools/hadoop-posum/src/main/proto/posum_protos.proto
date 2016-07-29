@@ -20,7 +20,7 @@ message EntityDBProto {
     }
 }
 
-enum EntityTypeProto {
+enum EntityCollectionProto {
     TYPE_APP = 0;
     TYPE_JOB = 1;
     TYPE_TASK = 2;
@@ -82,25 +82,30 @@ message JobProfileProto {
     optional int32 totalMapTasks = 6;
     optional int32 totalReduceTasks = 7;
     optional int32 inputSplits = 8; // only from conf
-    optional int64 inputBytes = 9; // only from conf
-    optional int64 mapOutputBytes = 10;
-    optional int64 reduceInputBytes = 11;
-    optional int64 outputBytes = 12;
-    optional int64 submitTime = 13;
-    optional int64 startTime = 14;
-    optional int64 finishTime = 15;
-    optional JobStateProto state = 16;
-    optional float mapProgress = 17;
-    optional float reduceProgress = 18;
-    optional int32 completedMaps = 19;
-    optional int32 completedReduces = 20;
-    optional bool uberized = 21;
-    optional int64 avgMapDuration = 22;
-    optional int64 avgReduceDuration = 23;
-    optional int64 avgTaskDuration = 24;
-    optional int64 avgShuffleDuration = 25;
-    optional int64 avgMergeDuration = 26;
-    optional StringStringMapPayloadProto flexFields = 27;
+    optional int64 totalInputBytes = 9; // only from conf
+    optional int64 inputBytes = 10; // ongoing
+    optional int64 mapOutputBytes = 11;
+    optional int64 reduceInputBytes = 12;
+    optional int64 outputBytes = 13;
+    optional int64 submitTime = 14;
+    optional int64 startTime = 15;
+    optional int64 finishTime = 16;
+    optional JobStateProto state = 17;
+    optional float mapProgress = 18;
+    optional float reduceProgress = 19;
+    optional int32 completedMaps = 20;
+    optional int32 completedReduces = 21;
+    optional bool uberized = 22;
+    optional int64 avgMapDuration = 23;
+    optional int64 avgReduceDuration = 24;
+    optional int64 avgTaskDuration = 25;
+    optional int64 avgShuffleTime = 26;
+    optional int64 avgMergeTime = 27;
+    optional int64 avgReduceTime = 28;
+    optional string mapperClass = 29;
+    optional string reducerClass = 30;
+    optional StringStringMapPayloadProto flexFields = 31;
+    repeated string splitLocations = 32;
 
     enum JobStateProto {
         STATE_NULL = 0;
@@ -128,13 +133,16 @@ message TaskProfileProto {
     optional int64 inputRecords = 5;
     optional int64 outputBytes = 6;
     optional int64 outputRecords = 7;
-    optional int64 expectedInputBytes = 8;
-    optional int64 startTime = 9;
-    optional int64 finishTime = 10;
-    optional TaskTypeProto type = 11;
-    optional float reportedProgress = 12;
-    optional string successfulAttempt = 13;
-    //    optional Counters counters = 14;
+    optional int64 startTime = 8;
+    optional int64 finishTime = 9;
+    optional TaskTypeProto type = 10;
+    optional float reportedProgress = 11;
+    optional string successfulAttempt = 12;
+    optional int64 shuffleTime = 13;
+    optional int64 mergeTime = 14;
+    optional int64 reduceTime = 15;
+    optional bool local = 16;
+    optional string httpAddress = 17;
 
     enum TaskTypeProto {
         TYPE_NULL = 0;
@@ -145,7 +153,7 @@ message TaskProfileProto {
 
 message HistoryProfileProto {
     required string id = 1;
-    required EntityTypeProto type = 2;
+    required EntityCollectionProto type = 2;
     required int64 timestamp = 3;
     required string originalId = 4;
     required bytes original = 5;
@@ -164,6 +172,13 @@ message EntityPropertyProto {
     }
 }
 
+message SaveFlexFieldsPayloadProto {
+    required EntityDBProto entityDB = 1;
+    required string jobId = 2;
+    required StringStringMapPayloadProto newFields = 3;
+    optional bool forHistory = 4;
+}
+
 message JobForAppPayloadProto {
     required EntityDBProto entityDB = 1;
     optional string user = 2;
@@ -172,23 +187,25 @@ message JobForAppPayloadProto {
 
 message EntityByIdPayloadProto {
     required EntityDBProto entityDB = 1;
-    optional EntityTypeProto entityType = 2;
+    optional EntityCollectionProto entityType = 2;
     required string id = 3;
 }
 
 message SingleEntityPayloadProto {
-    required EntityTypeProto entityType = 1;
+    required EntityCollectionProto entityType = 1;
     optional bytes entity = 2;
 }
 
-message MultiEntityRequestProto {
+message SearchRequestProto {
     required EntityDBProto entityDB = 1;
-    required EntityTypeProto entityType = 2;
+    required EntityCollectionProto entityType = 2;
     repeated EntityPropertyProto properties = 3;
+    optional int32 offset = 4;
+    optional int32 limit = 5;
 }
 
 message MultiEntityPayloadProto {
-    required EntityTypeProto entityType = 1;
+    required EntityCollectionProto entityType = 1;
     repeated bytes entities = 2;
 }
 
@@ -201,9 +218,10 @@ message SimpleRequestProto {
         REQ_CHANGE_POLICY = 1;
         REQ_ENTITY_BY_ID = 2;
         REQ_JOB_FOR_APP = 3;
-        REQ_START = 4;
-        REQ_LOG_POLICY_CHANGE = 5;
-        REQ_SYSTEM_ADDRESSES = 6;
+        REQ_SAVE_FLEX_FIELDS = 4;
+        REQ_START = 5;
+        REQ_LOG_POLICY_CHANGE = 6;
+        REQ_SYSTEM_ADDRESSES = 7;
     }
 }
 
@@ -219,6 +237,7 @@ message SimpleResponseProto {
         RESP_SINGLE_ENTITY = 1;
         RESP_MULTI_ENTITY = 2;
         RESP_STRING_STRING_MAP = 3;
+        RESP_STRING_LIST = 4;
     }
 }
 
@@ -253,6 +272,10 @@ message StringStringMapPayloadProto {
     repeated StringStringMapProto entries = 1;
 }
 
+message StringListPayloadProto {
+    repeated string entries = 1;
+}
+
 message CountersProxyProto {
     required string id = 1;
     repeated CounterGroupInfoPayloadProto groups = 2;
@@ -268,4 +291,10 @@ message CounterInfoPayloadProto {
     optional int64 total = 2;
     optional int64 map = 3;
     optional int64 reduce = 4;
+}
+
+message TaskPredictionProto {
+    required string predictor = 1;
+    required string id = 2;
+    optional int64 duration = 3;
 }

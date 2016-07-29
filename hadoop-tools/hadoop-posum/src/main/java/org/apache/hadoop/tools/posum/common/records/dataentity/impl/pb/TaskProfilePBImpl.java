@@ -91,12 +91,9 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     }
 
     @Override
-    public Integer getDuration() {
+    public Long getDuration() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        if(p.hasStartTime() && p.hasFinishTime())
-            return Long.valueOf(p.getFinishTime() - p.getStartTime()).intValue();
-        else
-            return -1;
+        return Math.max(0, p.getFinishTime() - p.getStartTime());
     }
 
     @Override
@@ -125,19 +122,6 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
         if (enumValue == null || enumValue.name().equals("TYPE_NULL"))
             return null;
         return TaskType.valueOf(enumValue.name().substring("TYPE_".length()));
-    }
-
-    @Override
-    public Long getExpectedInputBytes() {
-        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getExpectedInputBytes();
-    }
-
-    @Override
-    public void setExpectedInputBytes(Long expectedInputBytes) {
-        maybeInitBuilder();
-        if (expectedInputBytes != null)
-            builder.setExpectedInputBytes(expectedInputBytes);
     }
 
     @Override
@@ -212,5 +196,69 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     public String getSuccessfulAttempt() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getSuccessfulAttempt();
+    }
+
+    @Override
+    public Long getShuffleTime() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getShuffleTime();
+    }
+
+    @Override
+    public void setShuffleTime(Long time) {
+        maybeInitBuilder();
+        if (time != null)
+            builder.setShuffleTime(time);
+    }
+
+    @Override
+    public Long getMergeTime() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getMergeTime();
+    }
+
+    @Override
+    public void setMergeTime(Long time) {
+        maybeInitBuilder();
+        if (time != null)
+            builder.setMergeTime(time);
+    }
+
+    @Override
+    public Long getReduceTime() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getReduceTime();
+    }
+
+    @Override
+    public void setReduceTime(Long time) {
+        maybeInitBuilder();
+        if (time != null)
+            builder.setReduceTime(time);
+    }
+
+    @Override
+    public Boolean isLocal() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getLocal();
+    }
+
+    @Override
+    public void setLocal(Boolean local) {
+        maybeInitBuilder();
+        if (local != null)
+            builder.setLocal(local);
+    }
+
+    @Override
+    public void setHttpAddress(String address) {
+        maybeInitBuilder();
+        builder.setHttpAddress(address);
+    }
+
+    @Override
+    public String getHttpAddress() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getHttpAddress();
     }
 }

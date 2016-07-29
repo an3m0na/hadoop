@@ -16,9 +16,9 @@ public interface HistoryProfile<T extends GeneralDataEntity> extends GeneralData
 
      void setTimestamp(Long timestamp);
 
-     DataEntityType getType();
+     DataEntityCollection getType();
 
-     void setType(DataEntityType type);
+     void setType(DataEntityCollection type);
 
      String getOriginalId();
 
