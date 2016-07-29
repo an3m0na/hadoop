@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.common.records.field.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
 import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
@@ -110,15 +110,15 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload {
     }
 
     @Override
-    public DataEntityType getEntityType() {
+    public DataEntityCollection getEntityType() {
         MultiEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityType.valueOf(p.getEntityType().name().substring("TYPE_".length()));
+        return DataEntityCollection.valueOf(p.getEntityType().name().substring("TYPE_".length()));
     }
 
     @Override
-    public void setEntityType(DataEntityType type) {
+    public void setEntityType(DataEntityCollection type) {
         maybeInitBuilder();
-        builder.setEntityType(POSUMProtos.EntityTypeProto.valueOf("TYPE_" + type.name()));
+        builder.setEntityType(POSUMProtos.EntityCollectionProto.valueOf("TYPE_" + type.name()));
     }
 
     @Override

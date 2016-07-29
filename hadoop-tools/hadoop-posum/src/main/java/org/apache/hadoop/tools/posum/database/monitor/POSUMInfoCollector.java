@@ -4,7 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.field.TaskPrediction;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
@@ -67,7 +67,7 @@ public class POSUMInfoCollector {
             //TODO get metrics from all services and persist to database
             if (now - lastPrediction > predictionTimeout) {
                 // make new predictions
-                List<String> taskIds = dataStore.listIds(DataEntityDB.getMain(), DataEntityType.TASK, null);
+                List<String> taskIds = dataStore.listIds(DataEntityDB.getMain(), DataEntityCollection.TASK, null);
                 for (String taskId : taskIds) {
                     // prediction can throw exception if data model changes state during calculation
 //                    try {

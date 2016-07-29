@@ -2,9 +2,8 @@ package org.apache.hadoop.tools.posum.simulator.predictor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.math3.util.DoubleArray;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
@@ -34,27 +33,27 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         super.initialize(dataStore);
 
         // populate flex-fields for jobs in history
-        List<String> historyJobIds = dataStore.listIds(DataEntityType.JOB_HISTORY,
+        List<String> historyJobIds = dataStore.listIds(DataEntityCollection.JOB_HISTORY,
                 Collections.<String, Object>emptyMap());
         for (String jobId : historyJobIds) {
-            JobProfile job = dataStore.findById(DataEntityType.JOB_HISTORY, jobId);
+            JobProfile job = dataStore.findById(DataEntityCollection.JOB_HISTORY, jobId);
             if (job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null)
                 completeProfile(job);
         }
     }
 
     private void completeProfile(JobProfile job) {
-        List<TaskProfile> tasks = getDataStore().find(DataEntityType.TASK_HISTORY, "jobId", job.getId());
+        List<TaskProfile> tasks = getDataStore().find(DataEntityCollection.TASK_HISTORY, "jobId", job.getId());
         Map<String, String> fields = calculateCurrentProfile(job, tasks);
         fields.put(FLEX_KEY_PREFIX + FlexKeys.PROFILED, "true");
         getDataStore().saveFlexFields(job.getId(), fields, true);
     }
 
     private JobProfile calculateCurrentProfile(String jobId) {
-        JobProfile job = getDataStore().findById(DataEntityType.JOB, jobId);
+        JobProfile job = getDataStore().findById(DataEntityCollection.JOB, jobId);
         Map<String, String> flexFields = calculateCurrentProfile(
                 job,
-                getDataStore().<TaskProfile>find(DataEntityType.TASK, "jobId", job.getId())
+                getDataStore().<TaskProfile>find(DataEntityCollection.TASK, "jobId", job.getId())
         );
         getDataStore().saveFlexFields(job.getId(), flexFields, false);
         return job;
@@ -155,7 +154,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 POSUMConfiguration.PREDICTION_BUFFER_DEFAULT);
         // get past jobs with the same name
         List<JobProfile> comparable = getDataStore().find(
-                DataEntityType.JOB_HISTORY,
+                DataEntityCollection.JOB_HISTORY,
                 type.equals(TaskType.MAP) ? "mapperClass" : "reducerClass",
                 type.equals(TaskType.MAP) ? job.getMapperClass() : job.getReducerClass(),
                 -bufferLimit,
@@ -164,7 +163,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         if (comparable.size() < 1) {
             // get past jobs at least by the same user
             comparable = getDataStore().find(
-                    DataEntityType.JOB_HISTORY,
+                    DataEntityCollection.JOB_HISTORY,
                     "user",
                     job.getUser(),
                     -bufferLimit,
@@ -194,7 +193,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
 
     @Override
     public Long predictTaskDuration(String taskId) {
-        TaskProfile task = getDataStore().findById(DataEntityType.TASK, taskId);
+        TaskProfile task = getDataStore().findById(DataEntityCollection.TASK, taskId);
         if (task == null)
             throw new POSUMException("Task not found for id " + taskId);
         if (task.getDuration() > 0)

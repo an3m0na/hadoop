@@ -18,7 +18,7 @@ public class HistoryProfileDeserializer extends JsonDeserializer<HistoryProfileP
     public HistoryProfilePBImpl deserialize(JsonParser jp, DeserializationContext ctxt)
             throws IOException {
         ObjectNode node = jp.readValueAsTree();
-        DataEntityType type = DataEntityType.valueOf((node.get("type")).asText());
+        DataEntityCollection type = DataEntityCollection.valueOf((node.get("type")).asText());
         String id = (node.get("_id")).asText();
         Long timestamp = (node.get("timestamp")).asLong();
 

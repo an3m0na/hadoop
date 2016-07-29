@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.util;
+package org.apache.hadoop.tools.posum.common.util.json;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 

@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.field;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.yarn.util.Records;
 
@@ -11,16 +11,16 @@ import java.util.List;
  */
 public abstract class MultiEntityPayload {
 
-    public static MultiEntityPayload newInstance(DataEntityType type, List<GeneralDataEntity> entities) {
+    public static MultiEntityPayload newInstance(DataEntityCollection type, List<GeneralDataEntity> entities) {
         MultiEntityPayload payload = Records.newRecord(MultiEntityPayload.class);
         payload.setEntityType(type);
         payload.setEntities(entities);
         return payload;
     }
 
-    public abstract DataEntityType getEntityType();
+    public abstract DataEntityCollection getEntityType();
 
-    public abstract void setEntityType(DataEntityType type);
+    public abstract void setEntityType(DataEntityCollection type);
 
     public abstract List<GeneralDataEntity> getEntities();
 

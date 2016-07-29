@@ -10,19 +10,19 @@ import java.util.Map;
  */
 public interface DataClientInterface {
 
-    <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityType collection, String id);
+    <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id);
 
-    List<String> listIds(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams);
+    List<String> listIds(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams);
 
-    <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams, int offset, int limit);
+    <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams, int offsetOrZero, int limitOrZero);
 
-    <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityType collection, T toInsert);
+    <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert);
 
-    <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityType apps, T toUpdate);
+    <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityCollection apps, T toUpdate);
 
-    void delete(DataEntityDB db, DataEntityType collection, String id);
+    void delete(DataEntityDB db, DataEntityCollection collection, String id);
 
-    void delete(DataEntityDB db, DataEntityType collection, Map<String, Object> queryParams);
+    void delete(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams);
 
     DBInterface bindTo(DataEntityDB db);
 

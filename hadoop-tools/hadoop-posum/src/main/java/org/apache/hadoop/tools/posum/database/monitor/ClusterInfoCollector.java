@@ -85,7 +85,7 @@ public class ClusterInfoCollector {
         // gather app info
 
         List<JobProfile> jobs =
-                dataStore.find(db, DataEntityType.JOB, Collections.singletonMap("appId", (Object) appId), 0, 0);
+                dataStore.find(db, DataEntityCollection.JOB, Collections.singletonMap("appId", (Object) appId), 0, 0);
         JobProfile job;
         String jobId;
         if (jobs.size() > 1)
@@ -167,23 +167,23 @@ public class ClusterInfoCollector {
             @Override
             public void run() throws Exception {
                 try {
-                    dataStore.delete(db, DataEntityType.APP, appId);
-                    dataStore.delete(db, DataEntityType.JOB, Collections.singletonMap("appId", (Object) appId));
-                    dataStore.delete(db, DataEntityType.TASK, Collections.singletonMap("appId", (Object) appId));
-                    dataStore.delete(db, DataEntityType.JOB_CONF, finalJob.getId());
-                    dataStore.delete(db, DataEntityType.COUNTER, finalJob.getId());
-                    dataStore.store(db, DataEntityType.APP_HISTORY, app);
-                    dataStore.store(db, DataEntityType.JOB_HISTORY, finalJob);
-                    dataStore.store(db, DataEntityType.JOB_CONF_HISTORY, jobConf);
-                    dataStore.store(db, DataEntityType.COUNTER_HISTORY, jobCounters);
+                    dataStore.delete(db, DataEntityCollection.APP, appId);
+                    dataStore.delete(db, DataEntityCollection.JOB, Collections.singletonMap("appId", (Object) appId));
+                    dataStore.delete(db, DataEntityCollection.TASK, Collections.singletonMap("appId", (Object) appId));
+                    dataStore.delete(db, DataEntityCollection.JOB_CONF, finalJob.getId());
+                    dataStore.delete(db, DataEntityCollection.COUNTER, finalJob.getId());
+                    dataStore.store(db, DataEntityCollection.APP_HISTORY, app);
+                    dataStore.store(db, DataEntityCollection.JOB_HISTORY, finalJob);
+                    dataStore.store(db, DataEntityCollection.JOB_CONF_HISTORY, jobConf);
+                    dataStore.store(db, DataEntityCollection.COUNTER_HISTORY, jobCounters);
                     for (TaskProfile task : tasks) {
-                        dataStore.store(db, DataEntityType.TASK_HISTORY, task);
+                        dataStore.store(db, DataEntityCollection.TASK_HISTORY, task);
                     }
                     for (CountersProxy counters : taskCounters) {
                         if (counters == null)
                             continue;
-                        dataStore.delete(db, DataEntityType.COUNTER, counters.getId());
-                        dataStore.store(db, DataEntityType.COUNTER_HISTORY, counters);
+                        dataStore.delete(db, DataEntityCollection.COUNTER, counters.getId());
+                        dataStore.store(db, DataEntityCollection.COUNTER_HISTORY, counters);
                     }
                 } catch (Exception e) {
                     logger.error("Could not move app data to history", e);
@@ -245,10 +245,10 @@ public class ClusterInfoCollector {
     }
 
     private void updateAppInfo(final AppProfile app) {
-        dataStore.updateOrStore(db, DataEntityType.APP, app);
+        dataStore.updateOrStore(db, DataEntityCollection.APP, app);
         if (historyEnabled) {
-            dataStore.store(db, DataEntityType.HISTORY,
-                    new HistoryProfilePBImpl<>(DataEntityType.APP, app));
+            dataStore.store(db, DataEntityCollection.HISTORY,
+                    new HistoryProfilePBImpl<>(DataEntityCollection.APP, app));
         }
 
         if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
@@ -349,26 +349,26 @@ public class ClusterInfoCollector {
             dataStore.runTransaction(db, new DataTransaction() {
                 @Override
                 public void run() throws Exception {
-                    dataStore.updateOrStore(db, DataEntityType.JOB, job);
-                    dataStore.updateOrStore(db, DataEntityType.COUNTER, jobCounters);
+                    dataStore.updateOrStore(db, DataEntityCollection.JOB, job);
+                    dataStore.updateOrStore(db, DataEntityCollection.COUNTER, jobCounters);
                     for (CountersProxy counters : taskCounters)
-                        dataStore.updateOrStore(db, DataEntityType.COUNTER, counters);
+                        dataStore.updateOrStore(db, DataEntityCollection.COUNTER, counters);
                     for (TaskProfile task : tasks) {
-                        dataStore.updateOrStore(db, DataEntityType.TASK, task);
+                        dataStore.updateOrStore(db, DataEntityCollection.TASK, task);
                     }
                 }
             });
 
             if (historyEnabled) {
-                dataStore.store(db, DataEntityType.HISTORY,
-                        new HistoryProfilePBImpl<>(DataEntityType.APP, app));
-                dataStore.store(db, DataEntityType.HISTORY,
-                        new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
-                dataStore.store(db, DataEntityType.HISTORY,
-                        new HistoryProfilePBImpl<>(DataEntityType.COUNTER, jobCounters));
+                dataStore.store(db, DataEntityCollection.HISTORY,
+                        new HistoryProfilePBImpl<>(DataEntityCollection.APP, app));
+                dataStore.store(db, DataEntityCollection.HISTORY,
+                        new HistoryProfilePBImpl<>(DataEntityCollection.JOB, job));
+                dataStore.store(db, DataEntityCollection.HISTORY,
+                        new HistoryProfilePBImpl<>(DataEntityCollection.COUNTER, jobCounters));
                 for (TaskProfile task : tasks) {
-                    dataStore.store(db, DataEntityType.HISTORY,
-                            new HistoryProfilePBImpl<>(DataEntityType.TASK, task));
+                    dataStore.store(db, DataEntityCollection.HISTORY,
+                            new HistoryProfilePBImpl<>(DataEntityCollection.TASK, task));
                 }
             }
         } else {
@@ -379,8 +379,8 @@ public class ClusterInfoCollector {
                 try {
                     JobProfile job = getAndStoreSubmittedJobInfo(conf, app.getId(), app.getUser(), db);
                     if (historyEnabled && job != null) {
-                        dataStore.store(db, DataEntityType.HISTORY,
-                                new HistoryProfilePBImpl<>(DataEntityType.JOB, job));
+                        dataStore.store(db, DataEntityCollection.HISTORY,
+                                new HistoryProfilePBImpl<>(DataEntityCollection.JOB, job));
                     }
                 } catch (Exception e) {
                     logger.error("Could not get job info from staging dir!", e);
@@ -421,8 +421,8 @@ public class ClusterInfoCollector {
             @Override
             public void run() throws Exception {
                 try {
-                    dataStore.store(db, DataEntityType.JOB, job);
-                    dataStore.store(db, DataEntityType.JOB_CONF, confProxy);
+                    dataStore.store(db, DataEntityCollection.JOB, job);
+                    dataStore.store(db, DataEntityCollection.JOB_CONF, confProxy);
                 } catch (DuplicateKeyException e) {
                     // this is possible; do nothing
                 } catch (Exception e) {
