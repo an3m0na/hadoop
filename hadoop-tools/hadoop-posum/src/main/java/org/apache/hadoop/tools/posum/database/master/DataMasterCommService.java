@@ -6,11 +6,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.common.records.field.*;
+import org.apache.hadoop.tools.posum.common.records.payload.*;
+import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
@@ -93,12 +94,12 @@ public class DataMasterCommService extends CompositeService implements DataMaste
         try {
             switch (request.getType()) {
                 case ENTITY_BY_ID:
-                    EntityByIdPayload idPayload = (EntityByIdPayload) request.getPayload();
+                    FindByIdCall idPayload = (FindByIdCall) request.getPayload();
                     GeneralDataEntity ret =
                             dmContext.getDataStore().findById(idPayload.getEntityDB(),
-                                    idPayload.getEntityType(),
+                                    idPayload.getEntityCollection(),
                                     idPayload.getId());
-                    SingleEntityPayload entityPayload = SingleEntityPayload.newInstance(idPayload.getEntityType(), ret);
+                    SingleEntityPayload entityPayload = SingleEntityPayload.newInstance(idPayload.getEntityCollection(), ret);
                     return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
                 case JOB_FOR_APP:
                     JobForAppPayload jobForAppPayload = (JobForAppPayload) request.getPayload();

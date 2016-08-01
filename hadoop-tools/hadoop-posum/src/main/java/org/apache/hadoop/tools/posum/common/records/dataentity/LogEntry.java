@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import org.apache.hadoop.tools.posum.common.records.field.impl.pb.TaskPredictionPBImpl;
+import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.TaskPredictionPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.bson.types.ObjectId;
 import org.mongojack.Id;
@@ -16,7 +16,7 @@ public class LogEntry<T> implements GeneralDataEntity {
     public enum Type {
         POLICY_CHANGE(String.class, DataEntityCollection.LOG_SCHEDULER),
         POLICY_MAP(PolicyMap.class, DataEntityCollection.POSUM_STATS),
-        TASK_PREDICTION(TaskPredictionPBImpl.class, DataEntityCollection.LOG_PREDICTOR);
+        TASK_PREDICTION(TaskPredictionPayloadPBImpl.class, DataEntityCollection.LOG_PREDICTOR);
 
         @JsonIgnore
         private Class detailsClass;

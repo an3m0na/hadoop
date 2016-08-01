@@ -7,7 +7,7 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.field.StringStringMapPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.StringStringMapPayload;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.records.request.RegistrationRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -23,10 +23,8 @@ import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerCli
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
-import org.apache.hadoop.tools.posum.database.master.DataMaster;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorClient;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 

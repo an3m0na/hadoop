@@ -21,17 +21,17 @@ message EntityDBProto {
 }
 
 enum EntityCollectionProto {
-    TYPE_APP = 0;
-    TYPE_JOB = 1;
-    TYPE_TASK = 2;
-    TYPE_JOB_CONF = 3;
-    TYPE_COUNTER = 4;
-    TYPE_APP_HISTORY = 5;
-    TYPE_JOB_HISTORY = 6;
-    TYPE_TASK_HISTORY = 7;
-    TYPE_JOB_CONF_HISTORY = 8;
-    TYPE_COUNTER_HISTORY = 9;
-    TYPE_HISTORY = 10;
+    COLL_APP = 0;
+    COLL_JOB = 1;
+    COLL_TASK = 2;
+    COLL_JOB_CONF = 3;
+    COLL_COUNTER = 4;
+    COLL_APP_HISTORY = 5;
+    COLL_JOB_HISTORY = 6;
+    COLL_TASK_HISTORY = 7;
+    COLL_JOB_CONF_HISTORY = 8;
+    COLL_COUNTER_HISTORY = 9;
+    COLL_HISTORY = 10;
 }
 
 message AppProfileProto {
@@ -153,13 +153,13 @@ message TaskProfileProto {
 
 message HistoryProfileProto {
     required string id = 1;
-    required EntityCollectionProto type = 2;
+    required EntityCollectionProto collection = 2;
     required int64 timestamp = 3;
     required string originalId = 4;
     required bytes original = 5;
 }
 
-message EntityPropertyProto {
+message SimplePropertyPayloadProto {
     required PropertyTypeProto type = 1;
     required string name = 2;
     required string value = 3;
@@ -185,28 +185,48 @@ message JobForAppPayloadProto {
     required string appId = 3;
 }
 
-message EntityByIdPayloadProto {
+message ByParamsProto {
     required EntityDBProto entityDB = 1;
-    optional EntityCollectionProto entityType = 2;
-    required string id = 3;
-}
-
-message SingleEntityPayloadProto {
-    required EntityCollectionProto entityType = 1;
-    optional bytes entity = 2;
-}
-
-message SearchRequestProto {
-    required EntityDBProto entityDB = 1;
-    required EntityCollectionProto entityType = 2;
-    repeated EntityPropertyProto properties = 3;
+    required EntityCollectionProto collection = 2;
+    repeated SimplePropertyPayloadProto properties = 3;
     optional int32 offset = 4;
     optional int32 limit = 5;
 }
 
-message MultiEntityPayloadProto {
-    required EntityCollectionProto entityType = 1;
+message ByIdProto {
+    required EntityDBProto entityDB = 1;
+    required EntityCollectionProto collection = 2;
+    required string id = 3;
+}
+
+message TransactionCallProto {
+    optional EntityDBProto entityDB = 1;
+    repeated DatabaseCallProto calls = 2;
+}
+
+message SingleEntityProto {
+    optional EntityDBProto entityDB = 1;
+    required EntityCollectionProto collection = 2;
+    optional bytes entity = 3;
+}
+
+message MultiEntityProto {
+    required EntityCollectionProto collection = 1;
     repeated bytes entities = 2;
+}
+
+message DatabaseCallProto {
+    required CallTypeProto type = 1;
+    required bytes call = 2;
+
+    enum CallTypeProto {
+        CALL_FIND_BY_ID = 0;
+        CALL_FIND_BY_PARAMS = 1;
+        CALL_STORE = 2;
+        CALL_UPDATE_OR_STORE = 3;
+        CALL_DELETE_BY_ID = 4;
+        CALL_DELETE_BY_PARAMS = 5;
+    }
 }
 
 message SimpleRequestProto {
@@ -241,19 +261,19 @@ message SimpleResponseProto {
     }
 }
 
-message SimulationResultProto {
+message SimulationResultPayloadProto {
     required string policyName = 1;
-    optional CompoundScoreProto score = 2;
+    optional CompoundScorePayloadProto score = 2;
 }
 
-message CompoundScoreProto {
+message CompoundScorePayloadProto {
     optional double runtime = 1;
     optional double penalty = 2;
     optional double cost = 3;
 }
 
 message HandleSimResultRequestProto {
-    repeated SimulationResultProto results = 1;
+    repeated SimulationResultPayloadProto results = 1;
 }
 
 message RegistrationRequestProto {
@@ -293,7 +313,7 @@ message CounterInfoPayloadProto {
     optional int64 reduce = 4;
 }
 
-message TaskPredictionProto {
+message TaskPredictionPayloadProto {
     required string predictor = 1;
     required string id = 2;
     optional int64 duration = 3;

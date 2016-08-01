@@ -4,12 +4,12 @@ import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
-import org.apache.hadoop.tools.posum.common.records.field.EntityProperty;
-import org.apache.hadoop.tools.posum.common.records.field.impl.pb.EntityPropertyPBImpl;
+import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SimplePropertyPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SearchRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SearchRequestProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.POSUMProtos.ByParamsProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.ByParamsProtoOrBuilder;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,22 +20,22 @@ import java.util.Map;
  */
 public class SearchRequestPBImpl extends SearchRequest {
 
-    private SearchRequestProto proto = SearchRequestProto.getDefaultInstance();
-    private SearchRequestProto.Builder builder = null;
+    private ByParamsProto proto = ByParamsProto.getDefaultInstance();
+    private ByParamsProto.Builder builder = null;
     private boolean viaProto = false;
 
     Map<String, Object> properties;
 
     public SearchRequestPBImpl() {
-        builder = SearchRequestProto.newBuilder();
+        builder = ByParamsProto.newBuilder();
     }
 
-    public SearchRequestPBImpl(SearchRequestProto proto) {
+    public SearchRequestPBImpl(ByParamsProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public SearchRequestProto getProto() {
+    public ByParamsProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -67,12 +67,12 @@ public class SearchRequestPBImpl extends SearchRequest {
         builder.clearProperties();
         if (properties == null)
             return;
-        Iterable<POSUMProtos.EntityPropertyProto> iterable =
-                new Iterable<POSUMProtos.EntityPropertyProto>() {
+        Iterable<POSUMProtos.SimplePropertyPayloadProto> iterable =
+                new Iterable<POSUMProtos.SimplePropertyPayloadProto>() {
 
                     @Override
-                    public Iterator<POSUMProtos.EntityPropertyProto> iterator() {
-                        return new Iterator<POSUMProtos.EntityPropertyProto>() {
+                    public Iterator<POSUMProtos.SimplePropertyPayloadProto> iterator() {
+                        return new Iterator<POSUMProtos.SimplePropertyPayloadProto>() {
 
                             Iterator<String> keyIter = properties.keySet().iterator();
 
@@ -82,12 +82,12 @@ public class SearchRequestPBImpl extends SearchRequest {
                             }
 
                             @Override
-                            public POSUMProtos.EntityPropertyProto next() {
+                            public POSUMProtos.SimplePropertyPayloadProto next() {
                                 String key = keyIter.next();
                                 Object value = properties.get(key);
-                                EntityPropertyPBImpl property = new EntityPropertyPBImpl();
+                                SimplePropertyPayloadPBImpl property = new SimplePropertyPayloadPBImpl();
                                 property.setName(key);
-                                property.setType(EntityProperty.PropertyType.getByClass(value.getClass()));
+                                property.setType(SimplePropertyPayload.PropertyType.getByClass(value.getClass()));
                                 property.setValue(value);
                                 return property.getProto();
                             }
@@ -112,7 +112,7 @@ public class SearchRequestPBImpl extends SearchRequest {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = SearchRequestProto.newBuilder(proto);
+            builder = ByParamsProto.newBuilder(proto);
         }
         viaProto = false;
     }
@@ -120,7 +120,7 @@ public class SearchRequestPBImpl extends SearchRequest {
 
     @Override
     public DataEntityDB getEntityDB() {
-        SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
+        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
         return new DataEntityDBPBImpl(p.getEntityDB());
     }
 
@@ -132,23 +132,23 @@ public class SearchRequestPBImpl extends SearchRequest {
 
     @Override
     public DataEntityCollection getEntityType() {
-        SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityCollection.valueOf(p.getEntityType().name().substring("TYPE_".length()));
+        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
+        return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
     }
 
     @Override
     public void setEntityType(DataEntityCollection type) {
         maybeInitBuilder();
-        builder.setEntityType(POSUMProtos.EntityCollectionProto.valueOf("TYPE_" + type.name()));
+        builder.setCollection(POSUMProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
     }
 
     @Override
     public Map<String, Object> getProperties() {
         if (this.properties == null) {
-            SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
+            ByParamsProtoOrBuilder p = viaProto ? proto : builder;
             this.properties = new HashMap<>(p.getPropertiesCount());
-            for (POSUMProtos.EntityPropertyProto propertyProto : p.getPropertiesList()) {
-                EntityProperty property = new EntityPropertyPBImpl(propertyProto);
+            for (POSUMProtos.SimplePropertyPayloadProto propertyProto : p.getPropertiesList()) {
+                SimplePropertyPayload property = new SimplePropertyPayloadPBImpl(propertyProto);
                 properties.put(property.getName(), property.getValue());
             }
         }
@@ -165,7 +165,7 @@ public class SearchRequestPBImpl extends SearchRequest {
 
     @Override
     public int getLimitOrZero() {
-        SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
+        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
         return p.getLimit();
     }
 
@@ -177,7 +177,7 @@ public class SearchRequestPBImpl extends SearchRequest {
 
     @Override
     public int getOffsetOrZero() {
-        SearchRequestProtoOrBuilder p = viaProto ? proto : builder;
+        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
         return p.getOffset();
     }
 

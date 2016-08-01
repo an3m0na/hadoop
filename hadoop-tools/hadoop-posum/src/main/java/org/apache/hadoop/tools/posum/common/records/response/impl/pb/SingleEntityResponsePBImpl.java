@@ -2,8 +2,8 @@ package org.apache.hadoop.tools.posum.common.records.response.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.field.impl.pb.SingleEntityPayloadPBImpl;
+import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SingleEntityPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 
 /**
@@ -26,6 +26,6 @@ public class SingleEntityResponsePBImpl extends SimpleResponsePBImpl<SingleEntit
 
     @Override
     public SingleEntityPayload bytesToPayload(ByteString data) throws InvalidProtocolBufferException {
-        return new SingleEntityPayloadPBImpl(POSUMProtos.SingleEntityPayloadProto.parseFrom(data));
+        return new SingleEntityPayloadPBImpl(POSUMProtos.SingleEntityProto.parseFrom(data));
     }
 }

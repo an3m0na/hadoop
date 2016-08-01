@@ -6,7 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
-import org.apache.hadoop.tools.posum.common.records.field.TaskPrediction;
+import org.apache.hadoop.tools.posum.common.records.payload.TaskPredictionPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
@@ -81,7 +81,7 @@ public class POSUMInfoCollector {
                     try {
                         duration = basicPredictor.predictTaskDuration(taskId);
                         dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
-                                TaskPrediction.newInstance(basicPredictor.getClass().getSimpleName(), taskId, duration)));
+                                TaskPredictionPayload.newInstance(basicPredictor.getClass().getSimpleName(), taskId, duration)));
                     } catch (Exception e) {
                         if (!(e instanceof POSUMException))
                             logger.error("Could not predict task duration for " + taskId + " due to: ", e);
@@ -92,7 +92,7 @@ public class POSUMInfoCollector {
                         duration = standardPredictor.predictTaskDuration(taskId);
 
                         dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
-                                TaskPrediction.newInstance(standardPredictor.getClass().getSimpleName(), taskId, duration)));
+                                TaskPredictionPayload.newInstance(standardPredictor.getClass().getSimpleName(), taskId, duration)));
                     } catch (Exception e) {
                         if (!(e instanceof POSUMException))
                             logger.error("Could not predict task duration for " + taskId + " due to: ", e);
@@ -103,7 +103,7 @@ public class POSUMInfoCollector {
                         duration = detailedPredictor.predictTaskDuration(taskId);
 
                         dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
-                                TaskPrediction.newInstance(detailedPredictor.getClass().getSimpleName(), taskId, duration)));
+                                TaskPredictionPayload.newInstance(detailedPredictor.getClass().getSimpleName(), taskId, duration)));
                     } catch (Exception e) {
                         if (!(e instanceof POSUMException))
                             logger.error("Could not predict task duration for " + taskId + " due to: ", e);

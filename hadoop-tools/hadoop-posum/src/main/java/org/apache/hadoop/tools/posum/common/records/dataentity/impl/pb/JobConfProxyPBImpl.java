@@ -5,7 +5,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
-import org.apache.hadoop.tools.posum.common.records.field.impl.pb.StringStringMapPayloadPBImpl;
+import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.StringStringMapPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobConfProxyProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobConfProxyProtoOrBuilder;
 

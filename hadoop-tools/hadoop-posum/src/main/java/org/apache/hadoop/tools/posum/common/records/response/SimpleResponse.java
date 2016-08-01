@@ -1,6 +1,5 @@
 package org.apache.hadoop.tools.posum.common.records.response;
 
-import org.apache.hadoop.tools.posum.common.records.field.impl.pb.StringListPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.Utils;

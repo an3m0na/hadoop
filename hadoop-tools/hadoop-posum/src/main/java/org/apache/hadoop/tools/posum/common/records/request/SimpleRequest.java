@@ -1,7 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.request;
 
 
-import org.apache.hadoop.tools.posum.common.records.field.SaveFlexFieldsPayload;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto.SimpleRequestTypeProto;

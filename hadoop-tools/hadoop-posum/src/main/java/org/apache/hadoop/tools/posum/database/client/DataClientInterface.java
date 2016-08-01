@@ -18,6 +18,7 @@ public interface DataClientInterface {
 
     <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert);
 
+    //TODO turn this into a string that represents the upsertedId
     <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityCollection apps, T toUpdate);
 
     void delete(DataEntityDB db, DataEntityCollection collection, String id);

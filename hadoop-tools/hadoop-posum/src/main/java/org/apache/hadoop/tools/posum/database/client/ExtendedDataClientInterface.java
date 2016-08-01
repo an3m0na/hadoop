@@ -10,7 +10,20 @@ import java.util.Map;
 /**
  * Created by ane on 7/28/16.
  */
-public interface ExtendedDataClientInterface extends DataClientInterface{
+public interface ExtendedDataClientInterface extends DataClientInterface {
     Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections();
+
     void clear();
+
+    void lockForRead(DataEntityDB db);
+
+    void lockForWrite(DataEntityDB db);
+
+    void unlockForRead(DataEntityDB db);
+
+    void unlockForWrite(DataEntityDB db);
+
+    void lockForWrite();
+
+    void unlockForWrite();
 }
