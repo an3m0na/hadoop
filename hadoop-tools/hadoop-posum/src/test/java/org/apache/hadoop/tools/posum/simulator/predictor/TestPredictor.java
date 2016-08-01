@@ -4,7 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
-import org.apache.hadoop.tools.posum.test.MockDataStoreImpl;
+import org.apache.hadoop.tools.posum.database.mock.MockDataStoreImpl;
 import org.junit.Before;
 
 import java.lang.reflect.InvocationTargetException;

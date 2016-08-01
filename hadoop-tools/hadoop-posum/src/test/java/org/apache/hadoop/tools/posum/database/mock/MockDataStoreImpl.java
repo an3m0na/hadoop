@@ -1,6 +1,7 @@
-package org.apache.hadoop.tools.posum.test;
+package org.apache.hadoop.tools.posum.database.mock;
 
 
+import com.mongodb.DuplicateKeyException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -113,7 +114,7 @@ public class MockDataStoreImpl implements ExtendedDataClientInterface {
                 toInsert.setId(ObjectId.get().toHexString());
             } else {
                 if (findById(db, collection, toInsert.getId()) != null) {
-                    throw new POSUMException("Duplicate id " + toInsert.getId());
+                    throw new POSUMException("Cannot insert duplicate key " + toInsert.getId());
                 }
             }
             this.getTypedEntities(db, collection).put(toInsert.getId(), toInsert);

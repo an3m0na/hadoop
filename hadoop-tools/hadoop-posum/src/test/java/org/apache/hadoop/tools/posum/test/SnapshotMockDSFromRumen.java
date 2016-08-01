@@ -5,6 +5,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.database.mock.MockDataStoreImpl;
 import org.apache.hadoop.tools.rumen.JobTraceReader;
 import org.apache.hadoop.tools.rumen.LoggedJob;
 import org.apache.hadoop.tools.rumen.LoggedTask;
@@ -18,7 +19,7 @@ import java.util.*;
  * Created by ane on 7/26/16.
  */
 //TODO rewrite this to make use of MockDataStoreImpl features
-public class SnapshotMockDSFromRumen extends MockDataStoreImpl{// implements TraceSnapshotMockDS {
+public class SnapshotMockDSFromRumen extends MockDataStoreImpl {// implements TraceSnapshotMockDS {
     private List<JobProfile> jobList = new ArrayList<>();
     private Map<String, Map<String, TaskProfile>> taskMap = new HashMap<>();
     private long simulationTime = 0;
