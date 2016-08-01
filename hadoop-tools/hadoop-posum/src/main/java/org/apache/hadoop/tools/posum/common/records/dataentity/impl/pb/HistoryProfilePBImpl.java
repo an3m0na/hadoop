@@ -84,13 +84,13 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
     @Override
     public DataEntityCollection getType() {
         HistoryProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityCollection.valueOf(p.getType().name().substring("TYPE_".length()));
+        return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
     }
 
     @Override
     public void setType(DataEntityCollection type) {
         maybeInitBuilder();
-        builder.setType(POSUMProtos.EntityCollectionProto.valueOf("TYPE_" + type.name()));
+        builder.setCollection(POSUMProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
     }
 
     @Override

@@ -2,11 +2,9 @@ package org.apache.hadoop.tools.posum.common.records.response.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.hadoop.tools.posum.common.records.field.StringStringMapPayload;
-import org.apache.hadoop.tools.posum.common.records.field.impl.pb.StringStringMapPayloadPBImpl;
+import org.apache.hadoop.tools.posum.common.records.payload.StringStringMapPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.StringStringMapPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
-
-import java.util.Map;
 
 /**
  * Created by ane on 3/20/16.

@@ -36,6 +36,7 @@ public class MockDataStoreImpl implements ExtendedDataClientInterface {
             storedEntities.put(db, dbEntities);
             locks.put(db.getId(), new ReentrantReadWriteLock());
         }
+        locks.put(Integer.MAX_VALUE, new ReentrantReadWriteLock());
     }
 
     private <T extends GeneralDataEntity> Map<String, T> getTypedEntities(DataEntityDB db, DataEntityCollection collection) {
@@ -222,5 +223,37 @@ public class MockDataStoreImpl implements ExtendedDataClientInterface {
                 collectionEntry.getValue().clear();
             }
         }
+    }
+
+    @Override
+    public void lockForRead(DataEntityDB db) {
+        locks.get(db.getId()).readLock().lock();
+    }
+
+    @Override
+    public void lockForWrite(DataEntityDB db) {
+        locks.get(db.getId()).writeLock().lock();
+    }
+
+    @Override
+    public void unlockForRead(DataEntityDB db) {
+        locks.get(db.getId()).readLock().unlock();
+    }
+
+    @Override
+    public void unlockForWrite(DataEntityDB db) {
+        locks.get(db.getId()).writeLock().unlock();
+    }
+
+    @Override
+    public void lockForWrite() {
+        //TODO make this affect something
+        locks.get(Integer.MAX_VALUE).writeLock().lock();
+    }
+
+    @Override
+    public void unlockForWrite() {
+        //TODO make this affect something
+        locks.get(Integer.MAX_VALUE).writeLock().lock();
     }
 }

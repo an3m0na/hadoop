@@ -2,10 +2,8 @@ package org.apache.hadoop.tools.posum.common.records.request.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.hadoop.tools.posum.common.records.field.JobForAppPayload;
-import org.apache.hadoop.tools.posum.common.records.field.SaveFlexFieldsPayload;
-import org.apache.hadoop.tools.posum.common.records.field.impl.pb.JobForAppPayloadPBImpl;
-import org.apache.hadoop.tools.posum.common.records.field.impl.pb.SaveFlexFieldsPayloadPBImpl;
+import org.apache.hadoop.tools.posum.common.records.payload.SaveFlexFieldsPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SaveFlexFieldsPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 
 /**

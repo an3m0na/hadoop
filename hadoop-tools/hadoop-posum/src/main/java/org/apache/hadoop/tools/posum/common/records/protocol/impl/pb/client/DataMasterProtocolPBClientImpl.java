@@ -4,9 +4,9 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
-import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.field.StringListPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -20,7 +20,6 @@ import org.apache.hadoop.tools.posum.common.records.response.impl.pb.StringListR
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SearchRequestProto;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
 
@@ -65,7 +64,7 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
 
     @Override
     public SimpleResponse<MultiEntityPayload> listEntities(SearchRequest request) throws IOException, YarnException {
-        SearchRequestProto requestProto =
+        POSUMProtos.ByParamsProto requestProto =
                 ((SearchRequestPBImpl) request).getProto();
         try {
             return new MultiEntityResponsePBImpl(
@@ -78,7 +77,7 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
 
     @Override
     public SimpleResponse<StringListPayload> listIds(SearchRequest request) throws IOException, YarnException {
-        SearchRequestProto requestProto =
+        POSUMProtos.ByParamsProto requestProto =
                 ((SearchRequestPBImpl) request).getProto();
         try {
             return new StringListResponsePBImpl(

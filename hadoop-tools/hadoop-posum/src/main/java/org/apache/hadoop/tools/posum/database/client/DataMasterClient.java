@@ -5,15 +5,16 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.common.records.field.*;
+import org.apache.hadoop.tools.posum.common.records.payload.*;
+import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
-import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
@@ -69,7 +70,7 @@ public class DataMasterClient extends AbstractService implements DataClientInter
         try {
             SingleEntityPayload payload = Utils.handleError("findById",
                     dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.ENTITY_BY_ID,
-                            EntityByIdPayload.newInstance(db, collection, id)))
+                            FindByIdCall.newInstance(db, collection, id)))
             ).getPayload();
             if (payload != null)
                 return (T) payload.getEntity();

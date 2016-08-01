@@ -2,14 +2,14 @@ package org.apache.hadoop.tools.posum.common.records.request.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.hadoop.tools.posum.common.records.field.EntityByIdPayload;
-import org.apache.hadoop.tools.posum.common.records.field.impl.pb.EntityByIdPayloadPBImpl;
+import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
+import org.apache.hadoop.tools.posum.common.records.call.impl.pb.FindByIdCallPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 
 /**
  * Created by ane on 3/20/16.
  */
-public class EntityByIdRequestPBImpl extends  SimpleRequestPBImpl<EntityByIdPayload>  {
+public class EntityByIdRequestPBImpl extends  SimpleRequestPBImpl<FindByIdCall>  {
     public EntityByIdRequestPBImpl() {
         super();
     }
@@ -20,12 +20,12 @@ public class EntityByIdRequestPBImpl extends  SimpleRequestPBImpl<EntityByIdPayl
 
 
     @Override
-    public ByteString payloadToBytes(EntityByIdPayload payload) {
-        return ((EntityByIdPayloadPBImpl)payload).getProto().toByteString();
+    public ByteString payloadToBytes(FindByIdCall payload) {
+        return ((FindByIdCallPBImpl)payload).getProto().toByteString();
     }
 
     @Override
-    public EntityByIdPayload bytesToPayload(ByteString data) throws InvalidProtocolBufferException {
-        return new EntityByIdPayloadPBImpl(POSUMProtos.EntityByIdPayloadProto.parseFrom(data));
+    public FindByIdCall bytesToPayload(ByteString data) throws InvalidProtocolBufferException {
+        return new FindByIdCallPBImpl(POSUMProtos.ByIdProto.parseFrom(data));
     }
 }

@@ -4,7 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
-import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
+import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
@@ -55,7 +55,7 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
                     break;
                 case SIMULATION_FINISH:
                     simulationManager.simulationFinished();
-                    ConcurrentSkipListSet<SimulationResult> results = event.getCastContent();
+                    ConcurrentSkipListSet<SimulationResultPayload> results = event.getCastContent();
                     logger.trace("Policy scores: " + results);
                     decidePolicyChange(results);
                     break;
@@ -67,13 +67,13 @@ public class Orchestrator extends CompositeService implements EventHandler<POSUM
         }
     }
 
-    private void decidePolicyChange(ConcurrentSkipListSet<SimulationResult> results) {
+    private void decidePolicyChange(ConcurrentSkipListSet<SimulationResultPayload> results) {
         if (!switchEnabled)
             return;
         MetaSchedulerInterface scheduler = pmContext.getCommService().getScheduler();
         if (scheduler == null)
             return;
-        SimulationResult bestResult = results.last();
+        SimulationResultPayload bestResult = results.last();
         if (bestResult == null)
             return;
         logger.info("Switching to best policy: " + bestResult.getPolicyName());

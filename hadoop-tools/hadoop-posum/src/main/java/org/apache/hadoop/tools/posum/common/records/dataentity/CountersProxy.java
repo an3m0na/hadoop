@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity;
 
-import org.apache.hadoop.tools.posum.common.records.field.CounterGroupInfoPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
 
 import java.util.List;
 

@@ -11,7 +11,6 @@ import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SearchReques
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.StringListResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SearchRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
@@ -41,7 +40,7 @@ public class DataMasterProtocolPBServiceImpl implements DataMasterProtocolPB {
 
     @Override
     public SimpleResponseProto listEntities(RpcController controller,
-                                                 SearchRequestProto proto) throws ServiceException {
+                                                 POSUMProtos.ByParamsProto proto) throws ServiceException {
         SearchRequestPBImpl request = new SearchRequestPBImpl(proto);
         try {
             SimpleResponse response = real.listEntities(request);
@@ -53,7 +52,7 @@ public class DataMasterProtocolPBServiceImpl implements DataMasterProtocolPB {
 
     @Override
     public SimpleResponseProto listIds(RpcController controller,
-                                            SearchRequestProto proto) throws ServiceException {
+                                            POSUMProtos.ByParamsProto proto) throws ServiceException {
         SearchRequestPBImpl request = new SearchRequestPBImpl(proto);
         try {
             SimpleResponse response = real.listIds(request);

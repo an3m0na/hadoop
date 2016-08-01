@@ -1,11 +1,11 @@
 package org.apache.hadoop.tools.posum.common.records.protocol;
 
-import org.apache.hadoop.tools.posum.common.records.field.StringListPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
+import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
-import org.apache.hadoop.tools.posum.common.records.field.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.field.SingleEntityPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.StandardProtocol;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
