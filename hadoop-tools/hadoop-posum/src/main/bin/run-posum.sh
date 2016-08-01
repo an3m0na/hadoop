@@ -6,7 +6,6 @@ printUsage() {
   echo "                 --stop"
   echo "                 --restart"
   echo "                 --maxmem=<maximum JVM memory for each process in MB>"
-  echo "                 [--print-simulation]"
   echo                  
 }
 ###############################################################################
@@ -15,7 +14,7 @@ parseArgs() {
   for i in $*
   do
     case $i in
-    --maxmem=*)
+      --maxmem=*)
       maxmem=${i#*=}
       ;;
       --stop)
@@ -23,9 +22,6 @@ parseArgs() {
       ;;
       --restart)
       doRestart=true
-      ;;
-    --print-simulation)
-      printsimulation="true"
       ;;
     *)
       echo "Invalid option"
@@ -68,10 +64,6 @@ runMaster() {
         if [[ ${doStop} == true ]]; then
             return
         fi
-    fi
-
-    if [[ "${printsimulation}" == "true" ]] ; then
-        args="${args} -printsimulation"
     fi
 
     echo ">>> Starting POSUM processes" > run-posum.out

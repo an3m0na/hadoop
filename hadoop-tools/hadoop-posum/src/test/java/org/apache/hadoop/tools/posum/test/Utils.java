@@ -9,6 +9,10 @@ import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 /**
  * Created by ane on 7/29/16.
  */
@@ -18,7 +22,7 @@ public class Utils {
     public static final String FIRST_USER = "dummy";
     public static final String SECOND_USER = "geek";
 
-    public static void loadThreeDefaultAppsAndJobs(Long clusterTimestamp, DBInterface db){
+    public static void loadThreeDefaultAppsAndJobs(Long clusterTimestamp, DBInterface db) {
         AppProfile app1 = Records.newRecord(AppProfile.class);
         ApplicationId app1Id = ApplicationId.newInstance(clusterTimestamp, 1);
         app1.setId(app1Id.toString());
@@ -88,5 +92,34 @@ public class Utils {
         job3.setStartTime(app3.getStartTime());
         job3.setFinishTime(app3.getFinishTime());
         db.store(DataEntityCollection.JOB, job3);
+    }
+
+    private static String getMongoScriptCall() {
+        String scriptLocation = Utils.class.getClassLoader().getResource("run-mongo.sh").getFile();
+        return "/bin/bash " + scriptLocation;
+    }
+
+    public static void runMongoDB() throws IOException, InterruptedException {
+        runProcess(getMongoScriptCall());
+    }
+
+    public static void stopMongoDB() throws IOException, InterruptedException {
+        runProcess(getMongoScriptCall() + " --stop");
+    }
+
+    public static void runProcess(String command) throws IOException, InterruptedException {
+        Process process = Runtime.getRuntime().exec(command);
+        process.waitFor();
+        if (process.exitValue() != 0) {
+            System.out.println("Error stopping Mongo database:");
+            String s;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            while ((s = reader.readLine()) != null)
+                System.out.println(s);
+            reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            while ((s = reader.readLine()) != null)
+                System.out.println(s);
+            throw new RuntimeException("Could not stop MongoDB");
+        }
     }
 }

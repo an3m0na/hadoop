@@ -4,7 +4,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface;
-import org.apache.hadoop.tools.posum.test.MockDataStoreImpl;
+import org.apache.hadoop.tools.posum.database.mock.MockDataStoreImpl;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.junit.Before;

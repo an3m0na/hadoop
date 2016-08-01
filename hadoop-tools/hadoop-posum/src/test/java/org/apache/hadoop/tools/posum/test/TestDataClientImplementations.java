@@ -5,6 +5,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.impl.pb.JobIdPBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.client.DataClientInterface;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 import org.junit.Before;
@@ -13,24 +14,24 @@ import org.junit.Test;
 import java.util.*;
 
 import static org.apache.hadoop.tools.posum.test.Utils.*;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Created by ane on 7/26/16.
  */
-public class TestMockDataStoreImpl {
-    private MockDataStoreImpl dataStore;
-    private DBInterface db;
-    private final Long clusterTimestamp = System.currentTimeMillis();
+public abstract class TestDataClientImplementations {
+    protected DataClientInterface dataStore;
+    protected DBInterface db;
+    protected final Long clusterTimestamp = System.currentTimeMillis();
 
     @Before
     public void setUp() throws Exception {
-        dataStore = new MockDataStoreImpl();
+        setUpDataStore();
         db = dataStore.bindTo(DataEntityDB.getMain());
         Utils.loadThreeDefaultAppsAndJobs(clusterTimestamp, db);
     }
+
+    protected abstract void setUpDataStore() throws Exception;
 
     @Test
     public void testFindById() throws Exception {
@@ -106,14 +107,19 @@ public class TestMockDataStoreImpl {
         assertEquals(app3Id.toString(), apps.get(0).getId());
     }
 
-    @Test(expected = POSUMException.class)
+    @Test
     public void testStoreFailsForDuplicate() throws Exception {
-        AppProfile app3 = Records.newRecord(AppProfile.class);
-        ApplicationId app3Id = ApplicationId.newInstance(clusterTimestamp, 3);
-        app3.setId(app3Id.toString());
-        app3.setName("Modified Name");
-        app3.setQueue("Now it has a queue");
-        db.store(DataEntityCollection.APP, app3);
+        try {
+            AppProfile app3 = Records.newRecord(AppProfile.class);
+            ApplicationId app3Id = ApplicationId.newInstance(clusterTimestamp, 3);
+            app3.setId(app3Id.toString());
+            app3.setName("Modified Name");
+            app3.setQueue("Now it has a queue");
+            db.store(DataEntityCollection.APP, app3);
+            fail();
+        } catch (RuntimeException e) {
+            assertTrue(e.getMessage().contains("duplicate key"));
+        }
     }
 
     @Test
@@ -124,17 +130,27 @@ public class TestMockDataStoreImpl {
         String modifiedName = "Modified Name", queueName = "NotNullQueue";
         app3.setName(modifiedName);
         app3.setQueue(queueName);
-        assertTrue(db.updateOrStore(DataEntityCollection.APP, app3));
+        db.updateOrStore(DataEntityCollection.APP, app3);
         List<AppProfile> returnedApps = db.find(DataEntityCollection.APP,
-                Collections.singletonMap("id", (Object) app3.getId()));
+                Collections.singletonMap("name", (Object) modifiedName));
         assertEquals(1, returnedApps.size());
         AppProfile returned = returnedApps.get(0);
-        assertEquals(modifiedName, returned.getName());
+        assertEquals(app3Id.toString(), returned.getId());
         assertEquals(queueName, returned.getQueue());
         assertEquals("", returned.getUser());
         assertEquals(new Long(0), returned.getStartTime());
         assertEquals(new Long(0), returned.getFinishTime());
 
+        AppProfile app4 = Records.newRecord(AppProfile.class);
+        ApplicationId app4Id = ApplicationId.newInstance(clusterTimestamp, 4);
+        app4.setId(app4Id.toString());
+        app4.setName(modifiedName);
+        db.updateOrStore(DataEntityCollection.APP, app4);
+        returnedApps = db.find(DataEntityCollection.APP,
+                Collections.singletonMap("name", (Object) modifiedName));
+        assertEquals(2, returnedApps.size());
+        returned = returnedApps.get(1);
+        assertEquals(app4Id.toString(), returned.getId());
     }
 
 

@@ -99,7 +99,7 @@ public class TestDataMasterClient {
         app.setStartTime(System.currentTimeMillis());
         app.setFinishTime(System.currentTimeMillis() + 10000);
         System.out.println(app);
-        HistoryProfile appHistory = new HistoryProfilePBImpl(DataEntityCollection.APP, app);
+        HistoryProfile appHistory = new HistoryProfilePBImpl<>(DataEntityCollection.APP, app);
         String historyId = myStore.store(db, DataEntityCollection.HISTORY, appHistory);
 
         Map<String, Object> properties = new HashMap<>();
