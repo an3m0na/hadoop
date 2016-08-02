@@ -1,9 +1,12 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.SaveFlexFieldsPayload;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SaveFlexFieldsPayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SaveFlexFieldsPayloadProtoOrBuilder;
 
@@ -12,7 +15,7 @@ import java.util.Map;
 /**
  * Created by ane on 3/20/16.
  */
-public class SaveFlexFieldsPayloadPBImpl extends SaveFlexFieldsPayload {
+public class SaveFlexFieldsPayloadPBImpl extends SaveFlexFieldsPayload implements PayloadPB {
     private SaveFlexFieldsPayloadProto proto = SaveFlexFieldsPayloadProto.getDefaultInstance();
     private SaveFlexFieldsPayloadProto.Builder builder = null;
     private boolean viaProto = false;
@@ -127,6 +130,17 @@ public class SaveFlexFieldsPayloadPBImpl extends SaveFlexFieldsPayload {
     public void setForHistory(boolean forHistory) {
         maybeInitBuilder();
         builder.setForHistory(forHistory);
+    }
+
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = SaveFlexFieldsPayloadProto.parseFrom(data);
+        viaProto = true;
     }
 
 }

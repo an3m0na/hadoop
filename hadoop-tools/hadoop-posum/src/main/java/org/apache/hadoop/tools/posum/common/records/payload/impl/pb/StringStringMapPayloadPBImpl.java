@@ -1,7 +1,10 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.StringStringMapPayload;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.POSUMProtos.StringStringMapPayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.StringStringMapPayloadProtoOrBuilder;
 import org.apache.hadoop.yarn.proto.YarnProtos;
@@ -13,7 +16,7 @@ import java.util.Map;
 /**
  * Created by ane on 3/20/16.
  */
-public class StringStringMapPayloadPBImpl extends StringStringMapPayload {
+public class StringStringMapPayloadPBImpl extends StringStringMapPayload implements PayloadPB {
     private StringStringMapPayloadProto proto = StringStringMapPayloadProto.getDefaultInstance();
     private StringStringMapPayloadProto.Builder builder = null;
     private boolean viaProto = false;
@@ -134,5 +137,15 @@ public class StringStringMapPayloadPBImpl extends StringStringMapPayload {
         this.entries = entries;
     }
 
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = StringStringMapPayloadProto.parseFrom(data);
+        viaProto = true;
+    }
 
 }

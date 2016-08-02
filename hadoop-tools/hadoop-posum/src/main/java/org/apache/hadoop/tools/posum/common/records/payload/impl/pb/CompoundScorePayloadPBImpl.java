@@ -1,14 +1,17 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.POSUMProtos.CompoundScorePayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.CompoundScorePayloadProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
  */
-public class CompoundScorePayloadPBImpl extends CompoundScorePayload {
+public class CompoundScorePayloadPBImpl extends CompoundScorePayload implements PayloadPB {
     private CompoundScorePayloadProto proto = CompoundScorePayloadProto.getDefaultInstance();
     private CompoundScorePayloadProto.Builder builder = null;
     private boolean viaProto = false;
@@ -105,5 +108,16 @@ public class CompoundScorePayloadPBImpl extends CompoundScorePayload {
         maybeInitBuilder();
         if (cost != null)
             builder.setCost(cost);
+    }
+
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = CompoundScorePayloadProto.parseFrom(data);
+        viaProto = true;
     }
 }

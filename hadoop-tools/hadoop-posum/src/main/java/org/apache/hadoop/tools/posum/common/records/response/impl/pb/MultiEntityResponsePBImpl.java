@@ -1,9 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.response.impl.pb;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.MultiEntityPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 
 /**
@@ -19,13 +16,4 @@ public class MultiEntityResponsePBImpl extends SimpleResponsePBImpl<MultiEntityP
         super(proto);
     }
 
-    @Override
-    public ByteString payloadToBytes(MultiEntityPayload payload) {
-        return ((MultiEntityPayloadPBImpl) payload).getProto().toByteString();
-    }
-
-    @Override
-    public MultiEntityPayload bytesToPayload(ByteString data) throws InvalidProtocolBufferException {
-        return new MultiEntityPayloadPBImpl(POSUMProtos.MultiEntityProto.parseFrom(data));
-    }
 }

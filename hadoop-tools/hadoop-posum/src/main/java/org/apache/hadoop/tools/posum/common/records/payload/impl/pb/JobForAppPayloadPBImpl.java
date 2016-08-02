@@ -1,16 +1,19 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.JobForAppPayload;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobForAppPayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobForAppPayloadProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
  */
-public class JobForAppPayloadPBImpl extends JobForAppPayload {
+public class JobForAppPayloadPBImpl extends JobForAppPayload implements PayloadPB {
     private JobForAppPayloadProto proto = JobForAppPayloadProto.getDefaultInstance();
     private JobForAppPayloadProto.Builder builder = null;
     private boolean viaProto = false;
@@ -108,6 +111,17 @@ public class JobForAppPayloadPBImpl extends JobForAppPayload {
     public void setAppId(String id) {
         maybeInitBuilder();
         builder.setAppId(id);
+    }
+
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = JobForAppPayloadProto.parseFrom(data);
+        viaProto = true;
     }
 
 }

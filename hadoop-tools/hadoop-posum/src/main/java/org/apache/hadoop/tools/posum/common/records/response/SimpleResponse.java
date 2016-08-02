@@ -1,46 +1,19 @@
 package org.apache.hadoop.tools.posum.common.records.response;
 
+import org.apache.hadoop.tools.posum.common.records.payload.Payload;
+import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.*;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto.SimpleResponseTypeProto;
+import org.apache.hadoop.yarn.util.Records;
 
 /**
  * Created by ane on 3/31/16.
  */
-public abstract class SimpleResponse<T> {
-
-    public enum Type {
-        VOID(VoidResponsePBImpl.class),
-        SIMPLE_PROPERTY(SimplePropertyResponsePBImpl.class),
-        SINGLE_ENTITY(SingleEntityResponsePBImpl.class),
-        MULTI_ENTITY(MultiEntityResponsePBImpl.class),
-        STRING_STRING_MAP(StringStringMapResponsePBImpl.class),
-        STRING_LIST(StringListResponsePBImpl.class);
-
-        private Class<? extends SimpleResponsePBImpl> implClass;
-        private static final String prefix = "RESP_";
-
-        Type(Class<? extends SimpleResponsePBImpl> implClass) {
-            this.implClass = implClass;
-        }
-
-        public Class<? extends SimpleResponsePBImpl> getImplClass() {
-            return implClass;
-        }
-
-        public static Type fromProto(SimpleResponseTypeProto proto) {
-            return Type.valueOf(proto.name().substring(prefix.length()));
-        }
-
-        public SimpleResponseTypeProto toProto() {
-            return SimpleResponseTypeProto.valueOf(prefix + name());
-        }
-    }
+public abstract class SimpleResponse<T extends Payload> {
 
     public static SimpleResponse newInstance(boolean successful, String text) {
         SimpleResponse response = new VoidResponsePBImpl();
-        response.setType(Type.VOID);
+        response.setType(PayloadType.VOID);
         response.setSuccessful(successful);
         response.setText(text);
         return response;
@@ -57,29 +30,19 @@ public abstract class SimpleResponse<T> {
         return ret;
     }
 
-    public static <T> SimpleResponse<T> newInstance(Type type,
+    public static <T extends Payload> SimpleResponse<T> newInstance(PayloadType payloadType,
                                                     T payload) {
-        SimpleResponse<T> response;
-        try {
-            response = type.getImplClass().newInstance();
-        } catch (InstantiationException | IllegalAccessException ex) {
-            throw new PosumException("Could not instantiate response of type " + type, ex);
-        }
+        SimpleResponse<T> response = Records.newRecord(SimpleResponse.class);
         response.setSuccessful(true);
-        response.setType(type);
+        response.setType(payloadType);
         response.setPayload(payload);
         return response;
     }
 
-    public static <T> SimpleResponse<T> newInstance(Type type, String text, Throwable e) {
-        SimpleResponse<T> response;
-        try {
-            response = type.getImplClass().newInstance();
-        } catch (InstantiationException | IllegalAccessException ex) {
-            throw new PosumException("Could not instantiate response of type " + type, ex);
-        }
+    public static <T extends Payload> SimpleResponse<T> newInstance(PayloadType payloadType, String text, Throwable e) {
+        SimpleResponse<T> response = Records.newRecord(SimpleResponse.class);
         response.setSuccessful(false);
-        response.setType(type);
+        response.setType(payloadType);
         response.setText(text);
         if (e != null)
             response.setException(Utils.getErrorTrace(e));
@@ -98,9 +61,9 @@ public abstract class SimpleResponse<T> {
 
     public abstract void setSuccessful(boolean successful);
 
-    public abstract Type getType();
+    public abstract PayloadType getType();
 
-    public abstract void setType(Type type);
+    public abstract void setType(PayloadType payloadType);
 
     public abstract T getPayload();
 

@@ -6,7 +6,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 /**
  * Created by ane on 8/1/16.
  */
-public interface ByteStringSerializable {
+public interface PayloadPB {
     ByteString getProtoBytes();
 
     void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException;

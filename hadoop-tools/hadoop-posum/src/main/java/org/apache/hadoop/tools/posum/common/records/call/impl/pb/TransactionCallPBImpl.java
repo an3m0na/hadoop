@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.call.ThreePhaseDatabaseCall;
-import org.apache.hadoop.tools.posum.common.records.pb.ByteStringSerializable;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.TransactionCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
@@ -17,7 +17,7 @@ import java.util.*;
 /**
  * Created by ane on 3/20/16.
  */
-public class TransactionCallPBImpl extends TransactionCall implements ByteStringSerializable {
+public class TransactionCallPBImpl extends TransactionCall implements PayloadPB {
     private TransactionCallProto proto = TransactionCallProto.getDefaultInstance();
     private TransactionCallProto.Builder builder = null;
     private boolean viaProto = false;

@@ -1,7 +1,10 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.POSUMProtos.StringListPayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.StringListPayloadProtoOrBuilder;
 
@@ -10,7 +13,7 @@ import java.util.*;
 /**
  * Created by ane on 3/20/16.
  */
-public class StringListPayloadPBImpl extends StringListPayload {
+public class StringListPayloadPBImpl extends StringListPayload implements PayloadPB {
     private StringListPayloadProto proto = StringListPayloadProto.getDefaultInstance();
     private StringListPayloadProto.Builder builder = null;
     private boolean viaProto = false;
@@ -85,6 +88,17 @@ public class StringListPayloadPBImpl extends StringListPayload {
         maybeInitBuilder();
         builder.clearEntries();
         builder.addAllEntries(entries);
+    }
+
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = StringListPayloadProto.parseFrom(data);
+        viaProto = true;
     }
 
 }

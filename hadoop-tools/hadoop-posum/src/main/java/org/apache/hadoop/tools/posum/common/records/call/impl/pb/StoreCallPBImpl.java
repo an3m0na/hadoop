@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.common.records.call.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.pb.ByteStringSerializable;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
@@ -18,7 +18,7 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityProtoOrBuilder;
 /**
  * Created by ane on 3/20/16.
  */
-public class StoreCallPBImpl extends StoreCall implements ByteStringSerializable {
+public class StoreCallPBImpl extends StoreCall implements PayloadPB {
     private SingleEntityProto proto = SingleEntityProto.getDefaultInstance();
     private SingleEntityProto.Builder builder = null;
     private boolean viaProto = false;

@@ -7,6 +7,7 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
+import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.*;
@@ -94,16 +95,20 @@ public class DataCommService extends CompositeService implements DataMasterProto
     }
 
     @Override
-    public SimpleResponse<? extends Payload> executeDatabaseCall(DatabaseCall call) {
-        logger.debug("Got request for call " + call.getClass());
+    public SimpleResponse executeDatabaseCall(DatabaseCall call) {
+        DatabaseCallType callType = DatabaseCallType.fromMappedClass(call.getClass());
+        logger.debug("Got request for call " + callType);
+        if (callType == null) {
+            String message = "Unrecognized call implementation " + call.getClass();
+            logger.error(message);
+            return SimpleResponse.newInstance(false, message);
+        }
         try {
-            //TODO use dynamic payload in response
-            Payload payload = call.executeCall(dmContext.getDataStore());
-            return SimpleResponse.newInstance(SimpleResponse.Type.SIMPLE_PROPERTY, payload);
+            return SimpleResponse.newInstance(callType.getPayloadType(), call.executeCall(dmContext.getDataStore()));
         } catch (Exception e) {
-            String message = "Exception executing call " + call;
+            String message = "Exception executing call " + callType;
             logger.error(message, e);
-            return SimpleResponse.newInstance(SimpleResponse.Type.SIMPLE_PROPERTY, message, e);
+            return SimpleResponse.newInstance(message, e);
         }
     }
 
@@ -119,7 +124,7 @@ public class DataCommService extends CompositeService implements DataMasterProto
                                     idPayload.getEntityCollection(),
                                     idPayload.getId());
                     SingleEntityPayload entityPayload = SingleEntityPayload.newInstance(idPayload.getEntityCollection(), ret);
-                    return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
+                    return SimpleResponse.newInstance(PayloadType.SINGLE_ENTITY, entityPayload);
                 case JOB_FOR_APP:
                     JobForAppPayload jobForAppPayload = (JobForAppPayload) request.getPayload();
                     JobProfile jobProfile;
@@ -130,14 +135,14 @@ public class DataCommService extends CompositeService implements DataMasterProto
                         jobProfile = dmContext.getDataStore().getJobProfileForApp(jobForAppPayload.getEntityDB(), jobForAppPayload.getAppId(), jobForAppPayload.getUser());
                     entityPayload = SingleEntityPayload.newInstance(DataEntityCollection.JOB, jobProfile);
                     logger.debug("Returning profile " + jobProfile);
-                    return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY, entityPayload);
+                    return SimpleResponse.newInstance(PayloadType.SINGLE_ENTITY, entityPayload);
                 default:
-                    return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY,
+                    return SimpleResponse.newInstance(PayloadType.SINGLE_ENTITY,
                             "Could not recognize message type " + request.getType(), null);
             }
         } catch (Exception e) {
             logger.error("Exception resolving request", e);
-            return SimpleResponse.newInstance(SimpleResponse.Type.SINGLE_ENTITY,
+            return SimpleResponse.newInstance(PayloadType.SINGLE_ENTITY,
                     "Exception resolving request " + request, e);
         }
     }
@@ -153,10 +158,10 @@ public class DataCommService extends CompositeService implements DataMasterProto
                             request.getOffsetOrZero(),
                             request.getLimitOrZero());
             MultiEntityPayload payload = MultiEntityPayload.newInstance(request.getEntityType(), ret);
-            return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY, payload);
+            return SimpleResponse.newInstance(PayloadType.MULTI_ENTITY, payload);
         } catch (Exception e) {
             logger.error("Exception resolving request", e);
-            return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY,
+            return SimpleResponse.newInstance(PayloadType.MULTI_ENTITY,
                     "Exception resolving request " + request, e);
         }
     }
@@ -170,10 +175,10 @@ public class DataCommService extends CompositeService implements DataMasterProto
                             request.getEntityType(),
                             request.getProperties());
             StringListPayload payload = StringListPayload.newInstance(ret);
-            return SimpleResponse.newInstance(SimpleResponse.Type.STRING_LIST, payload);
+            return SimpleResponse.newInstance(PayloadType.STRING_LIST, payload);
         } catch (Exception e) {
             logger.error("Exception resolving request", e);
-            return SimpleResponse.newInstance(SimpleResponse.Type.MULTI_ENTITY,
+            return SimpleResponse.newInstance(PayloadType.MULTI_ENTITY,
                     "Exception resolving request " + request, e);
         }
     }
