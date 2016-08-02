@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.server.resourcemanager.RMAuditLogger;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
@@ -46,7 +46,7 @@ public class SQSAppAttempt extends SchedulerApplicationAttempt {
             Constructor<A> constructor = aClass.getConstructor(ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
             return constructor.newInstance(applicationAttemptId, user, queue, activeUsersManager, rmContext);
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate app attempt via default constructor" + e);
+            throw new PosumException("Failed to instantiate app attempt via default constructor" + e);
         }
     }
 
@@ -55,7 +55,7 @@ public class SQSAppAttempt extends SchedulerApplicationAttempt {
             Constructor<A> constructor = aClass.getConstructor(SQSAppAttempt.class);
             return constructor.newInstance(attempt);
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate app attempt via default constructor" + e);
+            throw new PosumException("Failed to instantiate app attempt via default constructor" + e);
         }
     }
 

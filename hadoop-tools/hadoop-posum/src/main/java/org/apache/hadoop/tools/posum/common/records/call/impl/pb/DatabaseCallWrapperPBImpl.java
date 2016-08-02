@@ -6,7 +6,7 @@ import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.GeneralDatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface;
 import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProtoOrBuilder;
@@ -85,7 +85,7 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall {
         maybeInitBuilder();
         DatabaseCallType type = DatabaseCallType.fromMappedClass(call.getClass());
         if (type == null)
-            throw new POSUMException("DatabaseCall class not recognized " + call.getClass());
+            throw new PosumException("DatabaseCall class not recognized " + call.getClass());
         builder.setType(DatabaseCallProto.CallTypeProto.valueOf("CALL_" + type.name()));
         ByteStringSerializable serializableCall = (ByteStringSerializable) call;
         builder.setCall(serializableCall.getProtoBytes());
@@ -99,7 +99,7 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall {
             ((ByteStringSerializable) call).populateFromProtoBytes(p.getCall());
             return call;
         } catch (Exception e) {
-            throw new POSUMException("Could not read call from byte string " + p.getCall() + " as " + callClass, e);
+            throw new PosumException("Could not read call from byte string " + p.getCall() + " as " + callClass, e);
         }
     }
 

@@ -11,7 +11,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.CountersProxyPBImpl;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -200,7 +200,7 @@ public class HadoopAPIClient {
                 return null;
             JsonNode rawJobs = wrapper.get("job");
             if (rawJobs.size() != 1)
-                throw new POSUMException("Unexpected number of jobs for mapreduce app " + appId);
+                throw new PosumException("Unexpected number of jobs for mapreduce app " + appId);
             JsonNode rawJob = rawJobs.get(0);
             JobProfile job = previousJob != null ? previousJob : Records.newRecord(JobProfile.class);
             job.setAppId(appId);

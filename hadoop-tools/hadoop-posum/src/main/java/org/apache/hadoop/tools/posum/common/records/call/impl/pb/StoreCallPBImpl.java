@@ -10,7 +10,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityProtoOrBuilder;
@@ -109,7 +109,7 @@ public class StoreCallPBImpl extends StoreCall implements ByteStringSerializable
                 Class eClass = getEntityCollection().getMappedClass();
                 return ((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(p.getEntity());
             } catch (Exception e) {
-                throw new POSUMException("Could not read object from byte string " + p.getEntity(), e);
+                throw new PosumException("Could not read object from byte string " + p.getEntity(), e);
             }
         }
         return null;

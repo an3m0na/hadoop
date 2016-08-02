@@ -1,9 +1,8 @@
 package org.apache.hadoop.tools.posum.database.mock;
 
 
-import com.mongodb.DuplicateKeyException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.client.DBImpl;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
@@ -101,7 +100,7 @@ public class MockDataStoreImpl implements ExtendedDataClientInterface {
             }
 
         } catch (IntrospectionException | InvocationTargetException | IllegalAccessException e) {
-            throw new POSUMException("Reflection error while accessing entity properties", e);
+            throw new PosumException("Reflection error while accessing entity properties", e);
         }
         return results;
     }
@@ -114,7 +113,7 @@ public class MockDataStoreImpl implements ExtendedDataClientInterface {
                 toInsert.setId(ObjectId.get().toHexString());
             } else {
                 if (findById(db, collection, toInsert.getId()) != null) {
-                    throw new POSUMException("Cannot insert duplicate key " + toInsert.getId());
+                    throw new PosumException("Cannot insert duplicate key " + toInsert.getId());
                 }
             }
             this.getTypedEntities(db, collection).put(toInsert.getId(), toInsert);
@@ -179,7 +178,7 @@ public class MockDataStoreImpl implements ExtendedDataClientInterface {
         if (profiles.size() == 1)
             return profiles.get(0);
         if (profiles.size() > 1)
-            throw new POSUMException("Found too many profiles in database for app " + appId);
+            throw new PosumException("Found too many profiles in database for app " + appId);
         return null;
     }
 
@@ -190,7 +189,7 @@ public class MockDataStoreImpl implements ExtendedDataClientInterface {
             DataEntityCollection type = forHistory ? DataEntityCollection.JOB_HISTORY : DataEntityCollection.JOB;
             JobProfile job = findById(db, type, jobId);
             if (job == null)
-                throw new POSUMException("Could not find job to save flex-fields: " + jobId);
+                throw new PosumException("Could not find job to save flex-fields: " + jobId);
 
             job.getFlexFields().putAll(newFields);
             updateOrStore(db, type, job);

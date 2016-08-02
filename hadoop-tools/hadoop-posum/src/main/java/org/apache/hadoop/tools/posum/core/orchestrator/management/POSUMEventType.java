@@ -1,8 +1,8 @@
-package org.apache.hadoop.tools.posum.core.master.management;
+package org.apache.hadoop.tools.posum.core.orchestrator.management;
 
 /**
  * Created by ane on 4/20/16.
  */
-public enum POSUMEventType {
+public enum PosumEventType {
     SIMULATION_FINISH, SIMULATOR_CONNECTED, SIMULATION_START
 }

@@ -7,13 +7,13 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.web.MetaSchedulerWebApp;
-import org.apache.hadoop.tools.posum.web.POSUMWebApp;
+import org.apache.hadoop.tools.posum.web.PosumWebApp;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -30,11 +30,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.QueueEntit
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.*;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -60,7 +57,7 @@ public class PortfolioMetaScheduler extends
     private Lock readLock = lock.readLock();
     private Lock writeLock = lock.writeLock();
 
-    private POSUMWebApp webApp;
+    private PosumWebApp webApp;
 
     //metrics
     private Timer allocateTimer;
@@ -77,7 +74,7 @@ public class PortfolioMetaScheduler extends
         try {
             currentPolicy = currentPolicyInfo.getImplClass().newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            throw new POSUMException("Could not instantiate scheduler for class " + currentPolicyInfo.getImplClass(), e);
+            throw new PosumException("Could not instantiate scheduler for class " + currentPolicyInfo.getImplClass(), e);
         }
         currentPolicy.initializePlugin(posumConf, commService);
         if (rmContext != null)
@@ -91,7 +88,7 @@ public class PortfolioMetaScheduler extends
         logger.debug("Changing policy to " + policyName);
         PolicyMap.PolicyInfo newClass = policies.get(policyName);
         if (newClass == null)
-            throw new POSUMException("Target policy does not exist: " + policyName);
+            throw new PosumException("Target policy does not exist: " + policyName);
         commService.logPolicyChange(policyName);
         if (!currentPolicyInfo.equals(newClass)) {
             Timer.Context context = null;
@@ -150,7 +147,7 @@ public class PortfolioMetaScheduler extends
 
     @Override
     public void serviceInit(Configuration conf) throws Exception {
-        this.posumConf = POSUMConfiguration.newInstance();
+        this.posumConf = PosumConfiguration.newInstance();
         setConf(conf);
         policies = new PolicyMap(posumConf);
         currentPolicyInfo = policies.getDefaultPolicy();
@@ -159,11 +156,11 @@ public class PortfolioMetaScheduler extends
         initPolicy();
 
         //initialize  metrics
-        metricsON = posumConf.getBoolean(POSUMConfiguration.SCHEDULER_METRICS_ON, POSUMConfiguration.SCHEDULER_METRICS_ON_DEFAULT);
+        metricsON = posumConf.getBoolean(PosumConfiguration.SCHEDULER_METRICS_ON, PosumConfiguration.SCHEDULER_METRICS_ON_DEFAULT);
 
         if (metricsON) {
-            long windowSize = posumConf.getLong(POSUMConfiguration.POSUM_MONITOR_HEARTBEAT_MS,
-                    POSUMConfiguration.POSUM_MONITOR_HEARTBEAT_MS_DEFAULT);
+            long windowSize = posumConf.getLong(PosumConfiguration.POSUM_MONITOR_HEARTBEAT_MS,
+                    PosumConfiguration.POSUM_MONITOR_HEARTBEAT_MS_DEFAULT);
 
             allocateTimer = new Timer(new SlidingTimeWindowReservoir(windowSize, TimeUnit.MILLISECONDS));
             handleTimer = new Timer(new SlidingTimeWindowReservoir(windowSize, TimeUnit.MILLISECONDS));
@@ -178,7 +175,7 @@ public class PortfolioMetaScheduler extends
 
         //initialize statistics service
         webApp = new MetaSchedulerWebApp(this,
-                posumConf.getInt(POSUMConfiguration.SCHEDULER_WEBAPP_PORT, POSUMConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT));
+                posumConf.getInt(PosumConfiguration.SCHEDULER_WEBAPP_PORT, PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT));
     }
 
     @Override

@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProtoOrBuilder;
 
@@ -100,7 +100,7 @@ public abstract class SimpleRequestPBImpl<T> extends SimpleRequest<T> {
                 try {
                     this.payload = bytesToPayload(p.getPayload());
                 } catch (InvalidProtocolBufferException e) {
-                    throw new POSUMException("Could not read message payload", e);
+                    throw new PosumException("Could not read message payload", e);
                 }
         }
         return payload;

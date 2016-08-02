@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimplePropertyPayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimplePropertyPayloadProtoOrBuilder;
@@ -88,7 +88,7 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload {
         try {
             return getType().read(p.getValue());
         } catch (IOException e) {
-            throw new POSUMException("Error reading property value ", e);
+            throw new PosumException("Error reading property value ", e);
         }
     }
 

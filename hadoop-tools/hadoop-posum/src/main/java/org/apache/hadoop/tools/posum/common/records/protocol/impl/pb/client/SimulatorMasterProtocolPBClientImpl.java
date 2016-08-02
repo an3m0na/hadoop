@@ -4,8 +4,8 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
-import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorProtocol;
-import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.SimulatorProtocolPB;
+import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorMasterProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.SimulatorMasterProtocolPB;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -21,15 +21,15 @@ import java.net.InetSocketAddress;
 /**
  * Created by ane on 3/20/16.
  */
-public class SimulatorProtocolPBClientImpl implements SimulatorProtocol, Closeable {
+public class SimulatorMasterProtocolPBClientImpl implements SimulatorMasterProtocol, Closeable {
 
-    private SimulatorProtocolPB proxy;
+    private SimulatorMasterProtocolPB proxy;
 
-    public SimulatorProtocolPBClientImpl(long clientVersion, InetSocketAddress addr,
-                                         Configuration conf) throws IOException {
-        RPC.setProtocolEngine(conf, SimulatorProtocolPB.class, ProtobufRpcEngine.class);
+    public SimulatorMasterProtocolPBClientImpl(long clientVersion, InetSocketAddress addr,
+                                               Configuration conf) throws IOException {
+        RPC.setProtocolEngine(conf, SimulatorMasterProtocolPB.class, ProtobufRpcEngine.class);
         proxy =
-                (SimulatorProtocolPB) RPC.getProxy(SimulatorProtocolPB.class, clientVersion,
+                (SimulatorMasterProtocolPB) RPC.getProxy(SimulatorMasterProtocolPB.class, clientVersion,
                         addr, conf);
     }
 

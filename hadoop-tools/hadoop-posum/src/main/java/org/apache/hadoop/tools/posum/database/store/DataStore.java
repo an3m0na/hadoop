@@ -4,8 +4,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.database.client.DBImpl;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.client.DataClientInterface;
@@ -33,7 +33,7 @@ public class DataStore implements DataClientInterface {
     private ConcurrentHashMap<Integer, ReentrantReadWriteLock> locks = new ConcurrentHashMap<>();
 
     public DataStore(Configuration conf) {
-        String url = conf.get(POSUMConfiguration.DATABASE_URL, POSUMConfiguration.DATABASE_URL_DEFAULT);
+        String url = conf.get(PosumConfiguration.DATABASE_URL, PosumConfiguration.DATABASE_URL_DEFAULT);
         conn = new MongoJackConnector(url);
         conn.addDatabase(mainDb,
                 DataEntityCollection.APP,
@@ -109,7 +109,7 @@ public class DataStore implements DataClientInterface {
         if (profiles.size() == 1)
             return profiles.get(0);
         if (profiles.size() > 1)
-            throw new POSUMException("Found too many profiles in database for app " + appId);
+            throw new PosumException("Found too many profiles in database for app " + appId);
         return null;
     }
 
@@ -120,7 +120,7 @@ public class DataStore implements DataClientInterface {
             DataEntityCollection type = forHistory ? DataEntityCollection.JOB_HISTORY : DataEntityCollection.JOB;
             JobProfile job = findById(db, type, jobId);
             if (job == null)
-                throw new POSUMException("Could not find job to save flex-fields: " + jobId);
+                throw new PosumException("Could not find job to save flex-fields: " + jobId);
 
             job.getFlexFields().putAll(newFields);
             updateOrStore(db, type, job);
@@ -175,23 +175,23 @@ public class DataStore implements DataClientInterface {
         return new DBImpl(db, this);
     }
 
-    public void runTransaction(DataEntityDB db, DataTransaction transaction) throws POSUMException {
+    public void runTransaction(DataEntityDB db, DataTransaction transaction) throws PosumException {
         locks.get(db.getId()).writeLock().lock();
         try {
             transaction.run();
         } catch (Exception e) {
-            throw new POSUMException("Exception executing transaction ", e);
+            throw new PosumException("Exception executing transaction ", e);
         } finally {
             locks.get(db.getId()).writeLock().unlock();
         }
     }
 
     public String getRawDocumentList(String database, String collection, Map<String, Object> queryParams)
-            throws POSUMException {
+            throws PosumException {
         try {
             return conn.getRawDocumentList(database, collection, queryParams);
         } catch (Exception e) {
-            throw new POSUMException("Exception executing transaction ", e);
+            throw new PosumException("Exception executing transaction ", e);
         }
     }
 

@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq;
 
 import com.codahale.metrics.Gauge;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.sls.scheduler.SchedulerMetrics;
 
@@ -21,7 +21,7 @@ public class SQSchedulerMetrics extends SchedulerMetrics {
             Constructor<M> constructor = mClass.getConstructor();
             return constructor.newInstance();
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate scheduler queue via default constructor" + e);
+            throw new PosumException("Failed to instantiate scheduler queue via default constructor" + e);
         }
     }
 

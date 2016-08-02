@@ -19,11 +19,11 @@ import java.io.IOException;
 /**
  * Created by ane on 3/20/16.
  */
-public class POSUMMasterProtocolPBServiceImpl implements POSUMMasterProtocolPB {
+public class OrchestratorMasterProtocolPBServiceImpl implements OrchestratorMasterProtocolPB {
 
-    private POSUMMasterProtocol real;
+    private OrchestratorMasterProtocol real;
 
-    public POSUMMasterProtocolPBServiceImpl(POSUMMasterProtocol impl) {
+    public OrchestratorMasterProtocolPBServiceImpl(OrchestratorMasterProtocol impl) {
         this.real = impl;
     }
 

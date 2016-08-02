@@ -8,14 +8,14 @@ import org.apache.hadoop.tools.posum.common.util.RestClient;
 /**
  * Created by ane on 3/7/16.
  */
-public class POSUMAPIClient {
+public class PosumAPIClient {
 
-    private static Log logger = LogFactory.getLog(POSUMAPIClient.class);
+    private static Log logger = LogFactory.getLog(PosumAPIClient.class);
 
     private final RestClient restClient;
     private final Configuration conf;
 
-    public POSUMAPIClient(Configuration conf) {
+    public PosumAPIClient(Configuration conf) {
         restClient = new RestClient();
         this.conf = conf;
     }

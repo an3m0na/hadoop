@@ -11,10 +11,10 @@ import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtoc
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
-import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterInterface;
+import org.apache.hadoop.tools.posum.core.orchestrator.client.OrchestratorMasterClient;
+import org.apache.hadoop.tools.posum.core.orchestrator.client.OrchestratorMasterInterface;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
@@ -29,7 +29,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
 
     private static Log logger = LogFactory.getLog(MetaSchedulerCommService.class);
 
-    private POSUMMasterClient masterClient;
+    private OrchestratorMasterClient masterClient;
     private DataMasterClient dataClient;
     private DBInterface dbInterface;
 
@@ -45,7 +45,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        masterClient = new POSUMMasterClient();
+        masterClient = new OrchestratorMasterClient();
         masterClient.init(conf);
         addIfService(masterClient);
 
@@ -57,14 +57,14 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
                 bindAddress,
-                POSUMConfiguration.SCHEDULER_ADDRESS,
-                POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT,
-                POSUMConfiguration.SCHEDULER_PORT_DEFAULT);
+                PosumConfiguration.SCHEDULER_ADDRESS,
+                PosumConfiguration.SCHEDULER_ADDRESS_DEFAULT,
+                PosumConfiguration.SCHEDULER_PORT_DEFAULT);
         this.metaServer =
                 rpc.getServer(MetaSchedulerProtocol.class, this, masterServiceAddress,
                         getConfig(), new DummyTokenSecretManager(),
-                        getConfig().getInt(POSUMConfiguration.SCHEDULER_SERVICE_THREAD_COUNT,
-                                POSUMConfiguration.SCHEDULER_SERVICE_THREAD_COUNT_DEFAULT));
+                        getConfig().getInt(PosumConfiguration.SCHEDULER_SERVICE_THREAD_COUNT,
+                                PosumConfiguration.SCHEDULER_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.metaServer.start();
 
@@ -72,7 +72,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
 
         String connectAddress =
                 NetUtils.getConnectAddress(this.metaServer.getListenerAddress()).toString();
-        String dmAddress = masterClient.register(Utils.POSUMProcess.SCHEDULER,
+        String dmAddress = masterClient.register(Utils.PosumProcess.SCHEDULER,
                 connectAddress.substring(connectAddress.indexOf("/") + 1));
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
@@ -113,7 +113,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         return dbInterface;
     }
 
-    public POSUMMasterInterface getMaster() {
+    public OrchestratorMasterInterface getMaster() {
         return masterClient;
     }
 

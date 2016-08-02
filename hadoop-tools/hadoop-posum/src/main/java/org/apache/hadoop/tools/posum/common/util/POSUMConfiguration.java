@@ -8,7 +8,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 /**
  * Created by ane on 2/9/16.
  */
-public class POSUMConfiguration {
+public class PosumConfiguration {
 
     public static Configuration newInstance() {
         Configuration conf = new Configuration();

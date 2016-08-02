@@ -12,11 +12,11 @@ import org.apache.hadoop.tools.posum.common.records.payload.*;
 import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
+import org.apache.hadoop.tools.posum.core.orchestrator.client.OrchestratorMasterClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
@@ -28,28 +28,28 @@ import java.util.Map;
 /**
  * Created by ane on 3/19/16.
  */
-public class DataMasterCommService extends CompositeService implements DataMasterProtocol {
+public class DataCommService extends CompositeService implements DataMasterProtocol {
 
-    private static Log logger = LogFactory.getLog(DataMasterCommService.class);
+    private static Log logger = LogFactory.getLog(DataCommService.class);
 
     DataMasterContext dmContext;
     private Server dmServer;
-    private InetSocketAddress bindAddress;
-    private POSUMMasterClient masterClient;
+    private String connectAddress;
+    private OrchestratorMasterClient masterClient;
 
     /**
      * Construct the service.
      *
      * @param context service dmContext
      */
-    public DataMasterCommService(DataMasterContext context) {
-        super(DataMasterCommService.class.getName());
+    public DataCommService(DataMasterContext context) {
+        super(DataCommService.class.getName());
         this.dmContext = context;
     }
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        masterClient = new POSUMMasterClient();
+        masterClient = new OrchestratorMasterClient();
         masterClient.init(conf);
         addIfService(masterClient);
 
@@ -60,24 +60,28 @@ public class DataMasterCommService extends CompositeService implements DataMaste
     protected void serviceStart() throws Exception {
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
-                POSUMConfiguration.DM_BIND_ADDRESS,
-                POSUMConfiguration.DM_ADDRESS,
-                POSUMConfiguration.DM_ADDRESS_DEFAULT,
-                POSUMConfiguration.DM_PORT_DEFAULT);
+                PosumConfiguration.DM_BIND_ADDRESS,
+                PosumConfiguration.DM_ADDRESS,
+                PosumConfiguration.DM_ADDRESS_DEFAULT,
+                PosumConfiguration.DM_PORT_DEFAULT);
         dmContext.setTokenSecretManager(new DummyTokenSecretManager());
         this.dmServer =
                 rpc.getServer(DataMasterProtocol.class, this, masterServiceAddress,
                         getConfig(), dmContext.getTokenSecretManager(),
-                        getConfig().getInt(POSUMConfiguration.DM_SERVICE_THREAD_COUNT,
-                                POSUMConfiguration.DM_SERVICE_THREAD_COUNT_DEFAULT));
+                        getConfig().getInt(PosumConfiguration.DM_SERVICE_THREAD_COUNT,
+                                PosumConfiguration.DM_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.dmServer.start();
         super.serviceStart();
 
-        String connectAddress =
+        String fullAddress =
                 NetUtils.getConnectAddress(this.dmServer.getListenerAddress()).toString();
-        masterClient.register(Utils.POSUMProcess.DM,
-                connectAddress.substring(connectAddress.indexOf("/") + 1));
+        connectAddress = fullAddress.substring(fullAddress.indexOf("/") + 1);
+        masterClient.register(Utils.PosumProcess.DM, connectAddress);
+    }
+
+    public String getConnectAddress() {
+        return connectAddress;
     }
 
     @Override
@@ -190,7 +194,7 @@ public class DataMasterCommService extends CompositeService implements DataMaste
         return SimpleResponse.newInstance(true);
     }
 
-    public Map<Utils.POSUMProcess, String> getSystemAddresses() {
+    public Map<Utils.PosumProcess, String> getSystemAddresses() {
         return masterClient.getSystemAddresses();
     }
 }

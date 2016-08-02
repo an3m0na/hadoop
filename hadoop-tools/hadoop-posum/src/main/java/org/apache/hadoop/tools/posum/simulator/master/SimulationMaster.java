@@ -4,13 +4,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumMasterProcess;
 import org.apache.hadoop.tools.posum.web.SimulatorWebApp;
 
 /**
  * Created by ane on 2/4/16.
  */
-public class SimulationMaster extends CompositeService {
+public class SimulationMaster extends CompositeService implements PosumMasterProcess {
 
     private static final Log logger =LogFactory.getLog(SimulationMaster.class);
 
@@ -41,8 +42,8 @@ public class SimulationMaster extends CompositeService {
 
         try {
             webApp = new SimulatorWebApp(smContext,
-                    conf.getInt(POSUMConfiguration.SIMULATOR_WEBAPP_PORT,
-                            POSUMConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT));
+                    conf.getInt(PosumConfiguration.SIMULATOR_WEBAPP_PORT,
+                            PosumConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT));
         } catch (Exception e) {
             logger.error("Could not initialize web app", e);
         }
@@ -63,9 +64,14 @@ public class SimulationMaster extends CompositeService {
         super.serviceStop();
     }
 
+    @Override
+    public String getConnectAddress() {
+        return commService.getConnectAddress();
+    }
+
     public static void main(String[] args) {
         try {
-            Configuration conf = POSUMConfiguration.newInstance();
+            Configuration conf = PosumConfiguration.newInstance();
             SimulationMaster master = new SimulationMaster();
             master.init(conf);
             master.start();

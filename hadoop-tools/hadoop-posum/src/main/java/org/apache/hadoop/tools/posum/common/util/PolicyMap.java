@@ -101,7 +101,7 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
 
     public PolicyMap(Configuration conf) {
         super(AvailablePolicy.values().length);
-        String policyMap = conf.get(POSUMConfiguration.SCHEDULER_POLICY_MAP);
+        String policyMap = conf.get(PosumConfiguration.SCHEDULER_POLICY_MAP);
         if (policyMap != null) {
             try {
                 for (String entry : policyMap.split(",")) {
@@ -112,18 +112,18 @@ public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
                         if (implClass != null)
                             put(entryParts[0], new PolicyInfo(implClass));
                         else
-                            throw new POSUMException("Invalid policy class " + entryParts[1]);
+                            throw new PosumException("Invalid policy class " + entryParts[1]);
                     }
                 }
             } catch (Exception e) {
-                throw new POSUMException("Could not parse policy map");
+                throw new PosumException("Could not parse policy map");
             }
         } else {
             for (AvailablePolicy policy : AvailablePolicy.values()) {
                 put(policy.name(), new PolicyInfo(policy.implClass));
             }
         }
-        defaultPolicyName = conf.get(POSUMConfiguration.DEFAULT_POLICY, POSUMConfiguration.DEFAULT_POLICY_DEFAULT);
+        defaultPolicyName = conf.get(PosumConfiguration.DEFAULT_POLICY, PosumConfiguration.DEFAULT_POLICY_DEFAULT);
         if (defaultPolicyName != null) {
             defaultPolicy = this.get(defaultPolicyName);
         }

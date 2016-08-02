@@ -1,45 +1,43 @@
-package org.apache.hadoop.tools.posum.core.master;
+package org.apache.hadoop.tools.posum.core.orchestrator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.core.master.management.Orchestrator;
-import org.apache.hadoop.tools.posum.core.master.management.POSUMEventType;
-import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerClient;
-import org.apache.hadoop.tools.posum.web.MasterWebApp;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumMasterProcess;
+import org.apache.hadoop.tools.posum.core.orchestrator.management.Orchestrator;
+import org.apache.hadoop.tools.posum.core.orchestrator.management.PosumEventType;
+import org.apache.hadoop.tools.posum.web.OrchestratorWebApp;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
-
-import java.util.Arrays;
 
 /**
  * Created by ane on 2/4/16.
  */
-public class POSUMMaster extends CompositeService {
-    private static Log logger = LogFactory.getLog(POSUMMaster.class);
+public class OrchestratorMaster extends CompositeService implements PosumMasterProcess {
+    private static Log logger = LogFactory.getLog(OrchestratorMaster.class);
 
     private Dispatcher dispatcher;
 
-    public POSUMMaster() {
-        super(POSUMMaster.class.getName());
+    public OrchestratorMaster() {
+        super(OrchestratorMaster.class.getName());
     }
 
-    private POSUMMasterContext pmContext;
-    private MasterCommService commService;
+    private OrchestratorMasterContext pmContext;
+    private OrchestratorCommService commService;
     private Orchestrator orchestrator;
-    private MasterWebApp webApp;
+    private OrchestratorWebApp webApp;
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        pmContext = new POSUMMasterContext();
+        pmContext = new OrchestratorMasterContext();
         dispatcher = new AsyncDispatcher();
         addIfService(dispatcher);
         pmContext.setDispatcher(dispatcher);
 
         //service to communicate with other processes
-        commService = new MasterCommService(pmContext);
+        commService = new OrchestratorCommService(pmContext);
         commService.init(conf);
         addIfService(commService);
         pmContext.setCommService(commService);
@@ -48,12 +46,12 @@ public class POSUMMaster extends CompositeService {
         orchestrator = new Orchestrator(pmContext);
         orchestrator.init(conf);
         addIfService(orchestrator);
-        dispatcher.register(POSUMEventType.class, orchestrator);
+        dispatcher.register(PosumEventType.class, orchestrator);
 
         try {
-            webApp = new MasterWebApp(pmContext,
-                    conf.getInt(POSUMConfiguration.MASTER_WEBAPP_PORT,
-                    POSUMConfiguration.MASTER_WEBAPP_PORT_DEFAULT));
+            webApp = new OrchestratorWebApp(pmContext,
+                    conf.getInt(PosumConfiguration.MASTER_WEBAPP_PORT,
+                            PosumConfiguration.MASTER_WEBAPP_PORT_DEFAULT));
         } catch (Exception e) {
             logger.error("Could not initialize web app", e);
         }
@@ -75,11 +73,16 @@ public class POSUMMaster extends CompositeService {
         super.serviceStop();
     }
 
+    public String getConnectAddress() {
+        if (commService != null)
+            return commService.getConnectAddress();
+        return null;
+    }
+
     public static void main(String[] args) {
         try {
-
-            Configuration conf = POSUMConfiguration.newInstance();
-            POSUMMaster master = new POSUMMaster();
+            Configuration conf = PosumConfiguration.newInstance();
+            OrchestratorMaster master = new OrchestratorMaster();
             master.init(conf);
             master.start();
         } catch (Exception e) {

@@ -6,8 +6,8 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
 
 import java.util.Collections;
@@ -150,8 +150,8 @@ public class DetailedPredictor extends JobBehaviorPredictor {
 
 
     private List<JobProfile> getComparableProfiles(JobProfile job, TaskType type) {
-        Integer bufferLimit = conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
-                POSUMConfiguration.PREDICTION_BUFFER_DEFAULT);
+        Integer bufferLimit = conf.getInt(PosumConfiguration.PREDICTION_BUFFER,
+                PosumConfiguration.PREDICTION_BUFFER_DEFAULT);
         // get past jobs with the same name
         List<JobProfile> comparable = getDataStore().find(
                 DataEntityCollection.JOB_HISTORY,
@@ -195,9 +195,9 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     public Long predictTaskDuration(String taskId) {
         TaskProfile task = getDataStore().findById(DataEntityCollection.TASK, taskId);
         if (task == null)
-            throw new POSUMException("Task not found for id " + taskId);
+            throw new PosumException("Task not found for id " + taskId);
         if (task.getDuration() > 0)
-            throw new POSUMException("Task has already finished: " + taskId);
+            throw new PosumException("Task has already finished: " + taskId);
         if (task.getType().equals(TaskType.MAP) && task.getHttpAddress() != null) {
             // apply locality-aware logic for this map task
             JobProfile job = calculateCurrentProfile(task.getJobId());
@@ -214,8 +214,8 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             return job.getAvgMapDuration();
         logger.debug("No map history data for " + job.getId() + ". Using default");
         // return the default; there is nothing we can do
-        return conf.getLong(POSUMConfiguration.AVERAGE_TASK_DURATION,
-                POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
+        return conf.getLong(PosumConfiguration.AVERAGE_TASK_DURATION,
+                PosumConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
     }
 
     private Long predictMapTaskDuration(JobProfile job, Boolean remote) {
@@ -308,8 +308,8 @@ public class DetailedPredictor extends JobBehaviorPredictor {
             // our selectivity or map rate data is unreliable
             // just return default duration
             logger.debug("No data to compute reduce for " + job.getName() + ". Using default");
-            return conf.getLong(POSUMConfiguration.AVERAGE_TASK_DURATION,
-                    POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
+            return conf.getLong(PosumConfiguration.AVERAGE_TASK_DURATION,
+                    PosumConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
         }
 
         // calculate the current map rate and assume reduce rate is the same

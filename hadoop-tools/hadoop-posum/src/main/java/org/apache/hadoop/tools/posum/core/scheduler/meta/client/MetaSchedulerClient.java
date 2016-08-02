@@ -8,8 +8,8 @@ import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -38,12 +38,12 @@ public class MetaSchedulerClient extends AbstractService implements MetaSchedule
         try {
             metaClient = new StandardClientProxyFactory<>(conf,
                     connectAddress,
-                    POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT,
-                    POSUMConfiguration.SCHEDULER_PORT_DEFAULT,
+                    PosumConfiguration.SCHEDULER_ADDRESS_DEFAULT,
+                    PosumConfiguration.SCHEDULER_PORT_DEFAULT,
                     MetaSchedulerProtocol.class).createProxy();
             checkPing();
         } catch (IOException e) {
-            throw new POSUMException("Could not init MetaScheduler client", e);
+            throw new PosumException("Could not init MetaScheduler client", e);
         }
         super.serviceStart();
     }
@@ -64,7 +64,7 @@ public class MetaSchedulerClient extends AbstractService implements MetaSchedule
         try {
             return Utils.handleError(kind, metaClient.handleSimpleRequest(request));
         } catch (IOException | YarnException e) {
-            throw new POSUMException("Error during RPC call", e);
+            throw new PosumException("Error during RPC call", e);
         }
     }
 

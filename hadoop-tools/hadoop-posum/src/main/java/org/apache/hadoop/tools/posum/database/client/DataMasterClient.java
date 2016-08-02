@@ -11,8 +11,8 @@ import org.apache.hadoop.tools.posum.common.records.payload.*;
 import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -47,12 +47,12 @@ public class DataMasterClient extends AbstractService implements DataClientInter
         try {
             dmClient = new StandardClientProxyFactory<>(conf,
                     connectAddress,
-                    POSUMConfiguration.DM_ADDRESS_DEFAULT,
-                    POSUMConfiguration.DM_PORT_DEFAULT,
+                    PosumConfiguration.DM_ADDRESS_DEFAULT,
+                    PosumConfiguration.DM_PORT_DEFAULT,
                     DataMasterProtocol.class).createProxy();
             checkPing();
         } catch (IOException e) {
-            throw new POSUMException("Could not init DataMaster client", e);
+            throw new PosumException("Could not init DataMaster client", e);
         }
         super.serviceStart();
     }
@@ -76,7 +76,7 @@ public class DataMasterClient extends AbstractService implements DataClientInter
                 return (T) payload.getEntity();
             return null;
         } catch (IOException | YarnException e) {
-            throw new POSUMException("Error during RPC call", e);
+            throw new PosumException("Error during RPC call", e);
         }
     }
 
@@ -89,7 +89,7 @@ public class DataMasterClient extends AbstractService implements DataClientInter
                 return payload.getEntries();
             return null;
         } catch (IOException | YarnException e) {
-            throw new POSUMException("Error during RPC call", e);
+            throw new PosumException("Error during RPC call", e);
         }
     }
 
@@ -103,7 +103,7 @@ public class DataMasterClient extends AbstractService implements DataClientInter
                 return (List<T>) payload.getEntities();
             return null;
         } catch (IOException | YarnException e) {
-            throw new POSUMException("Error during RPC call", e);
+            throw new PosumException("Error during RPC call", e);
         }
     }
 
@@ -146,7 +146,7 @@ public class DataMasterClient extends AbstractService implements DataClientInter
                 return (JobProfile) payload.getEntity();
             return null;
         } catch (IOException | YarnException e) {
-            throw new POSUMException("Error during RPC call", e);
+            throw new PosumException("Error during RPC call", e);
         }
     }
 
@@ -164,7 +164,7 @@ public class DataMasterClient extends AbstractService implements DataClientInter
         try {
             return Utils.handleError(kind, dmClient.handleSimpleRequest(request));
         } catch (IOException | YarnException e) {
-            throw new POSUMException("Error during RPC call", e);
+            throw new PosumException("Error during RPC call", e);
         }
     }
 

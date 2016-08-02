@@ -4,8 +4,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
 
 /**
@@ -18,7 +18,7 @@ public abstract class JobBehaviorPredictor {
 
     public static JobBehaviorPredictor newInstance(Configuration conf) {
         return newInstance(conf, conf.getClass(
-                POSUMConfiguration.PREDICTOR_CLASS,
+                PosumConfiguration.PREDICTOR_CLASS,
                 BasicPredictor.class,
                 JobBehaviorPredictor.class
         ));
@@ -31,7 +31,7 @@ public abstract class JobBehaviorPredictor {
             predictor.conf = conf;
             return predictor;
         } catch (Exception e) {
-            throw new POSUMException("Could not instantiate predictor type " + predictorClass.getName(), e);
+            throw new PosumException("Could not instantiate predictor type " + predictorClass.getName(), e);
         }
     }
 
@@ -48,15 +48,15 @@ public abstract class JobBehaviorPredictor {
     public Long predictTaskDuration(String taskId) {
         TaskProfile task = getDataStore().findById(DataEntityCollection.TASK, taskId);
         if (task == null)
-            throw new POSUMException("Task not found for id " + taskId);
+            throw new PosumException("Task not found for id " + taskId);
         if(task.getDuration() > 0)
-            throw new POSUMException("Task has already finished: " + taskId);
+            throw new PosumException("Task has already finished: " + taskId);
         return predictTaskDuration(task.getJobId(), task.getType());
     }
 
     DBInterface getDataStore() {
         if (dataStore == null)
-            throw new POSUMException("DataStore not initialized in Predictor");
+            throw new PosumException("DataStore not initialized in Predictor");
         return dataStore;
     }
 }

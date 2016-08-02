@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.core.master;
+package org.apache.hadoop.tools.posum.core.orchestrator;
 
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.yarn.event.Dispatcher;
@@ -6,10 +6,10 @@ import org.apache.hadoop.yarn.event.Dispatcher;
 /**
  * Created by ane on 3/19/16.
  */
-public class POSUMMasterContext {
+public class OrchestratorMasterContext {
     private Dispatcher dispatcher;
     private DummyTokenSecretManager tokenSecretManager;
-    private MasterCommService commService;
+    private OrchestratorCommService commService;
 
     public void setDispatcher(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -27,11 +27,11 @@ public class POSUMMasterContext {
         return tokenSecretManager;
     }
 
-    public void setCommService(MasterCommService commService) {
+    public void setCommService(OrchestratorCommService commService) {
         this.commService = commService;
     }
 
-    public MasterCommService getCommService() {
+    public OrchestratorCommService getCommService() {
         return commService;
     }
 

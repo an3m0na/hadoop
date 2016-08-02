@@ -5,7 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 
 import java.util.List;
 
@@ -17,8 +17,8 @@ public class StandardPredictor extends JobBehaviorPredictor {
     private static final Log logger = LogFactory.getLog(StandardPredictor.class);
 
     private List<JobProfile> getComparableProfiles(JobProfile job, TaskType type) {
-        int bufferLimit = conf.getInt(POSUMConfiguration.PREDICTION_BUFFER,
-                POSUMConfiguration.PREDICTION_BUFFER_DEFAULT);
+        int bufferLimit = conf.getInt(PosumConfiguration.PREDICTION_BUFFER,
+                PosumConfiguration.PREDICTION_BUFFER_DEFAULT);
         // get past jobs with the same name
         List<JobProfile> comparable = getDataStore().find(
                 DataEntityCollection.JOB_HISTORY,
@@ -54,8 +54,8 @@ public class StandardPredictor extends JobBehaviorPredictor {
         List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
         if (comparable.size() < 1) {
             logger.debug("No map history data for " + job.getId() + ". Using default");
-            return conf.getLong(POSUMConfiguration.AVERAGE_TASK_DURATION,
-                    POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
+            return conf.getLong(PosumConfiguration.AVERAGE_TASK_DURATION,
+                    PosumConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
         }
         Double avgMapRate = 0.0;
         for (JobProfile profile : comparable) {
@@ -102,8 +102,8 @@ public class StandardPredictor extends JobBehaviorPredictor {
             // our selectivity or map rate data is unreliable
             // just return default duration
             logger.debug("No data to compute reduce for " + job.getName() + ". Using default");
-            return conf.getLong(POSUMConfiguration.AVERAGE_TASK_DURATION,
-                    POSUMConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
+            return conf.getLong(PosumConfiguration.AVERAGE_TASK_DURATION,
+                    PosumConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
         }
 
         // calculate the current map rate and assume reduce rate is the same

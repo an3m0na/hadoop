@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.response;
 
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.*;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto.SimpleResponseTypeProto;
 
@@ -62,7 +62,7 @@ public abstract class SimpleResponse<T> {
         try {
             response = type.getImplClass().newInstance();
         } catch (InstantiationException | IllegalAccessException ex) {
-            throw new POSUMException("Could not instantiate response of type " + type, ex);
+            throw new PosumException("Could not instantiate response of type " + type, ex);
         }
         response.setSuccessful(true);
         response.setType(type);
@@ -75,7 +75,7 @@ public abstract class SimpleResponse<T> {
         try {
             response = type.getImplClass().newInstance();
         } catch (InstantiationException | IllegalAccessException ex) {
-            throw new POSUMException("Could not instantiate response of type " + type, ex);
+            throw new PosumException("Could not instantiate response of type " + type, ex);
         }
         response.setSuccessful(false);
         response.setType(type);

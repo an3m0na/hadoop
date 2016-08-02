@@ -7,8 +7,8 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
-import org.apache.hadoop.tools.posum.common.records.protocol.POSUMMasterProtocol;
-import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.OrchestratorMasterProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -39,7 +39,7 @@ public class Utils {
             String[] parts = id.split("_");
             return "m".equals(parts[parts.length - 2]) ? TaskType.MAP : TaskType.REDUCE;
         } catch (Exception e) {
-            throw new POSUMException("Id parse exception for " + id, e);
+            throw new PosumException("Id parse exception for " + id, e);
         }
     }
 
@@ -49,7 +49,7 @@ public class Utils {
             return ApplicationId.newInstance(Long.parseLong(parts[1]),
                     Integer.parseInt(parts[2]));
         } catch (Exception e) {
-            throw new POSUMException("Id parse exception for " + id, e);
+            throw new PosumException("Id parse exception for " + id, e);
         }
     }
 
@@ -61,7 +61,7 @@ public class Utils {
             jobId.setId(Integer.parseInt(parts[parts.length - 1]));
             return jobId;
         } catch (Exception e) {
-            throw new POSUMException("Id parse exception for " + id, e);
+            throw new PosumException("Id parse exception for " + id, e);
         }
     }
 
@@ -74,7 +74,7 @@ public class Utils {
             taskId.setId(Integer.parseInt(parts[4]));
             return taskId;
         } catch (Exception e) {
-            throw new POSUMException("Id parse exception for " + id, e);
+            throw new PosumException("Id parse exception for " + id, e);
         }
     }
 
@@ -87,13 +87,13 @@ public class Utils {
             taskId.setId(Integer.parseInt(parts[4]));
             return taskId;
         } catch (Exception e) {
-            throw new POSUMException("Id parse exception for " + id, e);
+            throw new PosumException("Id parse exception for " + id, e);
         }
     }
 
     public static <T> SimpleResponse<T> handleError(String type, SimpleResponse<T> response) {
         if (!response.getSuccessful()) {
-            throw new POSUMException("Request type " + type + " returned with error: " +
+            throw new PosumException("Request type " + type + " returned with error: " +
                     "\n" + response.getText() + "\n" + response.getException());
         }
         return response;
@@ -105,7 +105,7 @@ public class Utils {
                     SimpleRequest.Type.fromProto(proto.getType()).getImplClass();
             return implClass.getConstructor(POSUMProtos.SimpleRequestProto.class).newInstance(proto);
         } catch (Exception e) {
-            throw new POSUMException("Could not construct request object for " + proto.getType(), e);
+            throw new PosumException("Could not construct request object for " + proto.getType(), e);
         }
     }
 
@@ -115,7 +115,7 @@ public class Utils {
                     SimpleResponse.Type.fromProto(proto.getType()).getImplClass();
             return implClass.getConstructor(POSUMProtos.SimpleResponseProto.class).newInstance(proto);
         } catch (Exception e) {
-            throw new POSUMException("Could not construct response object", e);
+            throw new PosumException("Could not construct response object", e);
         }
     }
 
@@ -125,25 +125,25 @@ public class Utils {
         return traceWriter.toString();
     }
 
-    public enum POSUMProcess {
-        PM("POSUMMaster",
-                POSUMConfiguration.PM_ADDRESS_DEFAULT + ":" + POSUMConfiguration.PM_PORT_DEFAULT,
-                POSUMMasterProtocol.class),
+    public enum PosumProcess {
+        OM("OrchestratorMaster",
+                PosumConfiguration.PM_ADDRESS_DEFAULT + ":" + PosumConfiguration.PM_PORT_DEFAULT,
+                OrchestratorMasterProtocol.class),
         DM("DataMaster",
-                POSUMConfiguration.DM_ADDRESS_DEFAULT + ":" + POSUMConfiguration.DM_PORT_DEFAULT,
+                PosumConfiguration.DM_ADDRESS_DEFAULT + ":" + PosumConfiguration.DM_PORT_DEFAULT,
                 DataMasterProtocol.class),
         SIMULATOR("SimulationMaster",
-                POSUMConfiguration.SIMULATOR_ADDRESS_DEFAULT + ":" + POSUMConfiguration.SIMULATOR_PORT_DEFAULT,
-                SimulatorProtocol.class),
+                PosumConfiguration.SIMULATOR_ADDRESS_DEFAULT + ":" + PosumConfiguration.SIMULATOR_PORT_DEFAULT,
+                SimulatorMasterProtocol.class),
         SCHEDULER("PortfolioMetaScheduler",
-                POSUMConfiguration.SCHEDULER_ADDRESS_DEFAULT + ":" + POSUMConfiguration.SCHEDULER_PORT_DEFAULT,
+                PosumConfiguration.SCHEDULER_ADDRESS_DEFAULT + ":" + PosumConfiguration.SCHEDULER_PORT_DEFAULT,
                 MetaSchedulerProtocol.class);
 
         private final String longName;
         private String address;
         private final Class<? extends StandardProtocol> accessorProtocol;
 
-        POSUMProcess(String longName, String address, Class<? extends StandardProtocol> accessorProtocol) {
+        PosumProcess(String longName, String address, Class<? extends StandardProtocol> accessorProtocol) {
             this.longName = longName;
             this.address = address;
             this.accessorProtocol = accessorProtocol;
@@ -205,7 +205,7 @@ public class Utils {
             field.setAccessible(true);
             field.set(object, value);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new POSUMException("Reflection error: ", e);
+            throw new PosumException("Reflection error: ", e);
         }
     }
 
@@ -215,7 +215,7 @@ public class Utils {
             field.setAccessible(true);
             return (T) field.get(object);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new POSUMException("Reflection error: ", e);
+            throw new PosumException("Reflection error: ", e);
         }
     }
 
@@ -226,7 +226,7 @@ public class Utils {
             method.setAccessible(true);
             return (T) method.invoke(object, args);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            throw new POSUMException("Reflection error: ", e);
+            throw new PosumException("Reflection error: ", e);
         }
     }
 
@@ -259,7 +259,7 @@ public class Utils {
         for (String name : propertyNames) {
             Method reader = findPropertyReader(descriptors, name);
             if (reader == null)
-                throw new POSUMException("Could not find property reader for " + name + " in " + beanClass);
+                throw new PosumException("Could not find property reader for " + name + " in " + beanClass);
             ret.put(name, reader);
         }
         return ret;
