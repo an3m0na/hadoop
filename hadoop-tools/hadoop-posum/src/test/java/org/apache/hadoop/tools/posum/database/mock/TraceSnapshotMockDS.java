@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.test;
+package org.apache.hadoop.tools.posum.database.mock;
 
 import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface;
 

@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.test;
+package org.apache.hadoop.tools.posum.database.mock;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -19,7 +19,7 @@ import java.util.*;
  * Created by ane on 7/26/16.
  */
 //TODO rewrite this to make use of MockDataStoreImpl features
-public class SnapshotMockDS extends MockDataStoreImpl {// implements TraceSnapshotMockDS {
+public class SnapshotMockDSFromRumen extends MockDataStoreImpl {// implements TraceSnapshotMockDS {
     private List<JobProfile> jobList = new ArrayList<>();
     private Map<String, Map<String, TaskProfile>> taskMap = new HashMap<>();
     private long simulationTime = 0;
@@ -55,11 +55,11 @@ public class SnapshotMockDS extends MockDataStoreImpl {// implements TraceSnapsh
         return profile;
     }
 
-    public void importData(String dataDumpPath) throws IOException {
+    public void populateFromTraceFile(String traceFileName) throws IOException {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", "file:///");
 
-        File fin = new File(dataDumpPath);
+        File fin = new File(traceFileName);
         JobTraceReader reader = new JobTraceReader(
                 new Path(fin.getAbsolutePath()), conf);
         LoggedJob job;

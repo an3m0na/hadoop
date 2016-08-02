@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 /**
  * Created by ane on 7/26/16.
  */
-public abstract class TestDataClientImplementations {
+public abstract class TestDataClientImpl {
     protected DataClientInterface dataStore;
     protected DBInterface db;
     protected final Long clusterTimestamp = System.currentTimeMillis();
@@ -48,6 +48,7 @@ public abstract class TestDataClientImplementations {
         List<String> returnedAppIds = db.listIds(DataEntityCollection.APP, Collections.singletonMap("user", (Object) SECOND_USER));
         String appId2 = ApplicationId.newInstance(clusterTimestamp, 2).toString();
         String appId3 = ApplicationId.newInstance(clusterTimestamp, 3).toString();
+        Collections.sort(returnedAppIds);
         assertArrayEquals(new String[]{appId2, appId3}, returnedAppIds.toArray());
     }
 
@@ -142,14 +143,14 @@ public abstract class TestDataClientImplementations {
 
         AppProfile app4 = Records.newRecord(AppProfile.class);
         ApplicationId app4Id = ApplicationId.newInstance(clusterTimestamp, 4);
-        app4.setId(app4Id.toString());
+        String app4IdString = app4Id.toString();
+        app4.setId(app4IdString);
         app4.setName(modifiedName);
         db.updateOrStore(DataEntityCollection.APP, app4);
         returnedApps = db.find(DataEntityCollection.APP,
                 Collections.singletonMap("name", (Object) modifiedName));
         assertEquals(2, returnedApps.size());
-        returned = returnedApps.get(1);
-        assertEquals(app4Id.toString(), returned.getId());
+        assertTrue(returnedApps.get(0).getId().equals(app4IdString) || returnedApps.get(1).getId().equals(app4IdString));
     }
 
 
