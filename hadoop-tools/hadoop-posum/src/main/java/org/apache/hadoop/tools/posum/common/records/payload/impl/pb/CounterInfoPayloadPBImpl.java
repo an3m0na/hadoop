@@ -2,8 +2,11 @@ package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterInfoPayload;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.POSUMProtos.CounterInfoPayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.CounterInfoPayloadProtoOrBuilder;
 
@@ -12,7 +15,7 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.CounterInfoPayloadProtoOrBuilder
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
-public class CounterInfoPayloadPBImpl extends CounterInfoPayload {
+public class CounterInfoPayloadPBImpl extends CounterInfoPayload implements PayloadPB {
     private CounterInfoPayloadProto proto = CounterInfoPayloadProto.getDefaultInstance();
     private CounterInfoPayloadProto.Builder builder = null;
     private boolean viaProto = false;
@@ -117,5 +120,16 @@ public class CounterInfoPayloadPBImpl extends CounterInfoPayload {
     public void setValue(long value) {
         maybeInitBuilder();
         builder.setTotal(value);
+    }
+
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = CounterInfoPayloadProto.parseFrom(data);
+        viaProto = true;
     }
 }

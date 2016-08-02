@@ -7,6 +7,7 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
 import org.apache.hadoop.tools.posum.common.records.payload.StringStringMapPayload;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.records.request.RegistrationRequest;
@@ -107,7 +108,7 @@ public class OrchestratorCommService extends CompositeService implements Orchest
                     map.put(Utils.PosumProcess.SCHEDULER.name(), getPSAddress());
                     map.put(Utils.PosumProcess.SIMULATOR.name(), getSMAddress());
                     map.put(Utils.PosumProcess.OM.name(), connectAddress);
-                    return SimpleResponse.newInstance(SimpleResponse.Type.STRING_STRING_MAP,
+                    return SimpleResponse.newInstance(PayloadType.STRING_STRING_MAP,
                             StringStringMapPayload.newInstance(map));
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());

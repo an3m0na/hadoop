@@ -1,15 +1,18 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimulationResultPayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimulationResultPayloadProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
  */
-public class SimulationResultPayloadPBImpl extends SimulationResultPayload {
+public class SimulationResultPayloadPBImpl extends SimulationResultPayload implements PayloadPB {
     private SimulationResultPayloadProto proto = SimulationResultPayloadProto.getDefaultInstance();
     private SimulationResultPayloadProto.Builder builder = null;
     private boolean viaProto = false;
@@ -94,6 +97,17 @@ public class SimulationResultPayloadPBImpl extends SimulationResultPayload {
     public void setScore(CompoundScorePayload score) {
         maybeInitBuilder();
         builder.setScore(((CompoundScorePayloadPBImpl) score).getProto());
+    }
+
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = SimulationResultPayloadProto.parseFrom(data);
+        viaProto = true;
     }
 
 }

@@ -1,7 +1,9 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
@@ -18,7 +20,7 @@ import java.util.List;
 /**
  * Created by ane on 3/20/16.
  */
-public class MultiEntityPayloadPBImpl extends MultiEntityPayload {
+public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements PayloadPB {
     private MultiEntityProto proto = MultiEntityProto.getDefaultInstance();
     private MultiEntityProto.Builder builder = null;
     private boolean viaProto = false;
@@ -143,5 +145,16 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload {
     @Override
     public void setEntities(List<GeneralDataEntity> entities) {
         this.entities = entities;
+    }
+
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = MultiEntityProto.parseFrom(data);
+        viaProto = true;
     }
 }

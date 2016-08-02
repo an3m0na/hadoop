@@ -1,6 +1,9 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
@@ -13,7 +16,7 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityProtoOrBuilder;
 /**
  * Created by ane on 3/20/16.
  */
-public class SingleEntityPayloadPBImpl extends SingleEntityPayload {
+public class SingleEntityPayloadPBImpl extends SingleEntityPayload implements PayloadPB {
     private SingleEntityProto proto = SingleEntityProto.getDefaultInstance();
     private SingleEntityProto.Builder builder = null;
     private boolean viaProto = false;
@@ -103,5 +106,16 @@ public class SingleEntityPayloadPBImpl extends SingleEntityPayload {
         maybeInitBuilder();
         if (entity != null)
             builder.setEntity(((GeneralDataEntityPBImpl) entity).getProto().toByteString());
+    }
+
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = SingleEntityProto.parseFrom(data);
+        viaProto = true;
     }
 }

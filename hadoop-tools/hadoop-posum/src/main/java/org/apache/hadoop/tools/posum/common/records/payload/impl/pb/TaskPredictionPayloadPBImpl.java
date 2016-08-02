@@ -2,8 +2,11 @@ package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.TaskPredictionPayload;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.POSUMProtos.TaskPredictionPayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.TaskPredictionPayloadProtoOrBuilder;
 
@@ -12,7 +15,7 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.TaskPredictionPayloadProtoOrBuil
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
-public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload {
+public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload implements PayloadPB {
     private TaskPredictionPayloadProto proto = TaskPredictionPayloadProto.getDefaultInstance();
     private TaskPredictionPayloadProto.Builder builder = null;
     private boolean viaProto = false;
@@ -111,4 +114,14 @@ public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload {
         builder.setDuration(duration);
     }
 
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = TaskPredictionPayloadProto.parseFrom(data);
+        viaProto = true;
+    }
 }

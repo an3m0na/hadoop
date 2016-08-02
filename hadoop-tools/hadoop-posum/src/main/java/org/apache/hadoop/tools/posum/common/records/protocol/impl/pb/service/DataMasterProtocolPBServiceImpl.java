@@ -29,8 +29,8 @@ public class DataMasterProtocolPBServiceImpl implements DataMasterProtocolPB {
     public SimpleResponseProto executeDatabaseCall(RpcController controller,
                                                    POSUMProtos.DatabaseCallProto proto) throws ServiceException {
         try {
-            SimpleResponse response = real.executeDatabaseCall(new DatabaseCallWrapperPBImpl(proto));
-            return ((SimplePropertyResponsePBImpl) response).getProto();
+            SimpleResponse response = real.executeDatabaseCall(new DatabaseCallWrapperPBImpl(proto).getInnerCall());
+            return ((SimpleResponsePBImpl) response).getProto();
         } catch (YarnException | IOException e) {
             throw new ServiceException(e);
         }

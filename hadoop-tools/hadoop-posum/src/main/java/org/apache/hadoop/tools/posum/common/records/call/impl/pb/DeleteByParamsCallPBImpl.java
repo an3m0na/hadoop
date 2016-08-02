@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.common.records.call.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.pb.ByteStringSerializable;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.DeleteByParamsCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * Created by ane on 3/20/16.
  */
-public class DeleteByParamsCallPBImpl extends DeleteByParamsCall implements ByteStringSerializable {
+public class DeleteByParamsCallPBImpl extends DeleteByParamsCall implements PayloadPB {
     private ByParamsProto proto = ByParamsProto.getDefaultInstance();
     private ByParamsProto.Builder builder = null;
     private boolean viaProto = false;

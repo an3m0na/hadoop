@@ -1,16 +1,20 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimplePropertyPayloadProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimplePropertyPayloadProtoOrBuilder;
+
 import java.io.IOException;
 
 /**
  * Created by ane on 3/20/16.
  */
-public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload {
+public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implements PayloadPB {
     private SimplePropertyPayloadProto proto = SimplePropertyPayloadProto.getDefaultInstance();
     private SimplePropertyPayloadProto.Builder builder = null;
     private boolean viaProto = false;
@@ -109,6 +113,17 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload {
     public void setName(String name) {
         maybeInitBuilder();
         builder.setName(name);
+    }
+
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = SimplePropertyPayloadProto.parseFrom(data);
+        viaProto = true;
     }
 
 

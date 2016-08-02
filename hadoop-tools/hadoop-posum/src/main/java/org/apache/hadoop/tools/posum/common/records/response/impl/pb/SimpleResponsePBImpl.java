@@ -1,8 +1,10 @@
 package org.apache.hadoop.tools.posum.common.records.response.impl.pb;
 
-import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.tools.posum.common.records.payload.Payload;
+import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
@@ -11,7 +13,7 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProtoOrBuilder;
 /**
  * Created by ane on 3/20/16.
  */
-public abstract class SimpleResponsePBImpl<T> extends SimpleResponse<T> {
+public class SimpleResponsePBImpl<T extends Payload> extends SimpleResponse<T> {
     private SimpleResponseProto proto = SimpleResponseProto.getDefaultInstance();
     private SimpleResponseProto.Builder builder = null;
     private boolean viaProto = false;
@@ -57,7 +59,7 @@ public abstract class SimpleResponsePBImpl<T> extends SimpleResponse<T> {
     private void mergeLocalToBuilder() {
         maybeInitBuilder();
         if (this.payload != null)
-            builder.setPayload(payloadToBytes(payload));
+            builder.setPayload(((PayloadPB) payload).getProtoBytes());
     }
 
     private void mergeLocalToProto() {
@@ -116,26 +118,28 @@ public abstract class SimpleResponsePBImpl<T> extends SimpleResponse<T> {
     }
 
     @Override
-    public Type getType() {
+    public PayloadType getType() {
         SimpleResponseProtoOrBuilder p = viaProto ? proto : builder;
-        return Type.fromProto(p.getType());
+        return PayloadType.valueOf(p.getType().name().substring("RESP_".length()));
     }
 
     @Override
-    public void setType(Type type) {
+    public void setType(PayloadType payloadType) {
         maybeInitBuilder();
-        if (type != null)
-            builder.setType(type.toProto());
+        if (payloadType != null)
+            builder.setType(SimpleResponseProto.SimpleResponseTypeProto.valueOf("RESP_" + payloadType.name()));
     }
 
     @Override
     public T getPayload() {
-        if (this.payload == null) {
+        if (payload == null) {
             SimpleResponseProtoOrBuilder p = viaProto ? proto : builder;
             if (p.hasPayload())
                 try {
-                    this.payload = bytesToPayload(p.getPayload());
-                } catch (InvalidProtocolBufferException e) {
+                    payload = (T) getType().getImplClass().newInstance();
+                    ((PayloadPB) payload).populateFromProtoBytes(p.getPayload());
+                    return payload;
+                } catch (InstantiationException | IllegalAccessException | InvalidProtocolBufferException e) {
                     throw new PosumException("Could not read message payload", e);
                 }
         }
@@ -146,8 +150,4 @@ public abstract class SimpleResponsePBImpl<T> extends SimpleResponse<T> {
     public void setPayload(T payload) {
         this.payload = payload;
     }
-
-    public abstract ByteString payloadToBytes(T payload);
-
-    public abstract T bytesToPayload(ByteString data) throws InvalidProtocolBufferException;
 }

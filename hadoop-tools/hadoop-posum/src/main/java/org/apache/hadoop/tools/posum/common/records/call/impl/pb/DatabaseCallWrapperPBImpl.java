@@ -1,7 +1,9 @@
 package org.apache.hadoop.tools.posum.common.records.call.impl.pb;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.pb.ByteStringSerializable;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
@@ -13,7 +15,7 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProtoOrBuilder;
 /**
  * Created by ane on 8/1/16.
  */
-public class DatabaseCallWrapperPBImpl implements DatabaseCall {
+public class DatabaseCallWrapperPBImpl implements DatabaseCall, PayloadPB {
     private DatabaseCallProto proto = DatabaseCallProto.getDefaultInstance();
     private DatabaseCallProto.Builder builder = null;
     private boolean viaProto = false;
@@ -91,7 +93,7 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall {
         if (type == null)
             throw new PosumException("DatabaseCall class not recognized " + call.getClass());
         builder.setType(DatabaseCallProto.CallTypeProto.valueOf("CALL_" + type.name()));
-        ByteStringSerializable serializableCall = (ByteStringSerializable) call;
+        PayloadPB serializableCall = (PayloadPB) call;
         builder.setCall(serializableCall.getProtoBytes());
     }
 
@@ -100,7 +102,7 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall {
         Class<? extends DatabaseCall> callClass = getCallType().getMappedClass();
         try {
             DatabaseCall call = callClass.newInstance();
-            ((ByteStringSerializable) call).populateFromProtoBytes(p.getCall());
+            ((PayloadPB) call).populateFromProtoBytes(p.getCall());
             return call;
         } catch (Exception e) {
             throw new PosumException("Could not read call from byte string " + p.getCall() + " as " + callClass, e);
@@ -110,5 +112,16 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall {
     @Override
     public Payload executeCall(ExtendedDataClientInterface dataStore) {
         return getInnerCall().executeCall(dataStore);
+    }
+
+    @Override
+    public ByteString getProtoBytes() {
+        return getProto().toByteString();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        proto = DatabaseCallProto.parseFrom(data);
+        viaProto = true;
     }
 }

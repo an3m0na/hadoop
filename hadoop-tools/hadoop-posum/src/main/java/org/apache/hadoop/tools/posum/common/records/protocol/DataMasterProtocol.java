@@ -17,7 +17,7 @@ import java.io.IOException;
  * Created by ane on 3/19/16.
  */
 public interface DataMasterProtocol extends StandardProtocol {
-    SimpleResponse<? extends Payload> executeDatabaseCall(DatabaseCall call) throws IOException, YarnException;
+    SimpleResponse executeDatabaseCall(DatabaseCall call) throws IOException, YarnException;
     SimpleResponse<SingleEntityPayload> getEntity(SimpleRequest request) throws IOException, YarnException;
     SimpleResponse<MultiEntityPayload> listEntities(SearchRequest request) throws IOException, YarnException;
     SimpleResponse<StringListPayload> listIds(SearchRequest request) throws IOException, YarnException;

@@ -54,10 +54,10 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
     }
 
     @Override
-    public SimpleResponse<? extends Payload> executeDatabaseCall(DatabaseCall call) throws IOException, YarnException {
+    public SimpleResponse executeDatabaseCall(DatabaseCall call) throws IOException, YarnException {
         DatabaseCallProto callProto = new DatabaseCallWrapperPBImpl(call).getProto();
         try {
-            return new SimplePropertyResponsePBImpl(proxy.executeDatabaseCall(null, callProto));
+            return new SimpleResponsePBImpl(proxy.executeDatabaseCall(null, callProto));
         } catch (ServiceException e) {
             RPCUtil.unwrapAndThrowException(e);
             return null;
