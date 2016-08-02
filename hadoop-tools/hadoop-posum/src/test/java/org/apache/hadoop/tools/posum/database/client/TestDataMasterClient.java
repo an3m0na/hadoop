@@ -4,7 +4,7 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.core.orchestrator.OrchestratorMaster;
 import org.apache.hadoop.tools.posum.database.master.DataMaster;
 import org.apache.hadoop.tools.posum.test.ServiceRunner;
-import org.apache.hadoop.tools.posum.test.TestDataClientImplementations;
+import org.apache.hadoop.tools.posum.test.TestDataClientImpl;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.After;
 import org.junit.Test;
@@ -12,7 +12,7 @@ import org.junit.Test;
 /**
  * Created by ane on 3/21/16.
  */
-public class TestDataMasterClient extends TestDataClientImplementations {
+public class TestDataMasterClient extends TestDataClientImpl {
     private ServiceRunner posumMaster, dataMaster;
 
     @Override
