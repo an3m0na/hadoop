@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
+import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.*;
@@ -65,6 +66,14 @@ public class DataMasterClient extends AbstractService implements DataClientInter
         super.serviceStop();
     }
 
+    public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call) {
+        try {
+            return (T) Utils.handleError("executeDatabaseCall", dmClient.executeDatabaseCall(call)).getPayload();
+        } catch (IOException | YarnException e) {
+            throw new PosumException("Error during RPC call", e);
+        }
+    }
+
     @Override
     public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
         try {
@@ -81,7 +90,7 @@ public class DataMasterClient extends AbstractService implements DataClientInter
     }
 
     @Override
-    public  List<String> listIds(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
+    public List<String> listIds(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
         try {
             StringListPayload payload = Utils.handleError("listIds",
                     dmClient.listIds(SearchRequest.newInstance(db, collection, queryParams))).getPayload();

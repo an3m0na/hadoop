@@ -7,7 +7,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 /**
  * Created by ane on 7/29/16.
  */
-public abstract class ReadCall<T extends Payload> extends GeneralDatabaseCall<T> {
+public abstract class ReadCall<T extends Payload> extends LockBasedDatabaseCallImpl<T> {
 
     public abstract DataEntityDB getEntityDB();
 
@@ -18,12 +18,12 @@ public abstract class ReadCall<T extends Payload> extends GeneralDatabaseCall<T>
     public abstract void setEntityCollection(DataEntityCollection type);
 
     @Override
-    protected void prepare() {
+    public void lockDatabase() {
         dataStore.lockForRead(getEntityDB());
     }
 
     @Override
-    protected void wrapUp() {
+    public void unlockDatabase() {
         dataStore.unlockForRead(getEntityDB());
     }
 

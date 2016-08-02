@@ -13,17 +13,17 @@ public enum DatabaseCallType {
     STORE(StoreCallPBImpl.class),
     UPDATE_OR_STORE(UpdateOrStoreCallPBImpl.class);
 
-    private Class<? extends GeneralDatabaseCall> mappedClass;
+    private Class<? extends DatabaseCall> mappedClass;
 
-    DatabaseCallType(Class<? extends GeneralDatabaseCall> mappedClass) {
+    DatabaseCallType(Class<? extends DatabaseCall> mappedClass) {
         this.mappedClass = mappedClass;
     }
 
-    public Class<? extends GeneralDatabaseCall> getMappedClass() {
+    public Class<? extends DatabaseCall> getMappedClass() {
         return mappedClass;
     }
 
-    public static DatabaseCallType fromMappedClass(Class<? extends GeneralDatabaseCall> requiredClass) {
+    public static DatabaseCallType fromMappedClass(Class<? extends DatabaseCall> requiredClass) {
         for (DatabaseCallType type : values()) {
             if (type.getMappedClass().equals(requiredClass))
                 return type;

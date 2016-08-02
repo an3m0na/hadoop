@@ -25,7 +25,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class SQSQueue implements Queue {
 
     private final List<SQSAppAttempt> apps = new ArrayList<>();
-    // get a lock with fair distribution for app list updates
+    // get a lockDatabase with fair distribution for app list updates
     private final ReadWriteLock rwl = new ReentrantReadWriteLock(true);
     private final Lock readLock = rwl.readLock();
     private final Lock writeLock = rwl.writeLock();

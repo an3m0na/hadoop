@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.*;
@@ -90,6 +91,20 @@ public class DataCommService extends CompositeService implements DataMasterProto
             this.dmServer.stop();
         }
         super.serviceStop();
+    }
+
+    @Override
+    public SimpleResponse<? extends Payload> executeDatabaseCall(DatabaseCall call) {
+        logger.debug("Got request for call " + call.getClass());
+        try {
+            //TODO use dynamic payload in response
+            Payload payload = call.executeCall(dmContext.getDataStore());
+            return SimpleResponse.newInstance(SimpleResponse.Type.SIMPLE_PROPERTY, payload);
+        } catch (Exception e) {
+            String message = "Exception executing call " + call;
+            logger.error(message, e);
+            return SimpleResponse.newInstance(SimpleResponse.Type.SIMPLE_PROPERTY, message, e);
+        }
     }
 
     @Override

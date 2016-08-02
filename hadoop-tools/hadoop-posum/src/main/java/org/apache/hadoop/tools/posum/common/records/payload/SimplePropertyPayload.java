@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Created by ane on 3/23/16.
  */
-public abstract class SimplePropertyPayload implements Payload{
+public abstract class SimplePropertyPayload implements Payload {
 
     public enum PropertyType {
         STRING(String.class) {

@@ -3,8 +3,8 @@ package org.apache.hadoop.tools.posum.common.records.call.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.tools.posum.common.records.call.ThreePhaseDatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.pb.ByteStringSerializable;
-import org.apache.hadoop.tools.posum.common.records.call.GeneralDatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.TransactionCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
@@ -22,7 +22,7 @@ public class TransactionCallPBImpl extends TransactionCall implements ByteString
     private TransactionCallProto.Builder builder = null;
     private boolean viaProto = false;
 
-    List<GeneralDatabaseCall> calls;
+    List<ThreePhaseDatabaseCall> calls;
 
     public TransactionCallPBImpl() {
         builder = TransactionCallProto.newBuilder();
@@ -72,7 +72,7 @@ public class TransactionCallPBImpl extends TransactionCall implements ByteString
                     public Iterator<POSUMProtos.DatabaseCallProto> iterator() {
                         return new Iterator<POSUMProtos.DatabaseCallProto>() {
 
-                            Iterator<GeneralDatabaseCall> iterator = calls.iterator();
+                            Iterator<ThreePhaseDatabaseCall> iterator = calls.iterator();
 
                             @Override
                             public void remove() {
@@ -81,9 +81,7 @@ public class TransactionCallPBImpl extends TransactionCall implements ByteString
 
                             @Override
                             public POSUMProtos.DatabaseCallProto next() {
-                                DatabaseCallWrapperPBImpl wrapper = new DatabaseCallWrapperPBImpl();
-                                wrapper.setInnerCall(iterator.next());
-                                return wrapper.getProto();
+                                return new DatabaseCallWrapperPBImpl(iterator.next()).getProto();
                             }
 
                             @Override
@@ -125,13 +123,13 @@ public class TransactionCallPBImpl extends TransactionCall implements ByteString
     }
 
     @Override
-    public List<GeneralDatabaseCall> getCallList() {
+    public List<ThreePhaseDatabaseCall> getCallList() {
         if (this.calls == null) {
             TransactionCallProtoOrBuilder p = viaProto ? proto : builder;
             this.calls = new ArrayList<>(p.getCallsCount());
             for (POSUMProtos.DatabaseCallProto callProto : p.getCallsList()) {
                 if (callProto != null) {
-                    calls.add(new DatabaseCallWrapperPBImpl(callProto).getInnerCall());
+                    calls.add((ThreePhaseDatabaseCall) new DatabaseCallWrapperPBImpl(callProto).getInnerCall());
                 }
             }
         }
@@ -139,14 +137,14 @@ public class TransactionCallPBImpl extends TransactionCall implements ByteString
     }
 
     @Override
-    public void setCallList(List<GeneralDatabaseCall> callList) {
+    public void setCallList(List<ThreePhaseDatabaseCall> callList) {
         if (calls == null)
             return;
         this.calls = new ArrayList<>(callList);
     }
 
     @Override
-    public TransactionCall addCall(GeneralDatabaseCall call) {
+    public TransactionCall addCall(ThreePhaseDatabaseCall call) {
         getCallList().add(call);
         return this;
     }
