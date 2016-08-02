@@ -12,6 +12,7 @@ public abstract class SimpleResponse<T> {
 
     public enum Type {
         VOID(VoidResponsePBImpl.class),
+        SIMPLE_PROPERTY(SimplePropertyResponsePBImpl.class),
         SINGLE_ENTITY(SingleEntityResponsePBImpl.class),
         MULTI_ENTITY(MultiEntityResponsePBImpl.class),
         STRING_STRING_MAP(StringStringMapResponsePBImpl.class),

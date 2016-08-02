@@ -24,7 +24,7 @@ public abstract class DeleteByIdCall extends DeleteCall {
     public abstract void setId(String id);
 
     @Override
-    protected VoidPayload execute() {
+    public VoidPayload execute() {
         dataStore.delete(getEntityDB(), getEntityCollection(), getId());
         return VoidPayload.newInstance();
     }

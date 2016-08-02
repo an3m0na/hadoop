@@ -23,7 +23,7 @@ public abstract class FindByIdCall extends ReadCall<SingleEntityPayload> {
     public abstract void setId(String id);
 
     @Override
-    protected SingleEntityPayload execute() {
+    public SingleEntityPayload execute() {
         return SingleEntityPayload.newInstance(getEntityCollection(),
                 dataStore.findById(getEntityDB(), getEntityCollection(), getId()));
     }

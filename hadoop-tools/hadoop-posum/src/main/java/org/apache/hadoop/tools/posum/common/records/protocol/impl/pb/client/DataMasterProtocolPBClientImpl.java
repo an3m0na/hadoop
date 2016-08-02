@@ -1,24 +1,28 @@
 package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.client;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
+import org.apache.hadoop.tools.posum.common.records.call.impl.pb.DatabaseCallWrapperPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.response.impl.pb.MultiEntityResponsePBImpl;
-import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SingleEntityResponsePBImpl;
+import org.apache.hadoop.tools.posum.common.records.response.impl.pb.*;
 import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SearchRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.DataMasterProtocolPB;
-import org.apache.hadoop.tools.posum.common.records.response.impl.pb.StringListResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
+import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
@@ -46,6 +50,17 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
     public void close() {
         if (this.proxy != null) {
             RPC.stopProxy(this.proxy);
+        }
+    }
+
+    @Override
+    public SimpleResponse<? extends Payload> executeDatabaseCall(DatabaseCall call) throws IOException, YarnException {
+        DatabaseCallProto callProto = new DatabaseCallWrapperPBImpl(call).getProto();
+        try {
+            return new SimplePropertyResponsePBImpl(proxy.executeDatabaseCall(null, callProto));
+        } catch (ServiceException e) {
+            RPCUtil.unwrapAndThrowException(e);
+            return null;
         }
     }
 

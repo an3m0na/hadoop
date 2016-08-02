@@ -9,7 +9,7 @@ import org.apache.hadoop.yarn.util.Records;
 /**
  * Created by ane on 8/1/16.
  */
-public abstract class WriteCall extends GeneralDatabaseCall<SimplePropertyPayload> {
+public abstract class WriteCall extends LockBasedDatabaseCallImpl<SimplePropertyPayload> {
 
     public static StoreCall newInstance(DataEntityDB db, DataEntityCollection collection, GeneralDataEntity object) {
         StoreCall call = Records.newRecord(StoreCall.class);
@@ -32,12 +32,12 @@ public abstract class WriteCall extends GeneralDatabaseCall<SimplePropertyPayloa
     public abstract void setEntity(GeneralDataEntity entity);
 
     @Override
-    protected void prepare() {
+    public void lockDatabase() {
         dataStore.lockForWrite(getEntityDB());
     }
 
     @Override
-    protected void wrapUp() {
+    public void unlockDatabase() {
         dataStore.unlockForWrite(getEntityDB());
     }
 }

@@ -9,15 +9,15 @@ import java.util.List;
 /**
  * Created by ane on 7/30/16.
  */
-public abstract class TransactionCall extends GeneralDatabaseCall<Payload> {
+public abstract class TransactionCall extends LockBasedDatabaseCallImpl<Payload> {
 
     public abstract DataEntityDB getEntityDBOrNull();
 
     public abstract void setEntityDBOrNull(DataEntityDB db);
 
-    public abstract List<GeneralDatabaseCall> getCallList();
+    public abstract List<ThreePhaseDatabaseCall> getCallList();
 
-    public abstract void setCallList(List<GeneralDatabaseCall> callList);
+    public abstract void setCallList(List<ThreePhaseDatabaseCall> callList);
 
     /**
      * Add a new database call to the call list
@@ -25,11 +25,11 @@ public abstract class TransactionCall extends GeneralDatabaseCall<Payload> {
      * @param call
      * @return the modified TransactionCall object (useful for chaining adds)
      */
-    public abstract TransactionCall addCall(GeneralDatabaseCall call);
+    public abstract TransactionCall addCall(ThreePhaseDatabaseCall call);
 
 
     @Override
-    protected void prepare() {
+    public void lockDatabase() {
         if (getEntityDBOrNull() != null)
             dataStore.lockForWrite(getEntityDBOrNull());
         else
@@ -37,16 +37,16 @@ public abstract class TransactionCall extends GeneralDatabaseCall<Payload> {
     }
 
     @Override
-    protected Payload execute() {
+    public Payload execute() {
         Payload ret = VoidPayload.newInstance();
-        for (GeneralDatabaseCall call : getCallList()) {
+        for (ThreePhaseDatabaseCall call : getCallList()) {
             ret = call.execute();
         }
         return ret;
     }
 
     @Override
-    protected void wrapUp() {
+    public void unlockDatabase() {
         if (getEntityDBOrNull() != null)
             dataStore.unlockForWrite(getEntityDBOrNull());
         else

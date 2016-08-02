@@ -6,7 +6,7 @@ import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface
 /**
  * Created by ane on 7/29/16.
  */
-public abstract class GeneralDatabaseCall<T extends Payload> implements DatabaseCall<T> {
+abstract class ThreePhaseDatabaseCallImpl<T extends Payload> implements ThreePhaseDatabaseCall<T> {
     protected ExtendedDataClientInterface dataStore;
 
     @Override
@@ -17,22 +17,9 @@ public abstract class GeneralDatabaseCall<T extends Payload> implements Database
             T ret = execute();
             commit();
             return ret;
-        } finally {
+        } catch (Exception e) {
             rollBack();
+            throw e;
         }
     }
-
-    protected abstract void prepare();
-
-    protected abstract T execute();
-
-    protected void commit() {
-        wrapUp();
-    }
-
-    protected void rollBack() {
-        wrapUp();
-    }
-
-    protected abstract void wrapUp();
 }

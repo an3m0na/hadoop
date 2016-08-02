@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -9,6 +10,7 @@ import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.database.client.DBImpl;
 import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.database.client.DataClientInterface;
+import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface;
 import org.mongojack.DBQuery;
 
 import java.util.ArrayList;
@@ -21,7 +23,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by ane on 2/9/16.
  */
-public class DataStore implements DataClientInterface {
+public class DataStore implements ExtendedDataClientInterface {
 
     private static Log logger = LogFactory.getLog(DataStore.class);
 
@@ -231,5 +233,45 @@ public class DataStore implements DataClientInterface {
     public <T> void storeLogReport(LogEntry<T> logReport) {
         logReport.setId(logReport.getType().name());
         storeLogEntry(logReport);
+    }
+
+    @Override
+    public Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void clear() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void lockForRead(DataEntityDB db) {
+        locks.get(logDb.getId()).readLock().lock();
+    }
+
+    @Override
+    public void lockForWrite(DataEntityDB db) {
+        locks.get(logDb.getId()).writeLock().lock();
+    }
+
+    @Override
+    public void unlockForRead(DataEntityDB db) {
+        locks.get(logDb.getId()).readLock().unlock();
+    }
+
+    @Override
+    public void unlockForWrite(DataEntityDB db) {
+        locks.get(logDb.getId()).writeLock().unlock();
+    }
+
+    @Override
+    public void lockForWrite() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void unlockForWrite() {
+        throw new NotImplementedException();
     }
 }

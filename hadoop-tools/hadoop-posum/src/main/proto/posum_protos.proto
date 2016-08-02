@@ -258,6 +258,7 @@ message SimpleResponseProto {
         RESP_MULTI_ENTITY = 2;
         RESP_STRING_STRING_MAP = 3;
         RESP_STRING_LIST = 4;
+        RESP_SIMPLE_PROPERTY = 5;
     }
 }
 

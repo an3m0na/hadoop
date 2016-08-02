@@ -26,7 +26,7 @@ public abstract class DeleteByParamsCall extends DeleteCall {
     public abstract void setParams(Map<String, Object> params);
 
     @Override
-    protected VoidPayload execute() {
+    public VoidPayload execute() {
         dataStore.delete(getEntityDB(), getEntityCollection(), getParams());
         return VoidPayload.newInstance();
     }

@@ -8,7 +8,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayloa
 public abstract class StoreCall extends WriteCall {
 
     @Override
-    protected SimplePropertyPayload execute() {
+    public SimplePropertyPayload execute() {
         return SimplePropertyPayload.newInstance(
                 "id",
                 SimplePropertyPayload.PropertyType.STRING,

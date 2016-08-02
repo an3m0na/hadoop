@@ -40,7 +40,7 @@ public abstract class FindByParamsCall extends ReadCall<MultiEntityPayload> {
     public abstract void setOffsetOrZero(int offsetOrZero);
 
     @Override
-    protected MultiEntityPayload execute() {
+    public MultiEntityPayload execute() {
         return MultiEntityPayload.newInstance(getEntityCollection(),
                 dataStore.find(getEntityDB(), getEntityCollection(), getParams(), getOffsetOrZero(), getLimitOrZero()));
     }

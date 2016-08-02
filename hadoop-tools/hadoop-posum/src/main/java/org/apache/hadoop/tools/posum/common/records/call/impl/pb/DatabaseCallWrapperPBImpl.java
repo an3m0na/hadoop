@@ -3,7 +3,6 @@ package org.apache.hadoop.tools.posum.common.records.call.impl.pb;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.pb.ByteStringSerializable;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
-import org.apache.hadoop.tools.posum.common.records.call.GeneralDatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
@@ -21,6 +20,11 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall {
 
     public DatabaseCallWrapperPBImpl() {
         builder = DatabaseCallProto.newBuilder();
+    }
+
+    public DatabaseCallWrapperPBImpl(DatabaseCall call) {
+        this();
+        setInnerCall(call);
     }
 
     public DatabaseCallWrapperPBImpl(DatabaseCallProto proto) {
@@ -79,7 +83,7 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall {
         return DatabaseCallType.valueOf(p.getType().name().substring("CALL_".length()));
     }
 
-    public void setInnerCall(GeneralDatabaseCall call) {
+    public void setInnerCall(DatabaseCall call) {
         if (call == null)
             return;
         maybeInitBuilder();
@@ -91,11 +95,11 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall {
         builder.setCall(serializableCall.getProtoBytes());
     }
 
-    public GeneralDatabaseCall getInnerCall() {
+    public DatabaseCall getInnerCall() {
         DatabaseCallProtoOrBuilder p = viaProto ? proto : builder;
-        Class<? extends GeneralDatabaseCall> callClass = getCallType().getMappedClass();
+        Class<? extends DatabaseCall> callClass = getCallType().getMappedClass();
         try {
-            GeneralDatabaseCall call = callClass.newInstance();
+            DatabaseCall call = callClass.newInstance();
             ((ByteStringSerializable) call).populateFromProtoBytes(p.getCall());
             return call;
         } catch (Exception e) {

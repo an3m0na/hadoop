@@ -8,7 +8,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayloa
 public abstract class UpdateOrStoreCall extends WriteCall{
 
     @Override
-    protected SimplePropertyPayload execute() {
+    public SimplePropertyPayload execute() {
         return SimplePropertyPayload.newInstance(
                 "upsertedId",
                 SimplePropertyPayload.PropertyType.BOOL,
