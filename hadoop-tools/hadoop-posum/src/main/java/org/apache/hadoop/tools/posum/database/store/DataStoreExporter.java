@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.database.store;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.json.JsonFileWriter;
 import org.apache.hadoop.tools.posum.database.client.DataClientInterface;
 import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface;
@@ -30,7 +30,7 @@ public class DataStoreExporter {
         File dumpDir = new File(dumpPath);
         if (!dumpDir.exists())
             if (!dumpDir.mkdirs())
-                throw new POSUMException("Could not create data dump directory: " + dumpPath);
+                throw new PosumException("Could not create data dump directory: " + dumpPath);
         for (Map.Entry<DataEntityDB, List<DataEntityCollection>> dbMapEntry : collections.entrySet()) {
             for (DataEntityCollection collection : dbMapEntry.getValue()) {
                 List<GeneralDataEntity> entities =
@@ -45,7 +45,7 @@ public class DataStoreExporter {
                     }
                     writer.close();
                 } catch (IOException e) {
-                    throw new POSUMException("Did not successfully write file contents to " + outFile.getName(), e);
+                    throw new PosumException("Did not successfully write file contents to " + outFile.getName(), e);
                 }
             }
         }

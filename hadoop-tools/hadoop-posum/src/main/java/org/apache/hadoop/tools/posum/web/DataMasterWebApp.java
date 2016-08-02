@@ -19,8 +19,8 @@ import java.util.Map;
 /**
  * Created by ane on 4/29/16.
  */
-public class DataMasterWebApp extends POSUMWebApp {
-    private static Log logger = LogFactory.getLog(POSUMWebApp.class);
+public class DataMasterWebApp extends PosumWebApp {
+    private static Log logger = LogFactory.getLog(PosumWebApp.class);
 
     private final transient DataMasterContext context;
 

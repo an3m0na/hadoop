@@ -1,11 +1,11 @@
 option java_package = "org.apache.hadoop.yarn.proto";
-option java_outer_classname = "SimulatorProtocol";
+option java_outer_classname = "SimulatorMasterProtocol";
 option java_generic_services = true;
 option java_generate_equals_and_hash = true;
 package hadoop.yarn;
 
 import "posum_protos.proto";
 
-service SimulatorProtocolService {
+service SimulatorMasterProtocolService {
     rpc handleSimpleRequest (SimpleRequestProto) returns (SimpleResponseProto);
 }

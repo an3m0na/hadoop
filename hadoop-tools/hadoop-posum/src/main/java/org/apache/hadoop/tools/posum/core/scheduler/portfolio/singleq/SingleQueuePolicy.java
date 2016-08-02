@@ -4,9 +4,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -914,7 +913,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
             return;
         }
         //TODO
-        throw new POSUMException("Cannot transfer state from unknown policy " + other.getClass().getName());
+        throw new PosumException("Cannot transfer state from unknown policy " + other.getClass().getName());
     }
 }
 

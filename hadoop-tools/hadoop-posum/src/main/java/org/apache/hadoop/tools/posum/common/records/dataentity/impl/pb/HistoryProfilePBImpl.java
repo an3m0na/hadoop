@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.HistoryProfile;
@@ -68,7 +68,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
                 Class eClass = getType().getMappedClass();
                 return (T) ((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(p.getOriginal());
             } catch (Exception e) {
-                throw new POSUMException("Could not read object from byte string " + p.getOriginal(), e);
+                throw new PosumException("Could not read object from byte string " + p.getOriginal(), e);
             }
         }
         return null;

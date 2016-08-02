@@ -4,7 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaSchedulerNode;
@@ -39,8 +39,8 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
     @Override
     public void initializePlugin(Configuration conf, MetaSchedulerCommService commService) {
         super.initializePlugin(conf, commService);
-        maxCheck = conf.getLong(POSUMConfiguration.REPRIORITIZE_INTERVAL,
-                POSUMConfiguration.REPRIORITIZE_INTERVAL_DEFAULT);
+        maxCheck = conf.getLong(PosumConfiguration.REPRIORITIZE_INTERVAL,
+                PosumConfiguration.REPRIORITIZE_INTERVAL_DEFAULT);
     }
 
     @Override

@@ -5,7 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
@@ -55,7 +55,7 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
             Constructor<A> constructor = aClass.getConstructor(Configuration.class, ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
             return constructor.newInstance(posumConf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate app attempt via default constructor", e);
+            throw new PosumException("Failed to instantiate app attempt via default constructor", e);
         }
     }
 
@@ -64,7 +64,7 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
             Constructor<A> constructor = aClass.getConstructor(ExtCaAppAttempt.class);
             return constructor.newInstance(attempt);
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate app attempt via default constructor", e);
+            throw new PosumException("Failed to instantiate app attempt via default constructor", e);
         }
     }
 
@@ -74,7 +74,7 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
             field.setAccessible(true);
             field.set(inner, value);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new POSUMException("Reflection error: ", e);
+            throw new PosumException("Reflection error: ", e);
         }
     }
 
@@ -84,7 +84,7 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
             field.setAccessible(true);
             return (T) field.get(inner);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new POSUMException("Reflection error: ", e);
+            throw new PosumException("Reflection error: ", e);
         }
     }
 
@@ -95,7 +95,7 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
             method.setAccessible(true);
             return (T) method.invoke(inner, args);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            throw new POSUMException("Reflection error: ", e);
+            throw new PosumException("Reflection error: ", e);
         }
     }
 

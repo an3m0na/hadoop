@@ -4,7 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.GeneralLooper;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
 
@@ -25,8 +25,8 @@ public class HadoopMonitor extends GeneralLooper<HadoopMonitor> {
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         super.serviceInit(conf);
-        setSleepInterval(conf.getLong(POSUMConfiguration.CLUSTER_MONITOR_HEARTBEAT_MS,
-                POSUMConfiguration.CLUSTER_MONITOR_HEARTBEAT_MS_DEFAULT));
+        setSleepInterval(conf.getLong(PosumConfiguration.CLUSTER_MONITOR_HEARTBEAT_MS,
+                PosumConfiguration.CLUSTER_MONITOR_HEARTBEAT_MS_DEFAULT));
     }
 
     @Override

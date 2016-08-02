@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
@@ -45,7 +45,7 @@ public class SQSchedulerNode extends SchedulerNode {
             Constructor<N> constructor = nClass.getConstructor(RMNode.class, boolean.class);
             return constructor.newInstance(node, usePortForNodeName);
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate scheduler node via constructor" + e);
+            throw new PosumException("Failed to instantiate scheduler node via constructor" + e);
         }
     }
 
@@ -54,7 +54,7 @@ public class SQSchedulerNode extends SchedulerNode {
             Constructor<N> constructor = nClass.getConstructor(SQSchedulerNode.class);
             return constructor.newInstance(node);
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate scheduler node via constructor" + e);
+            throw new PosumException("Failed to instantiate scheduler node via constructor" + e);
         }
     }
 

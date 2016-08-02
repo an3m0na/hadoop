@@ -6,7 +6,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.yarn.api.records.*;
@@ -38,7 +38,6 @@ import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -848,7 +847,7 @@ public abstract class ExtensibleCapacityScheduler<
                     //build a new scheduler application based on the old one
                     myApps.put(appId, moveApplicationReference(appId, app, oldQueue, newQueueName));
                 } catch (Exception e) {
-                    throw new POSUMException("Could not move " + appId.toString() +
+                    throw new PosumException("Could not move " + appId.toString() +
                             " from " + oldQueue.getQueuePath() + " to " + newQueueName, e);
                 }
             }
@@ -863,7 +862,7 @@ public abstract class ExtensibleCapacityScheduler<
             return;
         }
         //TODO
-        throw new POSUMException("Cannot transfer state from unknown policy " + other.getClass().getName());
+        throw new PosumException("Cannot transfer state from unknown policy " + other.getClass().getName());
     }
 
     //

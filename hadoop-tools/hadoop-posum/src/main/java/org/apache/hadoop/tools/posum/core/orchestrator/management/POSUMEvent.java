@@ -1,20 +1,20 @@
-package org.apache.hadoop.tools.posum.core.master.management;
+package org.apache.hadoop.tools.posum.core.orchestrator.management;
 
 import org.apache.hadoop.yarn.event.AbstractEvent;
 
 /**
  * Created by ane on 4/20/16.
  */
-public class POSUMEvent extends AbstractEvent<POSUMEventType> {
+public class PosumEvent extends AbstractEvent<PosumEventType> {
 
     Object content;
 
-    public POSUMEvent(POSUMEventType eventType, Object content) {
+    public PosumEvent(PosumEventType eventType, Object content) {
         super(eventType);
         this.content = content;
     }
 
-    public POSUMEvent(POSUMEventType eventType) {
+    public PosumEvent(PosumEventType eventType) {
         super(eventType);
     }
 

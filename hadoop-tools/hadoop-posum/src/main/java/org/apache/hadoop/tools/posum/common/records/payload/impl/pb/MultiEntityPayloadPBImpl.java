@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
@@ -132,7 +132,7 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload {
                         Class eClass = getEntityCollection().getMappedClass();
                         entities.add(((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(entityString));
                     } catch (Exception e) {
-                        throw new POSUMException("Could not read object from byte string " + entityString, e);
+                        throw new PosumException("Could not read object from byte string " + entityString, e);
                     }
                 }
             }

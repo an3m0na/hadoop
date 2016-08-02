@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.web;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.core.master.POSUMMasterContext;
+import org.apache.hadoop.tools.posum.core.orchestrator.OrchestratorMasterContext;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.handler.AbstractHandler;
 
@@ -13,10 +13,10 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Created by ane on 4/29/16.
  */
-public class MasterWebApp extends POSUMWebApp {
-    private POSUMMasterContext context;
+public class OrchestratorWebApp extends PosumWebApp {
+    private OrchestratorMasterContext context;
 
-    public MasterWebApp(POSUMMasterContext context, int metricsAddressPort) {
+    public OrchestratorWebApp(OrchestratorMasterContext context, int metricsAddressPort) {
         super(metricsAddressPort);
         this.context = context;
         staticHandler.setWelcomeFiles(new String[]{"posumstats.html"});

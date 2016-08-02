@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.core.master;
+package org.apache.hadoop.tools.posum.core.orchestrator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,12 +13,12 @@ import org.apache.hadoop.tools.posum.common.records.request.RegistrationRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.core.master.management.POSUMEvent;
-import org.apache.hadoop.tools.posum.core.master.management.POSUMEventType;
+import org.apache.hadoop.tools.posum.core.orchestrator.management.PosumEvent;
+import org.apache.hadoop.tools.posum.core.orchestrator.management.PosumEventType;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerClient;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
@@ -36,11 +36,11 @@ import java.util.Map;
 /**
  * Created by ane on 3/19/16.
  */
-public class MasterCommService extends CompositeService implements POSUMMasterProtocol {
+public class OrchestratorCommService extends CompositeService implements OrchestratorMasterProtocol {
 
-    private static Log logger = LogFactory.getLog(MasterCommService.class);
+    private static Log logger = LogFactory.getLog(OrchestratorCommService.class);
 
-    POSUMMasterContext pmContext;
+    OrchestratorMasterContext pmContext;
     private Server server;
     private MetaSchedulerClient schedulerClient;
     private DataMasterClient dataClient;
@@ -48,8 +48,8 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
 
     private String connectAddress;
 
-    public MasterCommService(POSUMMasterContext context) {
-        super(MasterCommService.class.getName());
+    public OrchestratorCommService(OrchestratorMasterContext context) {
+        super(OrchestratorCommService.class.getName());
         this.pmContext = context;
     }
 
@@ -62,24 +62,28 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
     protected void serviceStart() throws Exception {
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
-                POSUMConfiguration.PM_BIND_ADDRESS,
-                POSUMConfiguration.PM_ADDRESS,
-                POSUMConfiguration.PM_ADDRESS_DEFAULT,
-                POSUMConfiguration.PM_PORT_DEFAULT);
+                PosumConfiguration.PM_BIND_ADDRESS,
+                PosumConfiguration.PM_ADDRESS,
+                PosumConfiguration.PM_ADDRESS_DEFAULT,
+                PosumConfiguration.PM_PORT_DEFAULT);
         pmContext.setTokenSecretManager(new DummyTokenSecretManager());
         this.server =
-                rpc.getServer(POSUMMasterProtocol.class, this, masterServiceAddress,
+                rpc.getServer(OrchestratorMasterProtocol.class, this, masterServiceAddress,
                         getConfig(), pmContext.getTokenSecretManager(),
-                        getConfig().getInt(POSUMConfiguration.PM_SERVICE_THREAD_COUNT,
-                                POSUMConfiguration.PM_SERVICE_THREAD_COUNT_DEFAULT));
+                        getConfig().getInt(PosumConfiguration.PM_SERVICE_THREAD_COUNT,
+                                PosumConfiguration.PM_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.server.start();
 
         super.serviceStart();
 
-        connectAddress =
+        String fullAddress =
                 NetUtils.getConnectAddress(this.server.getListenerAddress()).toString();
-        connectAddress = connectAddress.substring(connectAddress.indexOf("/") + 1);
+        connectAddress = fullAddress.substring(fullAddress.indexOf("/") + 1);
+    }
+
+    public String getConnectAddress() {
+        return connectAddress;
     }
 
     @Override
@@ -99,10 +103,10 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
                     break;
                 case SYSTEM_ADDRESSES:
                     Map<String, String> map = new HashMap<>(4);
-                    map.put(Utils.POSUMProcess.DM.name(), getDMAddress());
-                    map.put(Utils.POSUMProcess.SCHEDULER.name(), getPSAddress());
-                    map.put(Utils.POSUMProcess.SIMULATOR.name(), getSMAddress());
-                    map.put(Utils.POSUMProcess.PM.name(), connectAddress);
+                    map.put(Utils.PosumProcess.DM.name(), getDMAddress());
+                    map.put(Utils.PosumProcess.SCHEDULER.name(), getPSAddress());
+                    map.put(Utils.PosumProcess.SIMULATOR.name(), getSMAddress());
+                    map.put(Utils.PosumProcess.OM.name(), connectAddress);
                     return SimpleResponse.newInstance(SimpleResponse.Type.STRING_STRING_MAP,
                             StringStringMapPayload.newInstance(map));
                 default:
@@ -118,7 +122,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
     @Override
     public SimpleResponse handleSimulationResult(HandleSimResultRequest resultRequest) throws IOException, YarnException {
         try {
-            pmContext.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SIMULATION_FINISH,
+            pmContext.getDispatcher().getEventHandler().handle(new PosumEvent(PosumEventType.SIMULATION_FINISH,
                     resultRequest.getResults()));
         } catch (Exception e) {
             logger.error("Exception resolving request", e);
@@ -129,7 +133,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
 
     private void checkDM() {
         if (dataClient == null || dataClient.getConnectAddress() == null)
-            throw new POSUMException("No DataMaster registered! Shutting down...");
+            throw new PosumException("No DataMaster registered! Shutting down...");
     }
 
     @Override
@@ -149,7 +153,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
                     simulatorClient.init(getConfig());
                     addIfService(simulatorClient);
                     simulatorClient.start();
-                    pmContext.getDispatcher().getEventHandler().handle(new POSUMEvent(POSUMEventType.SIMULATOR_CONNECTED));
+                    pmContext.getDispatcher().getEventHandler().handle(new PosumEvent(PosumEventType.SIMULATOR_CONNECTED));
                     break;
                 case SCHEDULER:
                     checkDM();
@@ -159,7 +163,7 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
                     schedulerClient.start();
                     break;
                 default:
-                    throw new POSUMException("Now that's just absurd!");
+                    throw new PosumException("Now that's just absurd!");
             }
 
         } catch (Exception e) {
@@ -191,8 +195,8 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
         if (dataClient != null && dataClient.isInState(STATE.STARTED)) {
             String address = dataClient.getConnectAddress();
             if (address != null) {
-                return address.split(":")[0] + ":" + getConfig().getInt(POSUMConfiguration.DM_WEBAPP_PORT,
-                        POSUMConfiguration.DM_WEBAPP_PORT_DEFAULT);
+                return address.split(":")[0] + ":" + getConfig().getInt(PosumConfiguration.DM_WEBAPP_PORT,
+                        PosumConfiguration.DM_WEBAPP_PORT_DEFAULT);
             }
         }
         return null;
@@ -202,8 +206,8 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
         if (schedulerClient != null && schedulerClient.isInState(STATE.STARTED)) {
             String address = schedulerClient.getConnectAddress();
             if (address != null) {
-                return address.split(":")[0] + ":" + getConfig().getInt(POSUMConfiguration.SCHEDULER_WEBAPP_PORT,
-                        POSUMConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT);
+                return address.split(":")[0] + ":" + getConfig().getInt(PosumConfiguration.SCHEDULER_WEBAPP_PORT,
+                        PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT);
             }
         }
         return null;
@@ -213,8 +217,8 @@ public class MasterCommService extends CompositeService implements POSUMMasterPr
         if (simulatorClient != null && simulatorClient.isInState(STATE.STARTED)) {
             String address = simulatorClient.getConnectAddress();
             if (address != null) {
-                return address.split(":")[0] + ":" + getConfig().getInt(POSUMConfiguration.SIMULATOR_WEBAPP_PORT,
-                        POSUMConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT);
+                return address.split(":")[0] + ":" + getConfig().getInt(PosumConfiguration.SIMULATOR_WEBAPP_PORT,
+                        PosumConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT);
             }
         }
         return null;

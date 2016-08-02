@@ -4,8 +4,8 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
-import org.apache.hadoop.tools.posum.common.records.protocol.POSUMMasterProtocol;
-import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.POSUMMasterProtocolPB;
+import org.apache.hadoop.tools.posum.common.records.protocol.OrchestratorMasterProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.OrchestratorMasterProtocolPB;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.HandleSimResultRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.RegistrationRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -25,15 +25,15 @@ import java.net.InetSocketAddress;
 /**
  * Created by ane on 3/20/16.
  */
-public class POSUMMasterProtocolPBClientImpl implements POSUMMasterProtocol, Closeable {
+public class OrchestratorMasterProtocolPBClientImpl implements OrchestratorMasterProtocol, Closeable {
 
-    private POSUMMasterProtocolPB proxy;
+    private OrchestratorMasterProtocolPB proxy;
 
-    public POSUMMasterProtocolPBClientImpl(long clientVersion, InetSocketAddress addr,
-                                           Configuration conf) throws IOException {
-        RPC.setProtocolEngine(conf, POSUMMasterProtocolPB.class, ProtobufRpcEngine.class);
+    public OrchestratorMasterProtocolPBClientImpl(long clientVersion, InetSocketAddress addr,
+                                                  Configuration conf) throws IOException {
+        RPC.setProtocolEngine(conf, OrchestratorMasterProtocolPB.class, ProtobufRpcEngine.class);
         proxy =
-                (POSUMMasterProtocolPB) RPC.getProxy(POSUMMasterProtocolPB.class, clientVersion,
+                (OrchestratorMasterProtocolPB) RPC.getProxy(OrchestratorMasterProtocolPB.class, clientVersion,
                         addr, conf);
     }
 

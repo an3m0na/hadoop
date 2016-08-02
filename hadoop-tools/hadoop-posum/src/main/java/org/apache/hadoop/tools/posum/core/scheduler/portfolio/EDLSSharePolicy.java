@@ -1,11 +1,6 @@
 package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.QueueState;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
 
 /**

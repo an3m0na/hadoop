@@ -18,8 +18,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterInfoPayload;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
@@ -54,8 +54,8 @@ public class ClusterInfoCollector {
         this.dataStore = dataStore;
         this.api = new HadoopAPIClient(conf);
         this.conf = conf;
-        this.historyEnabled = conf.getBoolean(POSUMConfiguration.MONITOR_KEEP_HISTORY,
-                POSUMConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
+        this.historyEnabled = conf.getBoolean(PosumConfiguration.MONITOR_KEEP_HISTORY,
+                PosumConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
     }
 
     void refresh() {
@@ -89,7 +89,7 @@ public class ClusterInfoCollector {
         JobProfile job;
         String jobId;
         if (jobs.size() > 1)
-            throw new POSUMException("Unexpected number of jobs for mapreduce app " + appId);
+            throw new PosumException("Unexpected number of jobs for mapreduce app " + appId);
         else if (jobs.size() < 1) {
             // there is no running record of the job
             job = api.getFinishedJobInfo(appId);
@@ -487,7 +487,7 @@ public class ClusterInfoCollector {
             //DANGER We assume there can only be one job / application
             return getJobProfileFromConf(appId, Utils.parseJobId(appId, jobId), fs, confProxy, jobConfDir);
         } catch (URISyntaxException e) {
-            throw new POSUMException("Invalid jobConfDir path " + jobConfDirPath, e);
+            throw new PosumException("Invalid jobConfDir path " + jobConfDirPath, e);
         }
     }
 
@@ -508,7 +508,7 @@ public class ClusterInfoCollector {
         //DANGER We assume there can only be one job / application
         if (statuses.length != 1) {
             if (statuses.length > 1)
-                throw new POSUMException("Too many conf directories found for " + appId);
+                throw new PosumException("Too many conf directories found for " + appId);
             logger.warn("Job conf dir not found for: " + appId);
             return null;
         }

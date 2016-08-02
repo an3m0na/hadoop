@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.common.utils;
 
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.junit.Test;
 
@@ -72,7 +72,7 @@ public class TestUtils {
         assertTrue(Utils.checkBeanPropertiesMatch(bean, properties));
     }
 
-    @Test(expected = POSUMException.class)
+    @Test(expected = PosumException.class)
     public void testBeanPropertiesNeedGetter() throws IllegalAccessException, IntrospectionException, InvocationTargetException {
         ComplicatedBean bean = new ComplicatedBean();
         Map<String, Object> properties = new HashMap<>(5);

@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.core.scheduler.portfolio.singleq;
 
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.factories.RecordFactory;
 import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
@@ -51,7 +51,7 @@ public class SQSQueue implements Queue {
             Constructor<Q> constructor = qClass.getConstructor(String.class, SingleQueuePolicy.class);
             return constructor.newInstance(name, scheduler);
         } catch (Exception e) {
-            throw new POSUMException("Failed to instantiate scheduler queue via default constructor" + e);
+            throw new PosumException("Failed to instantiate scheduler queue via default constructor" + e);
         }
     }
 

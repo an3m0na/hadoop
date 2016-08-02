@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaAppAttempt;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
@@ -32,8 +32,8 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
     public EDLSAppAttempt(Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
         super(posumConf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
         if (posumConf != null)
-            minExecTime = posumConf.getLong(POSUMConfiguration.MIN_EXEC_TIME,
-                    POSUMConfiguration.MIN_EXEC_TIME_DEFAULT);
+            minExecTime = posumConf.getLong(PosumConfiguration.MIN_EXEC_TIME,
+                    PosumConfiguration.MIN_EXEC_TIME_DEFAULT);
     }
 
     public EDLSAppAttempt(ExtCaAppAttempt inner) {

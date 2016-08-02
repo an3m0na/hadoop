@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.database.store;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.json.JsonFileReader;
 import org.apache.hadoop.tools.posum.database.client.DataClientInterface;
 
@@ -41,7 +41,7 @@ public class DataStoreImporter {
                 }
             }
         } catch (Exception e) {
-            throw new POSUMException("Data dump directory could not be read: " + dumpPath, e);
+            throw new PosumException("Data dump directory could not be read: " + dumpPath, e);
         }
     }
 
@@ -56,7 +56,7 @@ public class DataStoreImporter {
                         dataStore.updateOrStore(dbMapEntry.getKey(), fileEntry.getKey(), entity);
                     reader.close();
                 } catch (IOException e) {
-                    throw new POSUMException("Did not successfully parse file contents for " + fileEntry.getValue(), e);
+                    throw new PosumException("Did not successfully parse file contents for " + fileEntry.getValue(), e);
                 }
             }
         }

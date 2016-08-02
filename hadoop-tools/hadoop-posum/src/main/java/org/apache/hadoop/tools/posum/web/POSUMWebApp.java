@@ -18,9 +18,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class POSUMWebApp extends HttpServlet {
+public class PosumWebApp extends HttpServlet {
     private static final long serialVersionUID = 1905162041950251407L;
-    private static Log logger = LogFactory.getLog(POSUMWebApp.class);
+    private static Log logger = LogFactory.getLog(PosumWebApp.class);
 
     private transient Server server;
 
@@ -28,7 +28,7 @@ public class POSUMWebApp extends HttpServlet {
     protected final ResourceHandler staticHandler = new ResourceHandler();
     private final Handler handler;
 
-    public POSUMWebApp(int metricsAddressPort) {
+    public PosumWebApp(int metricsAddressPort) {
         port = metricsAddressPort;
         staticHandler.setBaseResource(Resource.newClassPathResource("html"));
         handler = constructHandler();
