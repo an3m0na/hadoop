@@ -5,7 +5,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.json.JsonFileWriter;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
 
 import java.io.File;
 import java.io.IOException;

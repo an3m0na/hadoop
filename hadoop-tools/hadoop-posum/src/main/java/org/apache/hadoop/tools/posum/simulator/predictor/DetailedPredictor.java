@@ -12,7 +12,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.client.Database;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,16 +33,16 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     }
 
     @Override
-    public void initialize(DataBroker dataBroker) {
-        super.initialize(dataBroker);
+    public void initialize(Database db) {
+        super.initialize(db);
 
         // populate flex-fields for jobs in history
         IdsByParamsCall getFinishedJobIds = IdsByParamsCall.newInstance(DataEntityCollection.JOB_HISTORY,
                 Collections.<String, Object>emptyMap());
-        List<String> historyJobIds = dataBroker.executeDatabaseCall(getFinishedJobIds).getEntries();
+        List<String> historyJobIds = db.executeDatabaseCall(getFinishedJobIds).getEntries();
         for (String jobId : historyJobIds) {
             FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, jobId);
-            JobProfile job = getDataBroker().executeDatabaseCall(getJob).getEntity();
+            JobProfile job = getDatabase().executeDatabaseCall(getJob).getEntity();
             if (job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null)
                 completeProfile(job);
         }
@@ -51,22 +51,22 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     private void completeProfile(JobProfile job) {
         FindByParamsCall getTasks = FindByParamsCall.newInstance(DataEntityCollection.TASK_HISTORY,
                 Collections.singletonMap("jobId", (Object)job.getId()));
-        List<TaskProfile> tasks = getDataBroker().executeDatabaseCall(getTasks).getEntities();
+        List<TaskProfile> tasks = getDatabase().executeDatabaseCall(getTasks).getEntities();
         Map<String, String> fields = calculateCurrentProfile(job, tasks);
         fields.put(FLEX_KEY_PREFIX + FlexKeys.PROFILED, "true");
         SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), fields, true);
-        getDataBroker().executeDatabaseCall(saveFlexFields);
+        getDatabase().executeDatabaseCall(saveFlexFields);
     }
 
     private JobProfile calculateCurrentProfile(String jobId) {
         FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, jobId);
-        JobProfile job = getDataBroker().executeDatabaseCall(getJob).getEntity();
+        JobProfile job = getDatabase().executeDatabaseCall(getJob).getEntity();
         FindByParamsCall getTasks = FindByParamsCall.newInstance(DataEntityCollection.TASK,
                 Collections.singletonMap("jobId", (Object)job.getId()));
         Map<String, String> flexFields = calculateCurrentProfile(job,
-                getDataBroker().executeDatabaseCall(getTasks).<TaskProfile>getEntities());
+                getDatabase().executeDatabaseCall(getTasks).<TaskProfile>getEntities());
         SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), flexFields, true);
-        getDataBroker().executeDatabaseCall(saveFlexFields);
+        getDatabase().executeDatabaseCall(saveFlexFields);
         return job;
     }
 
@@ -170,11 +170,11 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 -bufferLimit,
                 bufferLimit
         );
-        List<JobProfile> comparable = getDataBroker().executeDatabaseCall(getComparableJobs).getEntities();
+        List<JobProfile> comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
         if (comparable.size() < 1) {
             // get past jobs at least by the same user
             getComparableJobs.setParams(Collections.singletonMap("user", (Object)job.getUser()));
-            comparable = getDataBroker().executeDatabaseCall(getComparableJobs).getEntities();
+            comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
         }
         return comparable;
     }
@@ -200,7 +200,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     @Override
     public Long predictTaskDuration(String taskId) {
         FindByIdCall getTask = FindByIdCall.newInstance(DataEntityCollection.TASK, taskId);
-        TaskProfile task = getDataBroker().executeDatabaseCall(getTask).getEntity();
+        TaskProfile task = getDatabase().executeDatabaseCall(getTask).getEntity();
         if (task == null)
             throw new PosumException("Task not found for id " + taskId);
         if (task.getDuration() > 0)

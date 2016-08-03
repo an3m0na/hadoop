@@ -9,7 +9,6 @@ import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProtoOrBuilder;

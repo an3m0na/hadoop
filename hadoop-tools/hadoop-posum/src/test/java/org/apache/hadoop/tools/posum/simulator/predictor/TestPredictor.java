@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.simulator.predictor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.tools.posum.database.mock.MockDataStoreImpl;
 import org.junit.Before;
 
@@ -28,7 +28,7 @@ public abstract class TestPredictor<T extends JobBehaviorPredictor> {
         MockDataStoreImpl dataStore = new MockDataStoreImpl();
 
         try {
-            predictor = predictorClass.getConstructor(Configuration.class, DataBroker.class)
+            predictor = predictorClass.getConstructor(Configuration.class, Database.class)
                     .newInstance(conf, dataStore.bindTo(DataEntityDB.getMain()));
         } catch (NoSuchMethodException |
                 InvocationTargetException |

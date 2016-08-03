@@ -10,7 +10,7 @@ import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaSchedulerNode;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -62,12 +62,12 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
     }
 
     protected JobProfile fetchJobProfile(String appId, String user) {
-        DataBroker broker = commService.getDataBroker();
-        if (broker == null)
+        Database db = commService.getDatabase();
+        if (db == null)
             // DataMaster is not connected; do nothing
             return null;
         JobForAppCall getJobProfileForApp = JobForAppCall.newInstance(appId, user);
-        JobProfile job = broker.executeDatabaseCall(getJobProfileForApp).getEntity();
+        JobProfile job = db.executeDatabaseCall(getJobProfileForApp).getEntity();
         if (job == null) {
             logger.error("Could not retrieve job info for " + appId);
             return null;
