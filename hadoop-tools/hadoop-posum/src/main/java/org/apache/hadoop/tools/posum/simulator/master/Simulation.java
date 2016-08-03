@@ -27,7 +27,8 @@ public class Simulation extends Thread {
         this.predictor = JobBehaviorPredictor.newInstance(context.getConf());
         this.dataClient = context.getCommService().getDataClient();
         //TODO set up simulation
-        predictor.initialize(dataClient.bindTo(DataEntityDB.get(DataEntityDB.Type.SIMULATION, policy)));
+        dataClient.bindTo(DataEntityDB.get(DataEntityDB.Type.SIMULATION, policy));
+        predictor.initialize(dataClient);
     }
 
     void exit() {

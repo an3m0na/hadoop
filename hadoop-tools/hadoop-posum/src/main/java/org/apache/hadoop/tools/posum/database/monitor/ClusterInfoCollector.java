@@ -23,7 +23,7 @@ import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.tools.posum.database.store.DataTransaction;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.util.Records;
@@ -42,7 +42,7 @@ public class ClusterInfoCollector {
 
     private Set<String> running = new HashSet<>();
     private Set<String> finished = new HashSet<>();
-    private final DataStore dataStore;
+    private final DataStoreImpl dataStore;
     private final DataEntityDB db = DataEntityDB.getMain();
     private final HadoopAPIClient api;
     private final Configuration conf;
@@ -50,7 +50,7 @@ public class ClusterInfoCollector {
     private static final String OLD_MAP_CLASS_ATTR = "mapred.mapper.class";
     private static final String OLD_REDUCE_CLASS_ATTR = "mapred.reducer.class";
 
-    public ClusterInfoCollector(Configuration conf, DataStore dataStore) {
+    public ClusterInfoCollector(Configuration conf, DataStoreImpl dataStore) {
         this.dataStore = dataStore;
         this.api = new HadoopAPIClient(conf);
         this.conf = conf;

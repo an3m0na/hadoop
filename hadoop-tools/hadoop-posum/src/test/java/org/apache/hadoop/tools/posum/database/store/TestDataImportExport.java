@@ -1,9 +1,10 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import org.apache.hadoop.tools.posum.common.records.call.IdsByParamsCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
-import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface;
+import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.database.mock.MockDataStoreImpl;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -22,15 +23,14 @@ import static org.junit.Assert.assertTrue;
  * Created by ane on 7/29/16.
  */
 public class TestDataImportExport {
-    private ExtendedDataClientInterface dataStore;
-    private DBInterface db;
+    private DataBroker dataBroker;
     private final Long clusterTimestamp = System.currentTimeMillis();
 
     @Before
     public void setUp() throws Exception {
-        dataStore = new MockDataStoreImpl();
-        db = dataStore.bindTo(DataEntityDB.getMain());
-        Utils.loadThreeDefaultAppsAndJobs(clusterTimestamp, db);
+        dataBroker = new DataStoreClient(new MockDataStoreImpl());
+        dataBroker.bindTo(DataEntityDB.getMain());
+        Utils.loadThreeDefaultAppsAndJobs(clusterTimestamp, dataBroker);
     }
 
     @Test
@@ -38,9 +38,11 @@ public class TestDataImportExport {
         String dataDumpPath = "testTmpDir";
         File tmpDir = new File(dataDumpPath);
         assertTrue(tmpDir.exists() && tmpDir.isDirectory());
-        dataStore.clear();
-        assertEquals(0, db.listIds(DataEntityCollection.APP, Collections.<String, Object>emptyMap()).size());
-        List<String> ids = db.listIds(DataEntityCollection.APP, Collections.<String, Object>emptyMap());
+        dataBroker.clear();
+        IdsByParamsCall listIds = IdsByParamsCall.newInstance(DataEntityCollection.APP, Collections.<String, Object>emptyMap());
+        List<String> ids = dataBroker.executeDatabaseCall(listIds).getEntries();
+        assertEquals(0, ids.size());
+        ids = dataBroker.executeDatabaseCall(listIds).getEntries();
         assertEquals(3, ids.size());
         assertArrayEquals(new String[]{
                 ApplicationId.newInstance(clusterTimestamp, 1).toString(),

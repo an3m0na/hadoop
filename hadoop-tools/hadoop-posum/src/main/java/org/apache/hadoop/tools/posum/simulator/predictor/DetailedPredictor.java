@@ -3,12 +3,16 @@ package org.apache.hadoop.tools.posum.simulator.predictor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
+import org.apache.hadoop.tools.posum.common.records.call.FindByParamsCall;
+import org.apache.hadoop.tools.posum.common.records.call.IdsByParamsCall;
+import org.apache.hadoop.tools.posum.common.records.call.SaveJobFlexFieldsCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,33 +33,40 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     }
 
     @Override
-    public void initialize(DBInterface dataStore) {
-        super.initialize(dataStore);
+    public void initialize(DataBroker dataBroker) {
+        super.initialize(dataBroker);
 
         // populate flex-fields for jobs in history
-        List<String> historyJobIds = dataStore.listIds(DataEntityCollection.JOB_HISTORY,
+        IdsByParamsCall getFinishedJobIds = IdsByParamsCall.newInstance(DataEntityCollection.JOB_HISTORY,
                 Collections.<String, Object>emptyMap());
+        List<String> historyJobIds = dataBroker.executeDatabaseCall(getFinishedJobIds).getEntries();
         for (String jobId : historyJobIds) {
-            JobProfile job = dataStore.findById(DataEntityCollection.JOB_HISTORY, jobId);
+            FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, jobId);
+            JobProfile job = getDataBroker().executeDatabaseCall(getJob).getEntity();
             if (job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null)
                 completeProfile(job);
         }
     }
 
     private void completeProfile(JobProfile job) {
-        List<TaskProfile> tasks = getDataStore().find(DataEntityCollection.TASK_HISTORY, "jobId", job.getId());
+        FindByParamsCall getTasks = FindByParamsCall.newInstance(DataEntityCollection.TASK_HISTORY,
+                Collections.singletonMap("jobId", (Object)job.getId()));
+        List<TaskProfile> tasks = getDataBroker().executeDatabaseCall(getTasks).getEntities();
         Map<String, String> fields = calculateCurrentProfile(job, tasks);
         fields.put(FLEX_KEY_PREFIX + FlexKeys.PROFILED, "true");
-        getDataStore().saveFlexFields(job.getId(), fields, true);
+        SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), fields, true);
+        getDataBroker().executeDatabaseCall(saveFlexFields);
     }
 
     private JobProfile calculateCurrentProfile(String jobId) {
-        JobProfile job = getDataStore().findById(DataEntityCollection.JOB, jobId);
-        Map<String, String> flexFields = calculateCurrentProfile(
-                job,
-                getDataStore().<TaskProfile>find(DataEntityCollection.TASK, "jobId", job.getId())
-        );
-        getDataStore().saveFlexFields(job.getId(), flexFields, false);
+        FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, jobId);
+        JobProfile job = getDataBroker().executeDatabaseCall(getJob).getEntity();
+        FindByParamsCall getTasks = FindByParamsCall.newInstance(DataEntityCollection.TASK,
+                Collections.singletonMap("jobId", (Object)job.getId()));
+        Map<String, String> flexFields = calculateCurrentProfile(job,
+                getDataBroker().executeDatabaseCall(getTasks).<TaskProfile>getEntities());
+        SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), flexFields, true);
+        getDataBroker().executeDatabaseCall(saveFlexFields);
         return job;
     }
 
@@ -148,27 +159,22 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         return fieldMap;
     }
 
-
     private List<JobProfile> getComparableProfiles(JobProfile job, TaskType type) {
-        Integer bufferLimit = conf.getInt(PosumConfiguration.PREDICTION_BUFFER,
+        int bufferLimit = conf.getInt(PosumConfiguration.PREDICTION_BUFFER,
                 PosumConfiguration.PREDICTION_BUFFER_DEFAULT);
         // get past jobs with the same name
-        List<JobProfile> comparable = getDataStore().find(
+        FindByParamsCall getComparableJobs = FindByParamsCall.newInstance(
                 DataEntityCollection.JOB_HISTORY,
-                type.equals(TaskType.MAP) ? "mapperClass" : "reducerClass",
-                type.equals(TaskType.MAP) ? job.getMapperClass() : job.getReducerClass(),
+                Collections.singletonMap(type.equals(TaskType.MAP) ? "mapperClass" : "reducerClass",
+                        type.equals(TaskType.MAP) ? (Object)job.getMapperClass() : job.getReducerClass()),
                 -bufferLimit,
                 bufferLimit
         );
+        List<JobProfile> comparable = getDataBroker().executeDatabaseCall(getComparableJobs).getEntities();
         if (comparable.size() < 1) {
             // get past jobs at least by the same user
-            comparable = getDataStore().find(
-                    DataEntityCollection.JOB_HISTORY,
-                    "user",
-                    job.getUser(),
-                    -bufferLimit,
-                    bufferLimit
-            );
+            getComparableJobs.setParams(Collections.singletonMap("user", (Object)job.getUser()));
+            comparable = getDataBroker().executeDatabaseCall(getComparableJobs).getEntities();
         }
         return comparable;
     }
@@ -193,7 +199,8 @@ public class DetailedPredictor extends JobBehaviorPredictor {
 
     @Override
     public Long predictTaskDuration(String taskId) {
-        TaskProfile task = getDataStore().findById(DataEntityCollection.TASK, taskId);
+        FindByIdCall getTask = FindByIdCall.newInstance(DataEntityCollection.TASK, taskId);
+        TaskProfile task = getDataBroker().executeDatabaseCall(getTask).getEntity();
         if (task == null)
             throw new PosumException("Task not found for id " + taskId);
         if (task.getDuration() > 0)

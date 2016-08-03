@@ -5,8 +5,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.json.JsonFileWriter;
-import org.apache.hadoop.tools.posum.database.client.DataClientInterface;
-import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,9 +18,9 @@ import java.util.Map;
  */
 public class DataStoreExporter {
     private Map<DataEntityDB, List<DataEntityCollection>> collections;
-    private DataClientInterface dataStore;
+    private DataStore dataStore;
 
-    public DataStoreExporter(ExtendedDataClientInterface dataStore) {
+    public DataStoreExporter(DataStore dataStore) {
         this.dataStore = dataStore;
         collections = dataStore.listExistingCollections();
     }

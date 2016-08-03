@@ -2,7 +2,6 @@ package org.apache.hadoop.tools.posum.common.records.call;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
 import org.apache.hadoop.yarn.util.Records;
 
@@ -11,11 +10,16 @@ import org.apache.hadoop.yarn.util.Records;
  */
 public abstract class DeleteByIdCall extends DeleteCall {
 
-    public static DeleteByIdCall newInstance(DataEntityDB db, DataEntityCollection type, String id) {
+    public static DeleteByIdCall newInstance(DataEntityCollection type, String id) {
         DeleteByIdCall call = Records.newRecord(DeleteByIdCall.class);
-        call.setEntityDB(db);
         call.setEntityCollection(type);
         call.setId(id);
+        return call;
+    }
+
+    public static DeleteByIdCall newInstance(DataEntityDB db, DataEntityCollection type, String id) {
+        DeleteByIdCall call = newInstance(type, id);
+        call.setDatabase(db);
         return call;
     }
 
@@ -25,7 +29,7 @@ public abstract class DeleteByIdCall extends DeleteCall {
 
     @Override
     public VoidPayload execute() {
-        dataStore.delete(getEntityDB(), getEntityCollection(), getId());
+        dataStore.delete(getDatabase(), getEntityCollection(), getId());
         return VoidPayload.newInstance();
     }
 }

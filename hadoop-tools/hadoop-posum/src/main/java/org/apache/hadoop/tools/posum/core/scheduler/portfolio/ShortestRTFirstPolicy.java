@@ -3,13 +3,14 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaSchedulerNode;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -61,11 +62,12 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
     }
 
     protected JobProfile fetchJobProfile(String appId, String user) {
-        DBInterface db = commService.getDB();
-        if (db == null)
+        DataBroker broker = commService.getDataBroker();
+        if (broker == null)
             // DataMaster is not connected; do nothing
             return null;
-        JobProfile job = db.getJobProfileForApp(appId, user);
+        JobForAppCall getJobProfileForApp = JobForAppCall.newInstance(appId, user);
+        JobProfile job = broker.executeDatabaseCall(getJobProfileForApp).getEntity();
         if (job == null) {
             logger.error("Could not retrieve job info for " + appId);
             return null;

@@ -9,19 +9,7 @@ import org.apache.hadoop.yarn.util.Records;
 /**
  * Created by ane on 8/1/16.
  */
-public abstract class WriteCall extends LockBasedDatabaseCallImpl<SimplePropertyPayload> {
-
-    public static StoreCall newInstance(DataEntityDB db, DataEntityCollection collection, GeneralDataEntity object) {
-        StoreCall call = Records.newRecord(StoreCall.class);
-        call.setEntityDB(db);
-        call.setEntityCollection(collection);
-        call.setEntity(object);
-        return call;
-    }
-
-    public abstract DataEntityDB getEntityDB();
-
-    public abstract void setEntityDB(DataEntityDB db);
+public abstract class WriteToCollectionCall extends LockBasedDatabaseCallImpl<SimplePropertyPayload> {
 
     public abstract DataEntityCollection getEntityCollection();
 
@@ -33,11 +21,11 @@ public abstract class WriteCall extends LockBasedDatabaseCallImpl<SimpleProperty
 
     @Override
     public void lockDatabase() {
-        dataStore.lockForWrite(getEntityDB());
+        dataStore.lockForWrite(getDatabase());
     }
 
     @Override
     public void unlockDatabase() {
-        dataStore.unlockForWrite(getEntityDB());
+        dataStore.unlockForWrite(getDatabase());
     }
 }

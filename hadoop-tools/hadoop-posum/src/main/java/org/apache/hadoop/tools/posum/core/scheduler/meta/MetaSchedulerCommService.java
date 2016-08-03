@@ -16,8 +16,8 @@ import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.orchestrator.client.OrchestratorMasterClient;
 import org.apache.hadoop.tools.posum.core.orchestrator.client.OrchestratorMasterInterface;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -31,8 +31,6 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
 
     private OrchestratorMasterClient masterClient;
     private DataMasterClient dataClient;
-    private DBInterface dbInterface;
-
     private Server metaServer;
     private MetaSchedulerInterface metaScheduler;
     private String bindAddress;
@@ -77,7 +75,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);
-        this.dbInterface = dataClient.bindTo(DataEntityDB.getMain());
+        dataClient.bindTo(DataEntityDB.getMain());
         dataClient.start();
     }
 
@@ -109,8 +107,8 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         return SimpleResponse.newInstance(true);
     }
 
-    public DBInterface getDB() {
-        return dbInterface;
+    public DataBroker getDataBroker() {
+        return dataClient;
     }
 
     public OrchestratorMasterInterface getMaster() {

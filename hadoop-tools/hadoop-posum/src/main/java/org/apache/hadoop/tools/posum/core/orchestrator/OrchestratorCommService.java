@@ -6,7 +6,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
 import org.apache.hadoop.tools.posum.common.records.payload.StringStringMapPayload;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
@@ -22,8 +21,8 @@ import org.apache.hadoop.tools.posum.core.orchestrator.management.PosumEvent;
 import org.apache.hadoop.tools.posum.core.orchestrator.management.PosumEventType;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerClient;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorClient;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -174,9 +173,9 @@ public class OrchestratorCommService extends CompositeService implements Orchest
         return SimpleResponse.newInstance(true, dataClient.getConnectAddress());
     }
 
-    public DBInterface getDB() {
+    public DataBroker getDataBroker() {
         if (dataClient != null && dataClient.isInState(STATE.STARTED))
-            return dataClient.bindTo(DataEntityDB.getMain());
+            return dataClient;
         else return null;
     }
 

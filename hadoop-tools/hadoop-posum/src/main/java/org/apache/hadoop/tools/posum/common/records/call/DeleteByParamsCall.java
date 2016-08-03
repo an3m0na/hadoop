@@ -2,7 +2,6 @@ package org.apache.hadoop.tools.posum.common.records.call;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
 import org.apache.hadoop.yarn.util.Records;
 
@@ -13,11 +12,16 @@ import java.util.Map;
  */
 public abstract class DeleteByParamsCall extends DeleteCall {
 
-    public static DeleteByParamsCall newInstance(DataEntityDB db, DataEntityCollection type, Map<String, Object> params) {
+    public static DeleteByParamsCall newInstance(DataEntityCollection type, Map<String, Object> params) {
         DeleteByParamsCall call = Records.newRecord(DeleteByParamsCall.class);
-        call.setEntityDB(db);
         call.setEntityCollection(type);
         call.setParams(params);
+        return call;
+    }
+
+    public static DeleteByParamsCall newInstance(DataEntityDB db, DataEntityCollection type, Map<String, Object> params) {
+        DeleteByParamsCall call = newInstance(type, params);
+        call.setDatabase(db);
         return call;
     }
 
@@ -27,7 +31,7 @@ public abstract class DeleteByParamsCall extends DeleteCall {
 
     @Override
     public VoidPayload execute() {
-        dataStore.delete(getEntityDB(), getEntityCollection(), getParams());
+        dataStore.delete(getDatabase(), getEntityCollection(), getParams());
         return VoidPayload.newInstance();
     }
 }

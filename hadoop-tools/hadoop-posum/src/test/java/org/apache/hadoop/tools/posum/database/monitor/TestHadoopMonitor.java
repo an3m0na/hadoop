@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.database.monitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.junit.Test;
 
 /**
@@ -14,7 +14,7 @@ public class TestHadoopMonitor {
     @Test
     public void checkDatabaseFeeding() {
         Configuration conf = PosumConfiguration.newInstance();
-        DataStore dataStore = new DataStore(conf);
+        DataStoreImpl dataStore = new DataStoreImpl(conf);
         DataMasterContext context = new DataMasterContext();
         context.setDataStore(dataStore);
         HadoopMonitor monitor = new HadoopMonitor(context);

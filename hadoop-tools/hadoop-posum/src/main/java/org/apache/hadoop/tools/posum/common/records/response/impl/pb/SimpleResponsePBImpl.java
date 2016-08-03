@@ -7,6 +7,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProtoOrBuilder;
 
@@ -120,14 +121,14 @@ public class SimpleResponsePBImpl<T extends Payload> extends SimpleResponse<T> {
     @Override
     public PayloadType getType() {
         SimpleResponseProtoOrBuilder p = viaProto ? proto : builder;
-        return PayloadType.valueOf(p.getType().name().substring("RESP_".length()));
+        return PayloadType.valueOf(p.getType().name().substring("PLD_".length()));
     }
 
     @Override
     public void setType(PayloadType payloadType) {
         maybeInitBuilder();
         if (payloadType != null)
-            builder.setType(SimpleResponseProto.SimpleResponseTypeProto.valueOf("RESP_" + payloadType.name()));
+            builder.setType(POSUMProtos.PayloadTypeProto.valueOf("PLD_" + payloadType.name()));
     }
 
     @Override

@@ -20,7 +20,7 @@ public abstract class SingleEntityPayload implements Payload{
 
     public abstract void setEntityCollection(DataEntityCollection type);
 
-    public abstract GeneralDataEntity getEntity();
+    public abstract <T extends GeneralDataEntity> T getEntity();
 
     public abstract void setEntity(GeneralDataEntity entity);
 

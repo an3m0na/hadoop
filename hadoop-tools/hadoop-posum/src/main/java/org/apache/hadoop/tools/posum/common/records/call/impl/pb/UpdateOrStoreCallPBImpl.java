@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.common.records.call.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
@@ -18,7 +19,7 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityProtoOrBuilder;
 /**
  * Created by ane on 3/20/16.
  */
-public class UpdateOrStoreCallPBImpl extends StoreCall implements PayloadPB {
+public class UpdateOrStoreCallPBImpl extends UpdateOrStoreCall implements PayloadPB {
     private SingleEntityProto proto = SingleEntityProto.getDefaultInstance();
     private SingleEntityProto.Builder builder = null;
     private boolean viaProto = false;
@@ -78,13 +79,17 @@ public class UpdateOrStoreCallPBImpl extends StoreCall implements PayloadPB {
     }
 
     @Override
-    public DataEntityDB getEntityDB() {
+    public DataEntityDB getDatabase() {
         SingleEntityProtoOrBuilder p = viaProto ? proto : builder;
+        if(!p.hasEntityDB())
+            return null;
         return new DataEntityDBPBImpl(p.getEntityDB());
     }
 
     @Override
-    public void setEntityDB(DataEntityDB db) {
+    public void setDatabase(DataEntityDB db) {
+        if (db == null)
+            return;
         maybeInitBuilder();
         builder.setEntityDB(((DataEntityDBPBImpl) db).getProto());
     }

@@ -80,7 +80,7 @@ public class StringListPayloadPBImpl extends StringListPayload implements Payloa
     @Override
     public List<String> getEntries() {
         StringListPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getEntriesList();
+        return new ArrayList<>(p.getEntriesList());
     }
 
     @Override

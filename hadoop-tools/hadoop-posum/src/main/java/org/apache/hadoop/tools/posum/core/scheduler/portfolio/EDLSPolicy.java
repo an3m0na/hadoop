@@ -3,13 +3,17 @@ package org.apache.hadoop.tools.posum.core.scheduler.portfolio;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
+import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
+import org.apache.hadoop.tools.posum.common.records.call.SaveJobFlexFieldsCall;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaSchedulerNode;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
@@ -53,6 +57,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, 0);
         return capacityConf;
     }
+
     @Override
     protected String resolveQueue(String queue,
                                   ApplicationId applicationId,
@@ -75,11 +80,11 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
     }
 
     protected JobProfile fetchJobProfile(String appId, String user) {
-        DBInterface db = commService.getDB();
-        if (db == null)
+        DataBroker broker = commService.getDataBroker();
+        if (broker == null)
             // DataMaster is not connected; do nothing
             return null;
-        JobProfile job = db.getJobProfileForApp(appId, user);
+        JobProfile job = broker.executeDatabaseCall(JobForAppCall.newInstance(appId, user)).getEntity();
         if (job == null) {
             logger.error("Could not retrieve job info for " + appId);
             return null;
@@ -88,7 +93,8 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         String typeString = flexFields.get(TYPE_FLEX_KEY);
         if (typeString == null) {
             // first initialization
-            JobConfProxy confProxy = db.getJobConf(job.getId());
+            FindByIdCall getJobConf = FindByIdCall.newInstance(DataEntityCollection.JOB_CONF, job.getId());
+            JobConfProxy confProxy = broker.executeDatabaseCall(getJobConf).getEntity();
             String deadlineString = confProxy.getEntry(PosumConfiguration.APP_DEADLINE);
             Map<String, String> newFields = new HashMap<>(2);
             if (deadlineString != null && deadlineString.length() > 0) {
@@ -97,7 +103,8 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
             } else {
                 newFields.put(TYPE_FLEX_KEY, EDLSAppAttempt.Type.BC.name());
             }
-            commService.getDB().saveFlexFields(job.getId(), newFields, false);
+            SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), newFields, false);
+            broker.executeDatabaseCall(saveFlexFields);
         }
         return job;
     }
@@ -109,8 +116,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
             if (EDLSAppAttempt.Type.DC.equals(app.getType()))
                 // application should already be initialized; do nothing
                 return;
-            DBInterface db = commService.getDB();
-            if (db == null)
+            if (commService.getDataBroker() == null)
                 // DataMaster is not connected; do nothing
                 return;
             String appId = app.getApplicationId().toString();

@@ -120,7 +120,7 @@ public class DataCommService extends CompositeService implements DataMasterProto
                 case ENTITY_BY_ID:
                     FindByIdCall idPayload = (FindByIdCall) request.getPayload();
                     GeneralDataEntity ret =
-                            dmContext.getDataStore().findById(idPayload.getEntityDB(),
+                            dmContext.getDataStore().findById(idPayload.getDatabase(),
                                     idPayload.getEntityCollection(),
                                     idPayload.getId());
                     SingleEntityPayload entityPayload = SingleEntityPayload.newInstance(idPayload.getEntityCollection(), ret);

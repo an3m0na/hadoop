@@ -3,12 +3,14 @@ package org.apache.hadoop.tools.posum.common.records.call.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProtoOrBuilder;
 
@@ -23,6 +25,8 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall, PayloadPB {
     public DatabaseCallWrapperPBImpl() {
         builder = DatabaseCallProto.newBuilder();
     }
+
+    private DatabaseCall call;
 
     public DatabaseCallWrapperPBImpl(DatabaseCall call) {
         this();
@@ -62,7 +66,15 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall, PayloadPB {
     }
 
     private void mergeLocalToBuilder() {
-
+        maybeInitBuilder();
+        if (call != null) {
+            DatabaseCallType type = DatabaseCallType.fromMappedClass(call.getClass());
+            if (type == null)
+                throw new PosumException("DatabaseCall class not recognized " + call.getClass());
+            builder.setType(DatabaseCallProto.CallTypeProto.valueOf("CALL_" + type.name()));
+            PayloadPB serializableCall = (PayloadPB) call;
+            builder.setCall(serializableCall.getProtoBytes());
+        }
     }
 
     private void mergeLocalToProto() {
@@ -80,37 +92,37 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall, PayloadPB {
         viaProto = false;
     }
 
-    public DatabaseCallType getCallType() {
-        DatabaseCallProtoOrBuilder p = viaProto ? proto : builder;
-        return DatabaseCallType.valueOf(p.getType().name().substring("CALL_".length()));
-    }
-
     public void setInnerCall(DatabaseCall call) {
-        if (call == null)
-            return;
-        maybeInitBuilder();
-        DatabaseCallType type = DatabaseCallType.fromMappedClass(call.getClass());
-        if (type == null)
-            throw new PosumException("DatabaseCall class not recognized " + call.getClass());
-        builder.setType(DatabaseCallProto.CallTypeProto.valueOf("CALL_" + type.name()));
-        PayloadPB serializableCall = (PayloadPB) call;
-        builder.setCall(serializableCall.getProtoBytes());
+        this.call = call;
     }
 
     public DatabaseCall getInnerCall() {
-        DatabaseCallProtoOrBuilder p = viaProto ? proto : builder;
-        Class<? extends DatabaseCall> callClass = getCallType().getMappedClass();
-        try {
-            DatabaseCall call = callClass.newInstance();
-            ((PayloadPB) call).populateFromProtoBytes(p.getCall());
-            return call;
-        } catch (Exception e) {
-            throw new PosumException("Could not read call from byte string " + p.getCall() + " as " + callClass, e);
+        if (this.call == null) {
+            DatabaseCallProtoOrBuilder p = viaProto ? proto : builder;
+            DatabaseCallType type = DatabaseCallType.valueOf(p.getType().name().substring("CALL_".length()));
+            Class<? extends DatabaseCall> callClass = type.getMappedClass();
+            try {
+                this.call = callClass.newInstance();
+                ((PayloadPB) call).populateFromProtoBytes(p.getCall());
+            } catch (Exception e) {
+                throw new PosumException("Could not read call from byte string " + p.getCall() + " as " + callClass, e);
+            }
         }
+        return this.call;
     }
 
     @Override
-    public Payload executeCall(ExtendedDataClientInterface dataStore) {
+    public DataEntityDB getDatabase() {
+        return getInnerCall().getDatabase();
+    }
+
+    @Override
+    public void setDatabase(DataEntityDB db) {
+        getInnerCall().setDatabase(db);
+    }
+
+    @Override
+    public Payload executeCall(DataStore dataStore) {
         return getInnerCall().executeCall(dataStore);
     }
 

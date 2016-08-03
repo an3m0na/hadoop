@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.database.client;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -26,12 +27,13 @@ import java.util.Map;
 /**
  * Created by ane on 2/9/16.
  */
-public class DataMasterClient extends AbstractService implements DataClientInterface {
+public class DataMasterClient extends AbstractService implements DataBroker {
 
     private static Log logger = LogFactory.getLog(DataMasterClient.class);
 
     private DataMasterProtocol dmClient;
     private String connectAddress;
+    private DataEntityDB defaultDB;
 
     public DataMasterClient(String connectAddress) {
         super(DataMasterClient.class.getName());
@@ -68,6 +70,8 @@ public class DataMasterClient extends AbstractService implements DataClientInter
 
     public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call) {
         try {
+            if(call.getDatabase() == null)
+                call.setDatabase(defaultDB);
             return (T) Utils.handleError("executeDatabaseCall", dmClient.executeDatabaseCall(call)).getPayload();
         } catch (IOException | YarnException e) {
             throw new PosumException("Error during RPC call", e);
@@ -75,94 +79,18 @@ public class DataMasterClient extends AbstractService implements DataClientInter
     }
 
     @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
-        try {
-            SingleEntityPayload payload = Utils.handleError("findById",
-                    dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.ENTITY_BY_ID,
-                            FindByIdCall.newInstance(db, collection, id)))
-            ).getPayload();
-            if (payload != null)
-                return (T) payload.getEntity();
-            return null;
-        } catch (IOException | YarnException e) {
-            throw new PosumException("Error during RPC call", e);
-        }
+    public Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections() {
+        throw new NotImplementedException();
     }
 
     @Override
-    public List<String> listIds(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
-        try {
-            StringListPayload payload = Utils.handleError("listIds",
-                    dmClient.listIds(SearchRequest.newInstance(db, collection, queryParams))).getPayload();
-            if (payload != null)
-                return payload.getEntries();
-            return null;
-        } catch (IOException | YarnException e) {
-            throw new PosumException("Error during RPC call", e);
-        }
+    public void clear() {
+        throw new NotImplementedException();
     }
 
     @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams, int offsetOrZero, int limitOrZero) {
-        try {
-            MultiEntityPayload payload = Utils.handleError("find",
-                    dmClient.listEntities(SearchRequest.newInstance(db, collection, queryParams, offsetOrZero, limitOrZero)))
-                    .getPayload();
-            if (payload != null)
-                return (List<T>) payload.getEntities();
-            return null;
-        } catch (IOException | YarnException e) {
-            throw new PosumException("Error during RPC call", e);
-        }
-    }
-
-    @Override
-    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert) {
-        //TODO
-        return null;
-    }
-
-    @Override
-    public <T extends GeneralDataEntity> boolean updateOrStore(DataEntityDB db, DataEntityCollection apps, T toUpdate) {
-        //TODO
-        return false;
-    }
-
-    @Override
-    public void delete(DataEntityDB db, DataEntityCollection collection, String id) {
-        //TODO
-    }
-
-    @Override
-    public void delete(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
-        //TODO
-    }
-
-    @Override
-    public DBInterface bindTo(DataEntityDB db) {
-        return new DBImpl(db, this);
-    }
-
-    @Override
-    public JobProfile getJobProfileForApp(DataEntityDB db, String appId, String user) {
-        logger.debug("Getting job profile for app " + appId);
-        try {
-            SingleEntityPayload payload = Utils.handleError("getJobProfileForApp",
-                    dmClient.getEntity(SimpleRequest.newInstance(SimpleRequest.Type.JOB_FOR_APP,
-                            JobForAppPayload.newInstance(db, appId, user)))
-            ).getPayload();
-            if (payload != null)
-                return (JobProfile) payload.getEntity();
-            return null;
-        } catch (IOException | YarnException e) {
-            throw new PosumException("Error during RPC call", e);
-        }
-    }
-
-    @Override
-    public void saveFlexFields(DataEntityDB db, String jobId, Map<String, String> newFields, boolean forHistory) {
-        sendSimpleRequest("saveFlexFields", SimpleRequest.newInstance(SimpleRequest.Type.SAVE_FLEX_FIELDS,
-                SaveFlexFieldsPayload.newInstance(db, jobId, newFields, forHistory)));
+    public void bindTo(DataEntityDB db) {
+        defaultDB = db;
     }
 
     public SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
