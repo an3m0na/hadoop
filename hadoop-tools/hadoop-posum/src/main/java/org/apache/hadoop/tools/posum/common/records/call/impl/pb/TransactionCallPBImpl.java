@@ -110,16 +110,19 @@ public class TransactionCallPBImpl extends TransactionCall implements PayloadPB 
     }
 
     @Override
-    public DataEntityDB getEntityDBOrNull() {
+    public DataEntityDB getDatabase() {
         TransactionCallProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasEntityDB())
+            return null;
         return p.hasEntityDB() ? new DataEntityDBPBImpl(p.getEntityDB()) : null;
     }
 
     @Override
-    public void setEntityDBOrNull(DataEntityDB db) {
+    public void setDatabase(DataEntityDB db) {
+        if (db == null)
+            return;
         maybeInitBuilder();
-        if (db != null)
-            builder.setEntityDB(((DataEntityDBPBImpl) db).getProto());
+        builder.setEntityDB(((DataEntityDBPBImpl) db).getProto());
     }
 
     @Override

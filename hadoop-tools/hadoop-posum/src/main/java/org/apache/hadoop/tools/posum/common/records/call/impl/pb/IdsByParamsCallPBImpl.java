@@ -3,13 +3,13 @@ package org.apache.hadoop.tools.posum.common.records.call.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.tools.posum.common.records.call.FindByParamsCall;
+import org.apache.hadoop.tools.posum.common.records.call.IdsByParamsCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SimplePropertyPayloadPBImpl;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.ByParamsProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.ByParamsProtoOrBuilder;
@@ -21,18 +21,18 @@ import java.util.Map;
 /**
  * Created by ane on 3/20/16.
  */
-public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadPB {
+public class IdsByParamsCallPBImpl extends IdsByParamsCall implements PayloadPB {
     private ByParamsProto proto = ByParamsProto.getDefaultInstance();
     private ByParamsProto.Builder builder = null;
     private boolean viaProto = false;
 
     private Map<String, Object> params;
 
-    public FindByParamsCallPBImpl() {
+    public IdsByParamsCallPBImpl() {
         builder = ByParamsProto.newBuilder();
     }
 
-    public FindByParamsCallPBImpl(ByParamsProto proto) {
+    public IdsByParamsCallPBImpl(ByParamsProto proto) {
         this.proto = proto;
         viaProto = true;
     }

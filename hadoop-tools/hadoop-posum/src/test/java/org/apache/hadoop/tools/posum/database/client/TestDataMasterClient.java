@@ -1,19 +1,12 @@
 package org.apache.hadoop.tools.posum.database.client;
 
-import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
-import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.core.orchestrator.OrchestratorMaster;
 import org.apache.hadoop.tools.posum.database.master.DataMaster;
 import org.apache.hadoop.tools.posum.test.ServiceRunner;
 import org.apache.hadoop.tools.posum.test.TestDataClientImpl;
 import org.apache.hadoop.tools.posum.test.Utils;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.util.Records;
 import org.junit.After;
 import org.junit.Test;
 
@@ -35,7 +28,8 @@ public class TestDataMasterClient extends TestDataClientImpl {
         client = new DataMasterClient(dataMaster.getService().getConnectAddress());
         client.init(PosumConfiguration.newInstance());
         client.start();
-        dataStore = client;
+        client.bindTo(DataEntityDB.getMain());
+        dataBroker = client;
     }
 
     @After
@@ -45,15 +39,6 @@ public class TestDataMasterClient extends TestDataClientImpl {
         posumMaster.join();
         dataMaster.join();
         Utils.stopMongoDB();
-    }
-
-    @Test
-    public void testRefactoring() throws Exception {
-        AppProfile app = Records.newRecord(AppProfile.class);
-        app.setId(ApplicationId.newInstance(clusterTimestamp, 1).toString());
-        SimplePropertyPayload payload = client.executeDatabaseCall(
-                StoreCall.newInstance(DataEntityDB.getMain(), DataEntityCollection.APP, app));
-        System.out.println(payload.getValue());
     }
 
     @Test

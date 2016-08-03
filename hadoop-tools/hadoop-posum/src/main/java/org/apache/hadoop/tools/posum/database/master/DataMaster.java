@@ -10,7 +10,7 @@ import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.tools.posum.database.monitor.HadoopMonitor;
 import org.apache.hadoop.tools.posum.database.monitor.PosumInfoCollector;
 import org.apache.hadoop.tools.posum.database.monitor.PosumMonitor;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.tools.posum.web.DataMasterWebApp;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
@@ -30,7 +30,7 @@ public class DataMaster extends CompositeService  implements PosumMasterProcess 
 
     private DataMasterContext dmContext;
     private DataCommService commService;
-    private DataStore dataStore;
+    private DataStoreImpl dataStore;
     private HadoopMonitor hadoopMonitor;
     private PosumMonitor posumMonitor;
 
@@ -38,7 +38,7 @@ public class DataMaster extends CompositeService  implements PosumMasterProcess 
     protected void serviceInit(Configuration conf) throws Exception {
         dmContext = new DataMasterContext();
 
-        dataStore = new DataStore(conf);
+        dataStore = new DataStoreImpl(conf);
         dmContext.setDataStore(dataStore);
         dispatcher = new AsyncDispatcher();
         addIfService(dispatcher);

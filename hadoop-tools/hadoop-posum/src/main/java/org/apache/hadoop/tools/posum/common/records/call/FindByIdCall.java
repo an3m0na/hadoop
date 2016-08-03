@@ -8,13 +8,18 @@ import org.apache.hadoop.yarn.util.Records;
 /**
  * Created by ane on 3/20/16.
  */
-public abstract class FindByIdCall extends ReadCall<SingleEntityPayload> {
+public abstract class FindByIdCall extends ReadFromCollectionCall<SingleEntityPayload> {
 
-    public static FindByIdCall newInstance(DataEntityDB db, DataEntityCollection type, String id) {
+    public static FindByIdCall newInstance(DataEntityCollection type, String id) {
         FindByIdCall call = Records.newRecord(FindByIdCall.class);
-        call.setEntityDB(db);
         call.setEntityCollection(type);
         call.setId(id);
+        return call;
+    }
+
+    public static FindByIdCall newInstance(DataEntityDB db, DataEntityCollection type, String id) {
+        FindByIdCall call = newInstance(type, id);
+        call.setDatabase(db);
         return call;
     }
 
@@ -25,6 +30,6 @@ public abstract class FindByIdCall extends ReadCall<SingleEntityPayload> {
     @Override
     public SingleEntityPayload execute() {
         return SingleEntityPayload.newInstance(getEntityCollection(),
-                dataStore.findById(getEntityDB(), getEntityCollection(), getId()));
+                dataStore.findById(getDatabase(), getEntityCollection(), getId()));
     }
 }

@@ -200,8 +200,21 @@ message ByIdProto {
 }
 
 message TransactionCallProto {
-    optional EntityDBProto entityDB = 1;
+    required EntityDBProto entityDB = 1;
     repeated DatabaseCallProto calls = 2;
+}
+
+message JobForAppCallProto {
+    required EntityDBProto entityDB = 1;
+    required string appId = 2;
+    required string user = 3;
+}
+
+message SaveJobFlexFieldsCallProto {
+    required EntityDBProto entityDB = 1;
+    required string jobId = 2;
+    required StringStringMapPayloadProto newFields = 3;
+    optional bool forHistory = 4;
 }
 
 message SingleEntityProto {
@@ -226,6 +239,9 @@ message DatabaseCallProto {
         CALL_UPDATE_OR_STORE = 3;
         CALL_DELETE_BY_ID = 4;
         CALL_DELETE_BY_PARAMS = 5;
+        CALL_JOB_FOR_APP = 6;
+        CALL_SAVE_FLEX_FIELDS = 7;
+        CALL_IDS_BY_PARAMS = 8;
     }
 }
 
@@ -248,18 +264,18 @@ message SimpleRequestProto {
 message SimpleResponseProto {
     required bool successful = 1;
     optional string text = 2;
-    required SimpleResponseTypeProto type = 3;
+    required PayloadTypeProto type = 3;
     optional bytes payload = 4;
     optional string exception = 5;
+}
 
-    enum SimpleResponseTypeProto {
-        RESP_VOID = 0;
-        RESP_SINGLE_ENTITY = 1;
-        RESP_MULTI_ENTITY = 2;
-        RESP_STRING_STRING_MAP = 3;
-        RESP_STRING_LIST = 4;
-        RESP_SIMPLE_PROPERTY = 5;
-    }
+enum PayloadTypeProto {
+    PLD_VOID = 0;
+    PLD_SINGLE_ENTITY = 1;
+    PLD_MULTI_ENTITY = 2;
+    PLD_STRING_STRING_MAP = 3;
+    PLD_STRING_LIST = 4;
+    PLD_SIMPLE_PROPERTY = 5;
 }
 
 message SimulationResultPayloadProto {

@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by ane on 3/20/16.
  */
-public abstract class MultiEntityPayload implements Payload{
+public abstract class MultiEntityPayload implements Payload {
 
     public static MultiEntityPayload newInstance(DataEntityCollection type, List<GeneralDataEntity> entities) {
         MultiEntityPayload payload = Records.newRecord(MultiEntityPayload.class);
@@ -22,7 +22,7 @@ public abstract class MultiEntityPayload implements Payload{
 
     public abstract void setEntityCollection(DataEntityCollection type);
 
-    public abstract List<GeneralDataEntity> getEntities();
+    public abstract <T extends GeneralDataEntity> List<T> getEntities();
 
     public abstract void setEntities(List<GeneralDataEntity> entities);
 }

@@ -12,7 +12,10 @@ public enum DatabaseCallType {
     DELETE_BY_ID(DeleteByIdCallPBImpl.class, PayloadType.VOID),
     DELETE_BY_PARAMS(DeleteByParamsCallPBImpl.class, PayloadType.VOID),
     STORE(StoreCallPBImpl.class, PayloadType.SIMPLE_PROPERTY),
-    UPDATE_OR_STORE(UpdateOrStoreCallPBImpl.class, PayloadType.SIMPLE_PROPERTY);
+    UPDATE_OR_STORE(UpdateOrStoreCallPBImpl.class, PayloadType.SIMPLE_PROPERTY),
+    JOB_FOR_APP(JobForAppCallPBImpl.class, PayloadType.SINGLE_ENTITY),
+    SAVE_FLEX_FIELDS(SaveJobFlexFieldsCallPBImpl.class, PayloadType.VOID),
+    IDS_BY_PARAMS(IdsByParamsCallPBImpl.class, PayloadType.STRING_LIST);
 
     private Class<? extends DatabaseCall> mappedClass;
     private PayloadType payloadType;

@@ -9,22 +9,18 @@ import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
  */
 public abstract class DeleteCall extends LockBasedDatabaseCallImpl<VoidPayload> {
 
-    public abstract DataEntityDB getEntityDB();
-
-    public abstract void setEntityDB(DataEntityDB db);
-
     public abstract DataEntityCollection getEntityCollection();
 
     public abstract void setEntityCollection(DataEntityCollection collection);
 
     @Override
     public void lockDatabase() {
-        dataStore.lockForWrite(getEntityDB());
+        dataStore.lockForWrite(getDatabase());
     }
 
     @Override
     public void unlockDatabase() {
-        dataStore.unlockForWrite(getEntityDB());
+        dataStore.unlockForWrite(getDatabase());
     }
 
 }

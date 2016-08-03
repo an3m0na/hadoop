@@ -10,13 +10,25 @@ import java.util.Map;
 /**
  * Created by ane on 3/20/16.
  */
-public abstract class FindByParamsCall extends ReadCall<MultiEntityPayload> {
+public abstract class FindByParamsCall extends ReadFromCollectionCall<MultiEntityPayload> {
 
-    public static FindByParamsCall newInstance(DataEntityDB db, DataEntityCollection collection, Map<String, Object> params) {
+    public static FindByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params) {
         FindByParamsCall call = Records.newRecord(FindByParamsCall.class);
-        call.setEntityDB(db);
         call.setEntityCollection(collection);
         call.setParams(params);
+        return call;
+    }
+
+    public static FindByParamsCall newInstance(DataEntityDB db, DataEntityCollection collection, Map<String, Object> params) {
+        FindByParamsCall call = newInstance(collection, params);
+        call.setDatabase(db);
+        return call;
+    }
+
+    public static FindByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params, int offsetOrZero, int limitOrZero) {
+        FindByParamsCall call = newInstance(collection, params);
+        call.setOffsetOrZero(offsetOrZero);
+        call.setLimitOrZero(limitOrZero);
         return call;
     }
 
@@ -42,6 +54,6 @@ public abstract class FindByParamsCall extends ReadCall<MultiEntityPayload> {
     @Override
     public MultiEntityPayload execute() {
         return MultiEntityPayload.newInstance(getEntityCollection(),
-                dataStore.find(getEntityDB(), getEntityCollection(), getParams(), getOffsetOrZero(), getLimitOrZero()));
+                dataStore.find(getDatabase(), getEntityCollection(), getParams(), getOffsetOrZero(), getLimitOrZero()));
     }
 }

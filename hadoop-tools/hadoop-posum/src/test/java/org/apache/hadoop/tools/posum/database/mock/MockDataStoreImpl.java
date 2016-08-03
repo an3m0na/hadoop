@@ -4,9 +4,9 @@ package org.apache.hadoop.tools.posum.database.mock;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.database.client.DBImpl;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
-import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface;
+import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.bson.types.ObjectId;
 
 import java.beans.IntrospectionException;
@@ -20,7 +20,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by ane on 2/10/16.
  */
-public class MockDataStoreImpl implements ExtendedDataClientInterface {
+public class MockDataStoreImpl implements DataStore {
 
     private Map<DataEntityDB, Map<DataEntityCollection, Map<String, ? extends GeneralDataEntity>>> storedEntities =
             new ConcurrentHashMap<>();
@@ -167,8 +167,10 @@ public class MockDataStoreImpl implements ExtendedDataClientInterface {
     }
 
     @Override
-    public DBInterface bindTo(DataEntityDB db) {
-        return new DBImpl(db, this);
+    public DataBroker bindTo(DataEntityDB db) {
+        DataBroker broker = new DataStoreClient(this);
+        broker.bindTo(db);
+        return broker;
     }
 
     @Override
@@ -243,17 +245,5 @@ public class MockDataStoreImpl implements ExtendedDataClientInterface {
     @Override
     public void unlockForWrite(DataEntityDB db) {
         locks.get(db.getId()).writeLock().unlock();
-    }
-
-    @Override
-    public void lockForWrite() {
-        //TODO make this affect something
-        locks.get(Integer.MAX_VALUE).writeLock().lock();
-    }
-
-    @Override
-    public void unlockForWrite() {
-        //TODO make this affect something
-        locks.get(Integer.MAX_VALUE).writeLock().lock();
     }
 }

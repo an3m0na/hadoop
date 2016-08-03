@@ -7,7 +7,6 @@ import org.apache.hadoop.tools.posum.common.records.payload.Payload;
  */
 abstract class LockBasedDatabaseCallImpl<T extends Payload> extends ThreePhaseDatabaseCallImpl<T> {
 
-
     public void prepare() {
         lockDatabase();
     }

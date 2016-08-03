@@ -3,33 +3,31 @@ package org.apache.hadoop.tools.posum.common.records.call.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.tools.posum.common.records.call.DeleteByIdCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
+import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.ByIdProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.ByIdProtoOrBuilder;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
+import org.apache.hadoop.yarn.proto.POSUMProtos.JobForAppCallProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.JobForAppCallProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
  */
-public class DeleteByIdCallPBImpl extends DeleteByIdCall implements PayloadPB {
-    private ByIdProto proto = ByIdProto.getDefaultInstance();
-    private ByIdProto.Builder builder = null;
+public class JobForAppCallPBImpl extends JobForAppCall implements PayloadPB {
+    private JobForAppCallProto proto = JobForAppCallProto.getDefaultInstance();
+    private JobForAppCallProto.Builder builder = null;
     private boolean viaProto = false;
 
-    public DeleteByIdCallPBImpl() {
-        builder = ByIdProto.newBuilder();
+    public JobForAppCallPBImpl() {
+        builder = JobForAppCallProto.newBuilder();
     }
 
-    public DeleteByIdCallPBImpl(ByIdProto proto) {
+    public JobForAppCallPBImpl(JobForAppCallProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public ByIdProto getProto() {
+    public JobForAppCallProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -57,7 +55,6 @@ public class DeleteByIdCallPBImpl extends DeleteByIdCall implements PayloadPB {
     }
 
     private void mergeLocalToBuilder() {
-
     }
 
     private void mergeLocalToProto() {
@@ -70,14 +67,14 @@ public class DeleteByIdCallPBImpl extends DeleteByIdCall implements PayloadPB {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = ByIdProto.newBuilder(proto);
+            builder = JobForAppCallProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
     public DataEntityDB getDatabase() {
-        ByIdProtoOrBuilder p = viaProto ? proto : builder;
+        JobForAppCallProtoOrBuilder p = viaProto ? proto : builder;
         if (!p.hasEntityDB())
             return null;
         return new DataEntityDBPBImpl(p.getEntityDB());
@@ -92,29 +89,27 @@ public class DeleteByIdCallPBImpl extends DeleteByIdCall implements PayloadPB {
     }
 
     @Override
-    public DataEntityCollection getEntityCollection() {
-        ByIdProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
+    public String getAppId() {
+        JobForAppCallProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getAppId();
     }
 
     @Override
-    public void setEntityCollection(DataEntityCollection type) {
-        if (type == null)
-            return;
+    public void setAppId(String id) {
         maybeInitBuilder();
-        builder.setCollection(POSUMProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
+        builder.setAppId(id);
     }
 
     @Override
-    public String getId() {
-        ByIdProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getId();
+    public String getUser() {
+        JobForAppCallProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getUser();
     }
 
     @Override
-    public void setId(String id) {
+    public void setUser(String user) {
         maybeInitBuilder();
-        builder.setId(id);
+        builder.setUser(user);
     }
 
     @Override
@@ -124,7 +119,8 @@ public class DeleteByIdCallPBImpl extends DeleteByIdCall implements PayloadPB {
 
     @Override
     public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        this.proto = ByIdProto.parseFrom(data);
+        this.proto = JobForAppCallProto.parseFrom(data);
         viaProto = true;
     }
+
 }

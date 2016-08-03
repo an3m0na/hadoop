@@ -5,7 +5,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.json.JsonFileReader;
-import org.apache.hadoop.tools.posum.database.client.DataClientInterface;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +44,7 @@ public class DataStoreImporter {
         }
     }
 
-    public void importTo(DataClientInterface dataStore) {
+    public void importTo(DataStore dataStore) {
         for (Map.Entry<DataEntityDB, Map<DataEntityCollection, File>> dbMapEntry : dataFiles.entrySet()) {
             for (Map.Entry<DataEntityCollection, File> fileEntry : dbMapEntry.getValue().entrySet()) {
                 try {

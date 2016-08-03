@@ -1,17 +1,12 @@
 package org.apache.hadoop.tools.posum.common.records.call;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 
 /**
  * Created by ane on 7/29/16.
  */
-public abstract class ReadCall<T extends Payload> extends LockBasedDatabaseCallImpl<T> {
-
-    public abstract DataEntityDB getEntityDB();
-
-    public abstract void setEntityDB(DataEntityDB db);
+public abstract class ReadFromCollectionCall<T extends Payload> extends LockBasedDatabaseCallImpl<T> {
 
     public abstract DataEntityCollection getEntityCollection();
 
@@ -19,12 +14,12 @@ public abstract class ReadCall<T extends Payload> extends LockBasedDatabaseCallI
 
     @Override
     public void lockDatabase() {
-        dataStore.lockForRead(getEntityDB());
+        dataStore.lockForRead(getDatabase());
     }
 
     @Override
     public void unlockDatabase() {
-        dataStore.unlockForRead(getEntityDB());
+        dataStore.unlockForRead(getDatabase());
     }
 
 }
