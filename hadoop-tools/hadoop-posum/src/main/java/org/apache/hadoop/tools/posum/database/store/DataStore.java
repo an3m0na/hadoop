@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.database.store;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.client.Database;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +27,7 @@ public interface DataStore {
 
     void delete(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams);
 
-    DataBroker bindTo(DataEntityDB db);
+    Database bindTo(DataEntityDB db);
 
     JobProfile getJobProfileForApp(DataEntityDB db, String appId, String user);
 

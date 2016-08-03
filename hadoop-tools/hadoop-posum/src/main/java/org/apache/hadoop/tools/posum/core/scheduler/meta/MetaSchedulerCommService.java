@@ -16,8 +16,8 @@ import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.core.orchestrator.client.OrchestratorMasterClient;
 import org.apache.hadoop.tools.posum.core.orchestrator.client.OrchestratorMasterInterface;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.client.MetaSchedulerInterface;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
+import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -107,8 +107,10 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         return SimpleResponse.newInstance(true);
     }
 
-    public DataBroker getDataBroker() {
-        return dataClient;
+    public Database getDatabase() {
+        if (dataClient == null)
+            return null;
+        return dataClient.bindTo(DataEntityDB.getMain());
     }
 
     public OrchestratorMasterInterface getMaster() {

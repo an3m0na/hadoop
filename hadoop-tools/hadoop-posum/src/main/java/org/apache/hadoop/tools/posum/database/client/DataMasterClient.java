@@ -33,7 +33,6 @@ public class DataMasterClient extends AbstractService implements DataBroker {
 
     private DataMasterProtocol dmClient;
     private String connectAddress;
-    private DataEntityDB defaultDB;
 
     public DataMasterClient(String connectAddress) {
         super(DataMasterClient.class.getName());
@@ -70,8 +69,6 @@ public class DataMasterClient extends AbstractService implements DataBroker {
 
     public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call) {
         try {
-            if(call.getDatabase() == null)
-                call.setDatabase(defaultDB);
             return (T) Utils.handleError("executeDatabaseCall", dmClient.executeDatabaseCall(call)).getPayload();
         } catch (IOException | YarnException e) {
             throw new PosumException("Error during RPC call", e);
@@ -89,8 +86,8 @@ public class DataMasterClient extends AbstractService implements DataBroker {
     }
 
     @Override
-    public void bindTo(DataEntityDB db) {
-        defaultDB = db;
+    public Database bindTo(DataEntityDB db) {
+        return new DatabaseImpl(this, db);
     }
 
     public SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {

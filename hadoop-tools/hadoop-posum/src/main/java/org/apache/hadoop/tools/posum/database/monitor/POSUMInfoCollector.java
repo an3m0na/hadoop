@@ -10,7 +10,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.TaskPredictionPayloa
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.DetailedPredictor;
@@ -49,14 +49,14 @@ public class PosumInfoCollector {
                 PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
         api = new PosumAPIClient(conf);
         this.policyMap = new PolicyMap(conf);
-        DataBroker dataBroker = dataStore.bindTo(DataEntityDB.getMain());
+        Database db = dataStore.bindTo(DataEntityDB.getMain());
 //        predictor = JobBehaviorPredictor.newInstance(conf);
         basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
-        basicPredictor.initialize(dataBroker);
+        basicPredictor.initialize(db);
         standardPredictor = JobBehaviorPredictor.newInstance(conf, StandardPredictor.class);
-        standardPredictor.initialize(dataBroker);
+        standardPredictor.initialize(db);
         detailedPredictor = JobBehaviorPredictor.newInstance(conf, DetailedPredictor.class);
-        detailedPredictor.initialize(dataBroker);
+        detailedPredictor.initialize(db);
         predictionTimeout = conf.getLong(PosumConfiguration.PREDICTOR_TIMEOUT,
                 PosumConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
     }

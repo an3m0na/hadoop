@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public interface DataBroker {
 
-    void bindTo(DataEntityDB db);
+    Database bindTo(DataEntityDB db);
 
     <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call);
 

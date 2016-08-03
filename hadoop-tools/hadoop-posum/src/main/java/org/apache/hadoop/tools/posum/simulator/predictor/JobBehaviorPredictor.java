@@ -7,7 +7,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.client.Database;
 
 /**
  * Created by ane on 2/9/16.
@@ -15,7 +15,7 @@ import org.apache.hadoop.tools.posum.database.client.DataBroker;
 public abstract class JobBehaviorPredictor {
 
     protected Configuration conf;
-    private DataBroker dataBroker;
+    private Database db;
 
     public static JobBehaviorPredictor newInstance(Configuration conf) {
         return newInstance(conf, conf.getClass(
@@ -36,8 +36,8 @@ public abstract class JobBehaviorPredictor {
         }
     }
 
-    public void initialize(DataBroker dataBroker) {
-        this.dataBroker = dataBroker;
+    public void initialize(Database db) {
+        this.db = db;
     }
 
     /* WARNING! Prediction methods may throw exceptions if data model changes occur during computation (e.g. task finishes) */
@@ -48,7 +48,7 @@ public abstract class JobBehaviorPredictor {
 
     public Long predictTaskDuration(String taskId) {
         FindByIdCall getTask = FindByIdCall.newInstance(DataEntityCollection.TASK, taskId);
-        TaskProfile task = getDataBroker().executeDatabaseCall(getTask).getEntity();
+        TaskProfile task = getDatabase().executeDatabaseCall(getTask).getEntity();
         if (task == null)
             throw new PosumException("Task not found for id " + taskId);
         if(task.getDuration() > 0)
@@ -56,9 +56,9 @@ public abstract class JobBehaviorPredictor {
         return predictTaskDuration(task.getJobId(), task.getType());
     }
 
-    DataBroker getDataBroker() {
-        if (dataBroker == null)
-            throw new PosumException("DataBroker not initialized in Predictor");
-        return dataBroker;
+    Database getDatabase() {
+        if (db == null)
+            throw new PosumException("Database not initialized in Predictor");
+        return db;
     }
 }

@@ -29,11 +29,11 @@ public class BasicPredictor extends JobBehaviorPredictor {
                 -bufferLimit,
                 bufferLimit
         );
-        List<JobProfile> comparable = getDataBroker().executeDatabaseCall(getComparableJobs).getEntities();
+        List<JobProfile> comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
         if (comparable.size() < 1) {
             // get past jobs at least by the same user
             getComparableJobs.setParams(Collections.singletonMap("user", (Object)job.getUser()));
-            comparable = getDataBroker().executeDatabaseCall(getComparableJobs).getEntities();
+            comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
         }
         return comparable;
     }
@@ -41,7 +41,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
     @Override
     public Long predictJobDuration(String jobId) {
         FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, jobId);
-        JobProfile job = getDataBroker().executeDatabaseCall(getJob).getEntity();
+        JobProfile job = getDatabase().executeDatabaseCall(getJob).getEntity();
         List<JobProfile> comparable = getComparableProfiles(job);
         if (comparable.size() < 1)
             return conf.getLong(PosumConfiguration.AVERAGE_JOB_DURATION,
@@ -56,7 +56,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
     @Override
     public Long predictTaskDuration(String jobId, TaskType type) {
         FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, jobId);
-        JobProfile job = getDataBroker().executeDatabaseCall(getJob).getEntity();
+        JobProfile job = getDatabase().executeDatabaseCall(getJob).getEntity();
         Long currentAverage = TaskType.MAP.equals(type) ? job.getAvgMapDuration() : job.getAvgReduceDuration();
         if (currentAverage > 0)
             return currentAverage;

@@ -7,7 +7,7 @@ import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaSchedulerNode;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 
@@ -59,10 +59,10 @@ public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttemp
             String appId = app.getApplicationId().toString();
             if (app.getTotalInputSize() != null)
                 return;
-            DataBroker broker = commService.getDataBroker();
-            if (broker != null) {
+            Database db = commService.getDatabase();
+            if (db != null) {
                 JobForAppCall getJob = JobForAppCall.newInstance(appId, app.getUser());
-                JobProfile job = broker.executeDatabaseCall(getJob).getEntity();
+                JobProfile job = db.executeDatabaseCall(getJob).getEntity();
                 if (job != null) {
                     Long size = job.getTotalInputBytes();
                     if (size != null && size > 0) {

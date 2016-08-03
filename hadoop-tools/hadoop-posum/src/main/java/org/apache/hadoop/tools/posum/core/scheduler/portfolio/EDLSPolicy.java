@@ -13,7 +13,7 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.core.scheduler.meta.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtCaSchedulerNode;
 import org.apache.hadoop.tools.posum.core.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
@@ -80,11 +80,11 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
     }
 
     protected JobProfile fetchJobProfile(String appId, String user) {
-        DataBroker broker = commService.getDataBroker();
-        if (broker == null)
+        Database db = commService.getDatabase();
+        if (db == null)
             // DataMaster is not connected; do nothing
             return null;
-        JobProfile job = broker.executeDatabaseCall(JobForAppCall.newInstance(appId, user)).getEntity();
+        JobProfile job = db.executeDatabaseCall(JobForAppCall.newInstance(appId, user)).getEntity();
         if (job == null) {
             logger.error("Could not retrieve job info for " + appId);
             return null;
@@ -94,7 +94,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         if (typeString == null) {
             // first initialization
             FindByIdCall getJobConf = FindByIdCall.newInstance(DataEntityCollection.JOB_CONF, job.getId());
-            JobConfProxy confProxy = broker.executeDatabaseCall(getJobConf).getEntity();
+            JobConfProxy confProxy = db.executeDatabaseCall(getJobConf).getEntity();
             String deadlineString = confProxy.getEntry(PosumConfiguration.APP_DEADLINE);
             Map<String, String> newFields = new HashMap<>(2);
             if (deadlineString != null && deadlineString.length() > 0) {
@@ -104,7 +104,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
                 newFields.put(TYPE_FLEX_KEY, EDLSAppAttempt.Type.BC.name());
             }
             SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), newFields, false);
-            broker.executeDatabaseCall(saveFlexFields);
+            db.executeDatabaseCall(saveFlexFields);
         }
         return job;
     }
@@ -116,7 +116,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
             if (EDLSAppAttempt.Type.DC.equals(app.getType()))
                 // application should already be initialized; do nothing
                 return;
-            if (commService.getDataBroker() == null)
+            if (commService.getDatabase() == null)
                 // DataMaster is not connected; do nothing
                 return;
             String appId = app.getApplicationId().toString();

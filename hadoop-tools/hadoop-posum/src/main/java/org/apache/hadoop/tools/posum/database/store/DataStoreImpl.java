@@ -4,11 +4,14 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
+import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.database.client.DataBroker;
-import org.apache.hadoop.tools.posum.database.client.DataStoreClient;
+import org.apache.hadoop.tools.posum.database.client.Database;
+import org.apache.hadoop.tools.posum.database.client.DatabaseImpl;
 import org.mongojack.DBQuery;
 
 import java.util.ArrayList;
@@ -249,10 +252,29 @@ public class DataStoreImpl implements DataStore {
     }
 
     @Override
-    public DataBroker bindTo(DataEntityDB db) {
-        DataBroker broker = new DataStoreClient(this);
-        broker.bindTo(db);
-        return broker;
+    public Database bindTo(DataEntityDB db) {
+        final DataStore thisStore = this;
+        return new DatabaseImpl(new DataBroker() {
+            @Override
+            public Database bindTo(DataEntityDB db) {
+                return new DatabaseImpl(this, db);
+            }
+
+            @Override
+            public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call) {
+                return call.executeCall(thisStore);
+            }
+
+            @Override
+            public Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections() {
+                return thisStore.listExistingCollections();
+            }
+
+            @Override
+            public void clear() {
+                thisStore.clear();
+            }
+        }, db);
     }
 
     @Override

@@ -29,7 +29,7 @@ public class TestDataMasterClient extends TestDataClientImpl {
         client.init(PosumConfiguration.newInstance());
         client.start();
         client.bindTo(DataEntityDB.getMain());
-        dataBroker = client;
+        db = client.bindTo(DataEntityDB.getMain());
     }
 
     @After

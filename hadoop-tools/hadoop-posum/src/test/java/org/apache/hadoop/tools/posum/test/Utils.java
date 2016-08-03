@@ -6,7 +6,7 @@ import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 
@@ -23,7 +23,7 @@ public class Utils {
     public static final String FIRST_USER = "dummy";
     public static final String SECOND_USER = "geek";
 
-    public static void loadThreeDefaultAppsAndJobs(Long clusterTimestamp, DataBroker dataBroker) {
+    public static void loadThreeDefaultAppsAndJobs(Long clusterTimestamp, Database db) {
         AppProfile app1 = Records.newRecord(AppProfile.class);
         ApplicationId app1Id = ApplicationId.newInstance(clusterTimestamp, 1);
         app1.setId(app1Id.toString());
@@ -32,7 +32,7 @@ public class Utils {
         app1.setStartTime(clusterTimestamp - 5 * DURATION_UNIT);
         app1.setFinishTime(clusterTimestamp);
         StoreCall storeCall = StoreCall.newInstance(DataEntityCollection.APP, app1);
-        dataBroker.executeDatabaseCall(storeCall);
+        db.executeDatabaseCall(storeCall);
 
         JobProfile job1 = Records.newRecord(JobProfile.class);
         JobId job1Id = new JobIdPBImpl();
@@ -48,7 +48,7 @@ public class Utils {
         job1.setFinishTime(app1.getFinishTime());
         storeCall.setEntityCollection(DataEntityCollection.JOB);
         storeCall.setEntity(job1);
-        dataBroker.executeDatabaseCall(storeCall);
+        db.executeDatabaseCall(storeCall);
 
         AppProfile app2 = Records.newRecord(AppProfile.class);
         ApplicationId app2Id = ApplicationId.newInstance(clusterTimestamp, 2);
@@ -59,7 +59,7 @@ public class Utils {
         app2.setFinishTime(clusterTimestamp - DURATION_UNIT);
         storeCall.setEntityCollection(DataEntityCollection.APP);
         storeCall.setEntity(app2);
-        dataBroker.executeDatabaseCall(storeCall);
+        db.executeDatabaseCall(storeCall);
 
         JobProfile job2 = Records.newRecord(JobProfile.class);
         JobId job2Id = new JobIdPBImpl();
@@ -75,7 +75,7 @@ public class Utils {
         job2.setFinishTime(app2.getFinishTime());
         storeCall.setEntityCollection(DataEntityCollection.JOB);
         storeCall.setEntity(job2);
-        dataBroker.executeDatabaseCall(storeCall);
+        db.executeDatabaseCall(storeCall);
 
         AppProfile app3 = Records.newRecord(AppProfile.class);
         ApplicationId app3Id = ApplicationId.newInstance(clusterTimestamp, 3);
@@ -86,7 +86,7 @@ public class Utils {
         app3.setFinishTime(clusterTimestamp - DURATION_UNIT);
         storeCall.setEntityCollection(DataEntityCollection.APP);
         storeCall.setEntity(app3);
-        dataBroker.executeDatabaseCall(storeCall);
+        db.executeDatabaseCall(storeCall);
 
         JobProfile job3 = Records.newRecord(JobProfile.class);
         JobId job3Id = new JobIdPBImpl();
@@ -102,7 +102,7 @@ public class Utils {
         job3.setFinishTime(app3.getFinishTime());
         storeCall.setEntityCollection(DataEntityCollection.JOB);
         storeCall.setEntity(job3);
-        dataBroker.executeDatabaseCall(storeCall);
+        db.executeDatabaseCall(storeCall);
     }
 
     private static String getMongoScriptCall() {
