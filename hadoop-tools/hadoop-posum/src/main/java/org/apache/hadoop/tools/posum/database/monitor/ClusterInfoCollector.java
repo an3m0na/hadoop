@@ -94,11 +94,10 @@ public class ClusterInfoCollector {
             jobId = job.getId();
             job = api.getFinishedJobInfo(appId, job.getId(), job);
         }
-        final JobProfile finalJob = job;
 
-        final JobConfProxy jobConf = api.getFinishedJobConf(jobId);
+        JobConfProxy jobConf = api.getFinishedJobConf(jobId);
         setClassNamesFromConf(job, jobConf);
-        final CountersProxy jobCounters = api.getFinishedJobCounters(jobId);
+        CountersProxy jobCounters = api.getFinishedJobCounters(jobId);
 
         if (jobCounters != null) {
             for (CounterGroupInfoPayload group : jobCounters.getCounterGroup()) {
@@ -161,10 +160,10 @@ public class ClusterInfoCollector {
         transaction.addCall(DeleteByIdCall.newInstance(DataEntityCollection.APP, appId))
                 .addCall(DeleteByParamsCall.newInstance(DataEntityCollection.JOB, Collections.singletonMap("appId", (Object) appId)))
                 .addCall(DeleteByParamsCall.newInstance(DataEntityCollection.TASK, Collections.singletonMap("appId", (Object) appId)))
-                .addCall(DeleteByIdCall.newInstance(DataEntityCollection.JOB_CONF, finalJob.getId()))
-                .addCall(DeleteByIdCall.newInstance(DataEntityCollection.COUNTER, finalJob.getId()))
+                .addCall(DeleteByIdCall.newInstance(DataEntityCollection.JOB_CONF, job.getId()))
+                .addCall(DeleteByIdCall.newInstance(DataEntityCollection.COUNTER, job.getId()))
                 .addCall(StoreCall.newInstance(DataEntityCollection.APP_HISTORY, app))
-                .addCall(StoreCall.newInstance(DataEntityCollection.JOB_HISTORY, finalJob))
+                .addCall(StoreCall.newInstance(DataEntityCollection.JOB_HISTORY, job))
                 .addCall(StoreCall.newInstance(DataEntityCollection.COUNTER_HISTORY, jobCounters));
         for (TaskProfile task : tasks) {
             transaction.addCall(StoreCall.newInstance(DataEntityCollection.TASK_HISTORY, task));
@@ -338,8 +337,7 @@ public class ClusterInfoCollector {
 
             TransactionCall transaction = TransactionCall.newInstance();
             transaction.addCall(UpdateOrStoreCall.newInstance(DataEntityCollection.JOB, job))
-                    .addCall(UpdateOrStoreCall.newInstance(DataEntityCollection.COUNTER, jobCounters))
-                    .addCall(UpdateOrStoreCall.newInstance(DataEntityCollection.COUNTER_HISTORY, jobCounters));
+                    .addCall(UpdateOrStoreCall.newInstance(DataEntityCollection.COUNTER, jobCounters));
             for (CountersProxy counters : taskCounters)
                 transaction.addCall(UpdateOrStoreCall.newInstance(DataEntityCollection.COUNTER, counters));
             for (TaskProfile task : tasks) {

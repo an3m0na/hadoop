@@ -121,7 +121,6 @@ public class DataStoreImpl implements DataStore {
             JobProfile job = findById(db, type, jobId);
             if (job == null)
                 throw new PosumException("Could not find job to save flex-fields: " + jobId);
-
             job.getFlexFields().putAll(newFields);
             updateOrStore(db, type, job);
         } finally {

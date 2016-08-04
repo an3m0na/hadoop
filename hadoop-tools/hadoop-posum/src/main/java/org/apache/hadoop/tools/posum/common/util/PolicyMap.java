@@ -1,8 +1,8 @@
 package org.apache.hadoop.tools.posum.common.util;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.core.scheduler.portfolio.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.*;
 
 import java.util.HashMap;
 

@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.database.client;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.core.orchestrator.OrchestratorMaster;
+import org.apache.hadoop.tools.posum.orchestrator.master.OrchestratorMaster;
 import org.apache.hadoop.tools.posum.database.master.DataMaster;
 import org.apache.hadoop.tools.posum.test.ServiceRunner;
 import org.apache.hadoop.tools.posum.test.TestDataClientImpl;
