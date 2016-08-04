@@ -15,9 +15,6 @@ public abstract class SimpleRequest<T> {
     public enum Type {
         PING(StringRequestPBImpl.class),
         CHANGE_POLICY(StringRequestPBImpl.class),
-        ENTITY_BY_ID(EntityByIdRequestPBImpl.class),
-        JOB_FOR_APP(JobForAppRequestPBImpl.class),
-        SAVE_FLEX_FIELDS(SaveFlexFieldsRequestPBImpl.class),
         START(VoidRequestPBImpl.class),
         LOG_POLICY_CHANGE(StringRequestPBImpl.class),
         SYSTEM_ADDRESSES(VoidRequestPBImpl.class);
