@@ -79,6 +79,7 @@ public class PosumInfoCollector {
 //                    }
                     Long duration;
                     try {
+                        //TODO store log entries remotely also
                         duration = basicPredictor.predictTaskDuration(taskId);
                         dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
                                 TaskPredictionPayload.newInstance(basicPredictor.getClass().getSimpleName(), taskId, duration)));
