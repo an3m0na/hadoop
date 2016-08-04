@@ -22,6 +22,7 @@ public class Utils {
     public static final String JOB_NAME_ROOT = "Dummy Job";
     public static final String FIRST_USER = "dummy";
     public static final String SECOND_USER = "geek";
+    public static final String TEST_TMP_DIR = "testTmpDir";
 
     public static void loadThreeDefaultAppsAndJobs(Long clusterTimestamp, Database db) {
         AppProfile app1 = Records.newRecord(AppProfile.class);
