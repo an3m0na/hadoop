@@ -88,12 +88,12 @@ public class SingleEntityPayloadPBImpl extends SingleEntityPayload implements Pa
     }
 
     @Override
-    public GeneralDataEntity getEntity() {
+    public <T extends GeneralDataEntity> T getEntity() {
         SingleEntityProtoOrBuilder p = viaProto ? proto : builder;
         if (p.hasEntity()) {
             try {
                 Class eClass = getEntityCollection().getMappedClass();
-                return ((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(p.getEntity());
+                return (T) ((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(p.getEntity());
             } catch (Exception e) {
                 throw new PosumException("Could not read object from byte string " + p.getEntity(), e);
             }

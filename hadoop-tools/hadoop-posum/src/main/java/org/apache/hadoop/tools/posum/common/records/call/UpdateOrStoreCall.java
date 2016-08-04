@@ -4,6 +4,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
@@ -24,7 +25,7 @@ public abstract class UpdateOrStoreCall extends WriteToCollectionCall {
     }
 
     @Override
-    public SimplePropertyPayload execute() {
+    public SimplePropertyPayload execute(DataStore dataStore) {
         return SimplePropertyPayload.newInstance(
                 "upsertedId",
                 SimplePropertyPayload.PropertyType.BOOL,
