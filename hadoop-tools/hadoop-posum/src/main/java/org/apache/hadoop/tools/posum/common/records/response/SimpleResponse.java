@@ -12,7 +12,7 @@ import org.apache.hadoop.yarn.util.Records;
 public abstract class SimpleResponse<T extends Payload> {
 
     public static SimpleResponse newInstance(boolean successful, String text) {
-        SimpleResponse response = new VoidResponsePBImpl();
+        SimpleResponse response = Records.newRecord(SimpleResponse.class);
         response.setType(PayloadType.VOID);
         response.setSuccessful(successful);
         response.setText(text);

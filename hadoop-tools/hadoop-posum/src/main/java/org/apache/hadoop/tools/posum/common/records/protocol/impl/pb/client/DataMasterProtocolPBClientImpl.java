@@ -4,25 +4,19 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.DataMasterProtocolPB;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.DatabaseCallExecutionRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
+import org.apache.hadoop.tools.posum.common.records.request.impl.pb.DatabaseCallExecutionRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.records.response.impl.pb.*;
-import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
-import org.apache.hadoop.tools.posum.common.records.protocol.*;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SearchRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.DataMasterProtocolPB;
+import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallExecutionRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.ByParamsProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
+import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallExecutionRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -55,45 +49,6 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
         DatabaseCallExecutionRequestProto callProto = ((DatabaseCallExecutionRequestPBImpl) request).getProto();
         try {
             return new SimpleResponsePBImpl(proxy.executeDatabaseCall(null, callProto));
-        } catch (ServiceException e) {
-            RPCUtil.unwrapAndThrowException(e);
-            return null;
-        }
-    }
-
-    @Override
-    public SimpleResponse<SingleEntityPayload> getEntity(SimpleRequest request) throws IOException, YarnException {
-        SimpleRequestProto requestProto =
-                ((SimpleRequestPBImpl) request).getProto();
-        try {
-            return new SingleEntityResponsePBImpl(
-                    proxy.getEntity(null, requestProto));
-        } catch (ServiceException e) {
-            RPCUtil.unwrapAndThrowException(e);
-            return null;
-        }
-    }
-
-    @Override
-    public SimpleResponse<MultiEntityPayload> listEntities(SearchRequest request) throws IOException, YarnException {
-        ByParamsProto requestProto =
-                ((SearchRequestPBImpl) request).getProto();
-        try {
-            return new MultiEntityResponsePBImpl(
-                    proxy.listEntities(null, requestProto));
-        } catch (ServiceException e) {
-            RPCUtil.unwrapAndThrowException(e);
-            return null;
-        }
-    }
-
-    @Override
-    public SimpleResponse<StringListPayload> listIds(SearchRequest request) throws IOException, YarnException {
-        ByParamsProto requestProto =
-                ((SearchRequestPBImpl) request).getProto();
-        try {
-            return new StringListResponsePBImpl(
-                    proxy.listEntities(null, requestProto));
         } catch (ServiceException e) {
             RPCUtil.unwrapAndThrowException(e);
             return null;
