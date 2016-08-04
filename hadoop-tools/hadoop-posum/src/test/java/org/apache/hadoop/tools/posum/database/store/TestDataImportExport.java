@@ -35,7 +35,7 @@ public class TestDataImportExport {
 
     @Test
     public void test() throws Exception {
-        String dataDumpPath = "testTmpDir";
+        String dataDumpPath = Utils.TEST_TMP_DIR + File.separator + "importexport";
         File tmpDir = new File(dataDumpPath);
         assertTrue(tmpDir.exists() && tmpDir.isDirectory());
         dataStore.clear();
