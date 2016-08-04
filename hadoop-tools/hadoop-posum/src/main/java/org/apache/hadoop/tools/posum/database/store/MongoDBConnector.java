@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import com.mongodb.MongoClient;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
@@ -14,19 +15,23 @@ import java.util.concurrent.ConcurrentSkipListMap;
 /**
  * Created by ane on 3/3/16.
  */
-public class MongoJackConnector extends MongoConnector {
+public class MongoDBConnector {
 
-    private static Log logger = LogFactory.getLog(MongoJackConnector.class);
+    private static Log logger = LogFactory.getLog(MongoDBConnector.class);
 
     private static final int MAX_DBS = 100;
     private static final int MAX_COLS = 100;
+
+    private MongoClient client;
 
     private static Integer transientId = MAX_DBS;
     private HashMap<String, Integer> transientDbs = new HashMap<>();
     private ConcurrentSkipListMap<Integer, JacksonDBCollection> collections = new ConcurrentSkipListMap<>();
 
-    public MongoJackConnector(String databaseUrl) {
-        super(databaseUrl);
+    public MongoDBConnector(String databaseUrl) {
+        if (databaseUrl != null)
+            client = new MongoClient(databaseUrl);
+        client = new MongoClient();
     }
 
     synchronized void addDatabase(DataEntityDB db, DataEntityCollection... types) {
@@ -64,10 +69,6 @@ public class MongoJackConnector extends MongoConnector {
     <T extends GeneralDataEntity> String insertObject(DataEntityDB db, DataEntityCollection collection, T object) {
         WriteResult<T, String> result = this.<T>getCollection(db, collection).insert(object);
         return result.getSavedId();
-    }
-
-    <T extends GeneralDataEntity> boolean updateObject(DataEntityDB db, DataEntityCollection collection, T object) {
-        return this.<T>getCollection(db, collection).updateById(object.getId(), object).getN() == 1;
     }
 
     <T extends GeneralDataEntity> boolean upsertObject(DataEntityDB db, DataEntityCollection collection, T object) {
@@ -112,7 +113,7 @@ public class MongoJackConnector extends MongoConnector {
         return findObjects(db, collection, composeQuery(queryParams), fieldProjections);
     }
 
-    <T> List<T> findObjects(DataEntityDB db, DataEntityCollection collection, DBQuery.Query query, int offsetOrZero, int limitOrZero) {
+    private <T> List<T> findObjects(DataEntityDB db, DataEntityCollection collection, DBQuery.Query query, int offsetOrZero, int limitOrZero) {
         JacksonDBCollection<T, String> dbCollection = getCollection(db, collection);
         DBCursor<T> cursor = query == null ? dbCollection.find() : dbCollection.find(query);
         if (offsetOrZero != 0) {
