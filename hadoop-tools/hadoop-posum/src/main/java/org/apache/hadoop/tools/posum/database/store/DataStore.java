@@ -33,6 +33,8 @@ public interface DataStore {
 
     void saveFlexFields(DataEntityDB db, String jobId, Map<String, String> newFields, boolean forHistory);
 
+    //TODO master locking mechanism for when a migration or snapshot needs to be made
+
     void lockForRead(DataEntityDB db);
 
     void lockForWrite(DataEntityDB db);

@@ -19,7 +19,7 @@ import java.util.*;
  * Created by ane on 7/26/16.
  */
 //TODO rewrite this to make use of MockDataStoreImpl features
-public class SnapshotMockDSFromRumen extends MockDataStoreImpl {// implements TraceSnapshotMockDS {
+public class HistorySnapshotMockDSFromRumen extends MockDataStoreImpl {// implements TraceSnapshotMockDS {
     private List<JobProfile> jobList = new ArrayList<>();
     private Map<String, Map<String, TaskProfile>> taskMap = new HashMap<>();
     private long simulationTime = 0;
