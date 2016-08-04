@@ -26,7 +26,7 @@ public class DataStoreImpl implements DataStore {
     private static Log logger = LogFactory.getLog(DataStoreImpl.class);
 
     private final Configuration conf;
-    private MongoJackConnector conn;
+    private MongoDBConnector conn;
     private DataEntityDB mainDb = DataEntityDB.getMain(),
             logDb = DataEntityDB.getLogs(),
             simDb = DataEntityDB.getSimulation();
@@ -34,7 +34,7 @@ public class DataStoreImpl implements DataStore {
 
     public DataStoreImpl(Configuration conf) {
         String url = conf.get(PosumConfiguration.DATABASE_URL, PosumConfiguration.DATABASE_URL_DEFAULT);
-        conn = new MongoJackConnector(url);
+        conn = new MongoDBConnector(url);
         conn.addDatabase(mainDb,
                 DataEntityCollection.APP,
                 DataEntityCollection.APP_HISTORY,
@@ -103,32 +103,6 @@ public class DataStoreImpl implements DataStore {
     }
 
     @Override
-    public JobProfile getJobProfileForApp(final DataEntityDB db, String appId, String user) {
-        List<JobProfile> profiles;
-        profiles = find(db, DataEntityCollection.JOB, Collections.singletonMap("appId", (Object) appId), 0, 0);
-        if (profiles.size() == 1)
-            return profiles.get(0);
-        if (profiles.size() > 1)
-            throw new PosumException("Found too many profiles in database for app " + appId);
-        return null;
-    }
-
-    @Override
-    public void saveFlexFields(final DataEntityDB db, String jobId, Map<String, String> newFields, boolean forHistory) {
-        locks.get(db.getId()).writeLock().lock();
-        try {
-            DataEntityCollection type = forHistory ? DataEntityCollection.JOB_HISTORY : DataEntityCollection.JOB;
-            JobProfile job = findById(db, type, jobId);
-            if (job == null)
-                throw new PosumException("Could not find job to save flex-fields: " + jobId);
-            job.getFlexFields().putAll(newFields);
-            updateOrStore(db, type, job);
-        } finally {
-            locks.get(db.getId()).writeLock().unlock();
-        }
-    }
-
-    @Override
     public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert) {
         locks.get(db.getId()).writeLock().lock();
         try {
@@ -164,17 +138,6 @@ public class DataStoreImpl implements DataStore {
         locks.get(db.getId()).writeLock().lock();
         try {
             conn.deleteObject(db, collection, queryParams);
-        } finally {
-            locks.get(db.getId()).writeLock().unlock();
-        }
-    }
-
-    public void runTransaction(DataEntityDB db, DataTransaction transaction) throws PosumException {
-        locks.get(db.getId()).writeLock().lock();
-        try {
-            transaction.run();
-        } catch (Exception e) {
-            throw new PosumException("Exception executing transaction ", e);
         } finally {
             locks.get(db.getId()).writeLock().unlock();
         }

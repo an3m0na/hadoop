@@ -171,33 +171,6 @@ public class MockDataStoreImpl implements DataStore {
     }
 
     @Override
-    public JobProfile getJobProfileForApp(DataEntityDB db, String appId, String user) {
-        List<JobProfile> profiles;
-        profiles = find(db, DataEntityCollection.JOB, Collections.singletonMap("appId", (Object) appId), 0, 0);
-        if (profiles.size() == 1)
-            return profiles.get(0);
-        if (profiles.size() > 1)
-            throw new PosumException("Found too many profiles in database for app " + appId);
-        return null;
-    }
-
-    @Override
-    public void saveFlexFields(DataEntityDB db, String jobId, Map<String, String> newFields, boolean forHistory) {
-        locks.get(db.getId()).writeLock().lock();
-        try {
-            DataEntityCollection type = forHistory ? DataEntityCollection.JOB_HISTORY : DataEntityCollection.JOB;
-            JobProfile job = findById(db, type, jobId);
-            if (job == null)
-                throw new PosumException("Could not find job to save flex-fields: " + jobId);
-
-            job.getFlexFields().putAll(newFields);
-            updateOrStore(db, type, job);
-        } finally {
-            locks.get(db.getId()).writeLock().unlock();
-        }
-    }
-
-    @Override
     public Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections() {
         Map<DataEntityDB, List<DataEntityCollection>> ret = new HashMap<>(storedEntities.size());
         for (Map.Entry<DataEntityDB, Map<DataEntityCollection, Map<String, ? extends GeneralDataEntity>>> dbMapEntry :
