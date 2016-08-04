@@ -44,7 +44,7 @@ runMaster() {
     set -e
 
     PROCESSES=(
-        "org.apache.hadoop.tools.posum.core.master.POSUMMaster"
+        "org.apache.hadoop.tools.posum.orchestrator.master.OrchestratorMaster"
         "org.apache.hadoop.tools.posum.database.master.DataMaster"
         "org.apache.hadoop.tools.posum.simulator.master.SimulationMaster"
         )

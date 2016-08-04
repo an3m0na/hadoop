@@ -41,7 +41,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 Collections.<String, Object>emptyMap());
         List<String> historyJobIds = db.executeDatabaseCall(getFinishedJobIds).getEntries();
         for (String jobId : historyJobIds) {
-            FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, jobId);
+            FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB_HISTORY, jobId);
             JobProfile job = getDatabase().executeDatabaseCall(getJob).getEntity();
             if (job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null)
                 completeProfile(job);
@@ -65,7 +65,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 Collections.singletonMap("jobId", (Object)job.getId()));
         Map<String, String> flexFields = calculateCurrentProfile(job,
                 getDatabase().executeDatabaseCall(getTasks).<TaskProfile>getEntities());
-        SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), flexFields, true);
+        SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), flexFields, false);
         getDatabase().executeDatabaseCall(saveFlexFields);
         return job;
     }
