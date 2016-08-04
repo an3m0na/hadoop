@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.call;
 
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 
@@ -8,19 +9,22 @@ import org.apache.hadoop.tools.posum.database.store.DataStore;
  */
 abstract class LockBasedDatabaseCallImpl<T extends Payload> extends ThreePhaseDatabaseCallImpl<T> {
 
-    public void prepare(DataStore dataStore) {
-        lockDatabase(dataStore);
+    @Override
+    public void prepare(DataStore dataStore, DataEntityDB db) {
+        lockDatabase(dataStore, db);
     }
 
-    public void commit(DataStore dataStore) {
-        unlockDatabase(dataStore);
+    @Override
+    public void commit(DataStore dataStore, DataEntityDB db) {
+        unlockDatabase(dataStore, db);
     }
 
-    public void rollBack(DataStore dataStore) {
-        unlockDatabase(dataStore);
+    @Override
+    public void rollBack(DataStore dataStore, DataEntityDB db) {
+        unlockDatabase(dataStore, db);
     }
 
-    protected abstract void unlockDatabase(DataStore dataStore);
+    protected abstract void unlockDatabase(DataStore dataStore, DataEntityDB db);
 
-    protected abstract void lockDatabase(DataStore dataStore);
+    protected abstract void lockDatabase(DataStore dataStore, DataEntityDB db);
 }

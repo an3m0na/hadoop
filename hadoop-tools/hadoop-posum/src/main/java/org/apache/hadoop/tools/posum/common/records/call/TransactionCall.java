@@ -17,12 +17,6 @@ public abstract class TransactionCall extends LockBasedDatabaseCallImpl<Payload>
         return Records.newRecord(TransactionCall.class);
     }
 
-    public static TransactionCall newInstance(DataEntityDB db) {
-        TransactionCall call = Records.newRecord(TransactionCall.class);
-        call.setDatabase(db);
-        return call;
-    }
-
     public abstract List<ThreePhaseDatabaseCall> getCallList();
 
     public abstract void setCallList(List<? extends ThreePhaseDatabaseCall> callList);
@@ -37,22 +31,21 @@ public abstract class TransactionCall extends LockBasedDatabaseCallImpl<Payload>
 
 
     @Override
-    public void lockDatabase(DataStore dataStore) {
-        dataStore.lockForWrite(getDatabase());
+    public void lockDatabase(DataStore dataStore, DataEntityDB db) {
+        dataStore.lockForWrite(db);
     }
 
     @Override
-    public Payload execute(DataStore dataStore) {
+    public Payload execute(DataStore dataStore, DataEntityDB db) {
         Payload ret = VoidPayload.newInstance();
         for (ThreePhaseDatabaseCall call : getCallList()) {
-            call.setDatabase(getDatabase());
-            ret = call.execute(dataStore);
+            ret = call.execute(dataStore, db);
         }
         return ret;
     }
 
     @Override
-    public void unlockDatabase(DataStore dataStore) {
-        dataStore.unlockForWrite(getDatabase());
+    public void unlockDatabase(DataStore dataStore, DataEntityDB db) {
+        dataStore.unlockForWrite(db);
     }
 }

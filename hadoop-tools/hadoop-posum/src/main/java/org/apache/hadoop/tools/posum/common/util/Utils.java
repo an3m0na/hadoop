@@ -5,6 +5,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
@@ -14,6 +17,10 @@ import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.database.client.Database;
+import org.apache.hadoop.tools.posum.database.client.DatabaseImpl;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.util.Records;
@@ -284,5 +291,27 @@ public class Utils {
         return true;
     }
 
+    public static DataBroker exposeDataStoreAsBroker(final DataStore dataStore) {
+        return new DataBroker() {
+            @Override
+            public Database bindTo(DataEntityDB db) {
+                return new DatabaseImpl(this, db);
+            }
 
+            @Override
+            public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DataEntityDB db) {
+                return call.executeCall(dataStore, db);
+            }
+
+            @Override
+            public Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections() {
+                return dataStore.listExistingCollections();
+            }
+
+            @Override
+            public void clear() {
+                dataStore.clear();
+            }
+        };
+    }
 }

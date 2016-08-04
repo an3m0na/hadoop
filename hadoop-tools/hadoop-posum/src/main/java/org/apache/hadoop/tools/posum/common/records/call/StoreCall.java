@@ -18,18 +18,12 @@ public abstract class StoreCall extends WriteToCollectionCall {
         return call;
     }
 
-    public static StoreCall newInstance(DataEntityDB db, DataEntityCollection collection, GeneralDataEntity object) {
-        StoreCall call = newInstance(collection, object);
-        call.setDatabase(db);
-        return call;
-    }
-
     @Override
-    public SimplePropertyPayload execute(DataStore dataStore) {
+    public SimplePropertyPayload execute(DataStore dataStore, DataEntityDB db) {
         return SimplePropertyPayload.newInstance(
                 "id",
                 SimplePropertyPayload.PropertyType.STRING,
-                dataStore.store(getDatabase(), getEntityCollection(), getEntity())
+                dataStore.store(db, getEntityCollection(), getEntity())
         );
     }
 

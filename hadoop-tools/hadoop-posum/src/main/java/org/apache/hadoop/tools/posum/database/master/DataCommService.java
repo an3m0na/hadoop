@@ -11,6 +11,7 @@ import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.*;
+import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -95,16 +96,17 @@ public class DataCommService extends CompositeService implements DataMasterProto
     }
 
     @Override
-    public SimpleResponse executeDatabaseCall(DatabaseCall call) {
-        DatabaseCallType callType = DatabaseCallType.fromMappedClass(call.getClass());
+    public SimpleResponse executeDatabaseCall(DatabaseCallExecutionRequest request) {
+        DatabaseCallType callType = DatabaseCallType.fromMappedClass(request.getCall().getClass());
         logger.debug("Got request for call " + callType);
         if (callType == null) {
-            String message = "Unrecognized call implementation " + call.getClass();
+            String message = "Unrecognized call implementation " + request.getCall().getClass();
             logger.error(message);
             return SimpleResponse.newInstance(false, message);
         }
         try {
-            return SimpleResponse.newInstance(callType.getPayloadType(), call.executeCall(dmContext.getDataStore()));
+            return SimpleResponse.newInstance(callType.getPayloadType(),
+                    request.getCall().executeCall(dmContext.getDataStore(), request.getEntityDB()));
         } catch (Exception e) {
             String message = "Exception executing call " + callType;
             logger.error(message, e);
@@ -120,7 +122,8 @@ public class DataCommService extends CompositeService implements DataMasterProto
                 case ENTITY_BY_ID:
                     FindByIdCall idPayload = (FindByIdCall) request.getPayload();
                     GeneralDataEntity ret =
-                            dmContext.getDataStore().findById(idPayload.getDatabase(),
+                            //TODO remove the main binding after transition to call based transactions is complete
+                            dmContext.getDataStore().findById(DataEntityDB.getMain(),
                                     idPayload.getEntityCollection(),
                                     idPayload.getId());
                     SingleEntityPayload entityPayload = SingleEntityPayload.newInstance(idPayload.getEntityCollection(), ret);

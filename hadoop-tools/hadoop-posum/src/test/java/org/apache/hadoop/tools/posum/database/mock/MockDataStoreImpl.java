@@ -171,28 +171,7 @@ public class MockDataStoreImpl implements DataStore {
 
     @Override
     public Database bindTo(DataEntityDB db) {
-        final DataStore thisStore = this;
-        return new DatabaseImpl(new DataBroker() {
-            @Override
-            public Database bindTo(DataEntityDB db) {
-                return new DatabaseImpl(this, db);
-            }
-
-            @Override
-            public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call) {
-                return call.executeCall(thisStore);
-            }
-
-            @Override
-            public Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections() {
-                return thisStore.listExistingCollections();
-            }
-
-            @Override
-            public void clear() {
-                thisStore.clear();
-            }
-        }, db);
+        return Utils.exposeDataStoreAsBroker(this).bindTo(db);
     }
 
     @Override

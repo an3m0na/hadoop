@@ -20,21 +20,8 @@ public abstract class FindByParamsCall extends ReadFromCollectionCall<MultiEntit
         return call;
     }
 
-    public static FindByParamsCall newInstance(DataEntityDB db, DataEntityCollection collection, Map<String, Object> params) {
-        FindByParamsCall call = newInstance(collection, params);
-        call.setDatabase(db);
-        return call;
-    }
-
     public static FindByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params, int offsetOrZero, int limitOrZero) {
         FindByParamsCall call = newInstance(collection, params);
-        call.setOffsetOrZero(offsetOrZero);
-        call.setLimitOrZero(limitOrZero);
-        return call;
-    }
-
-    public static FindByParamsCall newInstance(DataEntityDB db, DataEntityCollection collection, Map<String, Object> params, int offsetOrZero, int limitOrZero) {
-        FindByParamsCall call = newInstance(db, collection, params);
         call.setOffsetOrZero(offsetOrZero);
         call.setLimitOrZero(limitOrZero);
         return call;
@@ -53,8 +40,8 @@ public abstract class FindByParamsCall extends ReadFromCollectionCall<MultiEntit
     public abstract void setOffsetOrZero(int offsetOrZero);
 
     @Override
-    public MultiEntityPayload execute(DataStore dataStore) {
+    public MultiEntityPayload execute(DataStore dataStore, DataEntityDB db) {
         return MultiEntityPayload.newInstance(getEntityCollection(),
-                dataStore.find(getDatabase(), getEntityCollection(), getParams(), getOffsetOrZero(), getLimitOrZero()));
+                dataStore.find(db, getEntityCollection(), getParams(), getOffsetOrZero(), getLimitOrZero()));
     }
 }

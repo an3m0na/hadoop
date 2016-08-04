@@ -18,19 +18,13 @@ public abstract class DeleteByIdCall extends DeleteCall {
         return call;
     }
 
-    public static DeleteByIdCall newInstance(DataEntityDB db, DataEntityCollection type, String id) {
-        DeleteByIdCall call = newInstance(type, id);
-        call.setDatabase(db);
-        return call;
-    }
-
     public abstract String getId();
 
     public abstract void setId(String id);
 
     @Override
-    public VoidPayload execute(DataStore dataStore) {
-        dataStore.delete(getDatabase(), getEntityCollection(), getId());
+    public VoidPayload execute(DataStore dataStore, DataEntityDB db) {
+        dataStore.delete(db, getEntityCollection(), getId());
         return VoidPayload.newInstance();
     }
 }

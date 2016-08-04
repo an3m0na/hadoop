@@ -84,22 +84,6 @@ public class SaveJobFlexFieldsCallPBImpl extends SaveJobFlexFieldsCall implement
     }
 
     @Override
-    public DataEntityDB getDatabase() {
-        SaveJobFlexFieldsCallProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasEntityDB())
-            return null;
-        return new DataEntityDBPBImpl(p.getEntityDB());
-    }
-
-    @Override
-    public void setDatabase(DataEntityDB db) {
-        if (db == null)
-            return;
-        maybeInitBuilder();
-        builder.setEntityDB(((DataEntityDBPBImpl) db).getProto());
-    }
-
-    @Override
     public String getJobId() {
         SaveJobFlexFieldsCallProtoOrBuilder p = viaProto ? proto : builder;
         return p.getJobId();

@@ -23,12 +23,6 @@ public abstract class JobForAppCall extends LockBasedDatabaseCallImpl<SingleEnti
         return call;
     }
 
-    public static JobForAppCall newInstance(DataEntityDB db, String appId, String user) {
-        JobForAppCall call = newInstance(appId, user);
-        call.setDatabase(db);
-        return call;
-    }
-
     public abstract String getAppId();
 
     public abstract void setAppId(String appId);
@@ -38,12 +32,10 @@ public abstract class JobForAppCall extends LockBasedDatabaseCallImpl<SingleEnti
     public abstract void setUser(String user);
 
     @Override
-    public SingleEntityPayload execute(DataStore dataStore) {
-        FindByParamsCall findJobCall = FindByParamsCall.newInstance(
-                getDatabase(),
-                DataEntityCollection.JOB,
+    public SingleEntityPayload execute(DataStore dataStore, DataEntityDB db) {
+        FindByParamsCall findJobCall = FindByParamsCall.newInstance(DataEntityCollection.JOB,
                 Collections.singletonMap("appId", (Object) getAppId()), 0, 0);
-        List<JobProfile> profiles = findJobCall.executeCall(dataStore).getEntities();
+        List<JobProfile> profiles = findJobCall.executeCall(dataStore, db).getEntities();
         if (profiles.size() == 1)
             return SingleEntityPayload.newInstance(DataEntityCollection.JOB, profiles.get(0));
         if (profiles.size() > 1)
@@ -52,13 +44,13 @@ public abstract class JobForAppCall extends LockBasedDatabaseCallImpl<SingleEnti
     }
 
     @Override
-    public void lockDatabase(DataStore dataStore) {
-        dataStore.lockForRead(getDatabase());
+    public void lockDatabase(DataStore dataStore, DataEntityDB db) {
+        dataStore.lockForRead(db);
     }
 
     @Override
-    public void unlockDatabase(DataStore dataStore) {
-        dataStore.unlockForRead(getDatabase());
+    public void unlockDatabase(DataStore dataStore, DataEntityDB db) {
+        dataStore.unlockForRead(db);
     }
 
 }

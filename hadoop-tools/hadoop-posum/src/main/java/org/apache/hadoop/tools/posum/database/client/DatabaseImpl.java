@@ -19,8 +19,6 @@ public class DatabaseImpl implements Database {
 
     @Override
     public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call) {
-        //TODO move this to the execution call
-        call.setDatabase(selectedDatabase);
-        return dataBroker.executeDatabaseCall(call);
+        return dataBroker.executeDatabaseCall(call, selectedDatabase);
     }
 }

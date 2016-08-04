@@ -6,8 +6,6 @@ import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.call.ThreePhaseDatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.TransactionCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.TransactionCallProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.TransactionCallProtoOrBuilder;
@@ -110,29 +108,13 @@ public class TransactionCallPBImpl extends TransactionCall implements PayloadPB 
     }
 
     @Override
-    public DataEntityDB getDatabase() {
-        TransactionCallProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasEntityDB())
-            return null;
-        return p.hasEntityDB() ? new DataEntityDBPBImpl(p.getEntityDB()) : null;
-    }
-
-    @Override
-    public void setDatabase(DataEntityDB db) {
-        if (db == null)
-            return;
-        maybeInitBuilder();
-        builder.setEntityDB(((DataEntityDBPBImpl) db).getProto());
-    }
-
-    @Override
     public List<ThreePhaseDatabaseCall> getCallList() {
         if (this.calls == null) {
             TransactionCallProtoOrBuilder p = viaProto ? proto : builder;
             this.calls = new ArrayList<>(p.getCallsCount());
             for (POSUMProtos.DatabaseCallProto callProto : p.getCallsList()) {
                 if (callProto != null) {
-                    calls.add((ThreePhaseDatabaseCall) new DatabaseCallWrapperPBImpl(callProto).getInnerCall());
+                    calls.add((ThreePhaseDatabaseCall) new DatabaseCallWrapperPBImpl(callProto).getCall());
                 }
             }
         }

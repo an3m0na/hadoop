@@ -1,15 +1,12 @@
 package org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.client;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
-import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
-import org.apache.hadoop.tools.posum.common.records.call.impl.pb.DatabaseCallWrapperPBImpl;
+import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
+import org.apache.hadoop.tools.posum.common.records.request.impl.pb.DatabaseCallExecutionRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -21,8 +18,8 @@ import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SearchRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.DataMasterProtocolPB;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallExecutionRequestProto;
+import org.apache.hadoop.yarn.proto.POSUMProtos.ByParamsProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
@@ -54,8 +51,8 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
     }
 
     @Override
-    public SimpleResponse executeDatabaseCall(DatabaseCall call) throws IOException, YarnException {
-        DatabaseCallProto callProto = new DatabaseCallWrapperPBImpl(call).getProto();
+    public SimpleResponse executeDatabaseCall(DatabaseCallExecutionRequest request) throws IOException, YarnException {
+        DatabaseCallExecutionRequestProto callProto = ((DatabaseCallExecutionRequestPBImpl) request).getProto();
         try {
             return new SimpleResponsePBImpl(proxy.executeDatabaseCall(null, callProto));
         } catch (ServiceException e) {
@@ -79,7 +76,7 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
 
     @Override
     public SimpleResponse<MultiEntityPayload> listEntities(SearchRequest request) throws IOException, YarnException {
-        POSUMProtos.ByParamsProto requestProto =
+        ByParamsProto requestProto =
                 ((SearchRequestPBImpl) request).getProto();
         try {
             return new MultiEntityResponsePBImpl(
@@ -92,7 +89,7 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
 
     @Override
     public SimpleResponse<StringListPayload> listIds(SearchRequest request) throws IOException, YarnException {
-        POSUMProtos.ByParamsProto requestProto =
+        ByParamsProto requestProto =
                 ((SearchRequestPBImpl) request).getProto();
         try {
             return new StringListResponsePBImpl(
@@ -105,7 +102,7 @@ public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Close
 
     @Override
     public SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException {
-        POSUMProtos.SimpleRequestProto requestProto =
+        SimpleRequestProto requestProto =
                 ((SimpleRequestPBImpl) request).getProto();
         try {
             return Utils.wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
