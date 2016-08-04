@@ -229,4 +229,36 @@ public abstract class TestDataClientImpl {
         assertEquals(1, job.getFlexFields().size());
         assertEquals(value, job.getFlexField(key));
     }
+
+    @Test
+    public void testTransaction() throws Exception {
+        TransactionCall transaction = TransactionCall.newInstance();
+        AppProfile app3 = Records.newRecord(AppProfile.class);
+        ApplicationId app3Id = ApplicationId.newInstance(clusterTimestamp, 3);
+        app3.setId(app3Id.toString());
+        String modifiedName = "Modified Name";
+        app3.setName(modifiedName);
+        transaction.addCall(UpdateOrStoreCall.newInstance(DataEntityCollection.APP, app3));
+        AppProfile app4 = Records.newRecord(AppProfile.class);
+        ApplicationId app4Id = ApplicationId.newInstance(clusterTimestamp, 4);
+        String app4IdString = app4Id.toString();
+        app4.setId(app4IdString);
+        app4.setName(modifiedName);
+        transaction.addCall(StoreCall.newInstance(DataEntityCollection.APP, app4));
+        String appId1 = ApplicationId.newInstance(clusterTimestamp, 1).toString();
+        transaction.addCall(DeleteByIdCall.newInstance(DataEntityCollection.APP, appId1));
+        db.executeDatabaseCall(transaction);
+        IdsByParamsCall listIdsForName = IdsByParamsCall.newInstance(DataEntityCollection.APP,
+                Collections.singletonMap("name", (Object) modifiedName));
+        List<String> idsForName = db.executeDatabaseCall(listIdsForName).getEntries();
+        Collections.sort(idsForName);
+        assertArrayEquals(new String[]{app3.getId(), app4.getId()}, idsForName.toArray());
+        FindByIdCall findApp = FindByIdCall.newInstance(DataEntityCollection.APP, appId1);
+        assertNull(db.executeDatabaseCall(findApp).getEntity());
+        transaction.setCallList(Collections.singletonList(
+                DeleteByIdCall.newInstance(DataEntityCollection.APP, app4.getId())));
+        db.executeDatabaseCall(transaction);
+        findApp.setId(app4.getId());
+        assertNull(db.executeDatabaseCall(findApp).getEntity());
+    }
 }

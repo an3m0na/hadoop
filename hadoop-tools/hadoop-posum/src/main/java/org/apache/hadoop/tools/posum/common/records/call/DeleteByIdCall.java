@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.common.records.call;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
@@ -28,7 +29,7 @@ public abstract class DeleteByIdCall extends DeleteCall {
     public abstract void setId(String id);
 
     @Override
-    public VoidPayload execute() {
+    public VoidPayload execute(DataStore dataStore) {
         dataStore.delete(getDatabase(), getEntityCollection(), getId());
         return VoidPayload.newInstance();
     }

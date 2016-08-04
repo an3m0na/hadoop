@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.common.records.call;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.Map;
@@ -52,7 +53,7 @@ public abstract class FindByParamsCall extends ReadFromCollectionCall<MultiEntit
     public abstract void setOffsetOrZero(int offsetOrZero);
 
     @Override
-    public MultiEntityPayload execute() {
+    public MultiEntityPayload execute(DataStore dataStore) {
         return MultiEntityPayload.newInstance(getEntityCollection(),
                 dataStore.find(getDatabase(), getEntityCollection(), getParams(), getOffsetOrZero(), getLimitOrZero()));
     }

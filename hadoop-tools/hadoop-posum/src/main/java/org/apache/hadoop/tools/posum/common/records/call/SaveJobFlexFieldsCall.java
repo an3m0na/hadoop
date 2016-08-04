@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.call;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.Map;
@@ -38,18 +39,18 @@ public abstract class SaveJobFlexFieldsCall extends LockBasedDatabaseCallImpl<Vo
     public abstract void setForHistory(boolean forHistory);
 
     @Override
-    public VoidPayload execute() {
+    public VoidPayload execute(DataStore dataStore) {
         dataStore.saveFlexFields(getDatabase(), getJobId(), getNewFields(), getForHistory());
         return VoidPayload.newInstance();
     }
 
     @Override
-    public void lockDatabase() {
+    public void lockDatabase(DataStore dataStore) {
         dataStore.lockForWrite(getDatabase());
     }
 
     @Override
-    public void unlockDatabase() {
+    public void unlockDatabase(DataStore dataStore) {
         dataStore.unlockForWrite(getDatabase());
     }
 }

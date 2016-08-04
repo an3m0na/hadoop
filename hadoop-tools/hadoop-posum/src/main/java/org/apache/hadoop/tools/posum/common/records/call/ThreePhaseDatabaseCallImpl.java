@@ -7,18 +7,16 @@ import org.apache.hadoop.tools.posum.database.store.DataStore;
  * Created by ane on 7/29/16.
  */
 abstract class ThreePhaseDatabaseCallImpl<T extends Payload> implements ThreePhaseDatabaseCall<T> {
-    protected DataStore dataStore;
 
     @Override
     public T executeCall(DataStore dataStore) {
-        this.dataStore = dataStore;
-        prepare();
+        prepare(dataStore);
         try {
-            T ret = execute();
-            commit();
+            T ret = execute(dataStore);
+            commit(dataStore);
             return ret;
         } catch (Exception e) {
-            rollBack();
+            rollBack(dataStore);
             throw e;
         }
     }

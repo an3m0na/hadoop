@@ -140,7 +140,7 @@ public class TransactionCallPBImpl extends TransactionCall implements PayloadPB 
     }
 
     @Override
-    public void setCallList(List<ThreePhaseDatabaseCall> callList) {
+    public void setCallList(List<? extends ThreePhaseDatabaseCall> callList) {
         if (calls == null)
             return;
         this.calls = new ArrayList<>(callList);

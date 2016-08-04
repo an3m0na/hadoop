@@ -4,6 +4,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
+import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
@@ -20,12 +21,12 @@ public abstract class WriteToCollectionCall extends LockBasedDatabaseCallImpl<Si
     public abstract void setEntity(GeneralDataEntity entity);
 
     @Override
-    public void lockDatabase() {
+    public void lockDatabase(DataStore dataStore) {
         dataStore.lockForWrite(getDatabase());
     }
 
     @Override
-    public void unlockDatabase() {
+    public void unlockDatabase(DataStore dataStore) {
         dataStore.unlockForWrite(getDatabase());
     }
 }
