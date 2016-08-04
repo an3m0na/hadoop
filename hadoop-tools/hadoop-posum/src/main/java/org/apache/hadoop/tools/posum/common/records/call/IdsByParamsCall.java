@@ -20,21 +20,8 @@ public abstract class IdsByParamsCall extends ReadFromCollectionCall<StringListP
         return call;
     }
 
-    public static IdsByParamsCall newInstance(DataEntityDB db, DataEntityCollection collection, Map<String, Object> params) {
-        IdsByParamsCall call = newInstance(collection, params);
-        call.setDatabase(db);
-        return call;
-    }
-
     public static IdsByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params, int offsetOrZero, int limitOrZero) {
         IdsByParamsCall call = newInstance(collection, params);
-        call.setOffsetOrZero(offsetOrZero);
-        call.setLimitOrZero(limitOrZero);
-        return call;
-    }
-
-    public static IdsByParamsCall newInstance(DataEntityDB db, DataEntityCollection collection, Map<String, Object> params, int offsetOrZero, int limitOrZero) {
-        IdsByParamsCall call = newInstance(db, collection, params);
         call.setOffsetOrZero(offsetOrZero);
         call.setLimitOrZero(limitOrZero);
         return call;
@@ -53,7 +40,7 @@ public abstract class IdsByParamsCall extends ReadFromCollectionCall<StringListP
     public abstract void setOffsetOrZero(int offsetOrZero);
 
     @Override
-    public StringListPayload execute(DataStore dataStore) {
-        return StringListPayload.newInstance(dataStore.listIds(getDatabase(), getEntityCollection(), getParams()));
+    public StringListPayload execute(DataStore dataStore, DataEntityDB db) {
+        return StringListPayload.newInstance(dataStore.listIds(db, getEntityCollection(), getParams()));
     }
 }

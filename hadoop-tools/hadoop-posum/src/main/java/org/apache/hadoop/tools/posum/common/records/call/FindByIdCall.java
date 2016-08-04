@@ -18,19 +18,13 @@ public abstract class FindByIdCall extends ReadFromCollectionCall<SingleEntityPa
         return call;
     }
 
-    public static FindByIdCall newInstance(DataEntityDB db, DataEntityCollection type, String id) {
-        FindByIdCall call = newInstance(type, id);
-        call.setDatabase(db);
-        return call;
-    }
-
     public abstract String getId();
 
     public abstract void setId(String id);
 
     @Override
-    public SingleEntityPayload execute(DataStore dataStore) {
+    public SingleEntityPayload execute(DataStore dataStore, DataEntityDB db) {
         return SingleEntityPayload.newInstance(getEntityCollection(),
-                dataStore.findById(getDatabase(), getEntityCollection(), getId()));
+                dataStore.findById(db, getEntityCollection(), getId()));
     }
 }

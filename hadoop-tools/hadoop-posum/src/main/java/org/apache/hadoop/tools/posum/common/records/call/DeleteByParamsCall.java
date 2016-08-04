@@ -20,19 +20,13 @@ public abstract class DeleteByParamsCall extends DeleteCall {
         return call;
     }
 
-    public static DeleteByParamsCall newInstance(DataEntityDB db, DataEntityCollection type, Map<String, Object> params) {
-        DeleteByParamsCall call = newInstance(type, params);
-        call.setDatabase(db);
-        return call;
-    }
-
     public abstract Map<String, Object> getParams();
 
     public abstract void setParams(Map<String, Object> params);
 
     @Override
-    public VoidPayload execute(DataStore dataStore) {
-        dataStore.delete(getDatabase(), getEntityCollection(), getParams());
+    public VoidPayload execute(DataStore dataStore, DataEntityDB db) {
+        dataStore.delete(db, getEntityCollection(), getParams());
         return VoidPayload.newInstance();
     }
 }

@@ -10,6 +10,7 @@ import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.*;
+import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SearchRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -67,9 +68,10 @@ public class DataMasterClient extends AbstractService implements DataBroker {
         super.serviceStop();
     }
 
-    public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call) {
+    public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DataEntityDB db) {
         try {
-            return (T) Utils.handleError("executeDatabaseCall", dmClient.executeDatabaseCall(call)).getPayload();
+            return (T) Utils.handleError("executeDatabaseCall",
+                    dmClient.executeDatabaseCall(DatabaseCallExecutionRequest.newInstance(call, db))).getPayload();
         } catch (IOException | YarnException e) {
             throw new PosumException("Error during RPC call", e);
         }

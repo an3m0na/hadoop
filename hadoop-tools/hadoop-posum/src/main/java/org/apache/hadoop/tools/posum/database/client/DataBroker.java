@@ -17,7 +17,7 @@ public interface DataBroker {
 
     Database bindTo(DataEntityDB db);
 
-    <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call);
+    <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DataEntityDB db);
 
     Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections();
 

@@ -20,12 +20,6 @@ public abstract class SaveJobFlexFieldsCall extends LockBasedDatabaseCallImpl<Vo
         return call;
     }
 
-    public static SaveJobFlexFieldsCall newInstance(DataEntityDB db, String jobId, Map<String, String> newFields, boolean forHistory) {
-        SaveJobFlexFieldsCall call = newInstance(jobId, newFields, forHistory);
-        call.setDatabase(db);
-        return call;
-    }
-
     public abstract String getJobId();
 
     public abstract void setJobId(String id);
@@ -39,18 +33,18 @@ public abstract class SaveJobFlexFieldsCall extends LockBasedDatabaseCallImpl<Vo
     public abstract void setForHistory(boolean forHistory);
 
     @Override
-    public VoidPayload execute(DataStore dataStore) {
-        dataStore.saveFlexFields(getDatabase(), getJobId(), getNewFields(), getForHistory());
+    public VoidPayload execute(DataStore dataStore, DataEntityDB db) {
+        dataStore.saveFlexFields(db, getJobId(), getNewFields(), getForHistory());
         return VoidPayload.newInstance();
     }
 
     @Override
-    public void lockDatabase(DataStore dataStore) {
-        dataStore.lockForWrite(getDatabase());
+    public void lockDatabase(DataStore dataStore, DataEntityDB db) {
+        dataStore.lockForWrite(db);
     }
 
     @Override
-    public void unlockDatabase(DataStore dataStore) {
-        dataStore.unlockForWrite(getDatabase());
+    public void unlockDatabase(DataStore dataStore, DataEntityDB db) {
+        dataStore.unlockForWrite(db);
     }
 }

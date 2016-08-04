@@ -76,22 +76,6 @@ public class FindByIdCallPBImpl extends FindByIdCall implements PayloadPB {
     }
 
     @Override
-    public DataEntityDB getDatabase() {
-        ByIdProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasEntityDB())
-            return null;
-        return new DataEntityDBPBImpl(p.getEntityDB());
-    }
-
-    @Override
-    public void setDatabase(DataEntityDB db) {
-        if (db == null)
-            return;
-        maybeInitBuilder();
-        builder.setEntityDB(((DataEntityDBPBImpl) db).getProto());
-    }
-
-    @Override
     public DataEntityCollection getEntityCollection() {
         ByIdProtoOrBuilder p = viaProto ? proto : builder;
         return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));

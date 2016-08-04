@@ -3,20 +3,17 @@ package org.apache.hadoop.tools.posum.common.records.call.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
-import org.apache.hadoop.tools.posum.common.records.payload.Payload;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProtoOrBuilder;
 
 /**
  * Created by ane on 8/1/16.
  */
-public class DatabaseCallWrapperPBImpl implements DatabaseCall, PayloadPB {
+public class DatabaseCallWrapperPBImpl implements PayloadPB {
     private DatabaseCallProto proto = DatabaseCallProto.getDefaultInstance();
     private DatabaseCallProto.Builder builder = null;
     private boolean viaProto = false;
@@ -29,7 +26,7 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall, PayloadPB {
 
     public DatabaseCallWrapperPBImpl(DatabaseCall call) {
         this();
-        setInnerCall(call);
+        setCall(call);
     }
 
     public DatabaseCallWrapperPBImpl(DatabaseCallProto proto) {
@@ -91,11 +88,11 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall, PayloadPB {
         viaProto = false;
     }
 
-    public void setInnerCall(DatabaseCall call) {
+    public void setCall(DatabaseCall call) {
         this.call = call;
     }
 
-    public DatabaseCall getInnerCall() {
+    public DatabaseCall getCall() {
         if (this.call == null) {
             DatabaseCallProtoOrBuilder p = viaProto ? proto : builder;
             DatabaseCallType type = DatabaseCallType.valueOf(p.getType().name().substring("CALL_".length()));
@@ -108,21 +105,6 @@ public class DatabaseCallWrapperPBImpl implements DatabaseCall, PayloadPB {
             }
         }
         return this.call;
-    }
-
-    @Override
-    public DataEntityDB getDatabase() {
-        return getInnerCall().getDatabase();
-    }
-
-    @Override
-    public void setDatabase(DataEntityDB db) {
-        getInnerCall().setDatabase(db);
-    }
-
-    @Override
-    public Payload executeCall(DataStore dataStore) {
-        return getInnerCall().executeCall(dataStore);
     }
 
     @Override

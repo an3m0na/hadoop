@@ -9,9 +9,5 @@ import org.apache.hadoop.tools.posum.database.store.DataStore;
  */
 public interface DatabaseCall<T extends Payload> {
 
-    DataEntityDB getDatabase();
-
-    void setDatabase(DataEntityDB db);
-
-    T executeCall(DataStore dataStore);
+    T executeCall(DataStore dataStore, DataEntityDB db);
 }

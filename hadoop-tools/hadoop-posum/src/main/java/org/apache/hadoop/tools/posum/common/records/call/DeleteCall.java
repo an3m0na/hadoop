@@ -15,13 +15,13 @@ public abstract class DeleteCall extends LockBasedDatabaseCallImpl<VoidPayload> 
     public abstract void setEntityCollection(DataEntityCollection collection);
 
     @Override
-    public void lockDatabase(DataStore dataStore) {
-        dataStore.lockForWrite(getDatabase());
+    public void lockDatabase(DataStore dataStore, DataEntityDB db) {
+        dataStore.lockForWrite(db);
     }
 
     @Override
-    public void unlockDatabase(DataStore dataStore) {
-        dataStore.unlockForWrite(getDatabase());
+    public void unlockDatabase(DataStore dataStore, DataEntityDB db) {
+        dataStore.unlockForWrite(db);
     }
 
 }

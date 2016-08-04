@@ -18,18 +18,12 @@ public abstract class UpdateOrStoreCall extends WriteToCollectionCall {
         return call;
     }
 
-    public static UpdateOrStoreCall newInstance(DataEntityDB db, DataEntityCollection collection, GeneralDataEntity object) {
-        UpdateOrStoreCall call = newInstance(collection, object);
-        call.setDatabase(db);
-        return call;
-    }
-
     @Override
-    public SimplePropertyPayload execute(DataStore dataStore) {
+    public SimplePropertyPayload execute(DataStore dataStore, DataEntityDB db) {
         return SimplePropertyPayload.newInstance(
                 "upsertedId",
                 SimplePropertyPayload.PropertyType.BOOL,
-                dataStore.updateOrStore(getDatabase(), getEntityCollection(), getEntity())
+                dataStore.updateOrStore(db, getEntityCollection(), getEntity())
         );
     }
 }
