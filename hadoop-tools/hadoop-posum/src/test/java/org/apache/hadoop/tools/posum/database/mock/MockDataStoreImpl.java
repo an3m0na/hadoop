@@ -1,14 +1,10 @@
 package org.apache.hadoop.tools.posum.database.mock;
 
 
-import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.database.client.Database;
-import org.apache.hadoop.tools.posum.database.client.DatabaseImpl;
 import org.apache.hadoop.tools.posum.database.store.DataStore;
 import org.bson.types.ObjectId;
 
