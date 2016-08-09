@@ -12,7 +12,6 @@ import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.junit.Test;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;

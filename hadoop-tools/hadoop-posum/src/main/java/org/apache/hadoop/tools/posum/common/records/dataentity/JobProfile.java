@@ -128,7 +128,7 @@ public interface JobProfile extends GeneralDataEntity {
 
     String getQueue();
 
-    void addFlexField(String name, String value);
+    void addAll(Map<String, String> other);
 
     String getFlexField(String name);
 

@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.safeEquals;
@@ -15,7 +16,6 @@ import static org.apache.hadoop.tools.posum.common.util.Utils.safeHashCode;
 public abstract class DataEntityDB {
     private static final String ROOT = "posum";
     private static final String SEPARATOR = "_";
-
     public enum Type {
         MAIN("main"), LOGS("logs"), SIMULATION("sim");
 

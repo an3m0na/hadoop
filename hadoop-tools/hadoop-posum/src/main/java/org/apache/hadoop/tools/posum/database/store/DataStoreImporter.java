@@ -44,7 +44,7 @@ public class DataStoreImporter {
         }
     }
 
-    public void importTo(DataStore dataStore) {
+    public void importTo(LockBasedDataStore dataStore) {
         for (Map.Entry<DataEntityDB, Map<DataEntityCollection, File>> dbMapEntry : dataFiles.entrySet()) {
             for (Map.Entry<DataEntityCollection, File> fileEntry : dbMapEntry.getValue().entrySet()) {
                 try {

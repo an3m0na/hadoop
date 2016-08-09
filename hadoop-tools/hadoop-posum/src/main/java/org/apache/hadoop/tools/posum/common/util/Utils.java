@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.util;
 
+import org.apache.commons.lang.WordUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
@@ -20,7 +21,7 @@ import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleRespo
 import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.tools.posum.database.client.DatabaseImpl;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.util.Records;
@@ -264,6 +265,18 @@ public class Utils {
                 Introspector.getBeanInfo(beanClass, Object.class).getPropertyDescriptors();
         for (String name : propertyNames) {
             Method reader = findPropertyReader(descriptors, name);
+            if (reader == null) {
+                // explore name variations
+                String alternatePropertyName = name.startsWith("_") ? name.substring(1) : "_" + name;
+                reader = findPropertyReader(descriptors, alternatePropertyName);
+                if (reader == null) {
+                    if (name.contains("_"))
+                        alternatePropertyName = WordUtils.capitalizeFully(name).replaceAll("_", "");
+                    else
+                        alternatePropertyName = name.replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase();
+                    reader = findPropertyReader(descriptors, alternatePropertyName);
+                }
+            }
             if (reader == null)
                 throw new PosumException("Could not find property reader for " + name + " in " + beanClass);
             ret.put(name, reader);
@@ -291,7 +304,7 @@ public class Utils {
         return true;
     }
 
-    public static DataBroker exposeDataStoreAsBroker(final DataStore dataStore) {
+    public static DataBroker exposeDataStoreAsBroker(final LockBasedDataStore dataStore) {
         return new DataBroker() {
             @Override
             public Database bindTo(DataEntityDB db) {

@@ -83,12 +83,18 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implement
     @Override
     public void setType(SimplePropertyPayload.PropertyType type) {
         maybeInitBuilder();
+        if (type == null) {
+            builder.clearType();
+            return;
+        }
         builder.setType(SimplePropertyPayloadProto.PropertyTypeProto.valueOf("PROPERTY_" + type.name()));
     }
 
     @Override
     public Object getValue() {
         SimplePropertyPayloadProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasValue())
+            return null;
         try {
             return getType().read(p.getValue());
         } catch (IOException e) {
@@ -99,8 +105,11 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implement
     @Override
     public void setValue(Object value) {
         maybeInitBuilder();
-        if (value != null)
-            builder.setValue(value.toString());
+        if (value == null) {
+            builder.clearValue();
+            return;
+        }
+        builder.setValue(value.toString());
     }
 
     @Override
@@ -112,6 +121,10 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implement
     @Override
     public void setName(String name) {
         maybeInitBuilder();
+        if (name == null) {
+            builder.clearName();
+            return;
+        }
         builder.setName(name);
     }
 

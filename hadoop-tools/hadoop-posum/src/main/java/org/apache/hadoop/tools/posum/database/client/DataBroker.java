@@ -4,7 +4,6 @@ import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
 
 import java.util.List;
 import java.util.Map;
