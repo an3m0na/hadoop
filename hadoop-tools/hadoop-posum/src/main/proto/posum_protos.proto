@@ -173,43 +173,37 @@ message SimplePropertyPayloadProto {
 }
 
 message ByParamsProto {
-    required EntityDBProto entityDB = 1;
-    required EntityCollectionProto collection = 2;
-    repeated SimplePropertyPayloadProto properties = 3;
-    optional string sortField = 4;
-    optional bool sortDescending = 5;
-    optional int32 offset = 6;
-    optional int32 limit = 7;
+    required EntityCollectionProto collection = 1;
+    repeated SimplePropertyPayloadProto properties = 2;
+    optional string sortField = 3;
+    optional bool sortDescending = 4;
+    optional int32 offset = 5;
+    optional int32 limit = 6;
 }
 
 message ByIdProto {
-    required EntityDBProto entityDB = 1;
-    required EntityCollectionProto collection = 2;
-    required string id = 3;
+    required EntityCollectionProto collection = 1;
+    required string id = 2;
 }
 
 message TransactionCallProto {
-    required EntityDBProto entityDB = 1;
-    repeated DatabaseCallProto calls = 2;
+    repeated DatabaseCallProto calls = 1;
 }
 
 message JobForAppCallProto {
-    required EntityDBProto entityDB = 1;
-    required string appId = 2;
-    required string user = 3;
+    required string appId = 1;
+    required string user = 2;
 }
 
 message SaveJobFlexFieldsCallProto {
-    required EntityDBProto entityDB = 1;
-    required string jobId = 2;
-    required StringStringMapPayloadProto newFields = 3;
-    optional bool forHistory = 4;
+    required string jobId = 1;
+    required StringStringMapPayloadProto newFields = 2;
+    optional bool forHistory = 3;
 }
 
 message SingleEntityProto {
-    optional EntityDBProto entityDB = 1;
-    required EntityCollectionProto collection = 2;
-    optional bytes entity = 3;
+    required EntityCollectionProto collection = 1;
+    optional bytes entity = 2;
 }
 
 message MultiEntityProto {
