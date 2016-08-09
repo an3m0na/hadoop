@@ -4,7 +4,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
@@ -19,12 +19,8 @@ public abstract class StoreCall extends WriteToCollectionCall {
     }
 
     @Override
-    public SimplePropertyPayload execute(DataStore dataStore, DataEntityDB db) {
-        return SimplePropertyPayload.newInstance(
-                "id",
-                SimplePropertyPayload.PropertyType.STRING,
-                dataStore.store(db, getEntityCollection(), getEntity())
-        );
+    public SimplePropertyPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
+        return SimplePropertyPayload.newInstance("id", dataStore.store(db, getEntityCollection(), getEntity()));
     }
 
 }

@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class TestDataImportExport {
     private Database db;
-    private DataStore dataStore;
+    private LockBasedDataStore dataStore;
     private final Long clusterTimestamp = System.currentTimeMillis();
 
     @Before

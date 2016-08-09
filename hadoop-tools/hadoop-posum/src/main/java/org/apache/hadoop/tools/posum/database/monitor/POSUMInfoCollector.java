@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.database.monitor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.records.call.IdsByParamsCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
@@ -10,6 +11,8 @@ import org.apache.hadoop.tools.posum.common.records.payload.TaskPredictionPayloa
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
+import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
@@ -29,6 +32,7 @@ public class PosumInfoCollector {
     private final PosumAPIClient api;
     private final DataEntityDB db = DataEntityDB.getLogs();
     private final DataStoreImpl dataStore;
+    private final DataBroker dataBroker;
     private final Configuration conf;
     private final boolean fineGrained;
     private final PolicyMap policyMap;
@@ -44,6 +48,7 @@ public class PosumInfoCollector {
 
     public PosumInfoCollector(Configuration conf, DataStoreImpl dataStore) {
         this.dataStore = dataStore;
+        this.dataBroker = Utils.exposeDataStoreAsBroker(dataStore);
         this.conf = conf;
         fineGrained = conf.getBoolean(PosumConfiguration.FINE_GRAINED_MONITOR,
                 PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
@@ -67,7 +72,8 @@ public class PosumInfoCollector {
             //TODO get metrics from all services and persist to database
             if (now - lastPrediction > predictionTimeout) {
                 // make new predictions
-                List<String> taskIds = dataStore.listIds(DataEntityDB.getMain(), DataEntityCollection.TASK, null);
+                IdsByParamsCall getAllTasks = IdsByParamsCall.newInstance(DataEntityCollection.TASK, null);
+                List<String> taskIds = dataBroker.executeDatabaseCall(getAllTasks, DataEntityDB.getMain()).getEntries();
                 for (String taskId : taskIds) {
                     // prediction can throw exception if data model changes state during calculation
 //                    try {

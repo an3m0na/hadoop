@@ -5,7 +5,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.Collections;
@@ -32,7 +32,7 @@ public abstract class JobForAppCall extends LockBasedDatabaseCallImpl<SingleEnti
     public abstract void setUser(String user);
 
     @Override
-    public SingleEntityPayload execute(DataStore dataStore, DataEntityDB db) {
+    public SingleEntityPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
         FindByParamsCall findJobCall = FindByParamsCall.newInstance(DataEntityCollection.JOB,
                 Collections.singletonMap("appId", (Object) getAppId()), 0, 0);
         List<JobProfile> profiles = findJobCall.executeCall(dataStore, db).getEntities();
@@ -44,12 +44,12 @@ public abstract class JobForAppCall extends LockBasedDatabaseCallImpl<SingleEnti
     }
 
     @Override
-    public void lockDatabase(DataStore dataStore, DataEntityDB db) {
+    public void lockDatabase(LockBasedDataStore dataStore, DataEntityDB db) {
         dataStore.lockForRead(db);
     }
 
     @Override
-    public void unlockDatabase(DataStore dataStore, DataEntityDB db) {
+    public void unlockDatabase(LockBasedDataStore dataStore, DataEntityDB db) {
         dataStore.unlockForRead(db);
     }
 

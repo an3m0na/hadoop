@@ -5,8 +5,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByParamsCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SimplePropertyPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
@@ -155,7 +153,7 @@ public class IdsByParamsCallPBImpl extends IdsByParamsCall implements PayloadPB 
     }
 
     @Override
-    public int getLimitOrZero() {
+    public Integer getLimitOrZero() {
         ByParamsProtoOrBuilder p = viaProto ? proto : builder;
         return p.getLimit();
     }
@@ -167,7 +165,7 @@ public class IdsByParamsCallPBImpl extends IdsByParamsCall implements PayloadPB 
     }
 
     @Override
-    public int getOffsetOrZero() {
+    public Integer getOffsetOrZero() {
         ByParamsProtoOrBuilder p = viaProto ? proto : builder;
         return p.getOffset();
     }
@@ -176,6 +174,36 @@ public class IdsByParamsCallPBImpl extends IdsByParamsCall implements PayloadPB 
     public void setOffsetOrZero(int offsetOrZero) {
         maybeInitBuilder();
         builder.setOffset(offsetOrZero);
+    }
+
+    @Override
+    public String getSortField() {
+        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
+        if(!p.hasSortField())
+            return null;
+        return p.getSortField();
+    }
+
+    @Override
+    public void setSortField(String field) {
+        maybeInitBuilder();
+        if(field == null){
+            builder.clearSortField();
+            return;
+        }
+        builder.setSortField(field);
+    }
+
+    @Override
+    public Boolean getSortDescending() {
+        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
+        return p.getSortDescending();
+    }
+
+    @Override
+    public void setSortDescending(boolean descending) {
+        maybeInitBuilder();
+        builder.setSortDescending(descending);
     }
 
     @Override

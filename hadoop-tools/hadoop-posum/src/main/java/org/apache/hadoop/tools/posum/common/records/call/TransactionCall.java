@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.common.records.call;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;
@@ -31,12 +31,12 @@ public abstract class TransactionCall extends LockBasedDatabaseCallImpl<Payload>
 
 
     @Override
-    public void lockDatabase(DataStore dataStore, DataEntityDB db) {
+    public void lockDatabase(LockBasedDataStore dataStore, DataEntityDB db) {
         dataStore.lockForWrite(db);
     }
 
     @Override
-    public Payload execute(DataStore dataStore, DataEntityDB db) {
+    public Payload execute(LockBasedDataStore dataStore, DataEntityDB db) {
         Payload ret = VoidPayload.newInstance();
         for (ThreePhaseDatabaseCall call : getCallList()) {
             ret = call.execute(dataStore, db);
@@ -45,7 +45,7 @@ public abstract class TransactionCall extends LockBasedDatabaseCallImpl<Payload>
     }
 
     @Override
-    public void unlockDatabase(DataStore dataStore, DataEntityDB db) {
+    public void unlockDatabase(LockBasedDataStore dataStore, DataEntityDB db) {
         dataStore.unlockForWrite(db);
     }
 }

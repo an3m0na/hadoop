@@ -75,11 +75,30 @@ public abstract class TestDataClientImpl {
     }
 
     @Test
+    public void testSorting() throws Exception {
+        IdsByParamsCall idsByFinishTime = IdsByParamsCall.newInstance(
+                DataEntityCollection.APP,
+                Collections.singletonMap("finishTime", (Object) (clusterTimestamp - DURATION_UNIT)),
+                "_id",
+                true,
+                0,
+                0
+        );
+        List<String> ids = db.executeDatabaseCall(idsByFinishTime).getEntries();
+        assertArrayEquals(new String[]{ApplicationId.newInstance(clusterTimestamp, 3).toString(),
+                ApplicationId.newInstance(clusterTimestamp, 2).toString()}, ids.toArray(new String[ids.size()]));
+
+    }
+
+    @Test
     public void testFindLimit() throws Exception {
         FindByParamsCall findByFinishTime = FindByParamsCall.newInstance(
                 DataEntityCollection.APP,
-                Collections.singletonMap("finishTime",
-                        (Object) (clusterTimestamp - DURATION_UNIT))
+                Collections.singletonMap("finishTime", (Object) (clusterTimestamp - DURATION_UNIT)),
+                "_id",
+                false,
+                0,
+                0
         );
         List<AppProfile> apps = db.executeDatabaseCall(findByFinishTime).getEntities();
         assertEquals(2, apps.size());
@@ -94,8 +113,11 @@ public abstract class TestDataClientImpl {
     public void testFindOffset() throws Exception {
         FindByParamsCall findByFinishTime = FindByParamsCall.newInstance(
                 DataEntityCollection.APP,
-                Collections.singletonMap("finishTime",
-                        (Object) (clusterTimestamp - DURATION_UNIT))
+                Collections.singletonMap("finishTime", (Object) (clusterTimestamp - DURATION_UNIT)),
+                "_id",
+                false,
+                0,
+                0
         );
         List<AppProfile> apps = db.executeDatabaseCall(findByFinishTime).getEntities();
         assertEquals(2, apps.size());
@@ -108,8 +130,14 @@ public abstract class TestDataClientImpl {
 
     @Test
     public void testFindOffsetAndLimit() throws Exception {
-        FindByParamsCall findByFinishTime = FindByParamsCall.newInstance(DataEntityCollection.APP, Collections.singletonMap("finishTime",
-                (Object) (clusterTimestamp - DURATION_UNIT)));
+        FindByParamsCall findByFinishTime = FindByParamsCall.newInstance(
+                DataEntityCollection.APP,
+                Collections.singletonMap("finishTime", (Object) (clusterTimestamp - DURATION_UNIT)),
+                "_id",
+                false,
+                0,
+                0
+        );
         List<AppProfile> apps = db.executeDatabaseCall(findByFinishTime).getEntities();
         assertEquals(2, apps.size());
         findByFinishTime.setOffsetOrZero(-1);
@@ -145,7 +173,8 @@ public abstract class TestDataClientImpl {
         app3.setName(modifiedName);
         app3.setQueue(queueName);
         UpdateOrStoreCall updateApp = UpdateOrStoreCall.newInstance(DataEntityCollection.APP, app3);
-        db.executeDatabaseCall(updateApp);
+        String upsertedId = (String) db.executeDatabaseCall(updateApp).getValue();
+        assertNull(upsertedId);
         FindByParamsCall findAppsByName = FindByParamsCall.newInstance(DataEntityCollection.APP,
                 Collections.singletonMap("name", (Object) modifiedName));
         List<AppProfile> returnedApps = db.executeDatabaseCall(findAppsByName).getEntities();
@@ -163,7 +192,8 @@ public abstract class TestDataClientImpl {
         app4.setId(app4IdString);
         app4.setName(modifiedName);
         updateApp.setEntity(app4);
-        db.executeDatabaseCall(updateApp);
+        upsertedId = (String) db.executeDatabaseCall(updateApp).getValue();
+        assertEquals(app4.getId(), upsertedId);
         returnedApps = db.executeDatabaseCall(findAppsByName).getEntities();
         assertEquals(2, returnedApps.size());
         assertTrue(returnedApps.get(0).getId().equals(app4IdString) ||

@@ -115,6 +115,7 @@ public class StringStringMapPayloadPBImpl extends StringStringMapPayload impleme
 
     @Override
     public void addEntry(String key, String value) {
+        maybeInitBuilder();
         getEntries().put(key, value);
     }
 
@@ -134,6 +135,7 @@ public class StringStringMapPayloadPBImpl extends StringStringMapPayload impleme
 
     @Override
     public void setEntries(Map<String, String> entries) {
+        maybeInitBuilder();
         this.entries = entries;
     }
 

@@ -1,11 +1,11 @@
 package org.apache.hadoop.tools.posum.database.mock;
 
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 
 /**
  * Created by ane on 7/28/16.
  */
-public interface HistorySnapshotDS extends DataStore {
+public interface HistorySnapshotDS extends LockBasedDataStore {
 
     Long getSnapshotTime();
 

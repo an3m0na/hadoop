@@ -5,7 +5,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.database.store.DataStore;
+import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.Map;
@@ -36,23 +36,23 @@ public abstract class SaveJobFlexFieldsCall extends LockBasedDatabaseCallImpl<Vo
     public abstract void setForHistory(boolean forHistory);
 
     @Override
-    public VoidPayload execute(DataStore dataStore, DataEntityDB db) {
+    public VoidPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
         DataEntityCollection type = getForHistory() ? DataEntityCollection.JOB_HISTORY : DataEntityCollection.JOB;
         JobProfile job = dataStore.findById(db, type, getJobId());
         if (job == null)
             throw new PosumException("Could not find job to save flex-fields: " + getJobId());
-        job.getFlexFields().putAll(getNewFields());
+        job.addAll(getNewFields());
         dataStore.updateOrStore(db, type, job);
         return VoidPayload.newInstance();
     }
 
     @Override
-    public void lockDatabase(DataStore dataStore, DataEntityDB db) {
+    public void lockDatabase(LockBasedDataStore dataStore, DataEntityDB db) {
         dataStore.lockForWrite(db);
     }
 
     @Override
-    public void unlockDatabase(DataStore dataStore, DataEntityDB db) {
+    public void unlockDatabase(LockBasedDataStore dataStore, DataEntityDB db) {
         dataStore.unlockForWrite(db);
     }
 }

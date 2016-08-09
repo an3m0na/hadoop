@@ -176,8 +176,10 @@ message ByParamsProto {
     required EntityDBProto entityDB = 1;
     required EntityCollectionProto collection = 2;
     repeated SimplePropertyPayloadProto properties = 3;
-    optional int32 offset = 4;
-    optional int32 limit = 5;
+    optional string sortField = 4;
+    optional bool sortDescending = 5;
+    optional int32 offset = 6;
+    optional int32 limit = 7;
 }
 
 message ByIdProto {
