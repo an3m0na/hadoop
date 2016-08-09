@@ -28,7 +28,6 @@ public class TestDataMasterClient extends TestDataClientImpl {
         client = new DataMasterClient(dataMaster.getService().getConnectAddress());
         client.init(PosumConfiguration.newInstance());
         client.start();
-        client.bindTo(DataEntityDB.getMain());
         db = client.bindTo(DataEntityDB.getMain());
     }
 

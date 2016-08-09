@@ -27,6 +27,13 @@ public abstract class FindByParamsCall extends ReadFromCollectionCall<MultiEntit
         return call;
     }
 
+    public static FindByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params, String sortField, boolean sortDescending) {
+        FindByParamsCall call = newInstance(collection, params);
+        call.setSortField(sortField);
+        call.setSortDescending(sortDescending);
+        return call;
+    }
+
     public static FindByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params, String sortField, boolean sortDescending, int offsetOrZero, int limitOrZero) {
         FindByParamsCall call = newInstance(collection, params, offsetOrZero, limitOrZero);
         call.setSortField(sortField);

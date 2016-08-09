@@ -56,7 +56,7 @@ public class Utils {
         app2.setId(app2Id.toString());
         app2.setName(JOB_NAME_ROOT + " 2");
         app2.setUser(SECOND_USER);
-        app2.setStartTime(clusterTimestamp - 4 * DURATION_UNIT);
+        app2.setStartTime(clusterTimestamp - 2 * DURATION_UNIT);
         app2.setFinishTime(clusterTimestamp - DURATION_UNIT);
         storeCall.setEntityCollection(DataEntityCollection.APP);
         storeCall.setEntity(app2);
@@ -83,7 +83,7 @@ public class Utils {
         app3.setId(app3Id.toString());
         app3.setName(JOB_NAME_ROOT + " 3");
         app3.setUser(SECOND_USER);
-        app3.setStartTime(clusterTimestamp - 2 * DURATION_UNIT);
+        app3.setStartTime(clusterTimestamp - 4 * DURATION_UNIT);
         app3.setFinishTime(clusterTimestamp - DURATION_UNIT);
         storeCall.setEntityCollection(DataEntityCollection.APP);
         storeCall.setEntity(app3);

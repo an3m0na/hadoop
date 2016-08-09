@@ -75,19 +75,36 @@ public abstract class TestDataClientImpl {
     }
 
     @Test
-    public void testSorting() throws Exception {
-        IdsByParamsCall idsByFinishTime = IdsByParamsCall.newInstance(
+    public void testSortByString() throws Exception {
+        IdsByParamsCall sortedIds = IdsByParamsCall.newInstance(
                 DataEntityCollection.APP,
-                Collections.singletonMap("finishTime", (Object) (clusterTimestamp - DURATION_UNIT)),
+                Collections.<String, Object>emptyMap(),
                 "_id",
-                true,
-                0,
-                0
+                true
         );
-        List<String> ids = db.executeDatabaseCall(idsByFinishTime).getEntries();
-        assertArrayEquals(new String[]{ApplicationId.newInstance(clusterTimestamp, 3).toString(),
-                ApplicationId.newInstance(clusterTimestamp, 2).toString()}, ids.toArray(new String[ids.size()]));
+        List<String> ids = db.executeDatabaseCall(sortedIds).getEntries();
+        assertArrayEquals(new String[]{
+                ApplicationId.newInstance(clusterTimestamp, 3).toString(),
+                ApplicationId.newInstance(clusterTimestamp, 2).toString(),
+                ApplicationId.newInstance(clusterTimestamp, 1).toString()
+        }, ids.toArray(new String[ids.size()]));
 
+    }
+
+    @Test
+    public void testSortByNumber() throws Exception {
+        IdsByParamsCall sortedIds = IdsByParamsCall.newInstance(
+                DataEntityCollection.APP,
+                Collections.<String, Object>emptyMap(),
+                "startTime",
+                false
+        );
+        List<String> ids = db.executeDatabaseCall(sortedIds).getEntries();
+        assertArrayEquals(new String[]{
+                ApplicationId.newInstance(clusterTimestamp, 1).toString(),
+                ApplicationId.newInstance(clusterTimestamp, 3).toString(),
+                ApplicationId.newInstance(clusterTimestamp, 2).toString()
+        }, ids.toArray(new String[ids.size()]));
     }
 
     @Test
@@ -96,9 +113,7 @@ public abstract class TestDataClientImpl {
                 DataEntityCollection.APP,
                 Collections.singletonMap("finishTime", (Object) (clusterTimestamp - DURATION_UNIT)),
                 "_id",
-                false,
-                0,
-                0
+                false
         );
         List<AppProfile> apps = db.executeDatabaseCall(findByFinishTime).getEntities();
         assertEquals(2, apps.size());
@@ -115,9 +130,7 @@ public abstract class TestDataClientImpl {
                 DataEntityCollection.APP,
                 Collections.singletonMap("finishTime", (Object) (clusterTimestamp - DURATION_UNIT)),
                 "_id",
-                false,
-                0,
-                0
+                false
         );
         List<AppProfile> apps = db.executeDatabaseCall(findByFinishTime).getEntities();
         assertEquals(2, apps.size());

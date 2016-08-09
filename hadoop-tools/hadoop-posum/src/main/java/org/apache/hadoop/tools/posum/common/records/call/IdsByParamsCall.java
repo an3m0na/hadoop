@@ -27,6 +27,13 @@ public abstract class IdsByParamsCall extends ReadFromCollectionCall<StringListP
         return call;
     }
 
+    public static IdsByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params, String sortField, boolean sortDescending) {
+        IdsByParamsCall call = newInstance(collection, params);
+        call.setSortField(sortField);
+        call.setSortDescending(sortDescending);
+        return call;
+    }
+
     public static IdsByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params, String sortField, boolean sortDescending, int offsetOrZero, int limitOrZero) {
         IdsByParamsCall call = newInstance(collection, params, offsetOrZero, limitOrZero);
         call.setSortField(sortField);
