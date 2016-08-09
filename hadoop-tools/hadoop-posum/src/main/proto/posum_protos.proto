@@ -162,7 +162,7 @@ message HistoryProfileProto {
 message SimplePropertyPayloadProto {
     required PropertyTypeProto type = 1;
     required string name = 2;
-    required string value = 3;
+    optional string value = 3;
 
     enum PropertyTypeProto {
         PROPERTY_STRING = 0;
@@ -239,6 +239,7 @@ message DatabaseCallProto {
         CALL_JOB_FOR_APP = 6;
         CALL_SAVE_FLEX_FIELDS = 7;
         CALL_IDS_BY_PARAMS = 8;
+        CALL_TRANSACTION = 9;
     }
 }
 
