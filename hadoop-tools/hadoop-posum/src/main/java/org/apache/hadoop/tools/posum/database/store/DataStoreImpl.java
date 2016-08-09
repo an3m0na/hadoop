@@ -200,36 +200,56 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     public <T> void storeLogEntry(LogEntry<T> logEntry) {
-        updateOrStore(logDb, logEntry.getType().getCollection(), logEntry);
+        lockForWrite(logDb);
+        try {
+            updateOrStore(logDb, logEntry.getType().getCollection(), logEntry);
+        } finally {
+            unlockForWrite(logDb);
+        }
     }
 
     public <T> List<LogEntry<T>> findLogs(LogEntry.Type type, long from, long to) {
-        return find(logDb,
-                type.getCollection(),
-                DBQuery.and(DBQuery.greaterThan("timestamp", from),
-                        DBQuery.lessThanEquals("timestamp", to),
-                        DBQuery.is("type", type)),
-                null,
-                false,
-                0,
-                0
-        );
+        lockForRead(logDb);
+        try {
+            return find(logDb,
+                    type.getCollection(),
+                    DBQuery.and(DBQuery.greaterThan("timestamp", from),
+                            DBQuery.lessThanEquals("timestamp", to),
+                            DBQuery.is("type", type)),
+                    null,
+                    false,
+                    0,
+                    0
+            );
+        } finally {
+            unlockForRead(logDb);
+        }
     }
 
     public <T> List<LogEntry<T>> findLogs(LogEntry.Type type, long after) {
-        return find(logDb,
-                type.getCollection(),
-                DBQuery.and(DBQuery.greaterThan("timestamp", after),
-                        DBQuery.is("type", type)),
-                null,
-                false,
-                0,
-                0
-        );
+        lockForRead(logDb);
+        try {
+            return find(logDb,
+                    type.getCollection(),
+                    DBQuery.and(DBQuery.greaterThan("timestamp", after),
+                            DBQuery.is("type", type)),
+                    null,
+                    false,
+                    0,
+                    0
+            );
+        } finally {
+            unlockForRead(logDb);
+        }
     }
 
     public <T> LogEntry<T> findReport(LogEntry.Type type) {
-        return findById(logDb, type.getCollection(), type.name());
+        lockForRead(logDb);
+        try {
+            return findById(logDb, type.getCollection(), type.name());
+        } finally {
+            unlockForRead(logDb);
+        }
     }
 
     public <T> void storeLogReport(LogEntry<T> logReport) {

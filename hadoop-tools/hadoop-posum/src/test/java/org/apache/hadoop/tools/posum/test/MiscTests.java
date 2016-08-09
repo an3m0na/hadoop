@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * Created by ane on 4/20/16.
  */
-public class CustomTests {
+public class MiscTests {
 //    @Test
     public void checkRegistration() {
         System.out.println(NetUtils.createSocketAddr("0.0.0.0", 7000));

@@ -18,6 +18,7 @@ public class ServiceRunner<T extends PosumMasterProcess> extends Thread {
     private Class<T> serviceClass;
     private Lock lock = new ReentrantLock();
     private final Condition isAvailable = lock.newCondition();
+    private boolean available = false;
 
     public ServiceRunner(Class<T> serviceClass) {
         this.serviceClass = serviceClass;
@@ -31,6 +32,7 @@ public class ServiceRunner<T extends PosumMasterProcess> extends Thread {
             service = serviceClass.newInstance();
             service.init(conf);
             service.start();
+            available = true;
             isAvailable.signal();
         } catch (InstantiationException | IllegalAccessException e) {
             throw new PosumException("Could not instantiate service " + serviceClass, e);
@@ -41,7 +43,8 @@ public class ServiceRunner<T extends PosumMasterProcess> extends Thread {
 
     public void awaitAvailability() throws InterruptedException {
         lock.lock();
-        isAvailable.await();
+        while (!available)
+            isAvailable.await();
         lock.unlock();
     }
 

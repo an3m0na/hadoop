@@ -19,28 +19,36 @@ public class TestDataMasterClient extends TestDataClientImpl {
 
     @Override
     protected void setUpDataStore() throws Exception {
+        System.out.println("Starting MongoDB and POSUM processes...");
         Utils.runMongoDB();
         posumMaster = new ServiceRunner<>(OrchestratorMaster.class);
         posumMaster.start();
         dataMaster = new ServiceRunner<>(DataMaster.class);
         dataMaster.start();
+        System.out.println("Waiting for Data Master to be ready...");
         dataMaster.awaitAvailability();
+        System.out.println("Data master ready.");
         client = new DataMasterClient(dataMaster.getService().getConnectAddress());
         client.init(PosumConfiguration.newInstance());
         client.start();
         db = client.bindTo(DataEntityDB.getMain());
+        System.out.println("DB ready.");
     }
 
     @After
     public void tearDown() throws Exception {
+        System.out.println("Stopping POSUM processes...");
         posumMaster.shutDown();
         dataMaster.shutDown();
         posumMaster.join();
         dataMaster.join();
+        System.out.println("Processes stopped.");
+        System.out.println("Stopping MongoDB processes...");
         Utils.stopMongoDB();
+        System.out.println("MongoDB stopped.");
     }
 
-    @Test
+//    @Test
     public void testHistoryProfileManipulation() {
         //TODO refactor for test new structure
 //        Configuration conf = POSUMConfiguration.newInstance();
