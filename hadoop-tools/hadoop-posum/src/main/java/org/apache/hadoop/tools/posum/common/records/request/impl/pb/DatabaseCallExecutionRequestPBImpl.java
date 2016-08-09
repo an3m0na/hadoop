@@ -76,6 +76,10 @@ public class DatabaseCallExecutionRequestPBImpl extends DatabaseCallExecutionReq
 
     public void setCall(DatabaseCall call) {
         maybeInitBuilder();
+        if (call == null) {
+            builder.clearCall();
+            return;
+        }
         builder.setCall(new DatabaseCallWrapperPBImpl(call).getProto());
     }
 
@@ -95,9 +99,11 @@ public class DatabaseCallExecutionRequestPBImpl extends DatabaseCallExecutionReq
 
     @Override
     public void setEntityDB(DataEntityDB db) {
-        if (db == null)
-            return;
         maybeInitBuilder();
+        if (db == null) {
+            builder.clearEntityDB();
+            return;
+        }
         builder.setEntityDB(((DataEntityDBPBImpl) db).getProto());
     }
 
