@@ -33,14 +33,19 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public String getId() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return "".equals(p.getId()) ? null : p.getId();
+        if (!p.hasId())
+            return null;
+        return p.getId();
     }
 
     @Override
     public void setId(String id) {
         maybeInitBuilder();
-        if (id != null)
-            builder.setId(id);
+        if (id == null) {
+            builder.clearId();
+            return;
+        }
+        builder.setId(id);
     }
 
     @Override
@@ -52,8 +57,11 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public void setStartTime(Long startTime) {
         maybeInitBuilder();
-        if (startTime != null)
-            builder.setStartTime(startTime);
+        if (startTime == null) {
+            builder.clearStartTime();
+            return;
+        }
+        builder.setStartTime(startTime);
     }
 
     @Override
@@ -65,16 +73,22 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public void setFinishTime(Long finishTime) {
         maybeInitBuilder();
-        if (finishTime != null)
-            builder.setFinishTime(finishTime);
+        if (finishTime == null) {
+            builder.clearFinishTime();
+            return;
+        }
+        builder.setFinishTime(finishTime);
     }
 
 
     @Override
     public void setInputBytes(Long inputBytes) {
         maybeInitBuilder();
-        if (inputBytes != null)
-            builder.setInputBytes(inputBytes);
+        if (inputBytes == null) {
+            builder.clearInputBytes();
+            return;
+        }
+        builder.setInputBytes(inputBytes);
     }
 
     @Override
@@ -86,8 +100,11 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public void setOutputBytes(Long outputBytes) {
         maybeInitBuilder();
-        if (outputBytes != null)
-            builder.setOutputBytes(outputBytes);
+        if (outputBytes == null) {
+            builder.clearOutputBytes();
+            return;
+        }
+        builder.setOutputBytes(outputBytes);
     }
 
     @Override
@@ -99,14 +116,19 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public String getAppId() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasAppId())
+            return null;
         return p.getAppId();
     }
 
     @Override
     public void setAppId(String appId) {
         maybeInitBuilder();
-        if (appId != null)
-            builder.setAppId(appId);
+        if (appId == null) {
+            builder.clearAppId();
+            return;
+        }
+        builder.setAppId(appId);
     }
 
     @Override
@@ -136,8 +158,11 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public void setReportedProgress(Float reportedProgress) {
         maybeInitBuilder();
-        if (reportedProgress != null)
-            builder.setReportedProgress(reportedProgress);
+        if (reportedProgress == null) {
+            builder.clearReportedProgress();
+            return;
+        }
+        builder.setReportedProgress(reportedProgress);
     }
 
     @Override
@@ -149,8 +174,11 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public void setInputRecords(Long inputRecords) {
         maybeInitBuilder();
-        if (inputRecords != null)
-            builder.setInputRecords(inputRecords);
+        if (inputRecords == null) {
+            builder.clearInputRecords();
+            return;
+        }
+        builder.setInputRecords(inputRecords);
     }
 
     @Override
@@ -162,21 +190,29 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public void setOutputRecords(Long outputRecords) {
         maybeInitBuilder();
-        if (outputRecords != null)
-            builder.setOutputRecords(outputRecords);
+        if (outputRecords == null) {
+            builder.clearOutputRecords();
+            return;
+        }
+        builder.setOutputRecords(outputRecords);
     }
 
     @Override
     public String getJobId() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasJobId())
+            return null;
         return p.getJobId();
     }
 
     @Override
     public void setJobId(String jobId) {
         maybeInitBuilder();
-        if (jobId != null)
-            builder.setJobId(jobId);
+        if (jobId == null) {
+            builder.clearJobId();
+            return;
+        }
+        builder.setJobId(jobId);
     }
 
     @Override
@@ -188,13 +224,18 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public void setSuccessfulAttempt(String successfulAttempt) {
         maybeInitBuilder();
-        if (successfulAttempt != null)
-            builder.setSuccessfulAttempt(successfulAttempt);
+        if (successfulAttempt == null) {
+            builder.clearSuccessfulAttempt();
+            return;
+        }
+        builder.setSuccessfulAttempt(successfulAttempt);
     }
 
     @Override
     public String getSuccessfulAttempt() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasSuccessfulAttempt())
+            return null;
         return p.getSuccessfulAttempt();
     }
 
@@ -207,8 +248,11 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public void setShuffleTime(Long time) {
         maybeInitBuilder();
-        if (time != null)
-            builder.setShuffleTime(time);
+        if (time == null) {
+            builder.clearShuffleTime();
+            return;
+        }
+        builder.setShuffleTime(time);
     }
 
     @Override
@@ -220,8 +264,11 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public void setMergeTime(Long time) {
         maybeInitBuilder();
-        if (time != null)
-            builder.setMergeTime(time);
+        if (time == null) {
+            builder.clearMergeTime();
+            return;
+        }
+        builder.setMergeTime(time);
     }
 
     @Override
@@ -233,32 +280,46 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public void setReduceTime(Long time) {
         maybeInitBuilder();
-        if (time != null)
-            builder.setReduceTime(time);
+        if (time == null) {
+            builder.clearReduceTime();
+            return;
+        }
+        builder.setReduceTime(time);
     }
 
     @Override
     public Boolean isLocal() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasLocal())
+            return null;
         return p.getLocal();
     }
 
     @Override
     public void setLocal(Boolean local) {
         maybeInitBuilder();
-        if (local != null)
-            builder.setLocal(local);
+        if (local == null) {
+            builder.clearLocal();
+            return;
+        }
+        builder.setLocal(local);
     }
 
     @Override
     public void setHttpAddress(String address) {
         maybeInitBuilder();
+        if (address == null) {
+            builder.clearHttpAddress();
+            return;
+        }
         builder.setHttpAddress(address);
     }
 
     @Override
     public String getHttpAddress() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasHttpAddress())
+            return null;
         return p.getHttpAddress();
     }
 }
