@@ -1,7 +1,6 @@
 package org.apache.hadoop.tools.posum.database.store;
 
 import com.mongodb.MongoClient;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -14,6 +13,7 @@ import org.bson.Document;
 import org.mongojack.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +26,6 @@ public class DataStoreImpl implements LockBasedDataStore {
 
     private static Log logger = LogFactory.getLog(DataStoreImpl.class);
 
-    private final Configuration conf;
     private MongoClient mongoClient;
     private DataEntityDB logDb = DataEntityDB.getLogs();
     private ReentrantReadWriteLock masterLock = new ReentrantReadWriteLock();
@@ -42,7 +41,6 @@ public class DataStoreImpl implements LockBasedDataStore {
         if (url != null)
             mongoClient = new MongoClient(url);
         mongoClient = new MongoClient();
-        this.conf = conf;
     }
 
     private <T extends GeneralDataEntity> JacksonDBCollection<T, String> getCollectionForRead(DataEntityDB db, DataEntityCollection collection) {
@@ -298,11 +296,35 @@ public class DataStoreImpl implements LockBasedDataStore {
 
     @Override
     public Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections() {
-        throw new NotImplementedException();
+        Map<DataEntityDB, List<DataEntityCollection>> ret = new HashMap<>(dbRegistry.size());
+        for (Map.Entry<DataEntityDB, DBAssets> assetsEntry : dbRegistry.entrySet()) {
+            List<DataEntityCollection> collections = new ArrayList<>(DataEntityCollection.values().length / 2);
+            for (Map.Entry<DataEntityCollection, JacksonDBCollection> collectionEntry :
+                    assetsEntry.getValue().collections.entrySet()) {
+                if (collectionEntry.getValue().count() > 0) {
+                    collections.add(collectionEntry.getKey());
+                }
+            }
+            if (collections.size() > 0)
+                ret.put(assetsEntry.getKey(), collections);
+        }
+        return ret;
     }
 
     @Override
     public void clear() {
-        throw new NotImplementedException();
+        lockAll();
+        try {
+            for (Map.Entry<DataEntityDB, DBAssets> assetsEntry : dbRegistry.entrySet()) {
+                for (Map.Entry<DataEntityCollection, JacksonDBCollection> collectionEntry :
+                        assetsEntry.getValue().collections.entrySet()) {
+                    collectionEntry.getValue().drop();
+                }
+                assetsEntry.getValue().collections.clear();
+            }
+            dbRegistry.clear();
+        } finally {
+            unlockAll();
+        }
     }
 }

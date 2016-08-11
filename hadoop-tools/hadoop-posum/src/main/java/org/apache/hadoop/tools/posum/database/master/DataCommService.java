@@ -8,6 +8,8 @@ import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.payload.CollectionMapPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -113,6 +115,12 @@ public class DataCommService extends CompositeService implements DataMasterProto
             switch (request.getType()) {
                 case PING:
                     logger.info("Received ping with message: " + request.getPayload());
+                    break;
+                case LIST_COLLECTIONS:
+                    return SimpleResponse.newInstance(PayloadType.COLLECTION_MAP,
+                            CollectionMapPayload.newInstance(dmContext.getDataStore().listExistingCollections()));
+                case CLEAR_DATA:
+                    dmContext.getDataStore().clear();
                     break;
                 case LOG_POLICY_CHANGE:
                     dmContext.getDataStore().storeLogEntry(

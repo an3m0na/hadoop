@@ -17,7 +17,9 @@ public abstract class SimpleRequest<T> {
         CHANGE_POLICY(StringRequestPBImpl.class),
         START(VoidRequestPBImpl.class),
         LOG_POLICY_CHANGE(StringRequestPBImpl.class),
-        SYSTEM_ADDRESSES(VoidRequestPBImpl.class);
+        SYSTEM_ADDRESSES(VoidRequestPBImpl.class),
+        LIST_COLLECTIONS(VoidRequestPBImpl.class),
+        CLEAR_DATA(VoidRequestPBImpl.class);
 
         private Class<? extends SimpleRequestPBImpl> implClass;
         private static final String prefix = "REQ_";

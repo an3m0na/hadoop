@@ -1,24 +1,22 @@
 package org.apache.hadoop.tools.posum.database.client;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.orchestrator.master.OrchestratorMaster;
 import org.apache.hadoop.tools.posum.database.master.DataMaster;
 import org.apache.hadoop.tools.posum.test.ServiceRunner;
-import org.apache.hadoop.tools.posum.test.TestDataClientImpl;
+import org.apache.hadoop.tools.posum.test.TestDataBroker;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.After;
-import org.junit.Test;
 
 /**
  * Created by ane on 3/21/16.
  */
-public class TestDataMasterClient extends TestDataClientImpl {
+public class TestDataMasterClient extends TestDataBroker {
     private ServiceRunner posumMaster, dataMaster;
     private DataMasterClient client;
 
     @Override
-    protected void setUpDataStore() throws Exception {
+    protected void setUpDataBroker() throws Exception {
         System.out.println("Starting MongoDB and POSUM processes...");
         Utils.runMongoDB();
         posumMaster = new ServiceRunner<>(OrchestratorMaster.class);
@@ -31,7 +29,7 @@ public class TestDataMasterClient extends TestDataClientImpl {
         client = new DataMasterClient(dataMaster.getService().getConnectAddress());
         client.init(PosumConfiguration.newInstance());
         client.start();
-        db = client.bindTo(DataEntityDB.getMain());
+        dataBroker = client;
         System.out.println("DB ready.");
     }
 
@@ -58,24 +56,24 @@ public class TestDataMasterClient extends TestDataClientImpl {
 //        DataStore myStore = new DataStore(conf);
 //
 //        String appId = "testHistoryApp";
-//        myStore.delete(db, DataEntityCollection.HISTORY, Collections.singletonMap("originalId", (Object)appId));
+//        myStore.delete(mainDB, DataEntityCollection.HISTORY, Collections.singletonMap("originalId", (Object)appId));
 //        AppProfile app = Records.newRecord(AppProfile.class);
 //        app.setId(appId);
 //        app.setStartTime(System.currentTimeMillis());
 //        app.setFinishTime(System.currentTimeMillis() + 10000);
 //        System.out.println(app);
 //        HistoryProfile appHistory = new HistoryProfilePBImpl<>(DataEntityCollection.APP, app);
-//        String historyId = myStore.store(db, DataEntityCollection.HISTORY, appHistory);
+//        String historyId = myStore.store(mainDB, DataEntityCollection.HISTORY, appHistory);
 //
 //        Map<String, Object> properties = new HashMap<>();
 //        properties.put("originalId", appId);
-//        List<HistoryProfile> profilesById = dataStore.find(db, DataEntityCollection.HISTORY, properties, 0, 0);
+//        List<HistoryProfile> profilesById = dataStore.find(mainDB, DataEntityCollection.HISTORY, properties, 0, 0);
 //        System.out.println(profilesById);
 //        assertTrue(profilesById.size() == 1);
 //        HistoryProfile otherHistory = profilesById.get(0);
 //        assertEquals(appId, otherHistory.getOriginalId());
 //        assertEquals(appHistory.getTimestamp(), otherHistory.getTimestamp());
 //
-//        myStore.delete(db, DataEntityCollection.HISTORY, historyId);
+//        myStore.delete(mainDB, DataEntityCollection.HISTORY, historyId);
     }
 }

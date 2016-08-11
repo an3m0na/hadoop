@@ -23,12 +23,14 @@ import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.tools.posum.database.client.DatabaseImpl;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
@@ -100,9 +102,25 @@ public class Utils {
         }
     }
 
-    public static <T extends Payload> SimpleResponse<T> handleError(String type, SimpleResponse<T> response) {
+    public static void checkPing(StandardProtocol handler) {
+        sendSimpleRequest("ping", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"), handler);
+    }
+
+    public static  <T extends Payload> T sendSimpleRequest(SimpleRequest.Type type, StandardProtocol handler) {
+        return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type), handler);
+    }
+
+    public static <T extends Payload> T sendSimpleRequest(String label, SimpleRequest request, StandardProtocol handler) {
+        try {
+            return (T)handleError(label, handler.handleSimpleRequest(request)).getPayload();
+        } catch (IOException | YarnException e) {
+            throw new PosumException("Error during RPC call", e);
+        }
+    }
+
+    public static <T extends Payload> SimpleResponse<T> handleError(String label, SimpleResponse<T> response) {
         if (!response.getSuccessful()) {
-            throw new PosumException("Request type " + type + " returned with error: " +
+            throw new PosumException("Request " + label + " returned with error: " +
                     "\n" + response.getText() + "\n" + response.getException());
         }
         return response;

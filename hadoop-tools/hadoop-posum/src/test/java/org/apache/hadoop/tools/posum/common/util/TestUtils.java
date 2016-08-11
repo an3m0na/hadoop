@@ -1,7 +1,5 @@
-package org.apache.hadoop.tools.posum.common.utils;
+package org.apache.hadoop.tools.posum.common.util;
 
-import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.junit.Test;
 
 import java.beans.IntrospectionException;
