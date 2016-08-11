@@ -5,17 +5,17 @@ import org.apache.hadoop.yarn.exceptions.YarnRuntimeException;
 /**
  * Created by ane on 3/21/16.
  */
-public class POSUMException extends YarnRuntimeException {
+public class PosumException extends YarnRuntimeException {
 
-    public POSUMException(Throwable cause) {
+    public PosumException(Throwable cause) {
         super(cause);
     }
 
-    public POSUMException(String message) {
+    public PosumException(String message) {
         super(message);
     }
 
-    public POSUMException(String message, Throwable cause) {
+    public PosumException(String message, Throwable cause) {
         super(message, cause);
     }
 }

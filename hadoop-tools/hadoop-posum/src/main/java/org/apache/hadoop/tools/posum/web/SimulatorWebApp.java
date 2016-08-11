@@ -12,7 +12,7 @@ import org.mortbay.jetty.handler.AbstractHandler;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class SimulatorWebApp extends POSUMWebApp {
+public class SimulatorWebApp extends PosumWebApp {
     private static final long serialVersionUID = 1905162041950251407L;
     private static Log logger = LogFactory.getLog(SimulatorWebApp.class);
 

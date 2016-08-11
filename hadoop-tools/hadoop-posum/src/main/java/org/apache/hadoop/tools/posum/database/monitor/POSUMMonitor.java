@@ -2,28 +2,28 @@ package org.apache.hadoop.tools.posum.database.monitor;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.GeneralLooper;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
 
 /**
  * Created by ane on 2/4/16.
  */
-public class POSUMMonitor extends GeneralLooper<POSUMMonitor> {
+public class PosumMonitor extends GeneralLooper<PosumMonitor> {
 
 
     private final DataMasterContext context;
 
-    public POSUMMonitor(DataMasterContext context) {
-        super(POSUMMonitor.class);
+    public PosumMonitor(DataMasterContext context) {
+        super(PosumMonitor.class);
         this.context = context;
     }
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
         super.serviceInit(conf);
-        setSleepInterval(conf.getLong(POSUMConfiguration.POSUM_MONITOR_HEARTBEAT_MS,
-                POSUMConfiguration.POSUM_MONITOR_HEARTBEAT_MS_DEFAULT));
+        setSleepInterval(conf.getLong(PosumConfiguration.POSUM_MONITOR_HEARTBEAT_MS,
+                PosumConfiguration.POSUM_MONITOR_HEARTBEAT_MS_DEFAULT));
 
     }
 

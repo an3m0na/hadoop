@@ -4,15 +4,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
+import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
-import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
-import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -57,7 +52,7 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
         }
     }
 
-    synchronized void simulationDone(SimulationResult result) {
+    synchronized void simulationDone(SimulationResultPayload result) {
         try {
             resultRequest.addResult(result);
             if (resultRequest.getResults().size() == policies.size()) {

@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.request;
 
-import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
+import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;
@@ -15,16 +15,16 @@ public abstract class HandleSimResultRequest {
         return Records.newRecord(HandleSimResultRequest.class);
     }
 
-    public static HandleSimResultRequest newInstance(List<SimulationResult> results) {
+    public static HandleSimResultRequest newInstance(List<SimulationResultPayload> results) {
         HandleSimResultRequest request = newInstance();
         request.setResults(results);
         return request;
     }
 
-    public abstract void setResults(List<SimulationResult> results);
+    public abstract void setResults(List<SimulationResultPayload> results);
 
     //the underlying implementation should be thread safe and ordered ascending by score
-    public abstract ConcurrentSkipListSet<SimulationResult> getResults();
+    public abstract ConcurrentSkipListSet<SimulationResultPayload> getResults();
 
-    public abstract void addResult(SimulationResult result);
+    public abstract void addResult(SimulationResultPayload result);
 }

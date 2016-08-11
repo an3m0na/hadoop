@@ -83,13 +83,13 @@ public class RegistrationRequestPBImpl extends RegistrationRequest {
     }
 
     @Override
-    public Utils.POSUMProcess getProcess() {
+    public Utils.PosumProcess getProcess() {
         RegistrationRequestProtoOrBuilder p = viaProto ? proto : builder;
-        return Utils.POSUMProcess.valueOf(p.getProcess().name().substring("PROCESS_".length()));
+        return Utils.PosumProcess.valueOf(p.getProcess().name().substring("PROCESS_".length()));
     }
 
     @Override
-    public void setProcess(Utils.POSUMProcess process) {
+    public void setProcess(Utils.PosumProcess process) {
         maybeInitBuilder();
         if (process != null)
             builder.setProcess(POSUMProtos.RegistrationRequestProto.POSUMProcessProto.valueOf("PROCESS_" + process.name()));

@@ -6,15 +6,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
-import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorProtocol;
+import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.util.POSUMConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterClient;
-import org.apache.hadoop.tools.posum.core.master.client.POSUMMasterInterface;
+import org.apache.hadoop.tools.posum.orchestrator.client.OrchestratorMasterClient;
+import org.apache.hadoop.tools.posum.orchestrator.client.OrchestratorMasterInterface;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -22,14 +21,15 @@ import java.net.InetSocketAddress;
 /**
  * Created by ane on 3/19/16.
  */
-class SimulatorCommService extends CompositeService implements SimulatorProtocol {
+public class SimulatorCommService extends CompositeService implements SimulatorMasterProtocol {
 
     private static Log logger = LogFactory.getLog(SimulatorCommService.class);
 
     SimulationMasterContext context;
     private Server simulatorServer;
-    private POSUMMasterClient masterClient;
+    private OrchestratorMasterClient masterClient;
     private DataMasterClient dataClient;
+    private String connectAddress;
 
     SimulatorCommService(SimulationMasterContext context) {
         super(SimulatorCommService.class.getName());
@@ -38,7 +38,7 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        masterClient = new POSUMMasterClient();
+        masterClient = new OrchestratorMasterClient();
         masterClient.init(conf);
         addIfService(masterClient);
 
@@ -49,28 +49,32 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
     protected void serviceStart() throws Exception {
         YarnRPC rpc = YarnRPC.create(getConfig());
         InetSocketAddress masterServiceAddress = getConfig().getSocketAddr(
-                POSUMConfiguration.SIMULATOR_BIND_ADDRESS,
-                POSUMConfiguration.SIMULATOR_ADDRESS,
-                POSUMConfiguration.SIMULATOR_ADDRESS_DEFAULT,
-                POSUMConfiguration.SIMULATOR_PORT_DEFAULT);
+                PosumConfiguration.SIMULATOR_BIND_ADDRESS,
+                PosumConfiguration.SIMULATOR_ADDRESS,
+                PosumConfiguration.SIMULATOR_ADDRESS_DEFAULT,
+                PosumConfiguration.SIMULATOR_PORT_DEFAULT);
         this.simulatorServer =
-                rpc.getServer(SimulatorProtocol.class, this, masterServiceAddress,
+                rpc.getServer(SimulatorMasterProtocol.class, this, masterServiceAddress,
                         getConfig(), context.getTokenSecretManager(),
-                        getConfig().getInt(POSUMConfiguration.SIMULATOR_SERVICE_THREAD_COUNT,
-                                POSUMConfiguration.SIMULATOR_SERVICE_THREAD_COUNT_DEFAULT));
+                        getConfig().getInt(PosumConfiguration.SIMULATOR_SERVICE_THREAD_COUNT,
+                                PosumConfiguration.SIMULATOR_SERVICE_THREAD_COUNT_DEFAULT));
 
         this.simulatorServer.start();
 
         super.serviceStart();
 
-        String connectAddress =
+        String fullAddress =
                 NetUtils.getConnectAddress(this.simulatorServer.getListenerAddress()).toString();
-        String dmAddress = masterClient.register(Utils.POSUMProcess.SIMULATOR,
-                connectAddress.substring(connectAddress.indexOf("/") + 1));
+        connectAddress = fullAddress.substring(fullAddress.indexOf("/") + 1);
+        String dmAddress = masterClient.register(Utils.PosumProcess.SIMULATOR, connectAddress);
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);
         dataClient.start();
+    }
+
+    public String getConnectAddress() {
+        return connectAddress;
     }
 
     @Override
@@ -105,7 +109,7 @@ class SimulatorCommService extends CompositeService implements SimulatorProtocol
         return dataClient;
     }
 
-    public POSUMMasterInterface getMaster() {
+    public OrchestratorMasterInterface getMaster() {
         return masterClient;
     }
 
