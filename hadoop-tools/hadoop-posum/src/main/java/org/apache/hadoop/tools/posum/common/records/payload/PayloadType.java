@@ -12,7 +12,8 @@ public enum PayloadType {
     SINGLE_ENTITY(SingleEntityPayloadPBImpl.class),
     MULTI_ENTITY(MultiEntityPayloadPBImpl.class),
     STRING_STRING_MAP(StringStringMapPayloadPBImpl.class),
-    STRING_LIST(StringListPayloadPBImpl.class);
+    STRING_LIST(StringListPayloadPBImpl.class),
+    COLLECTION_MAP(CollectionMapPayloadPBImpl.class);
 
     private Class<? extends PayloadPB> implClass;
 

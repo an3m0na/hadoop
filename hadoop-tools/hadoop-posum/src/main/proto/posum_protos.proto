@@ -221,6 +221,8 @@ message SimpleRequestProto {
         REQ_START = 2;
         REQ_LOG_POLICY_CHANGE = 3;
         REQ_SYSTEM_ADDRESSES = 4;
+        REQ_LIST_COLLECTIONS = 5;
+        REQ_CLEAR_DATA = 6;
     }
 }
 
@@ -248,6 +250,15 @@ message DatabaseCallExecutionRequestProto {
     required DatabaseCallProto call = 2;
 }
 
+message CollectionEntryProto{
+    required EntityDBProto entityDB = 1;
+    repeated EntityCollectionProto collections = 2;
+}
+
+message CollectionMapPayloadProto{
+    repeated CollectionEntryProto entries = 1;
+}
+
 message SimpleResponseProto {
     required bool successful = 1;
     optional string text = 2;
@@ -263,6 +274,7 @@ enum PayloadTypeProto {
     PLD_STRING_STRING_MAP = 3;
     PLD_STRING_LIST = 4;
     PLD_SIMPLE_PROPERTY = 5;
+    PLD_COLLECTION_MAP = 6;
 }
 
 message SimulationResultPayloadProto {
