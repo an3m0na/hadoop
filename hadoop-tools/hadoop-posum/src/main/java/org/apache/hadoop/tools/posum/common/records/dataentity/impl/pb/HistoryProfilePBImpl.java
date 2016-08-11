@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.HistoryProfile;
@@ -68,7 +68,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
                 Class eClass = getType().getMappedClass();
                 return (T) ((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(p.getOriginal());
             } catch (Exception e) {
-                throw new POSUMException("Could not read object from byte string " + p.getOriginal(), e);
+                throw new PosumException("Could not read object from byte string " + p.getOriginal(), e);
             }
         }
         return null;
@@ -84,13 +84,13 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
     @Override
     public DataEntityCollection getType() {
         HistoryProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityCollection.valueOf(p.getType().name().substring("TYPE_".length()));
+        return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
     }
 
     @Override
     public void setType(DataEntityCollection type) {
         maybeInitBuilder();
-        builder.setType(POSUMProtos.EntityCollectionProto.valueOf("TYPE_" + type.name()));
+        builder.setCollection(POSUMProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
     }
 
     @Override

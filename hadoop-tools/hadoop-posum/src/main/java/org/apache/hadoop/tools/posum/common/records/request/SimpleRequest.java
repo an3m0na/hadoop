@@ -1,9 +1,8 @@
 package org.apache.hadoop.tools.posum.common.records.request;
 
 
-import org.apache.hadoop.tools.posum.common.records.field.SaveFlexFieldsPayload;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.*;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto.SimpleRequestTypeProto;
 
 /**
@@ -14,11 +13,8 @@ import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto.SimpleRequest
 public abstract class SimpleRequest<T> {
 
     public enum Type {
-        PING(VoidRequestPBImpl.class),
+        PING(StringRequestPBImpl.class),
         CHANGE_POLICY(StringRequestPBImpl.class),
-        ENTITY_BY_ID(EntityByIdRequestPBImpl.class),
-        JOB_FOR_APP(JobForAppRequestPBImpl.class),
-        SAVE_FLEX_FIELDS(SaveFlexFieldsRequestPBImpl.class),
         START(VoidRequestPBImpl.class),
         LOG_POLICY_CHANGE(StringRequestPBImpl.class),
         SYSTEM_ADDRESSES(VoidRequestPBImpl.class);
@@ -49,7 +45,7 @@ public abstract class SimpleRequest<T> {
         try {
             request = type.getImplClass().newInstance();
         } catch (InstantiationException | IllegalAccessException ex) {
-            throw new POSUMException("Could not instantiate request of type " + type, ex);
+            throw new PosumException("Could not instantiate request of type " + type, ex);
         }
         request.setType(type);
         request.setPayload(payload);

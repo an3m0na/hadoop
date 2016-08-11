@@ -71,27 +71,27 @@ public class StandardClientProxyFactory<T> {
     protected static RetryPolicy createRetryPolicy(Configuration conf) {
         long rmConnectWaitMS =
                 conf.getLong(
-                        POSUMConfiguration.POSUM_CONNECT_MAX_WAIT_MS,
-                        POSUMConfiguration.POSUM_CONNECT_MAX_WAIT_MS_DEFAULT);
+                        PosumConfiguration.POSUM_CONNECT_MAX_WAIT_MS,
+                        PosumConfiguration.POSUM_CONNECT_MAX_WAIT_MS_DEFAULT);
         long rmConnectionRetryIntervalMS =
                 conf.getLong(
-                        POSUMConfiguration.POSUM_CONNECT_RETRY_INTERVAL_MS,
-                        POSUMConfiguration
+                        PosumConfiguration.POSUM_CONNECT_RETRY_INTERVAL_MS,
+                        PosumConfiguration
                                 .POSUM_CONNECT_RETRY_INTERVAL_MS_DEFAULT);
 
         boolean waitForEver = (rmConnectWaitMS == -1);
         if (!waitForEver) {
             if (rmConnectWaitMS < 0) {
                 throw new YarnRuntimeException("Invalid Configuration. "
-                        + POSUMConfiguration.POSUM_CONNECT_MAX_WAIT_MS
+                        + PosumConfiguration.POSUM_CONNECT_MAX_WAIT_MS
                         + " can be -1, but can not be other negative numbers");
             }
 
             // try connect once
             if (rmConnectWaitMS < rmConnectionRetryIntervalMS) {
-                LOG.warn(POSUMConfiguration.POSUM_CONNECT_MAX_WAIT_MS
+                LOG.warn(PosumConfiguration.POSUM_CONNECT_MAX_WAIT_MS
                         + " is smaller than "
-                        + POSUMConfiguration.POSUM_CONNECT_RETRY_INTERVAL_MS
+                        + PosumConfiguration.POSUM_CONNECT_RETRY_INTERVAL_MS
                         + ". Only try connect once.");
                 rmConnectWaitMS = 0;
             }
@@ -100,15 +100,15 @@ public class StandardClientProxyFactory<T> {
         // Handle HA case first
         if (HAUtil.isHAEnabled(conf)) {
             final long failoverSleepBaseMs = conf.getLong(
-                    POSUMConfiguration.CLIENT_FAILOVER_SLEEPTIME_BASE_MS,
+                    PosumConfiguration.CLIENT_FAILOVER_SLEEPTIME_BASE_MS,
                     rmConnectionRetryIntervalMS);
 
             final long failoverSleepMaxMs = conf.getLong(
-                    POSUMConfiguration.CLIENT_FAILOVER_SLEEPTIME_MAX_MS,
+                    PosumConfiguration.CLIENT_FAILOVER_SLEEPTIME_MAX_MS,
                     rmConnectionRetryIntervalMS);
 
             int maxFailoverAttempts = conf.getInt(
-                    POSUMConfiguration.CLIENT_FAILOVER_MAX_ATTEMPTS, -1);
+                    PosumConfiguration.CLIENT_FAILOVER_MAX_ATTEMPTS, -1);
 
             if (maxFailoverAttempts == -1) {
                 if (waitForEver) {
@@ -125,7 +125,7 @@ public class StandardClientProxyFactory<T> {
 
         if (rmConnectionRetryIntervalMS < 0) {
             throw new YarnRuntimeException("Invalid Configuration. " +
-                    POSUMConfiguration.POSUM_CONNECT_RETRY_INTERVAL_MS +
+                    PosumConfiguration.POSUM_CONNECT_RETRY_INTERVAL_MS +
                     " should not be negative.");
         }
 

@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.field.impl.pb.StringStringMapPayloadPBImpl;
+import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.StringStringMapPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProto;
 import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProtoOrBuilder;
 
@@ -27,9 +27,13 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     void buildProto() {
         maybeInitBuilder();
-        StringStringMapPayloadPBImpl flexFields = new StringStringMapPayloadPBImpl();
-        flexFields.setEntries(flexMap);
-        proto = builder.setFlexFields(flexFields.getProto()).build();
+        builder.clearFlexFields();
+        if (flexMap != null) {
+            StringStringMapPayloadPBImpl flexFields = new StringStringMapPayloadPBImpl();
+            flexFields.setEntries(flexMap);
+            builder.setFlexFields(flexFields.getProto());
+        }
+        proto = builder.build();
     }
 
     @Override
@@ -418,8 +422,9 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
-    public void addFlexField(String name, String value) {
-        getFlexFields().put(name, value);
+    public void addAll(Map<String, String> other) {
+        maybeInitBuilder();
+        getFlexFields().putAll(other);
     }
 
     @Override
@@ -439,7 +444,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public String getReducerClass() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        if(!p.hasReducerClass())
+        if (!p.hasReducerClass())
             return null;
         return p.getReducerClass();
     }
@@ -455,7 +460,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public String getMapperClass() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        if(!p.hasMapperClass())
+        if (!p.hasMapperClass())
             return null;
         return p.getMapperClass();
     }

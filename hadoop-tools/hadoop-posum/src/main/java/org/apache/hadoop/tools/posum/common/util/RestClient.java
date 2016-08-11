@@ -33,10 +33,10 @@ public class RestClient {
         RM("ResourceManager", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, "ws/v1/"),
         HISTORY("History", JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_ADDRESS, "ws/v1/history/mapreduce/"),
         AM("ApplicationMaster", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, "proxy/%s/ws/v1/mapreduce/"),
-        PS("PortfolioScheduler", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS + POSUMConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT, "/ajax/"),
-        PM("POSUMMaster", "http://localhost:" + POSUMConfiguration.MASTER_WEBAPP_PORT_DEFAULT, "/ajax/"),
-        SM("SimulationMaster", "http://localhost:" + POSUMConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT, "/ajax/"),
-        DM("DataMaster", "http://localhost:" + POSUMConfiguration.DM_WEBAPP_PORT_DEFAULT, "/ajax/");
+        PS("PortfolioScheduler", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS + PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT, "/ajax/"),
+        OM("OrchestratorMaster", "http://localhost:" + PosumConfiguration.MASTER_WEBAPP_PORT_DEFAULT, "/ajax/"),
+        SM("SimulationMaster", "http://localhost:" + PosumConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT, "/ajax/"),
+        DM("DataMaster", "http://localhost:" + PosumConfiguration.DM_WEBAPP_PORT_DEFAULT, "/ajax/");
 
         private static boolean updated = false;
 
@@ -62,23 +62,23 @@ public class RestClient {
             return labelMap.get(label);
         }
 
-        public synchronized static boolean checkUpdated(Map<Utils.POSUMProcess, String> addresses) {
+        public synchronized static boolean checkUpdated(Map<Utils.PosumProcess, String> addresses) {
             if (updated)
                 return true;
-                String psAddress = addresses.get(Utils.POSUMProcess.SCHEDULER);
+                String psAddress = addresses.get(Utils.PosumProcess.SCHEDULER);
             if (psAddress == null)
                 return false;
-            String pmAddress = addresses.get(Utils.POSUMProcess.PM);
+            String pmAddress = addresses.get(Utils.PosumProcess.OM);
             if (pmAddress == null)
                 return false;
-            String dmAddress = addresses.get(Utils.POSUMProcess.DM);
+            String dmAddress = addresses.get(Utils.PosumProcess.DM);
             if (dmAddress == null)
                 return false;
-            String smAddress = addresses.get(Utils.POSUMProcess.SIMULATOR);
+            String smAddress = addresses.get(Utils.PosumProcess.SIMULATOR);
             if (smAddress == null)
                 return false;
             PS.address = "http://" + psAddress;
-            PM.address = "http://" + pmAddress;
+            OM.address = "http://" + pmAddress;
             SM.address = "http://" + smAddress;
             DM.address = "http://" + dmAddress;
             //FIXME assuming that the scheduler, the AM proxy and the history server are all on the same node
@@ -105,7 +105,7 @@ public class RestClient {
             response = resource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
 
             if (response.getStatus() != 200 || !response.getType().equals(MediaType.APPLICATION_JSON_TYPE)) {
-                throw new POSUMException("Error during request to server: " + resource);
+                throw new PosumException("Error during request to server: " + resource);
             }
 
             try {

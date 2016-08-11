@@ -1,8 +1,8 @@
 package org.apache.hadoop.tools.posum.common.records.request.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
-import org.apache.hadoop.tools.posum.common.records.field.impl.pb.SimulationResultPBImpl;
+import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SimulationResultPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.yarn.proto.POSUMProtos;
 import org.apache.hadoop.yarn.proto.POSUMProtos.HandleSimResultRequestProto;
@@ -24,7 +24,7 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
     private boolean viaProto = false;
     private Lock lock = new ReentrantLock();
 
-    private ConcurrentSkipListSet<SimulationResult> results;
+    private ConcurrentSkipListSet<SimulationResultPayload> results;
 
     public HandleSimResultRequestPBImpl() {
         builder = HandleSimResultRequestProto.newBuilder();
@@ -67,14 +67,14 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
         builder.clearResults();
         if (results == null)
             return;
-        final Iterable<POSUMProtos.SimulationResultProto> iterable =
-                new Iterable<POSUMProtos.SimulationResultProto>() {
+        final Iterable<POSUMProtos.SimulationResultPayloadProto> iterable =
+                new Iterable<POSUMProtos.SimulationResultPayloadProto>() {
 
                     @Override
-                    public Iterator<POSUMProtos.SimulationResultProto> iterator() {
-                        return new Iterator<POSUMProtos.SimulationResultProto>() {
+                    public Iterator<POSUMProtos.SimulationResultPayloadProto> iterator() {
+                        return new Iterator<POSUMProtos.SimulationResultPayloadProto>() {
 
-                            Iterator<SimulationResult> iterator = results.iterator();
+                            Iterator<SimulationResultPayload> iterator = results.iterator();
 
                             @Override
                             public void remove() {
@@ -82,9 +82,9 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
                             }
 
                             @Override
-                            public POSUMProtos.SimulationResultProto next() {
-                                SimulationResult result = iterator.next();
-                                return ((SimulationResultPBImpl) result).getProto();
+                            public POSUMProtos.SimulationResultPayloadProto next() {
+                                SimulationResultPayload result = iterator.next();
+                                return ((SimulationResultPayloadPBImpl) result).getProto();
                             }
 
                             @Override
@@ -113,13 +113,13 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
     }
 
     @Override
-    public ConcurrentSkipListSet<SimulationResult> getResults() {
+    public ConcurrentSkipListSet<SimulationResultPayload> getResults() {
         lock.lock();
         if (this.results == null) {
             HandleSimResultRequestProtoOrBuilder p = viaProto ? proto : builder;
             this.results = new ConcurrentSkipListSet<>();
-            for (POSUMProtos.SimulationResultProto simProto : p.getResultsList()) {
-                SimulationResult result = new SimulationResultPBImpl(simProto);
+            for (POSUMProtos.SimulationResultPayloadProto simProto : p.getResultsList()) {
+                SimulationResultPayload result = new SimulationResultPayloadPBImpl(simProto);
                 results.add(result);
             }
         }
@@ -128,12 +128,12 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
     }
 
     @Override
-    public void addResult(SimulationResult result) {
+    public void addResult(SimulationResultPayload result) {
         getResults().add(result);
     }
 
     @Override
-    public void setResults(List<SimulationResult> results) {
+    public void setResults(List<SimulationResultPayload> results) {
         if (results == null)
             return;
         lock.lock();

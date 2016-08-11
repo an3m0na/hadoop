@@ -3,10 +3,8 @@ package org.apache.hadoop.tools.posum.database.store;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.util.POSUMException;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.json.JsonFileWriter;
-import org.apache.hadoop.tools.posum.database.client.DataClientInterface;
-import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,9 +17,9 @@ import java.util.Map;
  */
 public class DataStoreExporter {
     private Map<DataEntityDB, List<DataEntityCollection>> collections;
-    private DataClientInterface dataStore;
+    private LockBasedDataStore dataStore;
 
-    public DataStoreExporter(ExtendedDataClientInterface dataStore) {
+    public DataStoreExporter(LockBasedDataStore dataStore) {
         this.dataStore = dataStore;
         collections = dataStore.listExistingCollections();
     }
@@ -30,11 +28,18 @@ public class DataStoreExporter {
         File dumpDir = new File(dumpPath);
         if (!dumpDir.exists())
             if (!dumpDir.mkdirs())
-                throw new POSUMException("Could not create data dump directory: " + dumpPath);
+                throw new PosumException("Could not create data dump directory: " + dumpPath);
         for (Map.Entry<DataEntityDB, List<DataEntityCollection>> dbMapEntry : collections.entrySet()) {
             for (DataEntityCollection collection : dbMapEntry.getValue()) {
-                List<GeneralDataEntity> entities =
-                        dataStore.find(dbMapEntry.getKey(), collection, Collections.<String, Object>emptyMap(), 0, 0);
+                List<GeneralDataEntity> entities = dataStore.find(
+                        dbMapEntry.getKey(),
+                        collection,
+                        Collections.<String, Object>emptyMap(),
+                        null,
+                        false,
+                        0,
+                        0
+                );
                 File outFile = new File(dumpDir,
                         "[" + dbMapEntry.getKey().getName() + "]" + collection.getLabel() + ".json");
 
@@ -45,7 +50,7 @@ public class DataStoreExporter {
                     }
                     writer.close();
                 } catch (IOException e) {
-                    throw new POSUMException("Did not successfully write file contents to " + outFile.getName(), e);
+                    throw new PosumException("Did not successfully write file contents to " + outFile.getName(), e);
                 }
             }
         }

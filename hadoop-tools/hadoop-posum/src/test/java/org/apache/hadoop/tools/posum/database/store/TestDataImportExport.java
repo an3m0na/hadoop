@@ -1,10 +1,10 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import org.apache.hadoop.tools.posum.common.records.call.IdsByParamsCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
-import org.apache.hadoop.tools.posum.database.client.ExtendedDataClientInterface;
-import org.apache.hadoop.tools.posum.test.MockDataStoreImpl;
+import org.apache.hadoop.tools.posum.database.client.Database;
+import org.apache.hadoop.tools.posum.database.mock.MockDataStoreImpl;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.junit.Before;
@@ -22,8 +22,8 @@ import static org.junit.Assert.assertTrue;
  * Created by ane on 7/29/16.
  */
 public class TestDataImportExport {
-    private ExtendedDataClientInterface dataStore;
-    private DBInterface db;
+    private Database db;
+    private LockBasedDataStore dataStore;
     private final Long clusterTimestamp = System.currentTimeMillis();
 
     @Before
@@ -35,12 +35,14 @@ public class TestDataImportExport {
 
     @Test
     public void test() throws Exception {
-        String dataDumpPath = "testTmpDir";
+        String dataDumpPath = Utils.TEST_TMP_DIR + File.separator + "importexport";
         File tmpDir = new File(dataDumpPath);
         assertTrue(tmpDir.exists() && tmpDir.isDirectory());
         dataStore.clear();
-        assertEquals(0, db.listIds(DataEntityCollection.APP, Collections.<String, Object>emptyMap()).size());
-        List<String> ids = db.listIds(DataEntityCollection.APP, Collections.<String, Object>emptyMap());
+        IdsByParamsCall listIds = IdsByParamsCall.newInstance(DataEntityCollection.APP, Collections.<String, Object>emptyMap());
+        List<String> ids = db.executeDatabaseCall(listIds).getEntries();
+        assertEquals(0, ids.size());
+        ids = db.executeDatabaseCall(listIds).getEntries();
         assertEquals(3, ids.size());
         assertArrayEquals(new String[]{
                 ApplicationId.newInstance(clusterTimestamp, 1).toString(),

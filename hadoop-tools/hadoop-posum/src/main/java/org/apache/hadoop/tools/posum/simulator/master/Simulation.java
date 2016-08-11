@@ -3,9 +3,8 @@ package org.apache.hadoop.tools.posum.simulator.master;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.field.CompoundScore;
-import org.apache.hadoop.tools.posum.common.records.field.SimulationResult;
-import org.apache.hadoop.tools.posum.database.client.DBInterface;
+import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
+import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 
@@ -41,14 +40,14 @@ public class Simulation extends Thread {
         //TODO actual code
         try {
             sleep(5000);
-            simulator.simulationDone(SimulationResult.newInstance(policy,
-                    CompoundScore.newInstance(Math.random() * 10, 0.0, 0.0)));
+            simulator.simulationDone(SimulationResultPayload.newInstance(policy,
+                    CompoundScorePayload.newInstance(Math.random() * 10, 0.0, 0.0)));
         } catch (InterruptedException e) {
             logger.warn(e);
         } catch (Exception e) {
             logger.error("Error during simulation. Shutting down simulation...", e);
         }
-        simulator.simulationDone(SimulationResult.newInstance(policy,
-                CompoundScore.newInstance(0.0, 0.0, 0.0)));
+        simulator.simulationDone(SimulationResultPayload.newInstance(policy,
+                CompoundScorePayload.newInstance(0.0, 0.0, 0.0)));
     }
 }
