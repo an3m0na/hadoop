@@ -12,27 +12,27 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntit
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.proto.PosumProtos;
-import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityProto;
-import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityPayloadProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
  */
 public class StoreCallPBImpl extends StoreCall implements PayloadPB {
-    private SingleEntityProto proto = SingleEntityProto.getDefaultInstance();
-    private SingleEntityProto.Builder builder = null;
+    private SingleEntityPayloadProto proto = SingleEntityPayloadProto.getDefaultInstance();
+    private SingleEntityPayloadProto.Builder builder = null;
     private boolean viaProto = false;
 
     public StoreCallPBImpl() {
-        builder = SingleEntityProto.newBuilder();
+        builder = SingleEntityPayloadProto.newBuilder();
     }
 
-    public StoreCallPBImpl(SingleEntityProto proto) {
+    public StoreCallPBImpl(SingleEntityPayloadProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public SingleEntityProto getProto() {
+    public SingleEntityPayloadProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -72,14 +72,14 @@ public class StoreCallPBImpl extends StoreCall implements PayloadPB {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = SingleEntityProto.newBuilder(proto);
+            builder = SingleEntityPayloadProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
     public DataEntityCollection getEntityCollection() {
-        SingleEntityProtoOrBuilder p = viaProto ? proto : builder;
+        SingleEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
         return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
     }
 
@@ -91,7 +91,7 @@ public class StoreCallPBImpl extends StoreCall implements PayloadPB {
 
     @Override
     public GeneralDataEntity getEntity() {
-        SingleEntityProtoOrBuilder p = viaProto ? proto : builder;
+        SingleEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
         if (p.hasEntity()) {
             try {
                 Class eClass = getEntityCollection().getMappedClass();
@@ -117,7 +117,7 @@ public class StoreCallPBImpl extends StoreCall implements PayloadPB {
 
     @Override
     public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        this.proto = SingleEntityProto.parseFrom(data);
+        this.proto = SingleEntityPayloadProto.parseFrom(data);
         viaProto = true;
     }
 }

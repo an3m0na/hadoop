@@ -9,8 +9,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SimplePropertyPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.PosumProtos;
-import org.apache.hadoop.yarn.proto.PosumProtos.ByParamsProto;
-import org.apache.hadoop.yarn.proto.PosumProtos.ByParamsProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.ByParamsCallProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.ByParamsCallProtoOrBuilder;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,22 +20,22 @@ import java.util.Map;
  * Created by ane on 3/20/16.
  */
 public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadPB {
-    private ByParamsProto proto = ByParamsProto.getDefaultInstance();
-    private ByParamsProto.Builder builder = null;
+    private ByParamsCallProto proto = ByParamsCallProto.getDefaultInstance();
+    private ByParamsCallProto.Builder builder = null;
     private boolean viaProto = false;
 
     private Map<String, Object> params;
 
     public FindByParamsCallPBImpl() {
-        builder = ByParamsProto.newBuilder();
+        builder = ByParamsCallProto.newBuilder();
     }
 
-    public FindByParamsCallPBImpl(ByParamsProto proto) {
+    public FindByParamsCallPBImpl(ByParamsCallProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public ByParamsProto getProto() {
+    public ByParamsCallProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -112,14 +112,14 @@ public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadP
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = ByParamsProto.newBuilder(proto);
+            builder = ByParamsCallProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
     public DataEntityCollection getEntityCollection() {
-        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
+        ByParamsCallProtoOrBuilder p = viaProto ? proto : builder;
         return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
     }
 
@@ -134,7 +134,7 @@ public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadP
     @Override
     public Map<String, Object> getParams() {
         if (this.params == null) {
-            ByParamsProtoOrBuilder p = viaProto ? proto : builder;
+            ByParamsCallProtoOrBuilder p = viaProto ? proto : builder;
             this.params = new HashMap<>(p.getPropertiesCount());
             for (PosumProtos.SimplePropertyPayloadProto propertyProto : p.getPropertiesList()) {
                 SimplePropertyPayload property = new SimplePropertyPayloadPBImpl(propertyProto);
@@ -154,7 +154,7 @@ public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadP
 
     @Override
     public Integer getLimitOrZero() {
-        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
+        ByParamsCallProtoOrBuilder p = viaProto ? proto : builder;
         return p.getLimit();
     }
 
@@ -166,7 +166,7 @@ public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadP
 
     @Override
     public Integer getOffsetOrZero() {
-        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
+        ByParamsCallProtoOrBuilder p = viaProto ? proto : builder;
         return p.getOffset();
     }
 
@@ -178,7 +178,7 @@ public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadP
 
     @Override
     public String getSortField() {
-        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
+        ByParamsCallProtoOrBuilder p = viaProto ? proto : builder;
         if(!p.hasSortField())
             return null;
         return p.getSortField();
@@ -196,7 +196,7 @@ public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadP
 
     @Override
     public Boolean getSortDescending() {
-        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
+        ByParamsCallProtoOrBuilder p = viaProto ? proto : builder;
         return p.getSortDescending();
     }
 
@@ -213,7 +213,7 @@ public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadP
 
     @Override
     public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        this.proto = ByParamsProto.parseFrom(data);
+        this.proto = ByParamsCallProto.parseFrom(data);
         viaProto = true;
     }
 }
