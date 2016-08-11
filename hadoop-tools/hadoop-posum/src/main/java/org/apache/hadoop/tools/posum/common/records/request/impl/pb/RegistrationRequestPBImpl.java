@@ -3,9 +3,9 @@ package org.apache.hadoop.tools.posum.common.records.request.impl.pb;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.request.RegistrationRequest;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.RegistrationRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.RegistrationRequestProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos;
+import org.apache.hadoop.yarn.proto.PosumProtos.RegistrationRequestProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.RegistrationRequestProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
@@ -92,7 +92,7 @@ public class RegistrationRequestPBImpl extends RegistrationRequest {
     public void setProcess(Utils.PosumProcess process) {
         maybeInitBuilder();
         if (process != null)
-            builder.setProcess(POSUMProtos.RegistrationRequestProto.POSUMProcessProto.valueOf("PROCESS_" + process.name()));
+            builder.setProcess(PosumProtos.RegistrationRequestProto.PosumProcessProto.valueOf("PROCESS_" + process.name()));
     }
 
 

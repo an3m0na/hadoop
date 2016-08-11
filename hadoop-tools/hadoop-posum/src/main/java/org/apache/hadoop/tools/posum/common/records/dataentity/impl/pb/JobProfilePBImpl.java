@@ -5,8 +5,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.StringStringMapPayloadPBImpl;
-import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.JobProfileProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.JobProfileProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.JobProfileProtoOrBuilder;
 
 import java.util.List;
 import java.util.Map;

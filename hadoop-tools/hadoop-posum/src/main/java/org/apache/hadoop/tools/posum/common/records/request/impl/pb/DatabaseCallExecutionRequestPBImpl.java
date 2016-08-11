@@ -9,8 +9,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntit
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
-import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallExecutionRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallExecutionRequestProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallExecutionRequestProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallExecutionRequestProtoOrBuilder;
 
 /**
  * Created by ane on 8/1/16.

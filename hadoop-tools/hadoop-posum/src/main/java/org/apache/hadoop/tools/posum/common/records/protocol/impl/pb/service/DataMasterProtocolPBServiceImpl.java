@@ -8,9 +8,9 @@ import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallExecutionRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallExecutionRequestProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SimpleRequestProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SimpleResponseProto;
 
 import java.io.IOException;
 

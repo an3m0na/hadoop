@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.request.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
+import org.apache.hadoop.yarn.proto.PosumProtos;
 
 /**
  * Created by ane on 3/20/16.
@@ -13,7 +13,7 @@ public class StringRequestPBImpl extends SimpleRequestPBImpl<String> {
         super();
     }
 
-    public StringRequestPBImpl(POSUMProtos.SimpleRequestProto proto) {
+    public StringRequestPBImpl(PosumProtos.SimpleRequestProto proto) {
         super(proto);
     }
 

@@ -11,9 +11,9 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SingleEntityProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos;
+import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
@@ -86,7 +86,7 @@ public class StoreCallPBImpl extends StoreCall implements PayloadPB {
     @Override
     public void setEntityCollection(DataEntityCollection type) {
         maybeInitBuilder();
-        builder.setCollection(POSUMProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
+        builder.setCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
     }
 
     @Override

@@ -6,8 +6,8 @@ import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimplePropertyPayloadProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimplePropertyPayloadProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.SimplePropertyPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SimplePropertyPayloadProtoOrBuilder;
 
 import java.io.IOException;
 

@@ -9,10 +9,10 @@ import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleRespo
 import org.apache.hadoop.tools.posum.common.records.protocol.*;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.proto.POSUMProtos.RegistrationRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.HandleSimResultRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleResponseProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.RegistrationRequestProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.HandleSimResultRequestProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SimpleRequestProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SimpleResponseProto;
 
 import java.io.IOException;
 

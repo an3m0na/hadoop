@@ -6,9 +6,9 @@ import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.HistoryProfile;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.HistoryProfileProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.HistoryProfileProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos;
+import org.apache.hadoop.yarn.proto.PosumProtos.HistoryProfileProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.HistoryProfileProtoOrBuilder;
 import org.bson.types.ObjectId;
 
 /**
@@ -90,7 +90,7 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
     @Override
     public void setType(DataEntityCollection type) {
         maybeInitBuilder();
-        builder.setCollection(POSUMProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
+        builder.setCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
     }
 
     @Override

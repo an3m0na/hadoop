@@ -5,8 +5,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.StringStringMapPayload;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.yarn.proto.POSUMProtos.StringStringMapPayloadProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.StringStringMapPayloadProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.StringStringMapPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.StringStringMapPayloadProtoOrBuilder;
 import org.apache.hadoop.yarn.proto.YarnProtos;
 
 import java.util.HashMap;

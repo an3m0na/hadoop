@@ -6,8 +6,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.StringStringMapPayloadPBImpl;
-import org.apache.hadoop.yarn.proto.POSUMProtos.JobConfProxyProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.JobConfProxyProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.JobConfProxyProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.JobConfProxyProtoOrBuilder;
 
 import java.util.HashMap;
 import java.util.Map;

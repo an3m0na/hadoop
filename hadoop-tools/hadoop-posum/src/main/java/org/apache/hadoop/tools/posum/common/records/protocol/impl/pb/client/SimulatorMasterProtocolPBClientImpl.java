@@ -12,7 +12,7 @@ import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SimpleRequestProto;
 
 import java.io.Closeable;
 import java.io.IOException;

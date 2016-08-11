@@ -5,8 +5,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimpleRequestProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.SimpleRequestProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SimpleRequestProtoOrBuilder;
 
 /**
  * Created by ane on 3/21/16.

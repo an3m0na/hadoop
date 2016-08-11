@@ -7,8 +7,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.yarn.proto.POSUMProtos.CounterInfoPayloadProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.CounterInfoPayloadProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.CounterInfoPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.CounterInfoPayloadProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.

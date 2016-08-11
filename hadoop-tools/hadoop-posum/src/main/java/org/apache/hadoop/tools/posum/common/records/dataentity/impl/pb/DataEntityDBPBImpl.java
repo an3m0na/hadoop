@@ -2,8 +2,8 @@ package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.yarn.proto.POSUMProtos.EntityDBProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.EntityDBProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.EntityDBProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.EntityDBProtoOrBuilder;
 
 /**
  * Created by ane on 3/21/16.

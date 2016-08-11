@@ -6,8 +6,8 @@ import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
-import org.apache.hadoop.yarn.proto.POSUMProtos.AppProfileProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.AppProfileProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.AppProfileProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.AppProfileProtoOrBuilder;
 
 /**
  * Created by ane on 3/21/16.

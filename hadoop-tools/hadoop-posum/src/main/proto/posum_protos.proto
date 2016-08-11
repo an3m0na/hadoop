@@ -2,7 +2,7 @@ package hadoop.yarn;
 
 option java_package = "org.apache.hadoop.yarn.proto";
 
-option java_outer_classname = "POSUMProtos";
+option java_outer_classname = "PosumProtos";
 
 import "yarn_protos.proto";
 
@@ -281,10 +281,10 @@ message HandleSimResultRequestProto {
 }
 
 message RegistrationRequestProto {
-    required POSUMProcessProto process = 1;
+    required PosumProcessProto process = 1;
     required string connectAddress = 2;
 
-    enum POSUMProcessProto {
+    enum PosumProcessProto {
         PROCESS_PM = 0;
         PROCESS_DM = 1;
         PROCESS_SIMULATOR = 2;
