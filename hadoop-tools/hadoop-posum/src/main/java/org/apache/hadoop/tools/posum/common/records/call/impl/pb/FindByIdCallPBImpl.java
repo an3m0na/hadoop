@@ -8,9 +8,9 @@ import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.ByIdProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.ByIdProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos;
+import org.apache.hadoop.yarn.proto.PosumProtos.ByIdProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.ByIdProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
@@ -86,7 +86,7 @@ public class FindByIdCallPBImpl extends FindByIdCall implements PayloadPB {
         if (type == null)
             return;
         maybeInitBuilder();
-        builder.setCollection(POSUMProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
+        builder.setCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
     }
 
     @Override

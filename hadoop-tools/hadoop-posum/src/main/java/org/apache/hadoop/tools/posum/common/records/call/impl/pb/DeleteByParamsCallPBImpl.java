@@ -10,9 +10,9 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SimplePropertyPayloadPBImpl;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.ByParamsProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.ByParamsProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos;
+import org.apache.hadoop.yarn.proto.PosumProtos.ByParamsProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.ByParamsProtoOrBuilder;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -69,12 +69,12 @@ public class DeleteByParamsCallPBImpl extends DeleteByParamsCall implements Payl
         builder.clearProperties();
         if (params == null)
             return;
-        Iterable<POSUMProtos.SimplePropertyPayloadProto> iterable =
-                new Iterable<POSUMProtos.SimplePropertyPayloadProto>() {
+        Iterable<PosumProtos.SimplePropertyPayloadProto> iterable =
+                new Iterable<PosumProtos.SimplePropertyPayloadProto>() {
 
                     @Override
-                    public Iterator<POSUMProtos.SimplePropertyPayloadProto> iterator() {
-                        return new Iterator<POSUMProtos.SimplePropertyPayloadProto>() {
+                    public Iterator<PosumProtos.SimplePropertyPayloadProto> iterator() {
+                        return new Iterator<PosumProtos.SimplePropertyPayloadProto>() {
 
                             Iterator<String> keyIter = params.keySet().iterator();
 
@@ -84,7 +84,7 @@ public class DeleteByParamsCallPBImpl extends DeleteByParamsCall implements Payl
                             }
 
                             @Override
-                            public POSUMProtos.SimplePropertyPayloadProto next() {
+                            public PosumProtos.SimplePropertyPayloadProto next() {
                                 String key = keyIter.next();
                                 Object value = params.get(key);
                                 SimplePropertyPayloadPBImpl property = new SimplePropertyPayloadPBImpl();
@@ -130,7 +130,7 @@ public class DeleteByParamsCallPBImpl extends DeleteByParamsCall implements Payl
         if (type == null)
             return;
         maybeInitBuilder();
-        builder.setCollection(POSUMProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
+        builder.setCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
     }
 
     @Override
@@ -138,7 +138,7 @@ public class DeleteByParamsCallPBImpl extends DeleteByParamsCall implements Payl
         if (this.params == null) {
             ByParamsProtoOrBuilder p = viaProto ? proto : builder;
             this.params = new HashMap<>(p.getPropertiesCount());
-            for (POSUMProtos.SimplePropertyPayloadProto propertyProto : p.getPropertiesList()) {
+            for (PosumProtos.SimplePropertyPayloadProto propertyProto : p.getPropertiesList()) {
                 SimplePropertyPayload property = new SimplePropertyPayloadPBImpl(propertyProto);
                 params.put(property.getName(), property.getValue());
             }

@@ -5,9 +5,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.CounterGroupInfoPayloadPBImpl;
-import org.apache.hadoop.yarn.proto.POSUMProtos.CounterGroupInfoPayloadProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.CountersProxyProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.CountersProxyProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.CounterGroupInfoPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.CountersProxyProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.CountersProxyProtoOrBuilder;
 
 import java.util.ArrayList;
 import java.util.Iterator;

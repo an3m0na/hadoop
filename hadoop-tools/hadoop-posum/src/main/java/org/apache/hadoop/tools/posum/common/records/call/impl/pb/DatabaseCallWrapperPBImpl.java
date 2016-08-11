@@ -7,8 +7,8 @@ import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.DatabaseCallProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallProtoOrBuilder;
 
 /**
  * Created by ane on 8/1/16.

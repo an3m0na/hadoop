@@ -4,9 +4,9 @@ import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SimulationResultPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.HandleSimResultRequestProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.HandleSimResultRequestProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos;
+import org.apache.hadoop.yarn.proto.PosumProtos.HandleSimResultRequestProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.HandleSimResultRequestProtoOrBuilder;
 
 import java.util.Iterator;
 import java.util.List;
@@ -67,12 +67,12 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
         builder.clearResults();
         if (results == null)
             return;
-        final Iterable<POSUMProtos.SimulationResultPayloadProto> iterable =
-                new Iterable<POSUMProtos.SimulationResultPayloadProto>() {
+        final Iterable<PosumProtos.SimulationResultPayloadProto> iterable =
+                new Iterable<PosumProtos.SimulationResultPayloadProto>() {
 
                     @Override
-                    public Iterator<POSUMProtos.SimulationResultPayloadProto> iterator() {
-                        return new Iterator<POSUMProtos.SimulationResultPayloadProto>() {
+                    public Iterator<PosumProtos.SimulationResultPayloadProto> iterator() {
+                        return new Iterator<PosumProtos.SimulationResultPayloadProto>() {
 
                             Iterator<SimulationResultPayload> iterator = results.iterator();
 
@@ -82,7 +82,7 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
                             }
 
                             @Override
-                            public POSUMProtos.SimulationResultPayloadProto next() {
+                            public PosumProtos.SimulationResultPayloadProto next() {
                                 SimulationResultPayload result = iterator.next();
                                 return ((SimulationResultPayloadPBImpl) result).getProto();
                             }
@@ -118,7 +118,7 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
         if (this.results == null) {
             HandleSimResultRequestProtoOrBuilder p = viaProto ? proto : builder;
             this.results = new ConcurrentSkipListSet<>();
-            for (POSUMProtos.SimulationResultPayloadProto simProto : p.getResultsList()) {
+            for (PosumProtos.SimulationResultPayloadProto simProto : p.getResultsList()) {
                 SimulationResultPayload result = new SimulationResultPayloadPBImpl(simProto);
                 results.add(result);
             }

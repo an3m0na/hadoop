@@ -8,8 +8,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.StringStringMapPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SaveJobFlexFieldsCallProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SaveJobFlexFieldsCallProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.SaveJobFlexFieldsCallProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SaveJobFlexFieldsCallProtoOrBuilder;
 
 import java.util.Map;
 

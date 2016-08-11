@@ -7,8 +7,8 @@ import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.yarn.proto.POSUMProtos.JobForAppCallProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.JobForAppCallProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.JobForAppCallProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.JobForAppCallProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.

@@ -8,9 +8,9 @@ import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.yarn.proto.POSUMProtos.CounterGroupInfoPayloadProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.CounterInfoPayloadProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.CounterGroupInfoPayloadProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.CounterGroupInfoPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.CounterInfoPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.CounterGroupInfoPayloadProtoOrBuilder;
 
 import java.util.ArrayList;
 import java.util.Iterator;

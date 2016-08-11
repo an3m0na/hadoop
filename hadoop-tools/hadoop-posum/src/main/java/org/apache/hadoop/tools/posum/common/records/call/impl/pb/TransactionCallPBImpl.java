@@ -6,9 +6,9 @@ import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.call.ThreePhaseDatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.TransactionCall;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.TransactionCallProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.TransactionCallProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos;
+import org.apache.hadoop.yarn.proto.PosumProtos.TransactionCallProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.TransactionCallProtoOrBuilder;
 
 import java.util.*;
 
@@ -63,12 +63,12 @@ public class TransactionCallPBImpl extends TransactionCall implements PayloadPB 
         builder.clearCalls();
         if (calls == null)
             return;
-        final Iterable<POSUMProtos.DatabaseCallProto> iterable =
-                new Iterable<POSUMProtos.DatabaseCallProto>() {
+        final Iterable<PosumProtos.DatabaseCallProto> iterable =
+                new Iterable<PosumProtos.DatabaseCallProto>() {
 
                     @Override
-                    public Iterator<POSUMProtos.DatabaseCallProto> iterator() {
-                        return new Iterator<POSUMProtos.DatabaseCallProto>() {
+                    public Iterator<PosumProtos.DatabaseCallProto> iterator() {
+                        return new Iterator<PosumProtos.DatabaseCallProto>() {
 
                             Iterator<ThreePhaseDatabaseCall> iterator = calls.iterator();
 
@@ -78,7 +78,7 @@ public class TransactionCallPBImpl extends TransactionCall implements PayloadPB 
                             }
 
                             @Override
-                            public POSUMProtos.DatabaseCallProto next() {
+                            public PosumProtos.DatabaseCallProto next() {
                                 return new DatabaseCallWrapperPBImpl(iterator.next()).getProto();
                             }
 
@@ -112,7 +112,7 @@ public class TransactionCallPBImpl extends TransactionCall implements PayloadPB 
         if (this.calls == null) {
             TransactionCallProtoOrBuilder p = viaProto ? proto : builder;
             this.calls = new ArrayList<>(p.getCallsCount());
-            for (POSUMProtos.DatabaseCallProto callProto : p.getCallsList()) {
+            for (PosumProtos.DatabaseCallProto callProto : p.getCallsList()) {
                 if (callProto != null) {
                     calls.add((ThreePhaseDatabaseCall) new DatabaseCallWrapperPBImpl(callProto).getCall());
                 }

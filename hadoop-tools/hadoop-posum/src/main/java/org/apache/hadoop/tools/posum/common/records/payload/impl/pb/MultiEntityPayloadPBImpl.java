@@ -9,9 +9,9 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
-import org.apache.hadoop.yarn.proto.POSUMProtos;
-import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.MultiEntityProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos;
+import org.apache.hadoop.yarn.proto.PosumProtos.MultiEntityProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.MultiEntityProtoOrBuilder;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -120,7 +120,7 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements Payl
     @Override
     public void setEntityCollection(DataEntityCollection type) {
         maybeInitBuilder();
-        builder.setCollection(POSUMProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
+        builder.setCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
     }
 
     @Override

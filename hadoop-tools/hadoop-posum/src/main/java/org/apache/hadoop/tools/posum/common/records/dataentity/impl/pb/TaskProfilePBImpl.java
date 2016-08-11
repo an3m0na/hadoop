@@ -4,8 +4,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.yarn.proto.POSUMProtos.TaskProfileProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.TaskProfileProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.TaskProfileProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.TaskProfileProtoOrBuilder;
 
 /**
  * Created by ane on 3/21/16.

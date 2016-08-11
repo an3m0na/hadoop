@@ -7,8 +7,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.TaskPredictionPayload;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.yarn.proto.POSUMProtos.TaskPredictionPayloadProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.TaskPredictionPayloadProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.TaskPredictionPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.TaskPredictionPayloadProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.

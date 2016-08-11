@@ -6,8 +6,8 @@ import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimulationResultPayloadProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.SimulationResultPayloadProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.SimulationResultPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SimulationResultPayloadProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.

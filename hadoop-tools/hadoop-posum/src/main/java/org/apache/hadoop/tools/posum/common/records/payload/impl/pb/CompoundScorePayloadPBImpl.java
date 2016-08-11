@@ -5,8 +5,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.yarn.proto.POSUMProtos.CompoundScorePayloadProto;
-import org.apache.hadoop.yarn.proto.POSUMProtos.CompoundScorePayloadProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.CompoundScorePayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.CompoundScorePayloadProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
