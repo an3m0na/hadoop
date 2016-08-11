@@ -11,8 +11,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntit
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SimplePropertyPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.PosumProtos;
-import org.apache.hadoop.yarn.proto.PosumProtos.ByParamsProto;
-import org.apache.hadoop.yarn.proto.PosumProtos.ByParamsProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.ByParamsCallProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.ByParamsCallProtoOrBuilder;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,22 +22,22 @@ import java.util.Map;
  * Created by ane on 3/20/16.
  */
 public class DeleteByParamsCallPBImpl extends DeleteByParamsCall implements PayloadPB {
-    private ByParamsProto proto = ByParamsProto.getDefaultInstance();
-    private ByParamsProto.Builder builder = null;
+    private ByParamsCallProto proto = ByParamsCallProto.getDefaultInstance();
+    private ByParamsCallProto.Builder builder = null;
     private boolean viaProto = false;
 
     private Map<String, Object> params;
 
     public DeleteByParamsCallPBImpl() {
-        builder = ByParamsProto.newBuilder();
+        builder = ByParamsCallProto.newBuilder();
     }
 
-    public DeleteByParamsCallPBImpl(ByParamsProto proto) {
+    public DeleteByParamsCallPBImpl(ByParamsCallProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public ByParamsProto getProto() {
+    public ByParamsCallProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -114,14 +114,14 @@ public class DeleteByParamsCallPBImpl extends DeleteByParamsCall implements Payl
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = ByParamsProto.newBuilder(proto);
+            builder = ByParamsCallProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
     public DataEntityCollection getEntityCollection() {
-        ByParamsProtoOrBuilder p = viaProto ? proto : builder;
+        ByParamsCallProtoOrBuilder p = viaProto ? proto : builder;
         return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
     }
 
@@ -136,7 +136,7 @@ public class DeleteByParamsCallPBImpl extends DeleteByParamsCall implements Payl
     @Override
     public Map<String, Object> getParams() {
         if (this.params == null) {
-            ByParamsProtoOrBuilder p = viaProto ? proto : builder;
+            ByParamsCallProtoOrBuilder p = viaProto ? proto : builder;
             this.params = new HashMap<>(p.getPropertiesCount());
             for (PosumProtos.SimplePropertyPayloadProto propertyProto : p.getPropertiesList()) {
                 SimplePropertyPayload property = new SimplePropertyPayloadPBImpl(propertyProto);
@@ -161,7 +161,7 @@ public class DeleteByParamsCallPBImpl extends DeleteByParamsCall implements Payl
 
     @Override
     public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        this.proto = ByParamsProto.parseFrom(data);
+        this.proto = ByParamsCallProto.parseFrom(data);
         viaProto = true;
     }
 

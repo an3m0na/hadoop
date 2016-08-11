@@ -10,8 +10,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
 import org.apache.hadoop.yarn.proto.PosumProtos;
-import org.apache.hadoop.yarn.proto.PosumProtos.MultiEntityProto;
-import org.apache.hadoop.yarn.proto.PosumProtos.MultiEntityProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.MultiEntityPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.MultiEntityPayloadProtoOrBuilder;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -21,21 +21,21 @@ import java.util.List;
  * Created by ane on 3/20/16.
  */
 public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements PayloadPB {
-    private MultiEntityProto proto = MultiEntityProto.getDefaultInstance();
-    private MultiEntityProto.Builder builder = null;
+    private MultiEntityPayloadProto proto = MultiEntityPayloadProto.getDefaultInstance();
+    private MultiEntityPayloadProto.Builder builder = null;
     private boolean viaProto = false;
     private List<GeneralDataEntity> entities;
 
     public MultiEntityPayloadPBImpl() {
-        builder = MultiEntityProto.newBuilder();
+        builder = MultiEntityPayloadProto.newBuilder();
     }
 
-    public MultiEntityPayloadPBImpl(MultiEntityProto proto) {
+    public MultiEntityPayloadPBImpl(MultiEntityPayloadProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public MultiEntityProto getProto() {
+    public MultiEntityPayloadProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -106,14 +106,14 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements Payl
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = MultiEntityProto.newBuilder(proto);
+            builder = MultiEntityPayloadProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
     public DataEntityCollection getEntityCollection() {
-        MultiEntityProtoOrBuilder p = viaProto ? proto : builder;
+        MultiEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
         return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
     }
 
@@ -126,7 +126,7 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements Payl
     @Override
     public List<GeneralDataEntity> getEntities() {
         if (entities == null) {
-            MultiEntityProtoOrBuilder p = viaProto ? proto : builder;
+            MultiEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
             entities = new ArrayList<>(p.getEntitiesCount());
             for (ByteString entityString : p.getEntitiesList()) {
                 if (entityString != null) {
@@ -155,7 +155,7 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements Payl
 
     @Override
     public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        proto = MultiEntityProto.parseFrom(data);
+        proto = MultiEntityPayloadProto.parseFrom(data);
         viaProto = true;
     }
 }
