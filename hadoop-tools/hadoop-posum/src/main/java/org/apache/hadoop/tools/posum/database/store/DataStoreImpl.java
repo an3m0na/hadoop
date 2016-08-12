@@ -5,6 +5,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
+import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -197,7 +198,7 @@ public class DataStoreImpl implements LockBasedDataStore {
                 .find(new Document(queryParams)).toString();
     }
 
-    public <T> void storeLogEntry(LogEntry<T> logEntry) {
+    public <T extends Payload> void storeLogEntry(LogEntry<T> logEntry) {
         lockForWrite(logDb);
         try {
             updateOrStore(logDb, logEntry.getType().getCollection(), logEntry);
@@ -206,7 +207,7 @@ public class DataStoreImpl implements LockBasedDataStore {
         }
     }
 
-    public <T> List<LogEntry<T>> findLogs(LogEntry.Type type, long from, long to) {
+    public <T extends Payload> List<LogEntry<T>> findLogs(LogEntry.Type type, long from, long to) {
         lockForRead(logDb);
         try {
             return find(logDb,
@@ -224,7 +225,7 @@ public class DataStoreImpl implements LockBasedDataStore {
         }
     }
 
-    public <T> List<LogEntry<T>> findLogs(LogEntry.Type type, long after) {
+    public <T extends Payload> List<LogEntry<T>> findLogs(LogEntry.Type type, long after) {
         lockForRead(logDb);
         try {
             return find(logDb,
@@ -241,7 +242,7 @@ public class DataStoreImpl implements LockBasedDataStore {
         }
     }
 
-    public <T> LogEntry<T> findReport(LogEntry.Type type) {
+    public <T extends Payload> LogEntry<T> findReport(LogEntry.Type type) {
         lockForRead(logDb);
         try {
             return findById(logDb, type.getCollection(), type.name());
@@ -250,7 +251,7 @@ public class DataStoreImpl implements LockBasedDataStore {
         }
     }
 
-    public <T> void storeLogReport(LogEntry<T> logReport) {
+    public <T extends Payload> void storeLogReport(LogEntry<T> logReport) {
         logReport.setId(logReport.getType().name());
         storeLogEntry(logReport);
     }

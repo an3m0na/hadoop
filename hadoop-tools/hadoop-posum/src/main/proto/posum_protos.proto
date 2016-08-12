@@ -34,6 +34,9 @@ enum EntityCollectionProto {
     COLL_JOB_CONF_HISTORY = 8;
     COLL_COUNTER_HISTORY = 9;
     COLL_HISTORY = 10;
+    COLL_POSUM_STATS = 11;
+    COLL_SCHEDULER_LOG = 12;
+    COLL_PREDICTOR_LOG = 13;
 }
 
 message AppProfileProto {
@@ -159,6 +162,19 @@ message HistoryProfileProto {
     required int64 timestamp = 3;
     required string originalId = 4;
     required bytes original = 5;
+}
+
+message LogEntryProto {
+    required string id = 1;
+    required int64 timestamp = 3;
+    required LogTypeProto type = 4;
+    optional bytes details = 5;
+
+    enum LogTypeProto {
+        LG_POLICY_CHANGE = 1;
+        LG_POLICY_MAP = 2;
+        LG_TASK_PREDICTION = 3;
+    }
 }
 
 // --------- Requests ---------

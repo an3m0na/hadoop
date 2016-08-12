@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.json.JsonArray;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
@@ -103,7 +104,7 @@ public class DataMasterWebApp extends PosumWebApp {
     private JsonObject composePolicyMap() {
         JsonObject ret = new JsonObject();
         LogEntry<PolicyMap> policyReport = context.getDataStore().findReport(LogEntry.Type.POLICY_MAP);
-        if(policyReport != null){
+        if (policyReport != null) {
             for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfo :
                     policyReport.getDetails().entrySet()) {
                 ret.put(policyInfo.getKey(), new JsonObject()
@@ -117,9 +118,10 @@ public class DataMasterWebApp extends PosumWebApp {
     private JsonObject composeRecentChoices(Long since) {
         JsonArray times = new JsonArray();
         JsonArray choices = new JsonArray();
-        for (LogEntry<String> choiceEntry : context.getDataStore().<String>findLogs(LogEntry.Type.POLICY_CHANGE, since)) {
+        for (LogEntry<SimplePropertyPayload> choiceEntry :
+                context.getDataStore().<SimplePropertyPayload>findLogs(LogEntry.Type.POLICY_CHANGE, since)) {
             times.add(choiceEntry.getTimestamp());
-            choices.add(choiceEntry.getDetails());
+            choices.add((String) choiceEntry.getDetails().getValue());
         }
         return new JsonObject().put("times", times).put("policies", choices);
     }

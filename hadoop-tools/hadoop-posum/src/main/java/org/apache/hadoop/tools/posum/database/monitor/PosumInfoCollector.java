@@ -6,7 +6,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByParamsCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.TaskPredictionPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
@@ -78,7 +80,7 @@ public class PosumInfoCollector {
                     // prediction can throw exception if data model changes state during calculation
 //                    try {
 //                        Long duration = predictor.predictTaskDuration(taskId);
-//                        dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+//                        dataStore.storeLogEntry(DataEntityFactory.getNewLogEntry(LogEntry.Type.TASK_PREDICTION,
 //                                TaskPrediction.newInstance(predictor.getClass().getSimpleName(), taskId, duration)));
 //                    } catch (Exception e) {
 //                        logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
@@ -87,7 +89,7 @@ public class PosumInfoCollector {
                     try {
                         //TODO store log entries remotely also
                         duration = basicPredictor.predictTaskDuration(taskId);
-                        dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                        dataStore.storeLogEntry(DataEntityFactory.getNewLogEntry(LogEntry.Type.TASK_PREDICTION,
                                 TaskPredictionPayload.newInstance(basicPredictor.getClass().getSimpleName(), taskId, duration)));
                     } catch (Exception e) {
                         if (!(e instanceof PosumException))
@@ -98,7 +100,7 @@ public class PosumInfoCollector {
                     try {
                         duration = standardPredictor.predictTaskDuration(taskId);
 
-                        dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                        dataStore.storeLogEntry(DataEntityFactory.getNewLogEntry(LogEntry.Type.TASK_PREDICTION,
                                 TaskPredictionPayload.newInstance(standardPredictor.getClass().getSimpleName(), taskId, duration)));
                     } catch (Exception e) {
                         if (!(e instanceof PosumException))
@@ -109,7 +111,7 @@ public class PosumInfoCollector {
                     try {
                         duration = detailedPredictor.predictTaskDuration(taskId);
 
-                        dataStore.storeLogEntry(new LogEntry<>(LogEntry.Type.TASK_PREDICTION,
+                        dataStore.storeLogEntry(DataEntityFactory.getNewLogEntry(LogEntry.Type.TASK_PREDICTION,
                                 TaskPredictionPayload.newInstance(detailedPredictor.getClass().getSimpleName(), taskId, duration)));
                     } catch (Exception e) {
                         if (!(e instanceof PosumException))
@@ -123,12 +125,12 @@ public class PosumInfoCollector {
         }
 
         // aggregate policy change decisions
-        List<LogEntry<String>> policyChanges = dataStore.findLogs(LogEntry.Type.POLICY_CHANGE, lastCollectTime, now);
+        List<LogEntry<SimplePropertyPayload>> policyChanges = dataStore.findLogs(LogEntry.Type.POLICY_CHANGE, lastCollectTime, now);
         if (policyChanges.size() > 0) {
             if (policyMap.getSchedulingStart() == 0)
                 policyMap.setSchedulingStart(policyChanges.get(0).getTimestamp());
-            for (LogEntry<String> change : policyChanges) {
-                String policy = change.getDetails();
+            for (LogEntry<SimplePropertyPayload> change : policyChanges) {
+                String policy = (String)change.getDetails().getValue();
                 PolicyMap.PolicyInfo info = policyMap.get(policy);
                 if (!policy.equals(policyMap.getLastUsed())) {
                     if (policyMap.getLastUsed() != null) {
@@ -138,7 +140,7 @@ public class PosumInfoCollector {
                 }
                 info.start(change.getTimestamp());
             }
-            dataStore.storeLogReport(new LogEntry<>(LogEntry.Type.POLICY_MAP, policyMap));
+            dataStore.storeLogReport(DataEntityFactory.getNewLogEntry(LogEntry.Type.POLICY_MAP, policyMap));
         }
         lastCollectTime = now;
     }
