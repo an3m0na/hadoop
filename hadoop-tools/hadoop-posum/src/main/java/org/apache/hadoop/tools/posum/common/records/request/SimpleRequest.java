@@ -16,7 +16,7 @@ public abstract class SimpleRequest<T> {
         PING(StringRequestPBImpl.class),
         CHANGE_POLICY(StringRequestPBImpl.class),
         START(VoidRequestPBImpl.class),
-        LOG_POLICY_CHANGE(StringRequestPBImpl.class),
+        LOG_POLICY_CHANGE(SimplePropertyRequestPBImpl.class),
         SYSTEM_ADDRESSES(VoidRequestPBImpl.class),
         LIST_COLLECTIONS(VoidRequestPBImpl.class),
         CLEAR_DATA(VoidRequestPBImpl.class);

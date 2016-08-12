@@ -1,5 +1,11 @@
 package org.apache.hadoop.tools.posum.database.client;
 
+import org.apache.hadoop.tools.posum.common.records.call.FindByParamsCall;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
+import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.orchestrator.master.OrchestratorMaster;
 import org.apache.hadoop.tools.posum.database.master.DataMaster;
@@ -7,6 +13,12 @@ import org.apache.hadoop.tools.posum.test.ServiceRunner;
 import org.apache.hadoop.tools.posum.test.TestDataBroker;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.After;
+import org.junit.Test;
+
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by ane on 3/21/16.
@@ -46,7 +58,7 @@ public class TestDataMasterClient extends TestDataBroker {
         System.out.println("MongoDB stopped.");
     }
 
-//    @Test
+    //    @Test
     public void testHistoryProfileManipulation() {
         //TODO refactor for test new structure
 //        Configuration conf = POSUMConfiguration.newInstance();
@@ -75,5 +87,25 @@ public class TestDataMasterClient extends TestDataBroker {
 //        assertEquals(appHistory.getTimestamp(), otherHistory.getTimestamp());
 //
 //        myStore.delete(mainDB, DataEntityCollection.HISTORY, historyId);
+    }
+
+    @Test
+    public void testLogging() throws Exception {
+        client.sendLogRequest(SimpleRequest.Type.LOG_POLICY_CHANGE,
+                SimplePropertyPayload.newInstance("policyName", "FIFO"));
+        Thread.sleep(1000);
+        client.sendLogRequest(SimpleRequest.Type.LOG_POLICY_CHANGE,
+                SimplePropertyPayload.newInstance("policyName", "DATA"));
+        FindByParamsCall getAll = FindByParamsCall.newInstance(
+                DataEntityCollection.SCHEDULER_LOG,
+                Collections.<String, Object>emptyMap(),
+                "timestamp",
+                false
+        );
+        List<LogEntry<SimplePropertyPayload>> logs =
+                client.executeDatabaseCall(getAll, DataEntityDB.getLogs()).getEntities();
+        assertEquals(2, logs.size());
+        assertEquals("FIFO", logs.get(0).getDetails().getValue());
+        assertEquals("DATA", logs.get(1).getDetails().getValue());
     }
 }

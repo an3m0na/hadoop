@@ -1,7 +1,12 @@
 package org.apache.hadoop.tools.posum.common.util;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.hadoop.tools.posum.common.records.payload.Payload;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.*;
 
 import java.util.HashMap;
@@ -9,7 +14,18 @@ import java.util.HashMap;
 /**
  * Created by ane on 4/20/16.
  */
-public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> {
+//TODO refactor everything to a PayloadPBImpl
+public class PolicyMap extends HashMap<String, PolicyMap.PolicyInfo> implements PayloadPB{
+
+    @Override
+    public ByteString getProtoBytes() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+        throw new NotImplementedException();
+    }
 
     public static class PolicyInfo {
         @JsonIgnore

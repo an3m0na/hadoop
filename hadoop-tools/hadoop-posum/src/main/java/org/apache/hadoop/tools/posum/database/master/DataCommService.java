@@ -7,9 +7,11 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.CollectionMapPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
+import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -124,7 +126,7 @@ public class DataCommService extends CompositeService implements DataMasterProto
                     break;
                 case LOG_POLICY_CHANGE:
                     dmContext.getDataStore().storeLogEntry(
-                            new LogEntry<>(LogEntry.Type.POLICY_CHANGE, request.getPayload()));
+                            DataEntityFactory.getNewLogEntry(LogEntry.Type.POLICY_CHANGE, (SimplePropertyPayload)request.getPayload()));
                     break;
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
