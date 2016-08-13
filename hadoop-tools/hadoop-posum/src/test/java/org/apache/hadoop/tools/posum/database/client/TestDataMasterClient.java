@@ -1,8 +1,12 @@
 package org.apache.hadoop.tools.posum.database.client;
 
+import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByParamsCall;
+import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
+import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -19,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Created by ane on 3/21/16.
@@ -91,21 +96,19 @@ public class TestDataMasterClient extends TestDataBroker {
 
     @Test
     public void testLogging() throws Exception {
-        client.sendLogRequest(SimpleRequest.Type.LOG_POLICY_CHANGE,
-                SimplePropertyPayload.newInstance("policyName", "FIFO"));
-        Thread.sleep(1000);
-        client.sendLogRequest(SimpleRequest.Type.LOG_POLICY_CHANGE,
-                SimplePropertyPayload.newInstance("policyName", "DATA"));
-        FindByParamsCall getAll = FindByParamsCall.newInstance(
-                DataEntityCollection.SCHEDULER_LOG,
-                Collections.<String, Object>emptyMap(),
-                "timestamp",
-                false
+        String message = "Some message";
+        StoreLogCall storeLog = StoreLogCall.newInstance(message);
+        Long timestamp = storeLog.getLogEntry().getTimestamp();
+        String logId = (String) client.executeDatabaseCall(storeLog, null).getValue();
+        assertNotNull(logId);
+        FindByIdCall getLog = FindByIdCall.newInstance(
+                DataEntityCollection.AUDIT_LOG,
+                logId
         );
-        List<LogEntry<SimplePropertyPayload>> logs =
-                client.executeDatabaseCall(getAll, DataEntityDB.getLogs()).getEntities();
-        assertEquals(2, logs.size());
-        assertEquals("FIFO", logs.get(0).getDetails().getValue());
-        assertEquals("DATA", logs.get(1).getDetails().getValue());
+        LogEntry<SimplePropertyPayload> log =
+                client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntity();
+        assertEquals(logId, log.getId());
+        assertEquals(timestamp, log.getTimestamp());
+        assertEquals(message, log.getDetails().getValue());
     }
 }

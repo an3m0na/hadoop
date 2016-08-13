@@ -93,8 +93,8 @@ public abstract class DataEntityDB {
         return get(Type.SIMULATION);
     }
 
-    public Integer getId() {
-        return getType().ordinal();
+    public boolean isOfType(Type type){
+        return getType().equals(type);
     }
 
     public boolean isView() {
