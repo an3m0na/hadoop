@@ -18,8 +18,8 @@ public enum DataEntityCollection {
     COUNTER_HISTORY("counters_history", CountersProxyPBImpl.class),
     HISTORY("history", HistoryProfilePBImpl.class),
     POSUM_STATS("posum_stats", LogEntryPBImpl.class),
-    SCHEDULER_LOG("scheduler_log", LogEntryPBImpl.class),
-    PREDICTOR_LOG("predictor_log", CountersProxyPBImpl.class);
+    PREDICTOR_LOG("predictor_log", LogEntryPBImpl.class),
+    AUDIT_LOG("audit_log", LogEntryPBImpl.class);
 
     private String label;
     private Class<? extends GeneralDataEntity> mappedClass;

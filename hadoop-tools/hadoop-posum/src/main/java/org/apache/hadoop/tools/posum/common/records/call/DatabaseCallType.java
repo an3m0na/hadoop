@@ -16,7 +16,8 @@ public enum DatabaseCallType {
     JOB_FOR_APP(JobForAppCallPBImpl.class, PayloadType.SINGLE_ENTITY),
     SAVE_FLEX_FIELDS(SaveJobFlexFieldsCallPBImpl.class, PayloadType.VOID),
     IDS_BY_PARAMS(IdsByParamsCallPBImpl.class, PayloadType.STRING_LIST),
-    TRANSACTION(TransactionCallPBImpl.class, PayloadType.VOID);
+    TRANSACTION(TransactionCallPBImpl.class, PayloadType.VOID),
+    STORE_LOG(StoreLogCallPBImpl.class, PayloadType.SIMPLE_PROPERTY);
 
     private Class<? extends DatabaseCall> mappedClass;
     private PayloadType payloadType;

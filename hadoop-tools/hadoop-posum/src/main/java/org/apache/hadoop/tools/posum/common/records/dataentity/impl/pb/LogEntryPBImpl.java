@@ -19,6 +19,10 @@ public class LogEntryPBImpl<T extends Payload> extends GeneralDataEntityPBImpl<L
 
     private T details;
 
+    public LogEntryPBImpl(LogEntryProto proto) {
+        super(proto);
+    }
+
     public LogEntryPBImpl() {
         setId(ObjectId.get().toHexString());
         setTimestamp(System.currentTimeMillis());
@@ -27,7 +31,6 @@ public class LogEntryPBImpl<T extends Payload> extends GeneralDataEntityPBImpl<L
     public LogEntryPBImpl(Type type, T details) {
         setType(type);
         setDetails(details);
-
     }
 
     @Override
