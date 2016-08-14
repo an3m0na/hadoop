@@ -121,10 +121,13 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     }
 
     private static Set<String> parseRelevantProperties(DatabaseQuery query) {
+        Set<String> ret = new HashSet<>();
         if (query == null)
-            return Collections.emptySet();
-        if (query instanceof PropertyValueQuery)
-            return Collections.singleton(((PropertyValueQuery) query).getProperty().getName());
+            return ret;
+        if (query instanceof PropertyValueQuery) {
+            ret.add(((PropertyValueQuery) query).getProperty().getName());
+            return ret;
+        }
         if (query instanceof CompositionQuery) {
             return parseRelevantProperties((CompositionQuery) query);
         }

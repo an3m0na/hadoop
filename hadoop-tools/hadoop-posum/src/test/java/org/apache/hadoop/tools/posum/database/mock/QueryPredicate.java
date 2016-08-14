@@ -29,21 +29,13 @@ public abstract class QueryPredicate {
 
     public abstract boolean check(GeneralDataEntity entity) throws InvocationTargetException, IllegalAccessException;
 
-    public static QueryPredicate fromQuery(CompositionQuery query, Map<String, Method> propertyReaders) {
-        if (query == null)
-            return tautology;
-        return new CompositionQueryPredicate(propertyReaders, query);
-    }
-
-    public static QueryPredicate fromQuery(PropertyValueQuery query, Map<String, Method> propertyReaders) {
-        if (query == null)
-            return tautology;
-        return new PropertyValueQueryPredicate(propertyReaders, query);
-    }
-
     public static QueryPredicate fromQuery(DatabaseQuery query, Map<String, Method> propertyReaders) {
         if (query == null)
             return tautology;
+        if(query instanceof PropertyValueQuery)
+            return new PropertyValueQueryPredicate(propertyReaders, (PropertyValueQuery) query);
+        if(query instanceof CompositionQuery)
+            return new CompositionQueryPredicate(propertyReaders, (CompositionQuery) query);
         throw new PosumException("Query type not recognized: " + query.getClass());
     }
 }

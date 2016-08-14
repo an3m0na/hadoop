@@ -29,8 +29,7 @@ class PropertyValueQueryPredicate extends QueryPredicate {
         Object value = propertyReaders.get(property.getName()).invoke(entity);
         switch (query.getType()) {
             case IS:
-                if (safeEquals(value, property.getValue()))
-                    return true;
+                return safeEquals(value, property.getValue());
             case LESS:
                 return property.getValue() != null && ((Comparable) property.getValue()).compareTo(value) > 0;
             case LESS_OR_EQUAL:
