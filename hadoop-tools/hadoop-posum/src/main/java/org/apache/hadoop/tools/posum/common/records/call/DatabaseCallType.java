@@ -8,14 +8,13 @@ import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
  */
 public enum DatabaseCallType {
     FIND_BY_ID(FindByIdCallPBImpl.class, PayloadType.SINGLE_ENTITY),
-    FIND_BY_PARAMS(FindByParamsCallPBImpl.class, PayloadType.MULTI_ENTITY),
     DELETE_BY_ID(DeleteByIdCallPBImpl.class, PayloadType.VOID),
-    DELETE_BY_PARAMS(DeleteByParamsCallPBImpl.class, PayloadType.VOID),
+    DELETE_BY_PARAMS(DeleteByQueryCallPBImpl.class, PayloadType.VOID),
     STORE(StoreCallPBImpl.class, PayloadType.SIMPLE_PROPERTY),
     UPDATE_OR_STORE(UpdateOrStoreCallPBImpl.class, PayloadType.SIMPLE_PROPERTY),
     JOB_FOR_APP(JobForAppCallPBImpl.class, PayloadType.SINGLE_ENTITY),
     SAVE_FLEX_FIELDS(SaveJobFlexFieldsCallPBImpl.class, PayloadType.VOID),
-    IDS_BY_PARAMS(IdsByParamsCallPBImpl.class, PayloadType.STRING_LIST),
+    IDS_BY_PARAMS(IdsByQueryCallPBImpl.class, PayloadType.STRING_LIST),
     TRANSACTION(TransactionCallPBImpl.class, PayloadType.VOID),
     STORE_LOG(StoreLogCallPBImpl.class, PayloadType.SIMPLE_PROPERTY),
     FIND_BY_QUERY(FindByQueryCallPBImpl.class, PayloadType.MULTI_ENTITY);

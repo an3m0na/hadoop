@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Created by ane on 8/13/16.
  */
-public abstract class CompositionQuery extends DatabaseQuery {
+public abstract class CompositionQuery implements DatabaseQuery {
 
     public enum Type {
         AND, OR

@@ -92,13 +92,15 @@ public class DatabaseQueryWrapperPBImpl implements PayloadPB {
     public DatabaseQuery getQuery() {
         if (query == null) {
             DatabaseQueryProtoOrBuilder p = viaProto ? proto : builder;
-            DatabaseQueryType type = DatabaseQueryType.valueOf(p.getType().name().substring("QRY_".length()));
-            Class<? extends DatabaseQuery> queryClass = type.getMappedClass();
-            try {
-                query = queryClass.newInstance();
-                ((PayloadPB) query).populateFromProtoBytes(p.getQuery());
-            } catch (Exception e) {
-                throw new PosumException("Could not read call from byte string " + p.getQuery() + " as " + queryClass, e);
+            if (p.hasQuery()) {
+                DatabaseQueryType type = DatabaseQueryType.valueOf(p.getType().name().substring("QRY_".length()));
+                Class<? extends DatabaseQuery> queryClass = type.getMappedClass();
+                try {
+                    query = queryClass.newInstance();
+                    ((PayloadPB) query).populateFromProtoBytes(p.getQuery());
+                } catch (Exception e) {
+                    throw new PosumException("Could not read call from byte string " + p.getQuery() + " as " + queryClass, e);
+                }
             }
         }
         return query;

@@ -6,7 +6,7 @@ import org.apache.hadoop.yarn.util.Records;
 /**
  * Created by ane on 8/13/16.
  */
-public abstract class PropertyValueQuery extends DatabaseQuery {
+public abstract class PropertyValueQuery implements DatabaseQuery {
     public enum Type {
         IS, LESS, LESS_OR_EQUAL, GREATER, GREATER_OR_EQUAL
     }

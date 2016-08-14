@@ -3,6 +3,8 @@ package org.apache.hadoop.tools.posum.test;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.impl.pb.JobIdPBImpl;
 import org.apache.hadoop.tools.posum.common.records.call.*;
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.database.client.Database;
@@ -47,8 +49,8 @@ public abstract class TestDataBroker {
 
     @Test
     public void testListIds() throws Exception {
-        IdsByParamsCall listIds = IdsByParamsCall.newInstance(DataEntityCollection.APP,
-                Collections.singletonMap("user", (Object) SECOND_USER));
+        IdsByQueryCall listIds = IdsByQueryCall.newInstance(DataEntityCollection.APP,
+                QueryUtils.is("user", SECOND_USER));
         List<String> returnedAppIds = mainDB.executeDatabaseCall(listIds).getEntries();
         String appId2 = ApplicationId.newInstance(clusterTimestamp, 2).toString();
         String appId3 = ApplicationId.newInstance(clusterTimestamp, 3).toString();
@@ -58,17 +60,18 @@ public abstract class TestDataBroker {
 
     @Test
     public void testFindAll() throws Exception {
-        FindByParamsCall findAll = FindByParamsCall.newInstance(DataEntityCollection.JOB, Collections.<String, Object>emptyMap());
+        FindByQueryCall findAll = FindByQueryCall.newInstance(DataEntityCollection.JOB, null);
         List<JobProfile> jobs = mainDB.executeDatabaseCall(findAll).getEntities();
         assertEquals(3, jobs.size());
     }
 
     @Test
     public void testFindSelected() throws Exception {
-        Map<String, Object> properties = new HashMap<>(2);
-        properties.put("finishTime", clusterTimestamp - DURATION_UNIT);
-        properties.put("totalMapTasks", 10);
-        FindByParamsCall findByProperties = FindByParamsCall.newInstance(DataEntityCollection.JOB, properties);
+        DatabaseQuery query = QueryUtils.and(
+                QueryUtils.is("finishTime", clusterTimestamp - DURATION_UNIT),
+                QueryUtils.is("totalMapTasks", 10)
+        );
+        FindByQueryCall findByProperties = FindByQueryCall.newInstance(DataEntityCollection.JOB, query);
         List<JobProfile> jobs = mainDB.executeDatabaseCall(findByProperties).getEntities();
         assertEquals(1, jobs.size());
         JobId job2Id = new JobIdPBImpl();
@@ -79,12 +82,7 @@ public abstract class TestDataBroker {
 
     @Test
     public void testSortByString() throws Exception {
-        IdsByParamsCall sortedIds = IdsByParamsCall.newInstance(
-                DataEntityCollection.APP,
-                Collections.<String, Object>emptyMap(),
-                "_id",
-                true
-        );
+        IdsByQueryCall sortedIds = IdsByQueryCall.newInstance(DataEntityCollection.APP, null, "_id", true);
         List<String> ids = mainDB.executeDatabaseCall(sortedIds).getEntries();
         assertArrayEquals(new String[]{
                 ApplicationId.newInstance(clusterTimestamp, 3).toString(),
@@ -96,12 +94,7 @@ public abstract class TestDataBroker {
 
     @Test
     public void testSortByNumber() throws Exception {
-        IdsByParamsCall sortedIds = IdsByParamsCall.newInstance(
-                DataEntityCollection.APP,
-                Collections.<String, Object>emptyMap(),
-                "startTime",
-                false
-        );
+        IdsByQueryCall sortedIds = IdsByQueryCall.newInstance(DataEntityCollection.APP, null, "startTime", false);
         List<String> ids = mainDB.executeDatabaseCall(sortedIds).getEntries();
         assertArrayEquals(new String[]{
                 ApplicationId.newInstance(clusterTimestamp, 1).toString(),
@@ -112,9 +105,8 @@ public abstract class TestDataBroker {
 
     @Test
     public void testFindLimit() throws Exception {
-        FindByParamsCall findByFinishTime = FindByParamsCall.newInstance(
-                DataEntityCollection.APP,
-                Collections.singletonMap("finishTime", (Object) (clusterTimestamp - DURATION_UNIT)),
+        FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(DataEntityCollection.APP,
+                QueryUtils.is("finishTime", clusterTimestamp - DURATION_UNIT),
                 "_id",
                 false
         );
@@ -129,9 +121,9 @@ public abstract class TestDataBroker {
 
     @Test
     public void testFindOffset() throws Exception {
-        FindByParamsCall findByFinishTime = FindByParamsCall.newInstance(
+        FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(
                 DataEntityCollection.APP,
-                Collections.singletonMap("finishTime", (Object) (clusterTimestamp - DURATION_UNIT)),
+                QueryUtils.is("finishTime", clusterTimestamp - DURATION_UNIT),
                 "_id",
                 false
         );
@@ -146,9 +138,9 @@ public abstract class TestDataBroker {
 
     @Test
     public void testFindOffsetAndLimit() throws Exception {
-        FindByParamsCall findByFinishTime = FindByParamsCall.newInstance(
+        FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(
                 DataEntityCollection.APP,
-                Collections.singletonMap("finishTime", (Object) (clusterTimestamp - DURATION_UNIT)),
+                QueryUtils.is("finishTime", clusterTimestamp - DURATION_UNIT),
                 "_id",
                 false,
                 0,
@@ -191,8 +183,8 @@ public abstract class TestDataBroker {
         UpdateOrStoreCall updateApp = UpdateOrStoreCall.newInstance(DataEntityCollection.APP, app3);
         String upsertedId = (String) mainDB.executeDatabaseCall(updateApp).getValue();
         assertNull(upsertedId);
-        FindByParamsCall findAppsByName = FindByParamsCall.newInstance(DataEntityCollection.APP,
-                Collections.singletonMap("name", (Object) modifiedName));
+        FindByQueryCall findAppsByName = FindByQueryCall.newInstance(DataEntityCollection.APP,
+                QueryUtils.is("name", modifiedName));
         List<AppProfile> returnedApps = mainDB.executeDatabaseCall(findAppsByName).getEntities();
         assertEquals(1, returnedApps.size());
         AppProfile returned = returnedApps.get(0);
@@ -222,8 +214,8 @@ public abstract class TestDataBroker {
         DeleteByIdCall deleteApp = DeleteByIdCall.newInstance(DataEntityCollection.APP,
                 ApplicationId.newInstance(clusterTimestamp, 2).toString());
         mainDB.executeDatabaseCall(deleteApp);
-        IdsByParamsCall listIds = IdsByParamsCall.newInstance(DataEntityCollection.APP,
-                Collections.singletonMap("user", (Object) SECOND_USER));
+        IdsByQueryCall listIds = IdsByQueryCall.newInstance(DataEntityCollection.APP,
+                QueryUtils.is("user", SECOND_USER));
         List<String> returnedAppIds = mainDB.executeDatabaseCall(listIds).getEntries();
         String appId3 = ApplicationId.newInstance(clusterTimestamp, 3).toString();
         assertArrayEquals(new String[]{appId3}, returnedAppIds.toArray());
@@ -232,20 +224,20 @@ public abstract class TestDataBroker {
 
     @Test
     public void testDeleteByParams() throws Exception {
-        IdsByParamsCall listIds = IdsByParamsCall.newInstance(DataEntityCollection.JOB, Collections.<String, Object>emptyMap());
+        IdsByQueryCall listIds = IdsByQueryCall.newInstance(DataEntityCollection.JOB, null);
         List<String> returnedJobIds = mainDB.executeDatabaseCall(listIds).getEntries();
         assertEquals(3, returnedJobIds.size());
         String appId1 = ApplicationId.newInstance(clusterTimestamp, 1).toString();
-        listIds.setParams(Collections.singletonMap("appId", (Object) appId1));
+        listIds.setQuery(QueryUtils.is("appId", appId1));
         returnedJobIds = mainDB.executeDatabaseCall(listIds).getEntries();
         assertEquals(1, returnedJobIds.size());
-        DeleteByParamsCall deleteJob = DeleteByParamsCall.newInstance(DataEntityCollection.JOB,
-                Collections.singletonMap("appId", (Object) appId1));
+        DeleteByQueryCall deleteJob = DeleteByQueryCall.newInstance(DataEntityCollection.JOB,
+                QueryUtils.is("appId", appId1));
         mainDB.executeDatabaseCall(deleteJob);
-        listIds.setParams(Collections.<String, Object>emptyMap());
+        listIds.setQuery(null);
         returnedJobIds = mainDB.executeDatabaseCall(listIds).getEntries();
         assertEquals(2, returnedJobIds.size());
-        listIds.setParams(Collections.singletonMap("appId", (Object) appId1));
+        listIds.setQuery(QueryUtils.is("appId", appId1));
         returnedJobIds = mainDB.executeDatabaseCall(listIds).getEntries();
         assertEquals(0, returnedJobIds.size());
     }
@@ -261,8 +253,7 @@ public abstract class TestDataBroker {
     @Test
     public void testSaveFlexFields() throws Exception {
         String appId2 = ApplicationId.newInstance(clusterTimestamp, 2).toString();
-        IdsByParamsCall listIds = IdsByParamsCall.newInstance(DataEntityCollection.JOB,
-                Collections.singletonMap("appId", (Object) appId2));
+        IdsByQueryCall listIds = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("appId", appId2));
         List<String> returnedJobIds = mainDB.executeDatabaseCall(listIds).getEntries();
         assertEquals(1, returnedJobIds.size());
         String jobId = returnedJobIds.get(0);
@@ -294,8 +285,8 @@ public abstract class TestDataBroker {
         String appId1 = ApplicationId.newInstance(clusterTimestamp, 1).toString();
         transaction.addCall(DeleteByIdCall.newInstance(DataEntityCollection.APP, appId1));
         mainDB.executeDatabaseCall(transaction);
-        IdsByParamsCall listIdsForName = IdsByParamsCall.newInstance(DataEntityCollection.APP,
-                Collections.singletonMap("name", (Object) modifiedName));
+        IdsByQueryCall listIdsForName = IdsByQueryCall.newInstance(DataEntityCollection.APP,
+                QueryUtils.is("name", modifiedName));
         List<String> idsForName = mainDB.executeDatabaseCall(listIdsForName).getEntries();
         Collections.sort(idsForName);
         assertArrayEquals(new String[]{app3.getId(), app4.getId()}, idsForName.toArray());
@@ -323,8 +314,7 @@ public abstract class TestDataBroker {
     public void testClear() throws Exception {
         dataBroker.clear();
         assertEquals(0, dataBroker.listExistingCollections().size());
-        FindByParamsCall allEntities = FindByParamsCall.newInstance(DataEntityCollection.APP,
-                Collections.<String, Object>emptyMap());
+        FindByQueryCall allEntities = FindByQueryCall.newInstance(DataEntityCollection.APP, null);
         assertEquals(0, mainDB.executeDatabaseCall(allEntities).getEntities().size());
         allEntities.setEntityCollection(DataEntityCollection.JOB);
         assertEquals(0, mainDB.executeDatabaseCall(allEntities).getEntities().size());

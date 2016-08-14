@@ -4,12 +4,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
-import org.apache.hadoop.tools.posum.common.records.call.FindByParamsCall;
+import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -23,16 +23,16 @@ public class BasicPredictor extends JobBehaviorPredictor {
         int bufferLimit = conf.getInt(PosumConfiguration.PREDICTION_BUFFER,
                 PosumConfiguration.PREDICTION_BUFFER_DEFAULT);
         // get past jobs with the same name
-        FindByParamsCall getComparableJobs = FindByParamsCall.newInstance(
+        FindByQueryCall getComparableJobs = FindByQueryCall.newInstance(
                 DataEntityCollection.JOB_HISTORY,
-                Collections.singletonMap("name", (Object) job.getName()),
+                QueryUtils.is("name", job.getName()),
                 -bufferLimit,
                 bufferLimit
         );
         List<JobProfile> comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
         if (comparable.size() < 1) {
             // get past jobs at least by the same user
-            getComparableJobs.setParams(Collections.singletonMap("user", (Object)job.getUser()));
+            getComparableJobs.setQuery(QueryUtils.is("user", job.getUser()));
             comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
         }
         return comparable;

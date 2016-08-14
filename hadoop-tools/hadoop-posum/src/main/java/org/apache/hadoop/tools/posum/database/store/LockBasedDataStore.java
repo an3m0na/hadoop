@@ -16,14 +16,6 @@ public interface LockBasedDataStore {
 
     <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
                                                DataEntityCollection collection,
-                                               Map<String, Object> params,
-                                               String sortField,
-                                               boolean sortDescending,
-                                               int offsetOrZero,
-                                               int limitOrZero);
-
-    <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
-                                               DataEntityCollection collection,
                                                DatabaseQuery query,
                                                String sortField,
                                                boolean sortDescending,
@@ -32,7 +24,7 @@ public interface LockBasedDataStore {
 
     List<String> findIds(DataEntityDB db,
                          DataEntityCollection collection,
-                         Map<String, Object> queryParams,
+                         DatabaseQuery query,
                          String sortField,
                          boolean sortDescending,
                          int offsetOrZero,
@@ -44,7 +36,7 @@ public interface LockBasedDataStore {
 
     void delete(DataEntityDB db, DataEntityCollection collection, String id);
 
-    void delete(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams);
+    void delete(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query);
 
     Database bindTo(DataEntityDB db);
 

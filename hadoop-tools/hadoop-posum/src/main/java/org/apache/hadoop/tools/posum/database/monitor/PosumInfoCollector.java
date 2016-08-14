@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.database.monitor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.common.records.call.IdsByParamsCall;
+import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityFactory;
@@ -74,7 +74,7 @@ public class PosumInfoCollector {
             //TODO get metrics from all services and persist to database
             if (now - lastPrediction > predictionTimeout) {
                 // make new predictions
-                IdsByParamsCall getAllTasks = IdsByParamsCall.newInstance(DataEntityCollection.TASK, null);
+                IdsByQueryCall getAllTasks = IdsByQueryCall.newInstance(DataEntityCollection.TASK, null);
                 List<String> taskIds = dataBroker.executeDatabaseCall(getAllTasks, DataEntityDB.getMain()).getEntries();
                 for (String taskId : taskIds) {
                     // prediction can throw exception if data model changes state during calculation

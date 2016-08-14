@@ -4,9 +4,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
-import org.apache.hadoop.tools.posum.common.records.call.FindByParamsCall;
-import org.apache.hadoop.tools.posum.common.records.call.IdsByParamsCall;
+import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.SaveJobFlexFieldsCall;
+import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
@@ -14,7 +15,6 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.database.client.Database;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,8 +37,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         super.initialize(db);
 
         // populate flex-fields for jobs in history
-        IdsByParamsCall getFinishedJobIds = IdsByParamsCall.newInstance(DataEntityCollection.JOB_HISTORY,
-                Collections.<String, Object>emptyMap());
+        IdsByQueryCall getFinishedJobIds = IdsByQueryCall.newInstance(DataEntityCollection.JOB_HISTORY, null);
         List<String> historyJobIds = db.executeDatabaseCall(getFinishedJobIds).getEntries();
         for (String jobId : historyJobIds) {
             FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB_HISTORY, jobId);
@@ -49,8 +48,8 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     }
 
     private void completeProfile(JobProfile job) {
-        FindByParamsCall getTasks = FindByParamsCall.newInstance(DataEntityCollection.TASK_HISTORY,
-                Collections.singletonMap("jobId", (Object)job.getId()));
+        FindByQueryCall getTasks = FindByQueryCall.newInstance(DataEntityCollection.TASK_HISTORY,
+                QueryUtils.is("jobId", job.getId()));
         List<TaskProfile> tasks = getDatabase().executeDatabaseCall(getTasks).getEntities();
         Map<String, String> fields = calculateCurrentProfile(job, tasks);
         fields.put(FLEX_KEY_PREFIX + FlexKeys.PROFILED, "true");
@@ -61,8 +60,8 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     private JobProfile calculateCurrentProfile(String jobId) {
         FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, jobId);
         JobProfile job = getDatabase().executeDatabaseCall(getJob).getEntity();
-        FindByParamsCall getTasks = FindByParamsCall.newInstance(DataEntityCollection.TASK,
-                Collections.singletonMap("jobId", (Object)job.getId()));
+        FindByQueryCall getTasks = FindByQueryCall.newInstance(DataEntityCollection.TASK,
+                QueryUtils.is("jobId", job.getId()));
         Map<String, String> flexFields = calculateCurrentProfile(job,
                 getDatabase().executeDatabaseCall(getTasks).<TaskProfile>getEntities());
         SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), flexFields, false);
@@ -163,17 +162,17 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         int bufferLimit = conf.getInt(PosumConfiguration.PREDICTION_BUFFER,
                 PosumConfiguration.PREDICTION_BUFFER_DEFAULT);
         // get past jobs with the same name
-        FindByParamsCall getComparableJobs = FindByParamsCall.newInstance(
+        FindByQueryCall getComparableJobs = FindByQueryCall.newInstance(
                 DataEntityCollection.JOB_HISTORY,
-                Collections.singletonMap(type.equals(TaskType.MAP) ? "mapperClass" : "reducerClass",
-                        type.equals(TaskType.MAP) ? (Object)job.getMapperClass() : job.getReducerClass()),
+                QueryUtils.is(type.equals(TaskType.MAP) ? "mapperClass" : "reducerClass",
+                        type.equals(TaskType.MAP) ? job.getMapperClass() : job.getReducerClass()),
                 -bufferLimit,
                 bufferLimit
         );
         List<JobProfile> comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
         if (comparable.size() < 1) {
             // get past jobs at least by the same user
-            getComparableJobs.setParams(Collections.singletonMap("user", (Object)job.getUser()));
+            getComparableJobs.setQuery(QueryUtils.is("user", job.getUser()));
             comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
         }
         return comparable;

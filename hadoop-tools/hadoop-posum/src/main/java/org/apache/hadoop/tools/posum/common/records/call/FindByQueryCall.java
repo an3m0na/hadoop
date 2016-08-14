@@ -12,10 +12,10 @@ import org.apache.hadoop.yarn.util.Records;
  */
 public abstract class FindByQueryCall extends ReadFromCollectionCall<MultiEntityPayload> {
 
-    public static FindByQueryCall newInstance(DataEntityCollection collection, DatabaseQuery query) {
+    public static FindByQueryCall newInstance(DataEntityCollection collection, DatabaseQuery queryOrNull) {
         FindByQueryCall call = Records.newRecord(FindByQueryCall.class);
         call.setEntityCollection(collection);
-        call.setQuery(query);
+        call.setQuery(queryOrNull);
         return call;
     }
 
@@ -42,7 +42,7 @@ public abstract class FindByQueryCall extends ReadFromCollectionCall<MultiEntity
 
     public abstract DatabaseQuery getQuery();
 
-    public abstract void setQuery(DatabaseQuery query);
+    public abstract void setQuery(DatabaseQuery queryOrNull);
 
     public abstract Integer getLimitOrZero();
 
