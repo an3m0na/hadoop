@@ -79,24 +79,6 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
                                                       DataEntityCollection collection,
-                                                      Map<String, Object> params,
-                                                      String sortField,
-                                                      boolean sortDescending,
-                                                      int offsetOrZero,
-                                                      int limitOrZero) {
-        return new ArrayList<>(MockDataStoreImpl.findEntitiesByParams(
-                this.<T>getCollectionForRead(db, collection),
-                params,
-                sortField,
-                sortDescending,
-                offsetOrZero,
-                limitOrZero
-        ).values());
-    }
-
-    @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
-                                                      DataEntityCollection collection,
                                                       DatabaseQuery query,
                                                       String sortField,
                                                       boolean sortDescending,
@@ -115,14 +97,14 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     @Override
     public List<String> findIds(DataEntityDB db,
                                 DataEntityCollection collection,
-                                Map<String, Object> params,
+                                DatabaseQuery query,
                                 String sortField,
                                 boolean sortAsc,
                                 int offsetOrZero,
                                 int limitOrZero) {
-        return new ArrayList<>(findEntitiesByParams(
+        return new ArrayList<>(findEntitiesByQuery(
                 this.getCollectionForRead(db, collection),
-                params,
+                query,
                 sortField,
                 sortAsc,
                 offsetOrZero,
@@ -130,15 +112,7 @@ public class MockDataStoreImpl implements LockBasedDataStore {
         ).keySet());
     }
 
-    private static Set<String> parseRelevantProperties(PropertyValueQuery query) {
-        if (query == null)
-            return Collections.emptySet();
-        return Collections.singleton(query.getProperty().getName());
-    }
-
     private static Set<String> parseRelevantProperties(CompositionQuery query) {
-        if (query == null)
-            return Collections.emptySet();
         Set<String> ret = new HashSet<>(query.getQueries().size());
         for (DatabaseQuery innerQuery : query.getQueries()) {
             ret.addAll(parseRelevantProperties(innerQuery));
@@ -149,15 +123,20 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     private static Set<String> parseRelevantProperties(DatabaseQuery query) {
         if (query == null)
             return Collections.emptySet();
+        if (query instanceof PropertyValueQuery)
+            return Collections.singleton(((PropertyValueQuery) query).getProperty().getName());
+        if (query instanceof CompositionQuery) {
+            return parseRelevantProperties((CompositionQuery) query);
+        }
         throw new PosumException("Query type not recognized: " + query.getClass());
     }
 
     private static <T extends GeneralDataEntity> Map<String, T> findEntitiesByQuery(Map<String, T> entities,
-                                                          DatabaseQuery query,
-                                                          String sortField,
-                                                          boolean sortDescending,
-                                                          int offsetOrZero,
-                                                          int limitOrZero) {
+                                                                                    DatabaseQuery query,
+                                                                                    String sortField,
+                                                                                    boolean sortDescending,
+                                                                                    int offsetOrZero,
+                                                                                    int limitOrZero) {
         if (entities.size() < 1)
             return Collections.emptyMap();
         List<SimplePropertyPayload> relevant = new LinkedList<>();
@@ -174,57 +153,6 @@ public class MockDataStoreImpl implements LockBasedDataStore {
                     Object sortablePropertyValue = null;
                     if (sortField != null) {
                         sortablePropertyValue = propertyReaders.get(sortField).invoke(entry.getValue());
-                    }
-                    relevant.add(SimplePropertyPayload.newInstance(entry.getKey(), sortablePropertyValue));
-                }
-            }
-            if (sortField != null) {
-                if (sortDescending)
-                    Collections.sort(relevant, new Comparator<SimplePropertyPayload>() {
-                        @Override
-                        public int compare(SimplePropertyPayload o1, SimplePropertyPayload o2) {
-                            return -o1.compareTo(o2);
-                        }
-                    });
-                else
-                    Collections.sort(relevant);
-            }
-            int skip = offsetOrZero >= 0 ? offsetOrZero : relevant.size() + offsetOrZero;
-            int count = limitOrZero != 0 ? limitOrZero : relevant.size();
-            for (SimplePropertyPayload next : relevant) {
-                if (skip-- <= 0)
-                    results.put(next.getName(), entities.get(next.getName()));
-                if (--count == 0)
-                    break;
-            }
-        } catch (IntrospectionException | InvocationTargetException | IllegalAccessException e) {
-            throw new PosumException("Reflection error while accessing entity properties", e);
-        }
-        return results;
-    }
-
-    private static <T> Map<String, T> findEntitiesByParams(Map<String, T> entities,
-                                                           Map<String, Object> params,
-                                                           String sortField,
-                                                           boolean sortDescending,
-                                                           int offsetOrZero,
-                                                           int limitOrZero) {
-        if (entities.size() < 1)
-            return Collections.emptyMap();
-        List<SimplePropertyPayload> relevant = new LinkedList<>();
-        Map<String, T> results = new LinkedHashMap<>();
-        Class entityClass = entities.values().iterator().next().getClass();
-        try {
-            Map<String, Method> propertyReaders =
-                    Utils.getBeanPropertyReaders(entityClass, params.keySet());
-            for (Map.Entry<String, T> entry : entities.entrySet()) {
-                if (Utils.checkBeanPropertiesMatch(entry.getValue(), propertyReaders, params)) {
-                    Object sortablePropertyValue = null;
-                    if (sortField != null) {
-                        Method sortPropertyReader =
-                                Utils.getBeanPropertyReaders(entityClass, Collections.singleton(sortField))
-                                        .get(sortField);
-                        sortablePropertyValue = sortPropertyReader.invoke(entry.getValue());
                     }
                     relevant.add(SimplePropertyPayload.newInstance(entry.getKey(), sortablePropertyValue));
                 }
@@ -288,8 +216,8 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public void delete(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
-        List<String> ids = findIds(db, collection, queryParams, null, false, 0, 0);
+    public void delete(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query) {
+        List<String> ids = findIds(db, collection, query, null, false, 0, 0);
         Map<String, ?> entities = getCollectionForWrite(db, collection);
         for (String id : ids) {
             entities.remove(id);

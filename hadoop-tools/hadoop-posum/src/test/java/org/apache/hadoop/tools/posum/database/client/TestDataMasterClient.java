@@ -1,13 +1,12 @@
 package org.apache.hadoop.tools.posum.database.client;
 
 import org.apache.hadoop.tools.posum.common.records.call.*;
-import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
-import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.orchestrator.master.OrchestratorMaster;
 import org.apache.hadoop.tools.posum.database.master.DataMaster;
@@ -17,7 +16,6 @@ import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.After;
 import org.junit.Test;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -128,9 +126,9 @@ public class TestDataMasterClient extends TestDataBroker {
 
         FindByQueryCall getLog = FindByQueryCall.newInstance(
                 DataEntityCollection.AUDIT_LOG,
-                DatabaseQuery.and(
-                        DatabaseQuery.is("type", LogEntry.Type.GENERAL),
-                        DatabaseQuery.greaterThan("timestamp", firstTimestamp)
+                QueryUtils.and(
+                        QueryUtils.is("type", LogEntry.Type.GENERAL),
+                        QueryUtils.greaterThan("timestamp", firstTimestamp)
                 )
         );
         List<LogEntry> logs =
@@ -140,10 +138,10 @@ public class TestDataMasterClient extends TestDataBroker {
 
         getLog = FindByQueryCall.newInstance(
                 DataEntityCollection.AUDIT_LOG,
-                DatabaseQuery.and(
-                        DatabaseQuery.is("type", LogEntry.Type.GENERAL),
-                        DatabaseQuery.greaterThanOrEqual("timestamp", firstTimestamp),
-                        DatabaseQuery.lessThan("timestamp", secondTimestamp)
+                QueryUtils.and(
+                        QueryUtils.is("type", LogEntry.Type.GENERAL),
+                        QueryUtils.greaterThanOrEqual("timestamp", firstTimestamp),
+                        QueryUtils.lessThan("timestamp", secondTimestamp)
                 )
         );
        logs = client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntities();

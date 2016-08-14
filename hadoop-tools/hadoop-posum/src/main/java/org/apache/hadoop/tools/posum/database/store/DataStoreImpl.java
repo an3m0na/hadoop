@@ -95,17 +95,6 @@ public class DataStoreImpl implements LockBasedDataStore {
     @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
                                                       DataEntityCollection collection,
-                                                      Map<String, Object> params,
-                                                      String sortField,
-                                                      boolean sortDescending,
-                                                      int offsetOrZero,
-                                                      int limitOrZero) {
-        return find(db, collection, composeQuery(params), sortField, sortDescending, offsetOrZero, limitOrZero);
-    }
-
-    @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
-                                                      DataEntityCollection collection,
                                                       DatabaseQuery query,
                                                       String sortField,
                                                       boolean sortDescending,
@@ -117,12 +106,12 @@ public class DataStoreImpl implements LockBasedDataStore {
     @Override
     public List<String> findIds(DataEntityDB db,
                                 DataEntityCollection collection,
-                                Map<String, Object> params,
+                                DatabaseQuery query,
                                 String sortField,
                                 boolean sortDescending,
                                 int offsetOrZero,
                                 int limitOrZero) {
-        List rawList = find(db, collection, params, sortField, sortDescending, offsetOrZero, limitOrZero);
+        List rawList = find(db, collection, query, sortField, sortDescending, offsetOrZero, limitOrZero);
         List<String> ret = new ArrayList<>(rawList.size());
         for (Object rawObject : rawList) {
             ret.add(collection.getMappedClass().cast(rawObject).getId());
@@ -170,16 +159,6 @@ public class DataStoreImpl implements LockBasedDataStore {
         if (limitOrZero != 0)
             cursor.limit(limitOrZero);
         return cursor;
-    }
-
-    private DBQuery.Query composeQuery(Map<String, Object> queryParams) {
-        if (queryParams == null || queryParams.size() == 0)
-            return DBQuery.empty();
-        ArrayList<DBQuery.Query> paramList = new ArrayList<>(queryParams.size());
-        for (Map.Entry<String, Object> param : queryParams.entrySet()) {
-            paramList.add(DBQuery.is(param.getKey(), param.getValue()));
-        }
-        return DBQuery.and(paramList.toArray(new DBQuery.Query[queryParams.size()]));
     }
 
     private DBQuery.Query interpretQuery(PropertyValueQuery query) {
@@ -247,8 +226,8 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public void delete(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
-        getCollectionForWrite(db, collection).remove(composeQuery(queryParams));
+    public void delete(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query) {
+        getCollectionForWrite(db, collection).remove(interpretQuery(query));
     }
 
     public String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) {

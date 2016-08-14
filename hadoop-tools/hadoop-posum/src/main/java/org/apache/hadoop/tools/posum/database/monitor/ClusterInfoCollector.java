@@ -16,6 +16,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.mapreduce.v2.util.MRApps;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.records.call.*;
+import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterInfoPayload;
@@ -158,8 +159,8 @@ public class ClusterInfoCollector {
         // move info in database
         TransactionCall transaction = TransactionCall.newInstance();
         transaction.addCall(DeleteByIdCall.newInstance(DataEntityCollection.APP, appId))
-                .addCall(DeleteByParamsCall.newInstance(DataEntityCollection.JOB, Collections.singletonMap("appId", (Object) appId)))
-                .addCall(DeleteByParamsCall.newInstance(DataEntityCollection.TASK, Collections.singletonMap("appId", (Object) appId)))
+                .addCall(DeleteByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("appId", appId)))
+                .addCall(DeleteByQueryCall.newInstance(DataEntityCollection.TASK, QueryUtils.is("appId", appId)))
                 .addCall(DeleteByIdCall.newInstance(DataEntityCollection.JOB_CONF, job.getId()))
                 .addCall(DeleteByIdCall.newInstance(DataEntityCollection.COUNTER, job.getId()))
                 .addCall(StoreCall.newInstance(DataEntityCollection.APP_HISTORY, app))
