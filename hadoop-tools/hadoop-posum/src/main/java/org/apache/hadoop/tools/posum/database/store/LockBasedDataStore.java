@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.database.client.Database;
 
@@ -16,6 +17,14 @@ public interface LockBasedDataStore {
     <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
                                                DataEntityCollection collection,
                                                Map<String, Object> params,
+                                               String sortField,
+                                               boolean sortDescending,
+                                               int offsetOrZero,
+                                               int limitOrZero);
+
+    <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
+                                               DataEntityCollection collection,
+                                               DatabaseQuery query,
                                                String sortField,
                                                boolean sortDescending,
                                                int offsetOrZero,

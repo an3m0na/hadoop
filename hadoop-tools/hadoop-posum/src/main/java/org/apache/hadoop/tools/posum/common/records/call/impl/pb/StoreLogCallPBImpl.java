@@ -15,6 +15,8 @@ import org.apache.hadoop.yarn.proto.PosumProtos.LogEntryProto;
 public class StoreLogCallPBImpl extends StoreLogCall implements PayloadPB {
     private LogEntryProto proto = LogEntryProto.getDefaultInstance();
 
+    private LogEntry logEntry;
+
     public StoreLogCallPBImpl() {
     }
 
@@ -23,6 +25,8 @@ public class StoreLogCallPBImpl extends StoreLogCall implements PayloadPB {
     }
 
     public LogEntryProto getProto() {
+        if (logEntry != null)
+            proto = (LogEntryProto) ((LogEntryPBImpl) logEntry).getProto();
         return proto;
     }
 
@@ -48,12 +52,15 @@ public class StoreLogCallPBImpl extends StoreLogCall implements PayloadPB {
 
     @Override
     public LogEntry getLogEntry() {
-        return new LogEntryPBImpl(proto);
+        if (logEntry == null) {
+            logEntry = new LogEntryPBImpl(proto);
+        }
+        return logEntry;
     }
 
     @Override
     public void setLogEntry(LogEntry logEntry) {
-        proto = ((LogEntryPBImpl<?>) logEntry).getProto();
+        this.logEntry = logEntry;
     }
 
     @Override

@@ -1,6 +1,9 @@
 package org.apache.hadoop.tools.posum.database.mock;
 
 
+import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
@@ -92,6 +95,24 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
+    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
+                                                      DataEntityCollection collection,
+                                                      DatabaseQuery query,
+                                                      String sortField,
+                                                      boolean sortDescending,
+                                                      int offsetOrZero,
+                                                      int limitOrZero) {
+        return new ArrayList<>(MockDataStoreImpl.findEntitiesByQuery(
+                this.<T>getCollectionForRead(db, collection),
+                query,
+                sortField,
+                sortDescending,
+                offsetOrZero,
+                limitOrZero
+        ).values());
+    }
+
+    @Override
     public List<String> findIds(DataEntityDB db,
                                 DataEntityCollection collection,
                                 Map<String, Object> params,
@@ -107,6 +128,79 @@ public class MockDataStoreImpl implements LockBasedDataStore {
                 offsetOrZero,
                 limitOrZero
         ).keySet());
+    }
+
+    private static Set<String> parseRelevantProperties(PropertyValueQuery query) {
+        if (query == null)
+            return Collections.emptySet();
+        return Collections.singleton(query.getProperty().getName());
+    }
+
+    private static Set<String> parseRelevantProperties(CompositionQuery query) {
+        if (query == null)
+            return Collections.emptySet();
+        Set<String> ret = new HashSet<>(query.getQueries().size());
+        for (DatabaseQuery innerQuery : query.getQueries()) {
+            ret.addAll(parseRelevantProperties(innerQuery));
+        }
+        return ret;
+    }
+
+    private static Set<String> parseRelevantProperties(DatabaseQuery query) {
+        if (query == null)
+            return Collections.emptySet();
+        throw new PosumException("Query type not recognized: " + query.getClass());
+    }
+
+    private static <T extends GeneralDataEntity> Map<String, T> findEntitiesByQuery(Map<String, T> entities,
+                                                          DatabaseQuery query,
+                                                          String sortField,
+                                                          boolean sortDescending,
+                                                          int offsetOrZero,
+                                                          int limitOrZero) {
+        if (entities.size() < 1)
+            return Collections.emptyMap();
+        List<SimplePropertyPayload> relevant = new LinkedList<>();
+        Map<String, T> results = new LinkedHashMap<>();
+        Class entityClass = entities.values().iterator().next().getClass();
+        Set<String> relevantProperties = parseRelevantProperties(query);
+        if (sortField != null)
+            relevantProperties.add(sortField);
+        try {
+            Map<String, Method> propertyReaders = Utils.getBeanPropertyReaders(entityClass, relevantProperties);
+            QueryPredicate predicate = QueryPredicate.fromQuery(query, propertyReaders);
+            for (Map.Entry<String, T> entry : entities.entrySet()) {
+                if (predicate.check(entry.getValue())) {
+                    Object sortablePropertyValue = null;
+                    if (sortField != null) {
+                        sortablePropertyValue = propertyReaders.get(sortField).invoke(entry.getValue());
+                    }
+                    relevant.add(SimplePropertyPayload.newInstance(entry.getKey(), sortablePropertyValue));
+                }
+            }
+            if (sortField != null) {
+                if (sortDescending)
+                    Collections.sort(relevant, new Comparator<SimplePropertyPayload>() {
+                        @Override
+                        public int compare(SimplePropertyPayload o1, SimplePropertyPayload o2) {
+                            return -o1.compareTo(o2);
+                        }
+                    });
+                else
+                    Collections.sort(relevant);
+            }
+            int skip = offsetOrZero >= 0 ? offsetOrZero : relevant.size() + offsetOrZero;
+            int count = limitOrZero != 0 ? limitOrZero : relevant.size();
+            for (SimplePropertyPayload next : relevant) {
+                if (skip-- <= 0)
+                    results.put(next.getName(), entities.get(next.getName()));
+                if (--count == 0)
+                    break;
+            }
+        } catch (IntrospectionException | InvocationTargetException | IllegalAccessException e) {
+            throw new PosumException("Reflection error while accessing entity properties", e);
+        }
+        return results;
     }
 
     private static <T> Map<String, T> findEntitiesByParams(Map<String, T> entities,

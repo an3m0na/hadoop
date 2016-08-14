@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.test;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
@@ -22,12 +23,12 @@ import java.util.Map;
  * Created by ane on 4/20/16.
  */
 public class MiscTests {
-//    @Test
+    //    @Test
     public void checkRegistration() {
         System.out.println(NetUtils.createSocketAddr("0.0.0.0", 7000));
     }
 
-//    @Test
+    //    @Test
     public void testMongoRunner() throws IOException, InterruptedException {
         String scriptLocation = getClass().getClassLoader().getResource("run-mongo.sh").getFile();
         Process process = Runtime.getRuntime().exec("/bin/bash " + scriptLocation);
@@ -45,7 +46,7 @@ public class MiscTests {
         }
     }
 
-//    @Test
+    //    @Test
     public void testMongoStopper() throws IOException, InterruptedException {
         String scriptLocation = getClass().getClassLoader().getResource("run-mongo.sh").getFile();
         Process process = Runtime.getRuntime().exec("/bin/bash " + scriptLocation + " --stop");
@@ -63,7 +64,7 @@ public class MiscTests {
         }
     }
 
-//    @Test
+    //    @Test
     public void testHadoopAPIClient() {
         HadoopAPIClient apiClient = new HadoopAPIClient(PosumConfiguration.newInstance());
         List<AppProfile> apps = apiClient.getAppsInfo();
@@ -81,7 +82,7 @@ public class MiscTests {
         }
     }
 
-//    @Test
+    //    @Test
     public void checkDatabaseFeeding() {
         Configuration conf = PosumConfiguration.newInstance();
         DataStoreImpl dataStore = new DataStoreImpl(conf);
@@ -95,6 +96,22 @@ public class MiscTests {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+    }
+
+    private String getValueName(Enum value) {
+        return value.getClass().getName() + "." + value.name();
+    }
+
+    private Enum getValueFromName(String stream) throws ClassNotFoundException {
+        int lastDotIndex = stream.lastIndexOf('.');
+        Class enumClass = Class.forName(stream.substring(0, lastDotIndex));
+        return Enum.valueOf(enumClass, stream.substring(lastDotIndex+1));
+    }
+
+    @Test
+    public void testSomething() throws Exception {
+        System.out.println(getValueFromName(getValueName(LogEntry.Type.GENERAL)));
 
     }
 }

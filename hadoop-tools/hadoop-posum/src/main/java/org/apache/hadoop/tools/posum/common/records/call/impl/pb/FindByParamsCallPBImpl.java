@@ -85,10 +85,8 @@ public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadP
                             public PosumProtos.SimplePropertyPayloadProto next() {
                                 String key = keyIter.next();
                                 Object value = params.get(key);
-                                SimplePropertyPayloadPBImpl property = new SimplePropertyPayloadPBImpl();
-                                property.setName(key);
-                                property.setType(SimplePropertyPayload.PropertyType.getByClass(value.getClass()));
-                                property.setValue(value);
+                                SimplePropertyPayloadPBImpl property =
+                                        (SimplePropertyPayloadPBImpl) SimplePropertyPayload.newInstance(key, value);
                                 return property.getProto();
                             }
 
@@ -179,7 +177,7 @@ public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadP
     @Override
     public String getSortField() {
         ByParamsCallProtoOrBuilder p = viaProto ? proto : builder;
-        if(!p.hasSortField())
+        if (!p.hasSortField())
             return null;
         return p.getSortField();
     }
@@ -187,7 +185,7 @@ public class FindByParamsCallPBImpl extends FindByParamsCall implements PayloadP
     @Override
     public void setSortField(String field) {
         maybeInitBuilder();
-        if(field == null){
+        if (field == null) {
             builder.clearSortField();
             return;
         }

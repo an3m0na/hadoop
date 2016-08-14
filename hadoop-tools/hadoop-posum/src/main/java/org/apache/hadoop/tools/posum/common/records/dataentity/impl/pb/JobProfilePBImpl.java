@@ -46,14 +46,19 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     @Override
     public String getId() {
         JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return "".equals(p.getId()) ? null : p.getId();
+        if (!p.hasId())
+            return null;
+        return p.getId();
     }
 
     @Override
     public void setId(String id) {
         maybeInitBuilder();
-        if (id != null)
-            builder.setId(id);
+        if (id == null) {
+            builder.clearId();
+            return;
+        }
+        builder.setId(id);
     }
 
     @Override

@@ -87,9 +87,8 @@ public class DeleteByParamsCallPBImpl extends DeleteByParamsCall implements Payl
                             public PosumProtos.SimplePropertyPayloadProto next() {
                                 String key = keyIter.next();
                                 Object value = params.get(key);
-                                SimplePropertyPayloadPBImpl property = new SimplePropertyPayloadPBImpl();
-                                property.setName(key);
-                                property.setType(SimplePropertyPayload.PropertyType.getByClass(value.getClass()));
+                                SimplePropertyPayloadPBImpl property =
+                                        (SimplePropertyPayloadPBImpl) SimplePropertyPayload.newInstance(key, value);
                                 property.setValue(value);
                                 return property.getProto();
                             }
