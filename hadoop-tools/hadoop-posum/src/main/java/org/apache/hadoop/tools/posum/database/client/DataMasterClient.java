@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.*;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
@@ -87,11 +88,6 @@ public class DataMasterClient extends AbstractService implements DataBroker {
     @Override
     public Database bindTo(DataEntityDB db) {
         return new DatabaseImpl(this, db);
-    }
-
-    //TODO remove this after proper logging
-    public <T> void sendLogRequest(SimpleRequest.Type logType, T payload){
-        Utils.sendSimpleRequest(logType.name(), SimpleRequest.newInstance(logType, payload), dmClient);
     }
 
 }

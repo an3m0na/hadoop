@@ -185,10 +185,9 @@ message SimpleRequestProto {
         REQ_PING = 0;
         REQ_CHANGE_POLICY = 1;
         REQ_START = 2;
-        REQ_LOG_POLICY_CHANGE = 3;
-        REQ_SYSTEM_ADDRESSES = 4;
-        REQ_LIST_COLLECTIONS = 5;
-        REQ_CLEAR_DATA = 6;
+        REQ_SYSTEM_ADDRESSES = 3;
+        REQ_LIST_COLLECTIONS = 4;
+        REQ_CLEAR_DATA = 5;
     }
 }
 
@@ -330,6 +329,7 @@ message DatabaseCallProto {
         CALL_TRANSACTION = 9;
         CALL_STORE_LOG = 10;
         CALL_FIND_BY_QUERY = 11;
+        CALL_DOCUMENTS_BY_QUERY = 12;
     }
 }
 

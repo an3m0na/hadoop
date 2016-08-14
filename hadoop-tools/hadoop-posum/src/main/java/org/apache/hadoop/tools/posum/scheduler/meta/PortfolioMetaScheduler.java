@@ -7,6 +7,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
+import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.PolicyMap;
@@ -89,7 +91,7 @@ public class PortfolioMetaScheduler extends
         PolicyMap.PolicyInfo newClass = policies.get(policyName);
         if (newClass == null)
             throw new PosumException("Target policy does not exist: " + policyName);
-        commService.logPolicyChange(policyName);
+        commService.getDatabase().executeDatabaseCall(StoreLogCall.newInstance(LogEntry.Type.POLICY_CHANGE, policyName));
         if (!currentPolicyInfo.equals(newClass)) {
             Timer.Context context = null;
             if (metricsON)
@@ -182,7 +184,8 @@ public class PortfolioMetaScheduler extends
     public void serviceStart() throws Exception {
         logger.debug("Starting meta");
         commService.start();
-        commService.logPolicyChange(policies.getDefaultPolicyName());
+        commService.getDatabase().executeDatabaseCall(StoreLogCall.newInstance(LogEntry.Type.POLICY_CHANGE,
+                policies.getDefaultPolicyName()));
         readLock.lock();
         try {
             currentPolicy.start();
