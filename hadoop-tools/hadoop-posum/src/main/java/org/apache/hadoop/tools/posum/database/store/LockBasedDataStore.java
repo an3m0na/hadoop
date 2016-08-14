@@ -38,6 +38,8 @@ public interface LockBasedDataStore {
 
     void delete(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query);
 
+    String getRawDocuments(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query);
+
     Database bindTo(DataEntityDB db);
 
     void lockForRead(DataEntityDB db);

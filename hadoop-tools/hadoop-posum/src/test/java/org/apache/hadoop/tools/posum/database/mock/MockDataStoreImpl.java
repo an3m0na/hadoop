@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.database.mock;
 
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
@@ -225,6 +226,12 @@ public class MockDataStoreImpl implements LockBasedDataStore {
         for (String id : ids) {
             entities.remove(id);
         }
+    }
+
+    @Override
+    public String getRawDocuments(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query) {
+        //TODO
+        throw new NotImplementedException();
     }
 
     @Override

@@ -4,7 +4,6 @@ import org.apache.hadoop.tools.posum.common.records.call.*;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityFactory;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
@@ -116,11 +115,9 @@ public class TestDataMasterClient extends TestDataBroker {
         String firstId = (String) client.executeDatabaseCall(storeLog, null).getValue();
         assertNotNull(firstId);
 
+        storeLog = StoreLogCall.newInstance(second);
         Long secondTimestamp = firstTimestamp + 1000;
-        LogEntry secondLog = DataEntityFactory.getNewLogEntry(LogEntry.Type.GENERAL,
-                SimplePropertyPayload.newInstance("", second));
-        secondLog.setTimestamp(secondTimestamp);
-        storeLog = StoreLogCall.newInstance(secondLog);
+        storeLog.getLogEntry().setTimestamp(secondTimestamp);
         String secondId = (String) client.executeDatabaseCall(storeLog, null).getValue();
         assertNotNull(secondId);
 
@@ -144,7 +141,7 @@ public class TestDataMasterClient extends TestDataBroker {
                         QueryUtils.lessThan("timestamp", secondTimestamp)
                 )
         );
-       logs = client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntities();
+        logs = client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntities();
         assertEquals(1, logs.size());
         assertEquals(firstId, logs.get(0).getId());
     }

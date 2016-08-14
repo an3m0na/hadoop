@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -8,7 +9,6 @@ import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
@@ -32,7 +32,6 @@ public class DataStoreImpl implements LockBasedDataStore {
     private static Log logger = LogFactory.getLog(DataStoreImpl.class);
 
     private MongoClient mongoClient;
-    private DataEntityDB logDb = DataEntityDB.getLogs();
     private ReentrantReadWriteLock masterLock = new ReentrantReadWriteLock();
     private Map<DataEntityDB, DBAssets> dbRegistry = new ConcurrentHashMap<>(DataEntityDB.Type.values().length);
 
@@ -198,10 +197,10 @@ public class DataStoreImpl implements LockBasedDataStore {
     private DBQuery.Query interpretQuery(DatabaseQuery query) {
         if (query == null)
             return DBQuery.empty();
-        if(query instanceof CompositionQuery)
-            return interpretQuery((CompositionQuery)query);
-        if(query instanceof PropertyValueQuery)
-            return interpretQuery((PropertyValueQuery)query);
+        if (query instanceof CompositionQuery)
+            return interpretQuery((CompositionQuery) query);
+        if (query instanceof PropertyValueQuery)
+            return interpretQuery((PropertyValueQuery) query);
         throw new PosumException("Query type not recognized: " + query.getClass());
     }
 
@@ -230,68 +229,12 @@ public class DataStoreImpl implements LockBasedDataStore {
         getCollectionForWrite(db, collection).remove(interpretQuery(query));
     }
 
-    public String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) {
-        return mongoClient.getDatabase(database)
-                .getCollection(collection)
-                .find(new Document(queryParams)).toString();
-    }
-
-    public <T extends Payload> void storeLogEntry(LogEntry<T> logEntry) {
-        lockForWrite(logDb);
-        try {
-            updateOrStore(logDb, logEntry.getType().getCollection(), logEntry);
-        } finally {
-            unlockForWrite(logDb);
-        }
-    }
-
-    public <T extends Payload> List<LogEntry<T>> findLogs(LogEntry.Type type, long from, long to) {
-        lockForRead(logDb);
-        try {
-            return find(logDb,
-                    type.getCollection(),
-                    DBQuery.and(DBQuery.greaterThan("timestamp", from),
-                            DBQuery.lessThanEquals("timestamp", to),
-                            DBQuery.is("type", type)),
-                    null,
-                    false,
-                    0,
-                    0
-            );
-        } finally {
-            unlockForRead(logDb);
-        }
-    }
-
-    public <T extends Payload> List<LogEntry<T>> findLogs(LogEntry.Type type, long after) {
-        lockForRead(logDb);
-        try {
-            return find(logDb,
-                    type.getCollection(),
-                    DBQuery.and(DBQuery.greaterThan("timestamp", after),
-                            DBQuery.is("type", type)),
-                    null,
-                    false,
-                    0,
-                    0
-            );
-        } finally {
-            unlockForRead(logDb);
-        }
-    }
-
-    public <T extends Payload> LogEntry<T> findReport(LogEntry.Type type) {
-        lockForRead(logDb);
-        try {
-            return findById(logDb, type.getCollection(), type.name());
-        } finally {
-            unlockForRead(logDb);
-        }
-    }
-
-    public <T extends Payload> void storeLogReport(LogEntry<T> logReport) {
-        logReport.setId(logReport.getType().name());
-        storeLogEntry(logReport);
+    @Override
+    public String getRawDocuments(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query) {
+        DBObject queryObject = getCollectionForRead(db, collection).serializeQuery(interpretQuery(query));
+        return mongoClient.getDatabase(db.getName())
+                .getCollection(collection.getLabel())
+                .find(new Document(queryObject.toMap())).toString();
     }
 
     @Override

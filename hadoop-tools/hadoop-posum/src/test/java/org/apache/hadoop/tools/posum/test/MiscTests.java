@@ -87,7 +87,7 @@ public class MiscTests {
         Configuration conf = PosumConfiguration.newInstance();
         DataStoreImpl dataStore = new DataStoreImpl(conf);
         DataMasterContext context = new DataMasterContext();
-        context.setDataStore(dataStore);
+        context.setDataBroker(org.apache.hadoop.tools.posum.common.util.Utils.exposeDataStoreAsBroker(dataStore));
         HadoopMonitor monitor = new HadoopMonitor(context);
         monitor.start();
         try {
@@ -96,22 +96,6 @@ public class MiscTests {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-    }
-
-    private String getValueName(Enum value) {
-        return value.getClass().getName() + "." + value.name();
-    }
-
-    private Enum getValueFromName(String stream) throws ClassNotFoundException {
-        int lastDotIndex = stream.lastIndexOf('.');
-        Class enumClass = Class.forName(stream.substring(0, lastDotIndex));
-        return Enum.valueOf(enumClass, stream.substring(lastDotIndex+1));
-    }
-
-    @Test
-    public void testSomething() throws Exception {
-        System.out.println(getValueFromName(getValueName(LogEntry.Type.GENERAL)));
 
     }
 }

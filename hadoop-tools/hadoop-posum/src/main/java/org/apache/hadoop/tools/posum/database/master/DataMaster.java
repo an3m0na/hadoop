@@ -7,11 +7,13 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumMasterProcess;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.tools.posum.database.monitor.HadoopMonitor;
 import org.apache.hadoop.tools.posum.database.monitor.PosumInfoCollector;
 import org.apache.hadoop.tools.posum.database.monitor.PosumMonitor;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
+import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.tools.posum.web.DataMasterWebApp;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
@@ -31,7 +33,7 @@ public class DataMaster extends CompositeService  implements PosumMasterProcess 
 
     private DataMasterContext dmContext;
     private DataCommService commService;
-    private DataStoreImpl dataStore;
+    private LockBasedDataStore dataStore;
     private HadoopMonitor hadoopMonitor;
     private PosumMonitor posumMonitor;
 
@@ -40,7 +42,7 @@ public class DataMaster extends CompositeService  implements PosumMasterProcess 
         dmContext = new DataMasterContext();
 
         dataStore = new DataStoreImpl(conf);
-        dmContext.setDataStore(dataStore);
+        dmContext.setDataBroker(Utils.exposeDataStoreAsBroker(dataStore));
         dispatcher = new AsyncDispatcher();
         addIfService(dispatcher);
 
@@ -57,7 +59,7 @@ public class DataMaster extends CompositeService  implements PosumMasterProcess 
         hadoopMonitor.init(conf);
         addIfService(hadoopMonitor);
 
-        dmContext.setPosumInfo(new PosumInfoCollector(conf, dataStore));
+        dmContext.setPosumInfo(new PosumInfoCollector(conf, dmContext.getDataBroker()));
         posumMonitor = new PosumMonitor(dmContext);
         posumMonitor.init(conf);
         addIfService(posumMonitor);
