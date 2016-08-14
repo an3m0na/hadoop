@@ -5,6 +5,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.CounterGroupInfoPayloadPBImpl;
+import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.proto.PosumProtos.CounterGroupInfoPayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.CountersProxyProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.CountersProxyProtoOrBuilder;
@@ -70,16 +71,20 @@ public class CountersProxyPBImpl extends GeneralDataEntityPBImpl<CountersProxy, 
     @Override
     public String getId() {
         CountersProxyProtoOrBuilder p = viaProto ? proto : builder;
-        return "".equals(p.getId()) ? null : p.getId();
+        if (!p.hasId())
+            return null;
+        return p.getId();
     }
 
     @Override
     public void setId(String id) {
         maybeInitBuilder();
-        if (id != null)
-            builder.setId(id);
+        if (id == null) {
+            builder.clearId();
+            return;
+        }
+        builder.setId(id);
     }
-
     @Override
     public List<CounterGroupInfoPayload> getCounterGroup() {
         if (counterGroup == null) {

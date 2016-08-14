@@ -20,7 +20,7 @@ public class TransactionCallPBImpl extends TransactionCall implements PayloadPB 
     private TransactionCallProto.Builder builder = null;
     private boolean viaProto = false;
 
-    List<ThreePhaseDatabaseCall> calls;
+    private List<ThreePhaseDatabaseCall> calls;
 
     public TransactionCallPBImpl() {
         builder = TransactionCallProto.newBuilder();

@@ -51,30 +51,27 @@ message AppProfileProto {
     optional AppTrackingUIProto trackingUI = 9;
 
     enum AppStateProto {
-        STATE_NULL = 0;
-        STATE_NEW = 1;
-        STATE_NEW_SAVING = 2;
-        STATE_SUBMITTED = 3;
-        STATE_ACCEPTED = 4;
-        STATE_RUNNING = 5;
-        STATE_FINISHED = 6;
-        STATE_FAILED = 7;
-        STATE_KILLED = 8;
+        STATE_NEW = 0;
+        STATE_NEW_SAVING = 1;
+        STATE_SUBMITTED = 2;
+        STATE_ACCEPTED = 3;
+        STATE_RUNNING = 4;
+        STATE_FINISHED = 5;
+        STATE_FAILED = 6;
+        STATE_KILLED = 7;
     }
 
     enum AppStatusProto {
-        STATUS_NULL = 0;
-        STATUS_UNDEFINED = 1;
-        STATUS_SUCCEEDED = 2;
-        STATUS_FAILED = 3;
-        STATUS_KILLED = 4;
+        STATUS_UNDEFINED = 0;
+        STATUS_SUCCEEDED = 1;
+        STATUS_FAILED = 2;
+        STATUS_KILLED = 3;
     }
 
     enum AppTrackingUIProto {
-        UI_NULL = 0;
-        UI_RM = 1;
-        UI_AM = 2;
-        UI_HISTORY = 3;
+        UI_RM = 0;
+        UI_AM = 1;
+        UI_HISTORY = 2;
     }
 }
 
@@ -244,10 +241,11 @@ message SimplePropertyPayloadProto {
     optional string value = 3;
 
     enum PropertyTypeProto {
-        PROPERTY_STRING = 0;
-        PROPERTY_LONG = 1;
-        PROPERTY_INT = 2;
-        PROPERTY_BOOL = 3;
+        PROP_STRING = 0;
+        PROP_LONG = 1;
+        PROP_INT = 2;
+        PROP_BOOL = 3;
+        PROP_ENUM = 4;
     }
 }
 
@@ -331,6 +329,7 @@ message DatabaseCallProto {
         CALL_IDS_BY_PARAMS = 8;
         CALL_TRANSACTION = 9;
         CALL_STORE_LOG = 10;
+        CALL_FIND_BY_QUERY = 11;
     }
 }
 
@@ -342,6 +341,15 @@ message ByIdCallProto {
 message ByParamsCallProto {
     required EntityCollectionProto collection = 1;
     repeated SimplePropertyPayloadProto properties = 2;
+    optional string sortField = 3;
+    optional bool sortDescending = 4;
+    optional int32 offset = 5;
+    optional int32 limit = 6;
+}
+
+message ByQueryCallProto {
+    required EntityCollectionProto collection = 1;
+    optional DatabaseQueryProto query = 2;
     optional string sortField = 3;
     optional bool sortDescending = 4;
     optional int32 offset = 5;
@@ -361,4 +369,37 @@ message SaveJobFlexFieldsCallProto {
     required string jobId = 1;
     required StringStringMapPayloadProto newFields = 2;
     optional bool forHistory = 3;
+}
+
+message DatabaseQueryProto {
+    required TypeProto type = 1;
+    required bytes query = 2;
+
+    enum TypeProto {
+        QRY_COMPOSITION = 0;
+        QRY_PROPERTY_VALUE = 1;
+    }
+}
+
+message PropertyValueQueryProto {
+    required TypeProto type = 1;
+    required SimplePropertyPayloadProto property = 2;
+
+    enum TypeProto {
+        PQRY_IS = 0;
+        PQRY_LESS = 1;
+        PQRY_LESS_OR_EQUAL = 2;
+        PQRY_GREATER = 3;
+        PQRY_GREATER_OR_EQUAL = 4;
+    }
+}
+
+message CompositionQueryProto {
+    required TypeProto type = 1;
+    repeated DatabaseQueryProto queries = 2;
+
+    enum TypeProto {
+        CQRY_AND = 0;
+        CQRY_OR = 1;
+    }
 }

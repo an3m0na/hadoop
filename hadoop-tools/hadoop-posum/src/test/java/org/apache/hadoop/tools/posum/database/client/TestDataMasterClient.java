@@ -1,9 +1,7 @@
 package org.apache.hadoop.tools.posum.database.client;
 
-import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
-import org.apache.hadoop.tools.posum.common.records.call.FindByParamsCall;
-import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
-import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
+import org.apache.hadoop.tools.posum.common.records.call.*;
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityFactory;
@@ -110,5 +108,46 @@ public class TestDataMasterClient extends TestDataBroker {
         assertEquals(logId, log.getId());
         assertEquals(timestamp, log.getTimestamp());
         assertEquals(message, log.getDetails().getValue());
+    }
+
+    @Test
+    public void testLogChronology() throws Exception {
+        String first = "First", second = "Second";
+        StoreLogCall storeLog = StoreLogCall.newInstance(first);
+        Long firstTimestamp = storeLog.getLogEntry().getTimestamp();
+        String firstId = (String) client.executeDatabaseCall(storeLog, null).getValue();
+        assertNotNull(firstId);
+
+        Long secondTimestamp = firstTimestamp + 1000;
+        LogEntry secondLog = DataEntityFactory.getNewLogEntry(LogEntry.Type.GENERAL,
+                SimplePropertyPayload.newInstance("", second));
+        secondLog.setTimestamp(secondTimestamp);
+        storeLog = StoreLogCall.newInstance(secondLog);
+        String secondId = (String) client.executeDatabaseCall(storeLog, null).getValue();
+        assertNotNull(secondId);
+
+        FindByQueryCall getLog = FindByQueryCall.newInstance(
+                DataEntityCollection.AUDIT_LOG,
+                DatabaseQuery.and(
+                        DatabaseQuery.is("type", LogEntry.Type.GENERAL),
+                        DatabaseQuery.greaterThan("timestamp", firstTimestamp)
+                )
+        );
+        List<LogEntry> logs =
+                client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntities();
+        assertEquals(1, logs.size());
+        assertEquals(secondId, logs.get(0).getId());
+
+        getLog = FindByQueryCall.newInstance(
+                DataEntityCollection.AUDIT_LOG,
+                DatabaseQuery.and(
+                        DatabaseQuery.is("type", LogEntry.Type.GENERAL),
+                        DatabaseQuery.greaterThanOrEqual("timestamp", firstTimestamp),
+                        DatabaseQuery.lessThan("timestamp", secondTimestamp)
+                )
+        );
+       logs = client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntities();
+        assertEquals(1, logs.size());
+        assertEquals(firstId, logs.get(0).getId());
     }
 }

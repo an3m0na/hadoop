@@ -4,8 +4,12 @@ import com.mongodb.MongoClient;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
+import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -100,6 +104,17 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
+    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
+                                                      DataEntityCollection collection,
+                                                      DatabaseQuery query,
+                                                      String sortField,
+                                                      boolean sortDescending,
+                                                      int offsetOrZero,
+                                                      int limitOrZero) {
+        return find(db, collection, interpretQuery(query), sortField, sortDescending, offsetOrZero, limitOrZero);
+    }
+
+    @Override
     public List<String> findIds(DataEntityDB db,
                                 DataEntityCollection collection,
                                 Map<String, Object> params,
@@ -165,6 +180,50 @@ public class DataStoreImpl implements LockBasedDataStore {
             paramList.add(DBQuery.is(param.getKey(), param.getValue()));
         }
         return DBQuery.and(paramList.toArray(new DBQuery.Query[queryParams.size()]));
+    }
+
+    private DBQuery.Query interpretQuery(PropertyValueQuery query) {
+        SimplePropertyPayload property = query.getProperty();
+        switch (query.getType()) {
+            case IS:
+                return DBQuery.is(property.getName(), property.getValue());
+            case LESS:
+                return DBQuery.lessThan(property.getName(), property.getValue());
+            case LESS_OR_EQUAL:
+                return DBQuery.lessThanEquals(property.getName(), property.getValue());
+            case GREATER:
+                return DBQuery.greaterThan(property.getName(), property.getValue());
+            case GREATER_OR_EQUAL:
+                return DBQuery.greaterThanEquals(property.getName(), property.getValue());
+            default:
+                throw new PosumException("PropertyValue query type not recognized: " + query.getType());
+        }
+    }
+
+    private DBQuery.Query interpretQuery(CompositionQuery query) {
+        DBQuery.Query[] innerQueries = new DBQuery.Query[query.getQueries().size()];
+        int i = 0;
+        for (DatabaseQuery innerQuery : query.getQueries()) {
+            innerQueries[i++] = interpretQuery(innerQuery);
+        }
+        switch (query.getType()) {
+            case AND:
+                return DBQuery.and(innerQueries);
+            case OR:
+                return DBQuery.or(innerQueries);
+            default:
+                throw new PosumException("Composition query type not recognized: " + query.getType());
+        }
+    }
+
+    private DBQuery.Query interpretQuery(DatabaseQuery query) {
+        if (query == null)
+            return DBQuery.empty();
+        if(query instanceof CompositionQuery)
+            return interpretQuery((CompositionQuery)query);
+        if(query instanceof PropertyValueQuery)
+            return interpretQuery((PropertyValueQuery)query);
+        throw new PosumException("Query type not recognized: " + query.getClass());
     }
 
     @Override

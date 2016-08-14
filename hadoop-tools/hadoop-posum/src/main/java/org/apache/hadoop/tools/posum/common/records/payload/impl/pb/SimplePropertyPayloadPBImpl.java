@@ -83,7 +83,7 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implement
     @Override
     public PropertyType getType() {
         SimplePropertyPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return PropertyType.valueOf(p.getType().name().substring("PROPERTY_".length()));
+        return PropertyType.valueOf(p.getType().name().substring("PROP_".length()));
     }
 
     @Override
@@ -93,7 +93,7 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implement
             builder.clearType();
             return;
         }
-        builder.setType(SimplePropertyPayloadProto.PropertyTypeProto.valueOf("PROPERTY_" + type.name()));
+        builder.setType(SimplePropertyPayloadProto.PropertyTypeProto.valueOf("PROP_" + type.name()));
     }
 
     @Override
