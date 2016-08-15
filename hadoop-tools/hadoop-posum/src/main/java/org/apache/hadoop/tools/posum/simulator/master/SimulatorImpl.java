@@ -6,7 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
-import org.apache.hadoop.tools.posum.common.util.PolicyMap;
+import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 
 import java.util.HashMap;
@@ -20,7 +20,7 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
     private static Log logger = LogFactory.getLog(SimulatorImpl.class);
 
     private SimulationMasterContext context;
-    private PolicyMap policies;
+    private PolicyPortfolio policies;
     private Map<String, Simulation> simulationMap;
     private HandleSimResultRequest resultRequest;
 
@@ -31,7 +31,7 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
-        policies = new PolicyMap(conf);
+        policies = new PolicyPortfolio(conf);
         super.serviceInit(conf);
     }
 

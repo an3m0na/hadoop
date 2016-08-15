@@ -10,10 +10,12 @@ import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.json.JsonArray;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
-import org.apache.hadoop.tools.posum.common.util.PolicyMap;
+import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
 import org.mortbay.jetty.Handler;
@@ -114,11 +116,10 @@ public class DataMasterWebApp extends PosumWebApp {
 
     private JsonObject composePolicyMap() {
         JsonObject ret = new JsonObject();
-        LogEntry<PolicyMap> policyReport = context.getDataBroker().executeDatabaseCall(
+        LogEntry<PolicyInfoMapPayload> policyReport = context.getDataBroker().executeDatabaseCall(
                 CallUtils.findStatReportCall(LogEntry.Type.POLICY_MAP), DataEntityDB.getLogs()).getEntity();
         if (policyReport != null) {
-            for (Map.Entry<String, PolicyMap.PolicyInfo> policyInfo :
-                    policyReport.getDetails().entrySet()) {
+            for (Map.Entry<String, PolicyInfoPayload> policyInfo : policyReport.getDetails().getEntries().entrySet()) {
                 ret.put(policyInfo.getKey(), new JsonObject()
                         .put("time", policyInfo.getValue().getUsageTime())
                         .put("number", policyInfo.getValue().getUsageNumber()));

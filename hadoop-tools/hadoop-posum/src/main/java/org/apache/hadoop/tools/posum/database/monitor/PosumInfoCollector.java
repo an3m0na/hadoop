@@ -11,11 +11,13 @@ import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.TaskPredictionPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.PolicyMap;
+import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
@@ -23,7 +25,10 @@ import org.apache.hadoop.tools.posum.simulator.predictor.DetailedPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulator.predictor.StandardPredictor;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by ane on 2/4/16.
@@ -35,11 +40,13 @@ public class PosumInfoCollector {
     private final PosumAPIClient api;
     private final DataBroker dataBroker;
     private final Configuration conf;
-    private final boolean fineGrained;
-    private final PolicyMap policyMap;
-    private long lastCollectTime = 0;
-    private long lastPrediction = 0;
-    private long predictionTimeout = 0;
+    private final Boolean fineGrained;
+    private final Map<String, PolicyInfoPayload> policyMap;
+    private Long lastCollectTime = 0L;
+    private Long lastPrediction = 0L;
+    private Long predictionTimeout = 0L;
+    private Long schedulingStart = 0L;
+    private String lastUsedPolicy;
     //TODO use only this predictor for regular experiments
     //    private JobBehaviorPredictor predictor;
     private JobBehaviorPredictor basicPredictor;
@@ -53,7 +60,11 @@ public class PosumInfoCollector {
         fineGrained = conf.getBoolean(PosumConfiguration.FINE_GRAINED_MONITOR,
                 PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
         api = new PosumAPIClient(conf);
-        this.policyMap = new PolicyMap(conf);
+        Set<String> policies = new PolicyPortfolio(conf).keySet();
+        policyMap = new HashMap<>(policies.size());
+        for (String policy : policies) {
+            policyMap.put(policy, PolicyInfoPayload.newInstance());
+        }
         Database db = dataBroker.bindTo(DataEntityDB.getMain());
 //        predictor = JobBehaviorPredictor.newInstance(conf);
         basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
@@ -95,20 +106,21 @@ public class PosumInfoCollector {
         List<LogEntry<SimplePropertyPayload>> policyChanges =
                 dataBroker.executeDatabaseCall(findChoices, DataEntityDB.getLogs()).getEntities();
         if (policyChanges.size() > 0) {
-            if (policyMap.getSchedulingStart() == 0)
-                policyMap.setSchedulingStart(policyChanges.get(0).getTimestamp());
+            if (schedulingStart == 0)
+                schedulingStart = policyChanges.get(0).getTimestamp();
             for (LogEntry<SimplePropertyPayload> change : policyChanges) {
                 String policy = (String) change.getDetails().getValue();
-                PolicyMap.PolicyInfo info = policyMap.get(policy);
-                if (!policy.equals(policyMap.getLastUsed())) {
-                    if (policyMap.getLastUsed() != null) {
-                        policyMap.get(policyMap.getLastUsed()).stop(change.getTimestamp());
+                PolicyInfoPayload info = policyMap.get(policy);
+                if (!policy.equals(lastUsedPolicy)) {
+                    if (lastUsedPolicy != null) {
+                        policyMap.get(lastUsedPolicy).stop(change.getTimestamp());
                     }
-                    policyMap.setLastUsed(policy);
+                    lastUsedPolicy = policy;
                 }
                 info.start(change.getTimestamp());
             }
-            dataBroker.executeDatabaseCall(CallUtils.storeStatReportCall(LogEntry.Type.POLICY_MAP, policyMap), null);
+            dataBroker.executeDatabaseCall(CallUtils.storeStatReportCall(LogEntry.Type.POLICY_MAP,
+                    PolicyInfoMapPayload.newInstance(policyMap)), null);
         }
         lastCollectTime = now;
     }
