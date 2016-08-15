@@ -59,7 +59,7 @@ public class SimpleResponsePBImpl<T extends Payload> extends SimpleResponse<T> {
 
     private void mergeLocalToBuilder() {
         maybeInitBuilder();
-        if (this.payload != null)
+        if (payload != null)
             builder.setPayload(((PayloadPB) payload).getProtoBytes());
     }
 
@@ -139,7 +139,6 @@ public class SimpleResponsePBImpl<T extends Payload> extends SimpleResponse<T> {
                 try {
                     payload = (T) getType().getImplClass().newInstance();
                     ((PayloadPB) payload).populateFromProtoBytes(p.getPayload());
-                    return payload;
                 } catch (InstantiationException | IllegalAccessException | InvalidProtocolBufferException e) {
                     throw new PosumException("Could not read message payload", e);
                 }
@@ -149,6 +148,7 @@ public class SimpleResponsePBImpl<T extends Payload> extends SimpleResponse<T> {
 
     @Override
     public void setPayload(T payload) {
+        maybeInitBuilder();
         this.payload = payload;
     }
 }

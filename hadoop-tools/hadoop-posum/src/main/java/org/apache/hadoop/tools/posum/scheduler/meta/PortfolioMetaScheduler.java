@@ -7,9 +7,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
+import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.PolicyMap;
+import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.scheduler.meta.client.MetaSchedulerInterface;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.web.MetaSchedulerWebApp;
@@ -49,9 +51,9 @@ public class PortfolioMetaScheduler extends
     private Configuration conf;
     private Configuration posumConf;
     private MetaSchedulerCommService commService;
-    private PolicyMap policies;
+    private PolicyPortfolio policies;
 
-    private PolicyMap.PolicyInfo currentPolicyInfo;
+    private Class<? extends PluginPolicy> currentPolicyClass;
     private PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode> currentPolicy;
     private ReadWriteLock lock = new ReentrantReadWriteLock();
     private Lock readLock = lock.readLock();
@@ -72,9 +74,9 @@ public class PortfolioMetaScheduler extends
 
     private void initPolicy() {
         try {
-            currentPolicy = currentPolicyInfo.getImplClass().newInstance();
+            currentPolicy = currentPolicyClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            throw new PosumException("Could not instantiate scheduler for class " + currentPolicyInfo.getImplClass(), e);
+            throw new PosumException("Could not instantiate scheduler for class " + currentPolicyClass, e);
         }
         currentPolicy.initializePlugin(posumConf, commService);
         if (rmContext != null)
@@ -86,16 +88,16 @@ public class PortfolioMetaScheduler extends
     @Override
     public void changeToPolicy(String policyName) {
         logger.debug("Changing policy to " + policyName);
-        PolicyMap.PolicyInfo newClass = policies.get(policyName);
+        Class<? extends PluginPolicy> newClass = policies.get(policyName);
         if (newClass == null)
             throw new PosumException("Target policy does not exist: " + policyName);
-        commService.logPolicyChange(policyName);
-        if (!currentPolicyInfo.equals(newClass)) {
+        commService.getDatabase().executeDatabaseCall(StoreLogCall.newInstance(LogEntry.Type.POLICY_CHANGE, policyName));
+        if (!currentPolicyClass.equals(newClass)) {
             Timer.Context context = null;
             if (metricsON)
                 context = changeTimer.time();
             writeLock.lock();
-            currentPolicyInfo = newClass;
+            currentPolicyClass = newClass;
             if (isInState(STATE.INITED) || isInState(STATE.STARTED)) {
                 PluginPolicy oldPolicy = currentPolicy;
                 initPolicy();
@@ -149,8 +151,8 @@ public class PortfolioMetaScheduler extends
     public void serviceInit(Configuration conf) throws Exception {
         this.posumConf = PosumConfiguration.newInstance();
         setConf(conf);
-        policies = new PolicyMap(posumConf);
-        currentPolicyInfo = policies.getDefaultPolicy();
+        policies = new PolicyPortfolio(posumConf);
+        currentPolicyClass = policies.get(policies.getDefaultPolicyName());
         commService = new MetaSchedulerCommService(this, conf.get(YarnConfiguration.RM_ADDRESS));
         commService.init(posumConf);
         initPolicy();
@@ -182,7 +184,8 @@ public class PortfolioMetaScheduler extends
     public void serviceStart() throws Exception {
         logger.debug("Starting meta");
         commService.start();
-        commService.logPolicyChange(policies.getDefaultPolicyName());
+        commService.getDatabase().executeDatabaseCall(StoreLogCall.newInstance(LogEntry.Type.POLICY_CHANGE,
+                policies.getDefaultPolicyName()));
         readLock.lock();
         try {
             currentPolicy.start();

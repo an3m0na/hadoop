@@ -1,24 +1,34 @@
 package org.apache.hadoop.tools.posum.database.client;
 
+import org.apache.hadoop.tools.posum.common.records.call.*;
+import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.orchestrator.master.OrchestratorMaster;
 import org.apache.hadoop.tools.posum.database.master.DataMaster;
 import org.apache.hadoop.tools.posum.test.ServiceRunner;
-import org.apache.hadoop.tools.posum.test.TestDataClientImpl;
+import org.apache.hadoop.tools.posum.test.TestDataBroker;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.After;
 import org.junit.Test;
 
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 /**
  * Created by ane on 3/21/16.
  */
-public class TestDataMasterClient extends TestDataClientImpl {
+public class TestDataMasterClient extends TestDataBroker {
     private ServiceRunner posumMaster, dataMaster;
     private DataMasterClient client;
 
     @Override
-    protected void setUpDataStore() throws Exception {
+    protected void setUpDataBroker() throws Exception {
         System.out.println("Starting MongoDB and POSUM processes...");
         Utils.runMongoDB();
         posumMaster = new ServiceRunner<>(OrchestratorMaster.class);
@@ -31,7 +41,7 @@ public class TestDataMasterClient extends TestDataClientImpl {
         client = new DataMasterClient(dataMaster.getService().getConnectAddress());
         client.init(PosumConfiguration.newInstance());
         client.start();
-        db = client.bindTo(DataEntityDB.getMain());
+        dataBroker = client;
         System.out.println("DB ready.");
     }
 
@@ -48,7 +58,7 @@ public class TestDataMasterClient extends TestDataClientImpl {
         System.out.println("MongoDB stopped.");
     }
 
-//    @Test
+    //    @Test
     public void testHistoryProfileManipulation() {
         //TODO refactor for test new structure
 //        Configuration conf = POSUMConfiguration.newInstance();
@@ -58,24 +68,81 @@ public class TestDataMasterClient extends TestDataClientImpl {
 //        DataStore myStore = new DataStore(conf);
 //
 //        String appId = "testHistoryApp";
-//        myStore.delete(db, DataEntityCollection.HISTORY, Collections.singletonMap("originalId", (Object)appId));
+//        myStore.delete(mainDB, DataEntityCollection.HISTORY, Collections.singletonMap("originalId", (Object)appId));
 //        AppProfile app = Records.newRecord(AppProfile.class);
 //        app.setId(appId);
 //        app.setStartTime(System.currentTimeMillis());
 //        app.setFinishTime(System.currentTimeMillis() + 10000);
 //        System.out.println(app);
 //        HistoryProfile appHistory = new HistoryProfilePBImpl<>(DataEntityCollection.APP, app);
-//        String historyId = myStore.store(db, DataEntityCollection.HISTORY, appHistory);
+//        String historyId = myStore.store(mainDB, DataEntityCollection.HISTORY, appHistory);
 //
 //        Map<String, Object> properties = new HashMap<>();
 //        properties.put("originalId", appId);
-//        List<HistoryProfile> profilesById = dataStore.find(db, DataEntityCollection.HISTORY, properties, 0, 0);
+//        List<HistoryProfile> profilesById = dataStore.find(mainDB, DataEntityCollection.HISTORY, properties, 0, 0);
 //        System.out.println(profilesById);
 //        assertTrue(profilesById.size() == 1);
 //        HistoryProfile otherHistory = profilesById.get(0);
 //        assertEquals(appId, otherHistory.getOriginalId());
 //        assertEquals(appHistory.getTimestamp(), otherHistory.getTimestamp());
 //
-//        myStore.delete(db, DataEntityCollection.HISTORY, historyId);
+//        myStore.delete(mainDB, DataEntityCollection.HISTORY, historyId);
+    }
+
+    @Test
+    public void testLogging() throws Exception {
+        String message = "Some message";
+        StoreLogCall storeLog = StoreLogCall.newInstance(message);
+        Long timestamp = storeLog.getLogEntry().getTimestamp();
+        String logId = (String) client.executeDatabaseCall(storeLog, null).getValue();
+        assertNotNull(logId);
+        FindByIdCall getLog = FindByIdCall.newInstance(
+                DataEntityCollection.AUDIT_LOG,
+                logId
+        );
+        LogEntry<SimplePropertyPayload> log =
+                client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntity();
+        assertEquals(logId, log.getId());
+        assertEquals(timestamp, log.getTimestamp());
+        assertEquals(message, log.getDetails().getValue());
+    }
+
+    @Test
+    public void testLogChronology() throws Exception {
+        String first = "First", second = "Second";
+        StoreLogCall storeLog = StoreLogCall.newInstance(first);
+        Long firstTimestamp = storeLog.getLogEntry().getTimestamp();
+        String firstId = (String) client.executeDatabaseCall(storeLog, null).getValue();
+        assertNotNull(firstId);
+
+        storeLog = StoreLogCall.newInstance(second);
+        Long secondTimestamp = firstTimestamp + 1000;
+        storeLog.getLogEntry().setTimestamp(secondTimestamp);
+        String secondId = (String) client.executeDatabaseCall(storeLog, null).getValue();
+        assertNotNull(secondId);
+
+        FindByQueryCall getLog = FindByQueryCall.newInstance(
+                DataEntityCollection.AUDIT_LOG,
+                QueryUtils.and(
+                        QueryUtils.is("type", LogEntry.Type.GENERAL),
+                        QueryUtils.greaterThan("timestamp", firstTimestamp)
+                )
+        );
+        List<LogEntry> logs =
+                client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntities();
+        assertEquals(1, logs.size());
+        assertEquals(secondId, logs.get(0).getId());
+
+        getLog = FindByQueryCall.newInstance(
+                DataEntityCollection.AUDIT_LOG,
+                QueryUtils.and(
+                        QueryUtils.is("type", LogEntry.Type.GENERAL),
+                        QueryUtils.greaterThanOrEqual("timestamp", firstTimestamp),
+                        QueryUtils.lessThan("timestamp", secondTimestamp)
+                )
+        );
+        logs = client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntities();
+        assertEquals(1, logs.size());
+        assertEquals(firstId, logs.get(0).getId());
     }
 }

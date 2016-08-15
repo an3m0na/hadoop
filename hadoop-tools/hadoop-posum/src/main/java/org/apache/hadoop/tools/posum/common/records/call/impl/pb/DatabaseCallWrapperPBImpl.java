@@ -89,6 +89,7 @@ public class DatabaseCallWrapperPBImpl implements PayloadPB {
     }
 
     public void setCall(DatabaseCall call) {
+        maybeInitBuilder();
         this.call = call;
     }
 

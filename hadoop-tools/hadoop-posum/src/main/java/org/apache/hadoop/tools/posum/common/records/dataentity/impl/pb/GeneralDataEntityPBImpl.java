@@ -12,8 +12,6 @@ import org.mongojack.Id;
 /**
  * Created by ane on 3/21/16.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-@org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class GeneralDataEntityPBImpl<
         E extends GeneralDataEntity,
         P extends com.google.protobuf.GeneratedMessage & com.google.protobuf.MessageOrBuilder,

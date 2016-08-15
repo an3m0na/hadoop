@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.database.store;
 
-import org.apache.hadoop.tools.posum.common.records.call.IdsByParamsCall;
+import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.database.client.Database;
@@ -39,7 +39,7 @@ public class TestDataImportExport {
         File tmpDir = new File(dataDumpPath);
         assertTrue(tmpDir.exists() && tmpDir.isDirectory());
         dataStore.clear();
-        IdsByParamsCall listIds = IdsByParamsCall.newInstance(DataEntityCollection.APP, Collections.<String, Object>emptyMap());
+        IdsByQueryCall listIds = IdsByQueryCall.newInstance(DataEntityCollection.APP, null);
         List<String> ids = db.executeDatabaseCall(listIds).getEntries();
         assertEquals(0, ids.size());
         ids = db.executeDatabaseCall(listIds).getEntries();

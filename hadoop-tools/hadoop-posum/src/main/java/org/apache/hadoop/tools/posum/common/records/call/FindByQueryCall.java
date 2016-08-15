@@ -1,49 +1,48 @@
 package org.apache.hadoop.tools.posum.common.records.call;
 
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
-import java.util.Map;
-
 /**
  * Created by ane on 3/20/16.
  */
-public abstract class FindByParamsCall extends ReadFromCollectionCall<MultiEntityPayload> {
+public abstract class FindByQueryCall extends ReadFromCollectionCall<MultiEntityPayload> {
 
-    public static FindByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params) {
-        FindByParamsCall call = Records.newRecord(FindByParamsCall.class);
+    public static FindByQueryCall newInstance(DataEntityCollection collection, DatabaseQuery queryOrNull) {
+        FindByQueryCall call = Records.newRecord(FindByQueryCall.class);
         call.setEntityCollection(collection);
-        call.setParams(params);
+        call.setQuery(queryOrNull);
         return call;
     }
 
-    public static FindByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params, int offsetOrZero, int limitOrZero) {
-        FindByParamsCall call = newInstance(collection, params);
+    public static FindByQueryCall newInstance(DataEntityCollection collection, DatabaseQuery params, int offsetOrZero, int limitOrZero) {
+        FindByQueryCall call = newInstance(collection, params);
         call.setOffsetOrZero(offsetOrZero);
         call.setLimitOrZero(limitOrZero);
         return call;
     }
 
-    public static FindByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params, String sortField, boolean sortDescending) {
-        FindByParamsCall call = newInstance(collection, params);
+    public static FindByQueryCall newInstance(DataEntityCollection collection, DatabaseQuery params, String sortField, boolean sortDescending) {
+        FindByQueryCall call = newInstance(collection, params);
         call.setSortField(sortField);
         call.setSortDescending(sortDescending);
         return call;
     }
 
-    public static FindByParamsCall newInstance(DataEntityCollection collection, Map<String, Object> params, String sortField, boolean sortDescending, int offsetOrZero, int limitOrZero) {
-        FindByParamsCall call = newInstance(collection, params, offsetOrZero, limitOrZero);
+    public static FindByQueryCall newInstance(DataEntityCollection collection, DatabaseQuery params, String sortField, boolean sortDescending, int offsetOrZero, int limitOrZero) {
+        FindByQueryCall call = newInstance(collection, params, offsetOrZero, limitOrZero);
         call.setSortField(sortField);
         call.setSortDescending(sortDescending);
         return call;
     }
 
-    public abstract Map<String, Object> getParams();
+    public abstract DatabaseQuery getQuery();
 
-    public abstract void setParams(Map<String, Object> params);
+    public abstract void setQuery(DatabaseQuery queryOrNull);
 
     public abstract Integer getLimitOrZero();
 
@@ -66,7 +65,7 @@ public abstract class FindByParamsCall extends ReadFromCollectionCall<MultiEntit
         return MultiEntityPayload.newInstance(getEntityCollection(), dataStore.find(
                 db,
                 getEntityCollection(),
-                getParams(),
+                getQuery(),
                 getSortField(),
                 getSortDescending(),
                 getOffsetOrZero(),

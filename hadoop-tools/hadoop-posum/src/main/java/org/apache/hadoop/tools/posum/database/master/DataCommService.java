@@ -7,7 +7,8 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.payload.CollectionMapPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -28,7 +29,7 @@ public class DataCommService extends CompositeService implements DataMasterProto
 
     private static Log logger = LogFactory.getLog(DataCommService.class);
 
-    DataMasterContext dmContext;
+    private DataMasterContext dmContext;
     private Server dmServer;
     private String connectAddress;
     private OrchestratorMasterClient masterClient;
@@ -99,7 +100,7 @@ public class DataCommService extends CompositeService implements DataMasterProto
         }
         try {
             return SimpleResponse.newInstance(callType.getPayloadType(),
-                    request.getCall().executeCall(dmContext.getDataStore(), request.getEntityDB()));
+                    dmContext.getDataBroker().executeDatabaseCall(request.getCall(), request.getEntityDB()));
         } catch (Exception e) {
             String message = "Exception executing call " + callType;
             logger.error(message, e);
@@ -114,9 +115,11 @@ public class DataCommService extends CompositeService implements DataMasterProto
                 case PING:
                     logger.info("Received ping with message: " + request.getPayload());
                     break;
-                case LOG_POLICY_CHANGE:
-                    dmContext.getDataStore().storeLogEntry(
-                            new LogEntry<>(LogEntry.Type.POLICY_CHANGE, request.getPayload()));
+                case LIST_COLLECTIONS:
+                    return SimpleResponse.newInstance(PayloadType.COLLECTION_MAP,
+                            CollectionMapPayload.newInstance(dmContext.getDataBroker().listExistingCollections()));
+                case CLEAR_DATA:
+                    dmContext.getDataBroker().clear();
                     break;
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());

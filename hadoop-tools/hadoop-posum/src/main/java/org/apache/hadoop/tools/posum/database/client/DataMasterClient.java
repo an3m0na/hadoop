@@ -1,17 +1,16 @@
 package org.apache.hadoop.tools.posum.database.client;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.*;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
-import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
@@ -51,7 +50,8 @@ public class DataMasterClient extends AbstractService implements DataBroker {
                     PosumConfiguration.DM_ADDRESS_DEFAULT,
                     PosumConfiguration.DM_PORT_DEFAULT,
                     DataMasterProtocol.class).createProxy();
-            checkPing();
+            Utils.checkPing(dmClient);
+            logger.info("Successfully connected to Data Master");
         } catch (IOException e) {
             throw new PosumException("Could not init DataMaster client", e);
         }
@@ -77,34 +77,17 @@ public class DataMasterClient extends AbstractService implements DataBroker {
 
     @Override
     public Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections() {
-        throw new NotImplementedException();
+        return Utils.<CollectionMapPayload>sendSimpleRequest(SimpleRequest.Type.LIST_COLLECTIONS, dmClient).getEntries();
     }
 
     @Override
     public void clear() {
-        throw new NotImplementedException();
+        Utils.sendSimpleRequest(SimpleRequest.Type.CLEAR_DATA, dmClient);
     }
 
     @Override
     public Database bindTo(DataEntityDB db) {
         return new DatabaseImpl(this, db);
-    }
-
-    public SimpleResponse sendSimpleRequest(SimpleRequest.Type type) {
-        return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type));
-    }
-
-    public SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
-        try {
-            return Utils.handleError(kind, dmClient.handleSimpleRequest(request));
-        } catch (IOException | YarnException e) {
-            throw new PosumException("Error during RPC call", e);
-        }
-    }
-
-    private void checkPing() {
-        sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
-        logger.info("Successfully connected to Data Master");
     }
 
 }

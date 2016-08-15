@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.test;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
@@ -22,12 +23,12 @@ import java.util.Map;
  * Created by ane on 4/20/16.
  */
 public class MiscTests {
-//    @Test
+    //    @Test
     public void checkRegistration() {
         System.out.println(NetUtils.createSocketAddr("0.0.0.0", 7000));
     }
 
-//    @Test
+    //    @Test
     public void testMongoRunner() throws IOException, InterruptedException {
         String scriptLocation = getClass().getClassLoader().getResource("run-mongo.sh").getFile();
         Process process = Runtime.getRuntime().exec("/bin/bash " + scriptLocation);
@@ -45,7 +46,7 @@ public class MiscTests {
         }
     }
 
-//    @Test
+    //    @Test
     public void testMongoStopper() throws IOException, InterruptedException {
         String scriptLocation = getClass().getClassLoader().getResource("run-mongo.sh").getFile();
         Process process = Runtime.getRuntime().exec("/bin/bash " + scriptLocation + " --stop");
@@ -63,7 +64,7 @@ public class MiscTests {
         }
     }
 
-//    @Test
+    //    @Test
     public void testHadoopAPIClient() {
         HadoopAPIClient apiClient = new HadoopAPIClient(PosumConfiguration.newInstance());
         List<AppProfile> apps = apiClient.getAppsInfo();
@@ -81,12 +82,12 @@ public class MiscTests {
         }
     }
 
-//    @Test
+    //    @Test
     public void checkDatabaseFeeding() {
         Configuration conf = PosumConfiguration.newInstance();
         DataStoreImpl dataStore = new DataStoreImpl(conf);
         DataMasterContext context = new DataMasterContext();
-        context.setDataStore(dataStore);
+        context.setDataBroker(org.apache.hadoop.tools.posum.common.util.Utils.exposeDataStoreAsBroker(dataStore));
         HadoopMonitor monitor = new HadoopMonitor(context);
         monitor.start();
         try {

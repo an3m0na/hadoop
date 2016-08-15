@@ -1,32 +1,31 @@
 package org.apache.hadoop.tools.posum.common.records.call;
 
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
-import java.util.Map;
-
 /**
  * Created by ane on 3/20/16.
  */
-public abstract class DeleteByParamsCall extends DeleteCall {
+public abstract class DeleteByQueryCall extends DeleteCall {
 
-    public static DeleteByParamsCall newInstance(DataEntityCollection type, Map<String, Object> params) {
-        DeleteByParamsCall call = Records.newRecord(DeleteByParamsCall.class);
+    public static DeleteByQueryCall newInstance(DataEntityCollection type, DatabaseQuery queryOrNull) {
+        DeleteByQueryCall call = Records.newRecord(DeleteByQueryCall.class);
         call.setEntityCollection(type);
-        call.setParams(params);
+        call.setQuery(queryOrNull);
         return call;
     }
 
-    public abstract Map<String, Object> getParams();
+    public abstract DatabaseQuery getQuery();
 
-    public abstract void setParams(Map<String, Object> params);
+    public abstract void setQuery(DatabaseQuery query);
 
     @Override
     public VoidPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
-        dataStore.delete(db, getEntityCollection(), getParams());
+        dataStore.delete(db, getEntityCollection(), getQuery());
         return VoidPayload.newInstance();
     }
 }

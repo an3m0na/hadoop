@@ -1,20 +1,21 @@
 package org.apache.hadoop.tools.posum.database.store;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.test.TestDataClientImpl;
+import org.apache.hadoop.tools.posum.test.TestDataBroker;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.After;
 
 /**
  * Created by ane on 3/4/16.
  */
-public class TestDataStore extends TestDataClientImpl {
+public class TestDataStore extends TestDataBroker {
 
     @Override
-    protected void setUpDataStore() throws Exception {
+    protected void setUpDataBroker() throws Exception {
         Utils.runMongoDB();
-        db = new DataStoreImpl(PosumConfiguration.newInstance()).bindTo(DataEntityDB.getMain());
+        dataBroker = org.apache.hadoop.tools.posum.common.util.Utils.exposeDataStoreAsBroker(
+                new DataStoreImpl(PosumConfiguration.newInstance())
+        );
     }
 
     @After

@@ -10,27 +10,27 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDa
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.yarn.proto.PosumProtos;
-import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityProto;
-import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityPayloadProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
  */
 public class SingleEntityPayloadPBImpl extends SingleEntityPayload implements PayloadPB {
-    private SingleEntityProto proto = SingleEntityProto.getDefaultInstance();
-    private SingleEntityProto.Builder builder = null;
+    private SingleEntityPayloadProto proto = SingleEntityPayloadProto.getDefaultInstance();
+    private SingleEntityPayloadProto.Builder builder = null;
     private boolean viaProto = false;
 
     public SingleEntityPayloadPBImpl() {
-        builder = SingleEntityProto.newBuilder();
+        builder = SingleEntityPayloadProto.newBuilder();
     }
 
-    public SingleEntityPayloadPBImpl(SingleEntityProto proto) {
+    public SingleEntityPayloadPBImpl(SingleEntityPayloadProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public SingleEntityProto getProto() {
+    public SingleEntityPayloadProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -70,14 +70,14 @@ public class SingleEntityPayloadPBImpl extends SingleEntityPayload implements Pa
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = SingleEntityProto.newBuilder(proto);
+            builder = SingleEntityPayloadProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
     public DataEntityCollection getEntityCollection() {
-        SingleEntityProtoOrBuilder p = viaProto ? proto : builder;
+        SingleEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
         return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
     }
 
@@ -89,7 +89,7 @@ public class SingleEntityPayloadPBImpl extends SingleEntityPayload implements Pa
 
     @Override
     public <T extends GeneralDataEntity> T getEntity() {
-        SingleEntityProtoOrBuilder p = viaProto ? proto : builder;
+        SingleEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
         if (p.hasEntity()) {
             try {
                 Class eClass = getEntityCollection().getMappedClass();
@@ -115,7 +115,7 @@ public class SingleEntityPayloadPBImpl extends SingleEntityPayload implements Pa
 
     @Override
     public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        proto = SingleEntityProto.parseFrom(data);
+        proto = SingleEntityPayloadProto.parseFrom(data);
         viaProto = true;
     }
 }

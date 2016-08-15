@@ -117,9 +117,4 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         return masterClient;
     }
 
-
-    void logPolicyChange(String policyName) {
-        dataClient.sendSimpleRequest("logPolicyChange",
-                SimpleRequest.newInstance(SimpleRequest.Type.LOG_POLICY_CHANGE, policyName));
-    }
 }
