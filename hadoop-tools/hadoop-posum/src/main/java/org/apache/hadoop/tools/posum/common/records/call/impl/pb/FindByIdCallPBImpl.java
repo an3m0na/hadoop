@@ -9,27 +9,27 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.yarn.proto.PosumProtos;
-import org.apache.hadoop.yarn.proto.PosumProtos.ByIdProto;
-import org.apache.hadoop.yarn.proto.PosumProtos.ByIdProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.ByIdCallProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.ByIdCallProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
  */
 public class FindByIdCallPBImpl extends FindByIdCall implements PayloadPB {
-    private ByIdProto proto = ByIdProto.getDefaultInstance();
-    private ByIdProto.Builder builder = null;
+    private ByIdCallProto proto = ByIdCallProto.getDefaultInstance();
+    private ByIdCallProto.Builder builder = null;
     private boolean viaProto = false;
 
     public FindByIdCallPBImpl() {
-        builder = ByIdProto.newBuilder();
+        builder = ByIdCallProto.newBuilder();
     }
 
-    public FindByIdCallPBImpl(ByIdProto proto) {
+    public FindByIdCallPBImpl(ByIdCallProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public ByIdProto getProto() {
+    public ByIdCallProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -70,14 +70,14 @@ public class FindByIdCallPBImpl extends FindByIdCall implements PayloadPB {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = ByIdProto.newBuilder(proto);
+            builder = ByIdCallProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
     public DataEntityCollection getEntityCollection() {
-        ByIdProtoOrBuilder p = viaProto ? proto : builder;
+        ByIdCallProtoOrBuilder p = viaProto ? proto : builder;
         return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
     }
 
@@ -91,7 +91,7 @@ public class FindByIdCallPBImpl extends FindByIdCall implements PayloadPB {
 
     @Override
     public String getId() {
-        ByIdProtoOrBuilder p = viaProto ? proto : builder;
+        ByIdCallProtoOrBuilder p = viaProto ? proto : builder;
         return p.getId();
     }
 
@@ -108,7 +108,7 @@ public class FindByIdCallPBImpl extends FindByIdCall implements PayloadPB {
 
     @Override
     public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        this.proto = ByIdProto.parseFrom(data);
+        this.proto = ByIdCallProto.parseFrom(data);
         viaProto = true;
     }
 

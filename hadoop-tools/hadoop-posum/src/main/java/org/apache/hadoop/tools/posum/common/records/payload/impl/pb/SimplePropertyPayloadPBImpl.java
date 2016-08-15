@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
@@ -14,6 +16,8 @@ import java.io.IOException;
 /**
  * Created by ane on 3/20/16.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implements PayloadPB {
     private SimplePropertyPayloadProto proto = SimplePropertyPayloadProto.getDefaultInstance();
     private SimplePropertyPayloadProto.Builder builder = null;
@@ -28,6 +32,8 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implement
         viaProto = true;
     }
 
+    @JsonIgnore
+    @org.codehaus.jackson.annotate.JsonIgnore
     public SimplePropertyPayloadProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
@@ -77,7 +83,7 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implement
     @Override
     public PropertyType getType() {
         SimplePropertyPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return PropertyType.valueOf(p.getType().name().substring("PROPERTY_".length()));
+        return PropertyType.valueOf(p.getType().name().substring("PROP_".length()));
     }
 
     @Override
@@ -87,7 +93,7 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implement
             builder.clearType();
             return;
         }
-        builder.setType(SimplePropertyPayloadProto.PropertyTypeProto.valueOf("PROPERTY_" + type.name()));
+        builder.setType(SimplePropertyPayloadProto.PropertyTypeProto.valueOf("PROP_" + type.name()));
     }
 
     @Override
@@ -129,6 +135,8 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implement
     }
 
     @Override
+    @JsonIgnore
+    @org.codehaus.jackson.annotate.JsonIgnore
     public ByteString getProtoBytes() {
         return getProto().toByteString();
     }

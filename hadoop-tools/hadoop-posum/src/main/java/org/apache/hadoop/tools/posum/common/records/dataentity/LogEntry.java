@@ -2,29 +2,27 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.TaskPredictionPayloadPBImpl;
-import org.apache.hadoop.tools.posum.common.util.PolicyMap;
-import org.bson.types.ObjectId;
-import org.mongojack.Id;
-
+import org.apache.hadoop.tools.posum.common.records.payload.Payload;
+import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
 /**
  * Created by ane on 3/7/16.
  */
 @JsonDeserialize(using = LogEntryDeserializer.class)
-public class LogEntry<T> implements GeneralDataEntity {
+public interface LogEntry<T extends Payload> extends GeneralDataEntity {
 
-    public enum Type {
-        POLICY_CHANGE(String.class, DataEntityCollection.LOG_SCHEDULER),
-        POLICY_MAP(PolicyMap.class, DataEntityCollection.POSUM_STATS),
-        TASK_PREDICTION(TaskPredictionPayloadPBImpl.class, DataEntityCollection.LOG_PREDICTOR);
+    enum Type {
+        POLICY_CHANGE(PayloadType.SIMPLE_PROPERTY, DataEntityCollection.AUDIT_LOG),
+        POLICY_MAP(PayloadType.POLICY_INFO_MAP, DataEntityCollection.POSUM_STATS),
+        TASK_PREDICTION(PayloadType.TASK_PREDICTION, DataEntityCollection.PREDICTOR_LOG),
+        GENERAL(PayloadType.SIMPLE_PROPERTY, DataEntityCollection.AUDIT_LOG);
 
-        @JsonIgnore
-        private Class detailsClass;
         @JsonIgnore
         private DataEntityCollection collection;
+        @JsonIgnore
+        private PayloadType detailsType;
 
-        Type(Class detailsClass, DataEntityCollection collection) {
-            this.detailsClass = detailsClass;
+        Type(PayloadType detailsType, DataEntityCollection collection) {
+            this.detailsType = detailsType;
             this.collection = collection;
         }
 
@@ -32,55 +30,20 @@ public class LogEntry<T> implements GeneralDataEntity {
             return collection;
         }
 
-        public Class getDetailsClass() {
-            return detailsClass;
+        public PayloadType getDetailsType() {
+            return detailsType;
         }
     }
 
-    @Id
-    private String id;
-    private Type type;
-    private T details;
-    private Long timestamp;
+    Type getType();
 
-    public LogEntry(Type type, T details) {
-        this.type = type;
-        this.timestamp = System.currentTimeMillis();
-        this.details = details;
-        this.id = ObjectId.get().toHexString();
-    }
+    void setType(Type type);
 
-    @Override
-    public String getId() {
-        return id;
-    }
+    T getDetails();
 
-    @Override
-    public void setId(String id) {
-        this.id = id;
-    }
+    void setDetails(T details);
 
-    public Type getType() {
-        return type;
-    }
+    Long getTimestamp();
 
-    public void setType(Type type) {
-        this.type = type;
-    }
-
-    public T getDetails() {
-        return details;
-    }
-
-    public void setDetails(T details) {
-        this.details = details;
-    }
-
-    public Long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
-    }
+    void setTimestamp(Long timestamp);
 }

@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.call;
 
+import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
@@ -8,7 +9,6 @@ import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -33,8 +33,8 @@ public abstract class JobForAppCall extends LockBasedDatabaseCallImpl<SingleEnti
 
     @Override
     public SingleEntityPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
-        FindByParamsCall findJobCall = FindByParamsCall.newInstance(DataEntityCollection.JOB,
-                Collections.singletonMap("appId", (Object) getAppId()), 0, 0);
+        FindByQueryCall findJobCall = FindByQueryCall.newInstance(DataEntityCollection.JOB,
+                QueryUtils.is("appId", getAppId()));
         List<JobProfile> profiles = findJobCall.executeCall(dataStore, db).getEntities();
         if (profiles.size() == 1)
             return SingleEntityPayload.newInstance(DataEntityCollection.JOB, profiles.get(0));

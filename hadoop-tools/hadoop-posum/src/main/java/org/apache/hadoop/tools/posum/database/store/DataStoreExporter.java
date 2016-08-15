@@ -31,15 +31,7 @@ public class DataStoreExporter {
                 throw new PosumException("Could not create data dump directory: " + dumpPath);
         for (Map.Entry<DataEntityDB, List<DataEntityCollection>> dbMapEntry : collections.entrySet()) {
             for (DataEntityCollection collection : dbMapEntry.getValue()) {
-                List<GeneralDataEntity> entities = dataStore.find(
-                        dbMapEntry.getKey(),
-                        collection,
-                        Collections.<String, Object>emptyMap(),
-                        null,
-                        false,
-                        0,
-                        0
-                );
+                List<GeneralDataEntity> entities = dataStore.find(dbMapEntry.getKey(), collection, null, null, false, 0, 0);
                 File outFile = new File(dumpDir,
                         "[" + dbMapEntry.getKey().getName() + "]" + collection.getLabel() + ".json");
 

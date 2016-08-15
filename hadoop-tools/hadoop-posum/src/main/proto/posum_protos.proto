@@ -10,6 +10,8 @@ import "yarn_service_protos.proto";
 
 import "yarn_server_common_service_protos.proto";
 
+// --------- Entities ---------
+
 message EntityDBProto {
     required EntityDBTypeProto type = 1;
     optional string view = 2;
@@ -32,6 +34,9 @@ enum EntityCollectionProto {
     COLL_JOB_CONF_HISTORY = 8;
     COLL_COUNTER_HISTORY = 9;
     COLL_HISTORY = 10;
+    COLL_POSUM_STATS = 11;
+    COLL_PREDICTOR_LOG = 12;
+    COLL_AUDIT_LOG = 13;
 }
 
 message AppProfileProto {
@@ -46,30 +51,27 @@ message AppProfileProto {
     optional AppTrackingUIProto trackingUI = 9;
 
     enum AppStateProto {
-        STATE_NULL = 0;
-        STATE_NEW = 1;
-        STATE_NEW_SAVING = 2;
-        STATE_SUBMITTED = 3;
-        STATE_ACCEPTED = 4;
-        STATE_RUNNING = 5;
-        STATE_FINISHED = 6;
-        STATE_FAILED = 7;
-        STATE_KILLED = 8;
+        STATE_NEW = 0;
+        STATE_NEW_SAVING = 1;
+        STATE_SUBMITTED = 2;
+        STATE_ACCEPTED = 3;
+        STATE_RUNNING = 4;
+        STATE_FINISHED = 5;
+        STATE_FAILED = 6;
+        STATE_KILLED = 7;
     }
 
     enum AppStatusProto {
-        STATUS_NULL = 0;
-        STATUS_UNDEFINED = 1;
-        STATUS_SUCCEEDED = 2;
-        STATUS_FAILED = 3;
-        STATUS_KILLED = 4;
+        STATUS_UNDEFINED = 0;
+        STATUS_SUCCEEDED = 1;
+        STATUS_FAILED = 2;
+        STATUS_KILLED = 3;
     }
 
     enum AppTrackingUIProto {
-        UI_NULL = 0;
-        UI_RM = 1;
-        UI_AM = 2;
-        UI_HISTORY = 3;
+        UI_RM = 0;
+        UI_AM = 1;
+        UI_HISTORY = 2;
     }
 }
 
@@ -159,57 +161,21 @@ message HistoryProfileProto {
     required bytes original = 5;
 }
 
-message SimplePropertyPayloadProto {
-    required PropertyTypeProto type = 1;
-    required string name = 2;
-    optional string value = 3;
+message LogEntryProto {
+    required string id = 1;
+    required int64 timestamp = 3;
+    required LogTypeProto type = 4;
+    optional bytes details = 5;
 
-    enum PropertyTypeProto {
-        PROPERTY_STRING = 0;
-        PROPERTY_LONG = 1;
-        PROPERTY_INT = 2;
-        PROPERTY_BOOL = 3;
+    enum LogTypeProto {
+        LG_POLICY_CHANGE = 1;
+        LG_POLICY_MAP = 2;
+        LG_TASK_PREDICTION = 3;
+        LG_GENERAL = 4;
     }
 }
 
-message ByParamsProto {
-    required EntityCollectionProto collection = 1;
-    repeated SimplePropertyPayloadProto properties = 2;
-    optional string sortField = 3;
-    optional bool sortDescending = 4;
-    optional int32 offset = 5;
-    optional int32 limit = 6;
-}
-
-message ByIdProto {
-    required EntityCollectionProto collection = 1;
-    required string id = 2;
-}
-
-message TransactionCallProto {
-    repeated DatabaseCallProto calls = 1;
-}
-
-message JobForAppCallProto {
-    required string appId = 1;
-    required string user = 2;
-}
-
-message SaveJobFlexFieldsCallProto {
-    required string jobId = 1;
-    required StringStringMapPayloadProto newFields = 2;
-    optional bool forHistory = 3;
-}
-
-message SingleEntityProto {
-    required EntityCollectionProto collection = 1;
-    optional bytes entity = 2;
-}
-
-message MultiEntityProto {
-    required EntityCollectionProto collection = 1;
-    repeated bytes entities = 2;
-}
+// --------- Requests ---------
 
 message SimpleRequestProto {
     required SimpleRequestTypeProto type = 1;
@@ -219,61 +185,10 @@ message SimpleRequestProto {
         REQ_PING = 0;
         REQ_CHANGE_POLICY = 1;
         REQ_START = 2;
-        REQ_LOG_POLICY_CHANGE = 3;
-        REQ_SYSTEM_ADDRESSES = 4;
+        REQ_SYSTEM_ADDRESSES = 3;
+        REQ_LIST_COLLECTIONS = 4;
+        REQ_CLEAR_DATA = 5;
     }
-}
-
-
-message DatabaseCallProto {
-    required CallTypeProto type = 1;
-    required bytes call = 2;
-
-    enum CallTypeProto {
-        CALL_FIND_BY_ID = 0;
-        CALL_FIND_BY_PARAMS = 1;
-        CALL_STORE = 2;
-        CALL_UPDATE_OR_STORE = 3;
-        CALL_DELETE_BY_ID = 4;
-        CALL_DELETE_BY_PARAMS = 5;
-        CALL_JOB_FOR_APP = 6;
-        CALL_SAVE_FLEX_FIELDS = 7;
-        CALL_IDS_BY_PARAMS = 8;
-        CALL_TRANSACTION = 9;
-    }
-}
-
-message DatabaseCallExecutionRequestProto {
-    optional EntityDBProto entityDB = 1;
-    required DatabaseCallProto call = 2;
-}
-
-message SimpleResponseProto {
-    required bool successful = 1;
-    optional string text = 2;
-    required PayloadTypeProto type = 3;
-    optional bytes payload = 4;
-    optional string exception = 5;
-}
-
-enum PayloadTypeProto {
-    PLD_VOID = 0;
-    PLD_SINGLE_ENTITY = 1;
-    PLD_MULTI_ENTITY = 2;
-    PLD_STRING_STRING_MAP = 3;
-    PLD_STRING_LIST = 4;
-    PLD_SIMPLE_PROPERTY = 5;
-}
-
-message SimulationResultPayloadProto {
-    required string policyName = 1;
-    optional CompoundScorePayloadProto score = 2;
-}
-
-message CompoundScorePayloadProto {
-    optional double runtime = 1;
-    optional double penalty = 2;
-    optional double cost = 3;
 }
 
 message HandleSimResultRequestProto {
@@ -290,6 +205,89 @@ message RegistrationRequestProto {
         PROCESS_SIMULATOR = 2;
         PROCESS_SCHEDULER = 3;
     }
+}
+
+message DatabaseCallExecutionRequestProto {
+    optional EntityDBProto entityDB = 1;
+    required DatabaseCallProto call = 2;
+}
+
+// --------- Responses ---------
+
+message SimpleResponseProto {
+    required bool successful = 1;
+    optional string text = 2;
+    required PayloadTypeProto type = 3;
+    optional bytes payload = 4;
+    optional string exception = 5;
+}
+
+// --------- Payloads ---------
+
+enum PayloadTypeProto {
+    PLD_VOID = 0;
+    PLD_SINGLE_ENTITY = 1;
+    PLD_MULTI_ENTITY = 2;
+    PLD_STRING_STRING_MAP = 3;
+    PLD_STRING_LIST = 4;
+    PLD_SIMPLE_PROPERTY = 5;
+    PLD_COLLECTION_MAP = 6;
+    PLD_POLICY_INFO_MAP = 7;
+}
+
+message SimplePropertyPayloadProto {
+    required PropertyTypeProto type = 1;
+    optional string name = 2;
+    optional string value = 3;
+
+    enum PropertyTypeProto {
+        PROP_STRING = 0;
+        PROP_LONG = 1;
+        PROP_INT = 2;
+        PROP_BOOL = 3;
+        PROP_ENUM = 4;
+    }
+}
+
+message PolicyInfoMapPayloadProto {
+    repeated PolicyInfoPayloadProto entries = 1;
+}
+
+message PolicyInfoPayloadProto {
+    optional string policyName = 1;
+    optional uint32 usageNumber = 2;
+    optional uint64 usageTime = 3;
+    optional uint64 lastStarted = 4;
+}
+
+message CollectionMapPayloadProto {
+    repeated CollectionEntryProto entries = 1;
+}
+
+message CollectionEntryProto {
+    required EntityDBProto entityDB = 1;
+    repeated EntityCollectionProto collections = 2;
+}
+
+message SingleEntityPayloadProto {
+    required EntityCollectionProto collection = 1;
+    optional bytes entity = 2;
+}
+
+message MultiEntityPayloadProto {
+    required EntityCollectionProto collection = 1;
+    repeated bytes entities = 2;
+}
+
+message SimulationResultPayloadProto {
+    required string policyName = 1;
+    optional CompoundScorePayloadProto score = 2;
+}
+
+message CompoundScorePayloadProto {
+    optional double runtime = 1;
+    optional double penalty = 2;
+    optional double cost = 3;
 }
 
 message StringStringMapPayloadProto {
@@ -321,4 +319,99 @@ message TaskPredictionPayloadProto {
     required string predictor = 1;
     required string id = 2;
     optional int64 duration = 3;
+}
+
+// --------- Database Calls ---------
+
+
+message DatabaseCallProto {
+    required CallTypeProto type = 1;
+    required bytes call = 2;
+
+    enum CallTypeProto {
+        CALL_FIND_BY_ID = 0;
+        CALL_FIND_BY_PARAMS = 1;
+        CALL_STORE = 2;
+        CALL_UPDATE_OR_STORE = 3;
+        CALL_DELETE_BY_ID = 4;
+        CALL_DELETE_BY_PARAMS = 5;
+        CALL_JOB_FOR_APP = 6;
+        CALL_SAVE_FLEX_FIELDS = 7;
+        CALL_IDS_BY_PARAMS = 8;
+        CALL_TRANSACTION = 9;
+        CALL_STORE_LOG = 10;
+        CALL_FIND_BY_QUERY = 11;
+        CALL_DOCUMENTS_BY_QUERY = 12;
+    }
+}
+
+message ByIdCallProto {
+    required EntityCollectionProto collection = 1;
+    required string id = 2;
+}
+
+message ByParamsCallProto {
+    required EntityCollectionProto collection = 1;
+    repeated SimplePropertyPayloadProto properties = 2;
+    optional string sortField = 3;
+    optional bool sortDescending = 4;
+    optional int32 offset = 5;
+    optional int32 limit = 6;
+}
+
+message ByQueryCallProto {
+    required EntityCollectionProto collection = 1;
+    optional DatabaseQueryProto query = 2;
+    optional string sortField = 3;
+    optional bool sortDescending = 4;
+    optional int32 offset = 5;
+    optional int32 limit = 6;
+}
+
+message TransactionCallProto {
+    repeated DatabaseCallProto calls = 1;
+}
+
+message JobForAppCallProto {
+    required string appId = 1;
+    required string user = 2;
+}
+
+message SaveJobFlexFieldsCallProto {
+    required string jobId = 1;
+    required StringStringMapPayloadProto newFields = 2;
+    optional bool forHistory = 3;
+}
+
+message DatabaseQueryProto {
+    required TypeProto type = 1;
+    required bytes query = 2;
+
+    enum TypeProto {
+        QRY_COMPOSITION = 0;
+        QRY_PROPERTY_VALUE = 1;
+    }
+}
+
+message PropertyValueQueryProto {
+    required TypeProto type = 1;
+    required SimplePropertyPayloadProto property = 2;
+
+    enum TypeProto {
+        PQRY_IS = 0;
+        PQRY_LESS = 1;
+        PQRY_LESS_OR_EQUAL = 2;
+        PQRY_GREATER = 3;
+        PQRY_GREATER_OR_EQUAL = 4;
+    }
+}
+
+message CompositionQueryProto {
+    required TypeProto type = 1;
+    repeated DatabaseQueryProto queries = 2;
+
+    enum TypeProto {
+        CQRY_AND = 0;
+        CQRY_OR = 1;
+    }
 }

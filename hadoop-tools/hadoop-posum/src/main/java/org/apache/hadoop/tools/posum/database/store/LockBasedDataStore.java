@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.database.client.Database;
 
@@ -15,7 +16,7 @@ public interface LockBasedDataStore {
 
     <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
                                                DataEntityCollection collection,
-                                               Map<String, Object> params,
+                                               DatabaseQuery query,
                                                String sortField,
                                                boolean sortDescending,
                                                int offsetOrZero,
@@ -23,7 +24,7 @@ public interface LockBasedDataStore {
 
     List<String> findIds(DataEntityDB db,
                          DataEntityCollection collection,
-                         Map<String, Object> queryParams,
+                         DatabaseQuery query,
                          String sortField,
                          boolean sortDescending,
                          int offsetOrZero,
@@ -35,7 +36,9 @@ public interface LockBasedDataStore {
 
     void delete(DataEntityDB db, DataEntityCollection collection, String id);
 
-    void delete(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams);
+    void delete(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query);
+
+    String getRawDocuments(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query);
 
     Database bindTo(DataEntityDB db);
 

@@ -1,11 +1,15 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
+import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -14,6 +18,7 @@ import org.bson.Document;
 import org.mongojack.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,9 +31,7 @@ public class DataStoreImpl implements LockBasedDataStore {
 
     private static Log logger = LogFactory.getLog(DataStoreImpl.class);
 
-    private final Configuration conf;
     private MongoClient mongoClient;
-    private DataEntityDB logDb = DataEntityDB.getLogs();
     private ReentrantReadWriteLock masterLock = new ReentrantReadWriteLock();
     private Map<DataEntityDB, DBAssets> dbRegistry = new ConcurrentHashMap<>(DataEntityDB.Type.values().length);
 
@@ -42,7 +45,6 @@ public class DataStoreImpl implements LockBasedDataStore {
         if (url != null)
             mongoClient = new MongoClient(url);
         mongoClient = new MongoClient();
-        this.conf = conf;
     }
 
     private <T extends GeneralDataEntity> JacksonDBCollection<T, String> getCollectionForRead(DataEntityDB db, DataEntityCollection collection) {
@@ -92,23 +94,23 @@ public class DataStoreImpl implements LockBasedDataStore {
     @Override
     public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
                                                       DataEntityCollection collection,
-                                                      Map<String, Object> params,
+                                                      DatabaseQuery query,
                                                       String sortField,
                                                       boolean sortDescending,
                                                       int offsetOrZero,
                                                       int limitOrZero) {
-        return find(db, collection, composeQuery(params), sortField, sortDescending, offsetOrZero, limitOrZero);
+        return find(db, collection, interpretQuery(query), sortField, sortDescending, offsetOrZero, limitOrZero);
     }
 
     @Override
     public List<String> findIds(DataEntityDB db,
                                 DataEntityCollection collection,
-                                Map<String, Object> params,
+                                DatabaseQuery query,
                                 String sortField,
                                 boolean sortDescending,
                                 int offsetOrZero,
                                 int limitOrZero) {
-        List rawList = find(db, collection, params, sortField, sortDescending, offsetOrZero, limitOrZero);
+        List rawList = find(db, collection, query, sortField, sortDescending, offsetOrZero, limitOrZero);
         List<String> ret = new ArrayList<>(rawList.size());
         for (Object rawObject : rawList) {
             ret.add(collection.getMappedClass().cast(rawObject).getId());
@@ -158,14 +160,48 @@ public class DataStoreImpl implements LockBasedDataStore {
         return cursor;
     }
 
-    private DBQuery.Query composeQuery(Map<String, Object> queryParams) {
-        if (queryParams == null || queryParams.size() == 0)
-            return DBQuery.empty();
-        ArrayList<DBQuery.Query> paramList = new ArrayList<>(queryParams.size());
-        for (Map.Entry<String, Object> param : queryParams.entrySet()) {
-            paramList.add(DBQuery.is(param.getKey(), param.getValue()));
+    private DBQuery.Query interpretQuery(PropertyValueQuery query) {
+        SimplePropertyPayload property = query.getProperty();
+        switch (query.getType()) {
+            case IS:
+                return DBQuery.is(property.getName(), property.getValue());
+            case LESS:
+                return DBQuery.lessThan(property.getName(), property.getValue());
+            case LESS_OR_EQUAL:
+                return DBQuery.lessThanEquals(property.getName(), property.getValue());
+            case GREATER:
+                return DBQuery.greaterThan(property.getName(), property.getValue());
+            case GREATER_OR_EQUAL:
+                return DBQuery.greaterThanEquals(property.getName(), property.getValue());
+            default:
+                throw new PosumException("PropertyValue query type not recognized: " + query.getType());
         }
-        return DBQuery.and(paramList.toArray(new DBQuery.Query[queryParams.size()]));
+    }
+
+    private DBQuery.Query interpretQuery(CompositionQuery query) {
+        DBQuery.Query[] innerQueries = new DBQuery.Query[query.getQueries().size()];
+        int i = 0;
+        for (DatabaseQuery innerQuery : query.getQueries()) {
+            innerQueries[i++] = interpretQuery(innerQuery);
+        }
+        switch (query.getType()) {
+            case AND:
+                return DBQuery.and(innerQueries);
+            case OR:
+                return DBQuery.or(innerQueries);
+            default:
+                throw new PosumException("Composition query type not recognized: " + query.getType());
+        }
+    }
+
+    private DBQuery.Query interpretQuery(DatabaseQuery query) {
+        if (query == null)
+            return DBQuery.empty();
+        if (query instanceof CompositionQuery)
+            return interpretQuery((CompositionQuery) query);
+        if (query instanceof PropertyValueQuery)
+            return interpretQuery((PropertyValueQuery) query);
+        throw new PosumException("Query type not recognized: " + query.getClass());
     }
 
     @Override
@@ -189,72 +225,16 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public void delete(DataEntityDB db, DataEntityCollection collection, Map<String, Object> queryParams) {
-        getCollectionForWrite(db, collection).remove(composeQuery(queryParams));
+    public void delete(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query) {
+        getCollectionForWrite(db, collection).remove(interpretQuery(query));
     }
 
-    public String getRawDocumentList(String database, String collection, Map<String, Object> queryParams) {
-        return mongoClient.getDatabase(database)
-                .getCollection(collection)
-                .find(new Document(queryParams)).toString();
-    }
-
-    public <T> void storeLogEntry(LogEntry<T> logEntry) {
-        lockForWrite(logDb);
-        try {
-            updateOrStore(logDb, logEntry.getType().getCollection(), logEntry);
-        } finally {
-            unlockForWrite(logDb);
-        }
-    }
-
-    public <T> List<LogEntry<T>> findLogs(LogEntry.Type type, long from, long to) {
-        lockForRead(logDb);
-        try {
-            return find(logDb,
-                    type.getCollection(),
-                    DBQuery.and(DBQuery.greaterThan("timestamp", from),
-                            DBQuery.lessThanEquals("timestamp", to),
-                            DBQuery.is("type", type)),
-                    null,
-                    false,
-                    0,
-                    0
-            );
-        } finally {
-            unlockForRead(logDb);
-        }
-    }
-
-    public <T> List<LogEntry<T>> findLogs(LogEntry.Type type, long after) {
-        lockForRead(logDb);
-        try {
-            return find(logDb,
-                    type.getCollection(),
-                    DBQuery.and(DBQuery.greaterThan("timestamp", after),
-                            DBQuery.is("type", type)),
-                    null,
-                    false,
-                    0,
-                    0
-            );
-        } finally {
-            unlockForRead(logDb);
-        }
-    }
-
-    public <T> LogEntry<T> findReport(LogEntry.Type type) {
-        lockForRead(logDb);
-        try {
-            return findById(logDb, type.getCollection(), type.name());
-        } finally {
-            unlockForRead(logDb);
-        }
-    }
-
-    public <T> void storeLogReport(LogEntry<T> logReport) {
-        logReport.setId(logReport.getType().name());
-        storeLogEntry(logReport);
+    @Override
+    public String getRawDocuments(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query) {
+        DBObject queryObject = getCollectionForRead(db, collection).serializeQuery(interpretQuery(query));
+        return mongoClient.getDatabase(db.getName())
+                .getCollection(collection.getLabel())
+                .find(new Document(queryObject.toMap())).toString();
     }
 
     @Override
@@ -298,11 +278,35 @@ public class DataStoreImpl implements LockBasedDataStore {
 
     @Override
     public Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections() {
-        throw new NotImplementedException();
+        Map<DataEntityDB, List<DataEntityCollection>> ret = new HashMap<>(dbRegistry.size());
+        for (Map.Entry<DataEntityDB, DBAssets> assetsEntry : dbRegistry.entrySet()) {
+            List<DataEntityCollection> collections = new ArrayList<>(DataEntityCollection.values().length / 2);
+            for (Map.Entry<DataEntityCollection, JacksonDBCollection> collectionEntry :
+                    assetsEntry.getValue().collections.entrySet()) {
+                if (collectionEntry.getValue().count() > 0) {
+                    collections.add(collectionEntry.getKey());
+                }
+            }
+            if (collections.size() > 0)
+                ret.put(assetsEntry.getKey(), collections);
+        }
+        return ret;
     }
 
     @Override
     public void clear() {
-        throw new NotImplementedException();
+        lockAll();
+        try {
+            for (Map.Entry<DataEntityDB, DBAssets> assetsEntry : dbRegistry.entrySet()) {
+                for (Map.Entry<DataEntityCollection, JacksonDBCollection> collectionEntry :
+                        assetsEntry.getValue().collections.entrySet()) {
+                    collectionEntry.getValue().drop();
+                }
+                assetsEntry.getValue().collections.clear();
+            }
+            dbRegistry.clear();
+        } finally {
+            unlockAll();
+        }
     }
 }

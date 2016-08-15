@@ -5,35 +5,32 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.proto.PosumProtos;
-import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityProto;
-import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityPayloadProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityPayloadProtoOrBuilder;
 
 /**
  * Created by ane on 3/20/16.
  */
 public class UpdateOrStoreCallPBImpl extends UpdateOrStoreCall implements PayloadPB {
-    private SingleEntityProto proto = SingleEntityProto.getDefaultInstance();
-    private SingleEntityProto.Builder builder = null;
+    private SingleEntityPayloadProto proto = SingleEntityPayloadProto.getDefaultInstance();
+    private SingleEntityPayloadProto.Builder builder = null;
     private boolean viaProto = false;
 
     public UpdateOrStoreCallPBImpl() {
-        builder = SingleEntityProto.newBuilder();
+        builder = SingleEntityPayloadProto.newBuilder();
     }
 
-    public UpdateOrStoreCallPBImpl(SingleEntityProto proto) {
+    public UpdateOrStoreCallPBImpl(SingleEntityPayloadProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public SingleEntityProto getProto() {
+    public SingleEntityPayloadProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -73,14 +70,14 @@ public class UpdateOrStoreCallPBImpl extends UpdateOrStoreCall implements Payloa
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = SingleEntityProto.newBuilder(proto);
+            builder = SingleEntityPayloadProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
     public DataEntityCollection getEntityCollection() {
-        SingleEntityProtoOrBuilder p = viaProto ? proto : builder;
+        SingleEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
         return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
     }
 
@@ -92,7 +89,7 @@ public class UpdateOrStoreCallPBImpl extends UpdateOrStoreCall implements Payloa
 
     @Override
     public GeneralDataEntity getEntity() {
-        SingleEntityProtoOrBuilder p = viaProto ? proto : builder;
+        SingleEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
         if (p.hasEntity()) {
             try {
                 Class eClass = getEntityCollection().getMappedClass();
@@ -118,7 +115,7 @@ public class UpdateOrStoreCallPBImpl extends UpdateOrStoreCall implements Payloa
 
     @Override
     public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        this.proto = SingleEntityProto.parseFrom(data);
+        this.proto = SingleEntityPayloadProto.parseFrom(data);
         viaProto = true;
     }
 }
