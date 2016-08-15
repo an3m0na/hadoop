@@ -232,6 +232,7 @@ enum PayloadTypeProto {
     PLD_STRING_LIST = 4;
     PLD_SIMPLE_PROPERTY = 5;
     PLD_COLLECTION_MAP = 6;
+    PLD_POLICY_INFO_MAP = 7;
 }
 
 message SimplePropertyPayloadProto {
@@ -246,6 +247,17 @@ message SimplePropertyPayloadProto {
         PROP_BOOL = 3;
         PROP_ENUM = 4;
     }
+}
+
+message PolicyInfoMapPayloadProto {
+    repeated PolicyInfoPayloadProto entries = 1;
+}
+
+message PolicyInfoPayloadProto {
+    optional string policyName = 1;
+    optional uint32 usageNumber = 2;
+    optional uint64 usageTime = 3;
+    optional uint64 lastStarted = 4;
 }
 
 message CollectionMapPayloadProto {

@@ -12,7 +12,7 @@ public interface LogEntry<T extends Payload> extends GeneralDataEntity {
 
     enum Type {
         POLICY_CHANGE(PayloadType.SIMPLE_PROPERTY, DataEntityCollection.AUDIT_LOG),
-        POLICY_MAP(PayloadType.POLICY_MAP, DataEntityCollection.POSUM_STATS),
+        POLICY_MAP(PayloadType.POLICY_INFO_MAP, DataEntityCollection.POSUM_STATS),
         TASK_PREDICTION(PayloadType.TASK_PREDICTION, DataEntityCollection.PREDICTOR_LOG),
         GENERAL(PayloadType.SIMPLE_PROPERTY, DataEntityCollection.AUDIT_LOG);
 
