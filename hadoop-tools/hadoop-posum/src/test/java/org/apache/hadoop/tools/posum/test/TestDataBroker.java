@@ -15,6 +15,7 @@ import org.junit.Test;
 
 import java.util.*;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
 import static org.apache.hadoop.tools.posum.test.Utils.*;
 import static org.junit.Assert.*;
 
@@ -82,7 +83,7 @@ public abstract class TestDataBroker {
 
     @Test
     public void testSortByString() throws Exception {
-        IdsByQueryCall sortedIds = IdsByQueryCall.newInstance(DataEntityCollection.APP, null, "_id", true);
+        IdsByQueryCall sortedIds = IdsByQueryCall.newInstance(DataEntityCollection.APP, null, ID_FIELD, true);
         List<String> ids = mainDB.executeDatabaseCall(sortedIds).getEntries();
         assertArrayEquals(new String[]{
                 ApplicationId.newInstance(clusterTimestamp, 3).toString(),
@@ -107,7 +108,7 @@ public abstract class TestDataBroker {
     public void testFindLimit() throws Exception {
         FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(DataEntityCollection.APP,
                 QueryUtils.is("finishTime", clusterTimestamp - DURATION_UNIT),
-                "_id",
+                ID_FIELD,
                 false
         );
         List<AppProfile> apps = mainDB.executeDatabaseCall(findByFinishTime).getEntities();
@@ -124,7 +125,7 @@ public abstract class TestDataBroker {
         FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(
                 DataEntityCollection.APP,
                 QueryUtils.is("finishTime", clusterTimestamp - DURATION_UNIT),
-                "_id",
+                ID_FIELD,
                 false
         );
         List<AppProfile> apps = mainDB.executeDatabaseCall(findByFinishTime).getEntities();
@@ -141,7 +142,7 @@ public abstract class TestDataBroker {
         FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(
                 DataEntityCollection.APP,
                 QueryUtils.is("finishTime", clusterTimestamp - DURATION_UNIT),
-                "_id",
+                ID_FIELD,
                 false,
                 0,
                 0

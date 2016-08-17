@@ -30,7 +30,9 @@ public interface LockBasedDataStore {
                          int offsetOrZero,
                          int limitOrZero);
 
-    <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert);
+    <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toStore);
+
+    <T extends GeneralDataEntity> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore);
 
     <T extends GeneralDataEntity> String updateOrStore(DataEntityDB db, DataEntityCollection apps, T toUpdate);
 

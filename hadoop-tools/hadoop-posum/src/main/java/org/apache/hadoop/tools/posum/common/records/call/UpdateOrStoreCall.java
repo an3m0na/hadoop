@@ -10,13 +10,17 @@ import org.apache.hadoop.yarn.util.Records;
 /**
  * Created by ane on 7/30/16.
  */
-public abstract class UpdateOrStoreCall extends WriteToCollectionCall {
+public abstract class UpdateOrStoreCall extends WriteToCollectionCall<SimplePropertyPayload> {
     public static UpdateOrStoreCall newInstance(DataEntityCollection collection, GeneralDataEntity object) {
         UpdateOrStoreCall call = Records.newRecord(UpdateOrStoreCall.class);
         call.setEntityCollection(collection);
         call.setEntity(object);
         return call;
     }
+
+    public abstract GeneralDataEntity getEntity();
+
+    public abstract void setEntity(GeneralDataEntity entity);
 
     @Override
     public SimplePropertyPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {

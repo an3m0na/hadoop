@@ -83,7 +83,10 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements Payl
 
                             @Override
                             public ByteString next() {
-                                return ((GeneralDataEntityPBImpl) entityIterator.next()).getProto().toByteString();
+                                GeneralDataEntityPBImpl entityImpl = (GeneralDataEntityPBImpl) entityIterator.next();
+                                if (entityImpl != null)
+                                    return entityImpl.getProto().toByteString();
+                                return ByteString.EMPTY;
                             }
 
                             @Override
@@ -114,12 +117,18 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements Payl
     @Override
     public DataEntityCollection getEntityCollection() {
         MultiEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasCollection())
+            return null;
         return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
     }
 
     @Override
     public void setEntityCollection(DataEntityCollection type) {
         maybeInitBuilder();
+        if (type == null) {
+            builder.clearCollection();
+            return;
+        }
         builder.setCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
     }
 
@@ -129,14 +138,15 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements Payl
             MultiEntityPayloadProtoOrBuilder p = viaProto ? proto : builder;
             entities = new ArrayList<>(p.getEntitiesCount());
             for (ByteString entityString : p.getEntitiesList()) {
-                if (entityString != null) {
-                    try {
-                        Class eClass = getEntityCollection().getMappedClass();
-                        entities.add(((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(entityString));
-                    } catch (Exception e) {
-                        throw new PosumException("Could not read object from byte string " + entityString, e);
-                    }
+                if (entityString.isEmpty())
+                    continue;
+                try {
+                    Class eClass = getEntityCollection().getMappedClass();
+                    entities.add(((GeneralDataEntityPBImpl) eClass.newInstance()).parseToEntity(entityString));
+                } catch (Exception e) {
+                    throw new PosumException("Could not read object from byte string " + entityString, e);
                 }
+
             }
         }
         return entities;

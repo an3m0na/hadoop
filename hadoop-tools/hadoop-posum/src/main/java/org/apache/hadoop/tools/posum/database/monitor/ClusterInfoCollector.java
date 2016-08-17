@@ -167,9 +167,7 @@ public class ClusterInfoCollector {
                 .addCall(StoreCall.newInstance(DataEntityCollection.JOB_HISTORY, job))
                 .addCall(StoreCall.newInstance(DataEntityCollection.JOB_CONF_HISTORY, jobConf))
                 .addCall(StoreCall.newInstance(DataEntityCollection.COUNTER_HISTORY, jobCounters));
-        for (TaskProfile task : tasks) {
-            transaction.addCall(StoreCall.newInstance(DataEntityCollection.TASK_HISTORY, task));
-        }
+        transaction.addCall(StoreAllCall.newInstance(DataEntityCollection.TASK_HISTORY, tasks));
         for (CountersProxy counters : taskCounters) {
             if (counters == null)
                 continue;

@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
+
 /**
  * Created by ane on 2/9/16.
  */
@@ -205,9 +207,14 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert) {
-        WriteResult<T, String> result = this.<T>getCollectionForWrite(db, collection).insert(toInsert);
+    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toStore) {
+        WriteResult<T, String> result = this.<T>getCollectionForWrite(db, collection).insert(toStore);
         return result.getSavedId();
+    }
+
+    @Override
+    public <T extends GeneralDataEntity> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore) {
+        this.<T>getCollectionForWrite(db, collection).insert(toStore);
     }
 
     @Override
@@ -215,7 +222,7 @@ public class DataStoreImpl implements LockBasedDataStore {
                                                               DataEntityCollection collection,
                                                               T toUpdate) {
         WriteResult<T, String> result = this.<T>getCollectionForWrite(db, collection)
-                .update(DBQuery.is("_id", toUpdate.getId()), toUpdate, true, false);
+                .update(DBQuery.is(ID_FIELD, toUpdate.getId()), toUpdate, true, false);
         return (String) result.getUpsertedId();
     }
 
