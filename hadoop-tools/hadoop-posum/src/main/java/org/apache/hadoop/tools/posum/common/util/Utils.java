@@ -44,6 +44,7 @@ import java.util.*;
 public class Utils {
 
     private static Log logger = LogFactory.getLog(Utils.class);
+    public static final String ID_FIELD = "_id";
 
     public static TaskType getTaskTypeFromId(String id) {
         try {

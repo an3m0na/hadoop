@@ -1,14 +1,19 @@
 package org.apache.hadoop.tools.posum.database.store;
 
+import org.apache.hadoop.tools.posum.common.records.call.StoreAllCall;
+import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.json.JsonFileReader;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,16 +49,22 @@ public class DataStoreImporter {
         }
     }
 
-    public void importTo(LockBasedDataStore dataStore) {
+    public void importTo(DataBroker dataBroker) {
         for (Map.Entry<DataEntityDB, Map<DataEntityCollection, File>> dbMapEntry : dataFiles.entrySet()) {
+            StoreAllCall storeEntity = StoreAllCall.newInstance(null, null);
             for (Map.Entry<DataEntityCollection, File> fileEntry : dbMapEntry.getValue().entrySet()) {
+                storeEntity.setEntityCollection(fileEntry.getKey());
                 try {
                     JsonFileReader reader = new JsonFileReader(fileEntry.getValue());
                     Class<? extends GeneralDataEntity> entityClass = fileEntry.getKey().getMappedClass();
                     GeneralDataEntity entity;
-                    while ((entity = reader.getNext(entityClass)) != null)
-                        dataStore.updateOrStore(dbMapEntry.getKey(), fileEntry.getKey(), entity);
+                    List<GeneralDataEntity> allEntities = new LinkedList<>();
+                    while ((entity = reader.getNext(entityClass)) != null) {
+                       allEntities.add(entity);
+                    }
                     reader.close();
+                    storeEntity.setEntities(allEntities);
+                    dataBroker.executeDatabaseCall(storeEntity, dbMapEntry.getKey());
                 } catch (IOException e) {
                     throw new PosumException("Did not successfully parse file contents for " + fileEntry.getValue(), e);
                 }

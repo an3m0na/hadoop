@@ -12,8 +12,8 @@ public class HistorySnapshotMockDSImpl extends MockDataStoreImpl implements Hist
     private Long traceFinish = 0L;
     private Long currentOffset = 0L;
     private Long currentTime = 0L;
-
-    //TODO use master locks
+    private DataEntityDB mainDB = DataEntityDB.getMain();
+    private DataEntityDB shadowDB = DataEntityDB.get(DataEntityDB.Type.MAIN, "shadow");
 
     private void recomputeSnapshot() {
 

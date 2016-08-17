@@ -187,17 +187,24 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert) {
-        if (toInsert.getId() == null) {
-            toInsert.setId(ObjectId.get().toHexString());
+    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toStore) {
+        if (toStore.getId() == null) {
+            toStore.setId(ObjectId.get().toHexString());
         } else {
-            if (findById(db, collection, toInsert.getId()) != null) {
-                throw new PosumException("Cannot insert duplicate key " + toInsert.getId());
+            if (findById(db, collection, toStore.getId()) != null) {
+                throw new PosumException("Cannot insert duplicate key " + toStore.getId());
             }
         }
-        getCollectionForWrite(db, collection).put(toInsert.getId(), toInsert);
-        return toInsert.getId();
+        getCollectionForWrite(db, collection).put(toStore.getId(), toStore);
+        return toStore.getId();
 
+    }
+
+    @Override
+    public <T extends GeneralDataEntity> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore) {
+        for (T entity : toStore) {
+            store(db, collection, entity);
+        }
     }
 
     @Override

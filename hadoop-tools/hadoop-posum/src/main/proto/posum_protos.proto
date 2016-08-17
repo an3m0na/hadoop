@@ -342,6 +342,7 @@ message DatabaseCallProto {
         CALL_STORE_LOG = 10;
         CALL_FIND_BY_QUERY = 11;
         CALL_DOCUMENTS_BY_QUERY = 12;
+        CALL_STORE_ALL = 13;
     }
 }
 
