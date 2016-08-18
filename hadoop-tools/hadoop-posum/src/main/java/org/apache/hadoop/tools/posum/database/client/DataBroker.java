@@ -21,4 +21,9 @@ public interface DataBroker {
     Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections();
 
     void clear();
+
+    void clearDatabase(DataEntityDB db);
+
+    void copyDatabase(DataEntityDB sourceDB, DataEntityDB destinationDB);
+
 }

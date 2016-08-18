@@ -188,6 +188,8 @@ message SimpleRequestProto {
         REQ_SYSTEM_ADDRESSES = 3;
         REQ_LIST_COLLECTIONS = 4;
         REQ_CLEAR_DATA = 5;
+        REQ_CLEAR_DB = 6;
+        REQ_COPY_DB = 7;
     }
 }
 
@@ -319,6 +321,11 @@ message TaskPredictionPayloadProto {
     required string predictor = 1;
     required string id = 2;
     optional int64 duration = 3;
+}
+
+message DatabaseAlterationPayloadProto {
+    optional EntityDBProto source = 1;
+    optional EntityDBProto destination = 2;
 }
 
 // --------- Database Calls ---------

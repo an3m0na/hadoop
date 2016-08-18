@@ -21,4 +21,14 @@ public class DatabaseImpl implements Database {
     public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call) {
         return dataBroker.executeDatabaseCall(call, selectedDatabase);
     }
+
+    @Override
+    public void clear() {
+        dataBroker.clearDatabase(selectedDatabase);
+    }
+
+    @Override
+    public DataEntityDB getTarget() {
+        return selectedDatabase;
+    }
 }

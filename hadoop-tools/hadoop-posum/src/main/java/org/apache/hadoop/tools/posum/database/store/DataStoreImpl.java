@@ -304,16 +304,57 @@ public class DataStoreImpl implements LockBasedDataStore {
     public void clear() {
         lockAll();
         try {
-            for (Map.Entry<DataEntityDB, DBAssets> assetsEntry : dbRegistry.entrySet()) {
-                for (Map.Entry<DataEntityCollection, JacksonDBCollection> collectionEntry :
-                        assetsEntry.getValue().collections.entrySet()) {
-                    collectionEntry.getValue().drop();
-                }
-                assetsEntry.getValue().collections.clear();
-            }
+            for (DataEntityDB db : dbRegistry.keySet())
+                clear(db);
             dbRegistry.clear();
         } finally {
             unlockAll();
+        }
+    }
+
+    @Override
+    public void clear(DataEntityDB db) {
+        masterLock.readLock().lock();
+        try {
+            DBAssets dbAssets = getDatabaseAssets(db);
+            if (dbAssets == null)
+                return;
+            dbAssets.lock.writeLock().lock();
+            try {
+                mongoClient.getDatabase(db.getName()).drop();
+                dbAssets.collections.clear();
+            } finally {
+                dbAssets.lock.writeLock().unlock();
+            }
+        } finally {
+            masterLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public void copy(DataEntityDB sourceDB, DataEntityDB destinationDB) {
+        masterLock.readLock().lock();
+        try {
+            DBAssets sourceAssets = getDatabaseAssets(sourceDB);
+            clear(destinationDB);
+            if (sourceAssets == null)
+                return;
+            sourceAssets.lock.readLock().lock();
+            try {
+                for (Map.Entry<DataEntityCollection, JacksonDBCollection> collectionEntry :
+                        sourceAssets.collections.entrySet()) {
+                    try {
+                        lockForWrite(destinationDB);
+                        storeAll(destinationDB, collectionEntry.getKey(), collectionEntry.getValue().find().toArray());
+                    } finally {
+                        unlockForWrite(destinationDB);
+                    }
+                }
+            } finally {
+                sourceAssets.lock.readLock().unlock();
+            }
+        } finally {
+            masterLock.readLock().unlock();
         }
     }
 }
