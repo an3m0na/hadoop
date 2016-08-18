@@ -8,6 +8,7 @@ import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
 import org.apache.hadoop.tools.posum.common.records.payload.CollectionMapPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.DatabaseAlterationPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
@@ -120,6 +121,14 @@ public class DataCommService extends CompositeService implements DataMasterProto
                             CollectionMapPayload.newInstance(dmContext.getDataBroker().listExistingCollections()));
                 case CLEAR_DATA:
                     dmContext.getDataBroker().clear();
+                    break;
+                case CLEAR_DB:
+                    dmContext.getDataBroker().clearDatabase(
+                            ((DatabaseAlterationPayload) request.getPayload()).getSourceDB());
+                    break;
+                case COPY_DB:
+                    DatabaseAlterationPayload dbAlteration = (DatabaseAlterationPayload) request.getPayload();
+                    dmContext.getDataBroker().copyDatabase(dbAlteration.getSourceDB(), dbAlteration.getDestinationDB());
                     break;
                 default:
                     return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());

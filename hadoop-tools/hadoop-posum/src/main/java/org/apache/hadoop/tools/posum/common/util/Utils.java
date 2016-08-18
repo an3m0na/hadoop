@@ -107,13 +107,13 @@ public class Utils {
         sendSimpleRequest("ping", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"), handler);
     }
 
-    public static  <T extends Payload> T sendSimpleRequest(SimpleRequest.Type type, StandardProtocol handler) {
+    public static <T extends Payload> T sendSimpleRequest(SimpleRequest.Type type, StandardProtocol handler) {
         return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type), handler);
     }
 
     public static <T extends Payload> T sendSimpleRequest(String label, SimpleRequest request, StandardProtocol handler) {
         try {
-            return (T)handleError(label, handler.handleSimpleRequest(request)).getPayload();
+            return (T) handleError(label, handler.handleSimpleRequest(request)).getPayload();
         } catch (IOException | YarnException e) {
             throw new PosumException("Error during RPC call", e);
         }
@@ -343,6 +343,16 @@ public class Utils {
             @Override
             public void clear() {
                 dataStore.clear();
+            }
+
+            @Override
+            public void clearDatabase(DataEntityDB db) {
+                dataStore.clear(db);
+            }
+
+            @Override
+            public void copyDatabase(DataEntityDB sourceDB, DataEntityDB destinationDB) {
+                dataStore.copy(sourceDB, destinationDB);
             }
         };
     }

@@ -320,4 +320,23 @@ public abstract class TestDataBroker {
         allEntities.setEntityCollection(DataEntityCollection.JOB);
         assertEquals(0, mainDB.executeDatabaseCall(allEntities).getEntities().size());
     }
+
+    @Test
+    public void testMove() throws Exception {
+        int collectionNo = dataBroker.listExistingCollections().get(mainDB.getTarget()).size();
+        IdsByQueryCall allIds = IdsByQueryCall.newInstance(DataEntityCollection.APP, null);
+        int appNo = mainDB.executeDatabaseCall(allIds).getEntries().size();
+        allIds.setEntityCollection(DataEntityCollection.JOB);
+        int jobNo = mainDB.executeDatabaseCall(allIds).getEntries().size();
+        DataEntityDB otherDB = DataEntityDB.get(DataEntityDB.Type.MAIN, "testCopy");
+        dataBroker.copyDatabase(mainDB.getTarget(), otherDB);
+        dataBroker.clearDatabase(mainDB.getTarget());
+        Map<DataEntityDB, List<DataEntityCollection>> collectionMap = dataBroker.listExistingCollections();
+        assertNull(collectionMap.get(mainDB.getTarget()));
+        assertEquals(collectionNo, collectionMap.get(otherDB).size());
+        assertEquals(jobNo, dataBroker.executeDatabaseCall(allIds, otherDB).getEntries().size());
+        allIds.setEntityCollection(DataEntityCollection.APP);
+        assertEquals(appNo, dataBroker.executeDatabaseCall(allIds, otherDB).getEntries().size());
+
+    }
 }

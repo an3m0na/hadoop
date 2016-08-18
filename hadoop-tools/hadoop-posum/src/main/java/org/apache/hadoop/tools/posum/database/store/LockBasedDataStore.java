@@ -59,4 +59,8 @@ public interface LockBasedDataStore {
     Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections();
 
     void clear();
+
+    void clear(DataEntityDB db);
+
+    void copy(DataEntityDB sourceDB, DataEntityDB destinationDB);
 }

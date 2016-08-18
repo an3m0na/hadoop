@@ -10,6 +10,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayloa
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.client.Database;
+import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.bson.types.ObjectId;
 
@@ -265,6 +266,46 @@ public class MockDataStoreImpl implements LockBasedDataStore {
         lockAll();
         dbRegistry.clear();
         unlockAll();
+    }
+
+    @Override
+    public void clear(DataEntityDB db) {
+        masterLock.readLock().lock();
+        try {
+            DBAssets dbAssets = getDatabaseAssets(db);
+            if (dbAssets == null)
+                return;
+            dbAssets.lock.writeLock().lock();
+            try {
+                dbAssets.collections.clear();
+            } finally {
+                dbAssets.lock.writeLock().unlock();
+            }
+        } finally {
+            masterLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public void copy(DataEntityDB sourceDB, DataEntityDB destinationDB) {
+        masterLock.readLock().lock();
+        try {
+            DBAssets sourceAssets = getDatabaseAssets(sourceDB);
+            clear(destinationDB);
+            if (sourceAssets == null)
+                return;
+            sourceAssets.lock.readLock().lock();
+            try {
+                for (Map.Entry<DataEntityCollection, Map<String, ? extends GeneralDataEntity>> collectionEntry :
+                        sourceAssets.collections.entrySet()) {
+                    storeAll(destinationDB, collectionEntry.getKey(), new ArrayList<>(collectionEntry.getValue().values()));
+                }
+            } finally {
+                sourceAssets.lock.readLock().unlock();
+            }
+        } finally {
+            masterLock.readLock().unlock();
+        }
     }
 
     @Override

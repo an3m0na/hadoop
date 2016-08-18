@@ -1,6 +1,8 @@
 package org.apache.hadoop.tools.posum.database.mock;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
+import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.database.store.DataStoreImporter;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
@@ -14,6 +16,10 @@ public class HistorySnapshotMockDSImpl extends MockDataStoreImpl implements Hist
     private Long currentTime = 0L;
     private DataEntityDB mainDB = DataEntityDB.getMain();
     private DataEntityDB shadowDB = DataEntityDB.get(DataEntityDB.Type.MAIN, "shadow");
+
+    public  HistorySnapshotMockDSImpl(String dataDumpFolderName){
+        new DataStoreImporter(dataDumpFolderName).importTo(Utils.exposeDataStoreAsBroker(this));
+    }
 
     private void recomputeSnapshot() {
 

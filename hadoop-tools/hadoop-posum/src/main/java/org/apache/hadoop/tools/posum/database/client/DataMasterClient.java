@@ -86,6 +86,25 @@ public class DataMasterClient extends AbstractService implements DataBroker {
     }
 
     @Override
+    public void clearDatabase(DataEntityDB db) {
+        Utils.sendSimpleRequest(
+                "clearDatabase",
+                SimpleRequest.newInstance(SimpleRequest.Type.CLEAR_DB, DatabaseAlterationPayload.newInstance(db)),
+                dmClient
+        );
+    }
+
+    @Override
+    public void copyDatabase(DataEntityDB sourceDB, DataEntityDB destinationDB) {
+        Utils.sendSimpleRequest(
+                "clearDatabase",
+                SimpleRequest.newInstance(SimpleRequest.Type.COPY_DB,
+                        DatabaseAlterationPayload.newInstance(sourceDB, destinationDB)),
+                dmClient
+        );
+    }
+
+    @Override
     public Database bindTo(DataEntityDB db) {
         return new DatabaseImpl(this, db);
     }
