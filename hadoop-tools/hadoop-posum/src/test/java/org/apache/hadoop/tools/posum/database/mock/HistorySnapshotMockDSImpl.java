@@ -5,6 +5,8 @@ import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.store.DataStoreImporter;
 import org.apache.hadoop.yarn.util.Records;
 
+import java.util.List;
+
 /**
  * Created by ane on 7/26/16.
  */
@@ -17,63 +19,25 @@ public class HistorySnapshotMockDSImpl extends MockDataStoreImpl implements Hist
     private DataEntityDB mainDB = DataEntityDB.getMain();
     private DataEntityDB shadowDB = DataEntityDB.get(DataEntityDB.Type.MAIN, "shadow");
 
-    public  HistorySnapshotMockDSImpl(String dataDumpFolderName){
+    public HistorySnapshotMockDSImpl(String dataDumpFolderName) {
         new DataStoreImporter(dataDumpFolderName).importTo(Utils.exposeDataStoreAsBroker(this));
+        copy(mainDB, shadowDB);
+        clear(mainDB);
     }
 
     private void recomputeSnapshot() {
 
-//        while ((job = reader.getNext()) != null) {
-//
-//            String jobId = job.getJobID().toString();
-//
-//            long jobStartTimeMS = job.getSubmitTime();
-//            long jobFinishTimeMS = job.getFinishTime();
-//            if (startTime == 0) {
-//                startTime = jobStartTimeMS;
-//            }
-//            jobStartTimeMS -= startTime;
-//            jobFinishTimeMS -= startTime;
-//            if (jobStartTimeMS < 0) {
-//                jobFinishTimeMS = jobFinishTimeMS - jobStartTimeMS;
-//                jobStartTimeMS = 0;
-//            }
-//
-//            JobProfile profile = Records.newRecord(JobProfile.class);
-//            profile.setId(jobId);
-//            profile.setName(job.getJobName().getValue());
-//            profile.setUser(job.getUser() == null ? "default" : job.getUser().getValue());
-//            profile.setTotalMapTasks(job.getTotalMaps());
-//            profile.setTotalReduceTasks(job.getTotalReduces());
-//            profile.setStartTime(jobStartTimeMS);
-//            profile.setFinishTime(jobFinishTimeMS);
-//            //TODO continue with other job characteristics (look into computonsperbyte)
-//
-//            Map<String, TaskProfile> taskList = new HashMap<>(job.getMapTasks().size() + job.getReduceTasks().size());
-//            for (LoggedTask task : job.getMapTasks())
-//                taskList.put(task.getTaskID().toString(), buildTaskProfile(task, startTime));
-//            for (LoggedTask task : job.getReduceTasks())
-//                taskList.put(task.getTaskID().toString(), buildTaskProfile(task, startTime));
-//            taskMap.put(jobId, taskList);
-//
-//            jobList.add(profile);
-//
-//            if (jobFinishTimeMS > simulationTime)
-//                simulationTime = jobFinishTimeMS;
-//        }
+        // gather ids of all apps, jobs and tasks that have finished in the new snapshot
+        // delete them and their associated confs and counters from their active collections
+        // bring all of their data from the official history collections to the shadow history collections
+        // parse official history to delete these persisted entities and bring new entities that have started in the
+            // new snapshot to the active collections in  shadow
     }
 
-    private JobProfile createJobSnapshot(JobProfile original) {
-        JobProfile copy = Records.newRecord(JobProfile.class);
-        copy.setId(original.getId());
-        copy.setName(original.getName());
-        copy.setUser(original.getUser() == null ? "default" : original.getUser());
-        copy.setTotalMapTasks(original.getTotalMapTasks());
-        copy.setTotalReduceTasks(original.getTotalReduceTasks());
-        copy.setStartTime(original.getStartTime() > currentTime ? null : original.getStartTime());
-        copy.setFinishTime(original.getFinishTime() > currentTime ? null : original.getFinishTime());
-        //TODO copy all tasks with obfuscated times
-        return copy;
+    private JobProfile obfuscateJobProfile(JobProfile job, List<TaskProfile> obfuscatedTasks) {
+        job.setFinishTime(null);
+        //TODO other counters and such
+        return job;
     }
 
     @Override

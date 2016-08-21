@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.call.query;
 
 import org.apache.hadoop.tools.posum.common.records.call.query.impl.pb.CompositionQueryPBImpl;
+import org.apache.hadoop.tools.posum.common.records.call.query.impl.pb.PropertyInQueryPBImpl;
 import org.apache.hadoop.tools.posum.common.records.call.query.impl.pb.PropertyValueQueryPBImpl;
 
 /**
@@ -8,7 +9,8 @@ import org.apache.hadoop.tools.posum.common.records.call.query.impl.pb.PropertyV
  */
 public enum DatabaseQueryType {
     COMPOSITION(CompositionQueryPBImpl.class),
-    PROPERTY_VALUE(PropertyValueQueryPBImpl.class);
+    PROPERTY_VALUE(PropertyValueQueryPBImpl.class),
+    PROPERTY_IN(PropertyInQueryPBImpl.class);
 
     private Class<? extends DatabaseQuery> mappedClass;
 

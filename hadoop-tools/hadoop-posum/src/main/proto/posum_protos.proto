@@ -398,6 +398,7 @@ message DatabaseQueryProto {
     enum TypeProto {
         QRY_COMPOSITION = 0;
         QRY_PROPERTY_VALUE = 1;
+        QRY_PROPERTY_IN = 2;
     }
 }
 
@@ -422,4 +423,9 @@ message CompositionQueryProto {
         CQRY_AND = 0;
         CQRY_OR = 1;
     }
+}
+
+message PropertyInQueryProto {
+    required string propertyName = 1;
+    repeated SimplePropertyPayloadProto values = 2;
 }
