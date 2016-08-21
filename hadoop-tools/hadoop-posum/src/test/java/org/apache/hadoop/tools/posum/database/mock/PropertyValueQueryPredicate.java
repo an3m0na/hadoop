@@ -7,24 +7,23 @@ import org.apache.hadoop.tools.posum.common.util.PosumException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.safeEquals;
 
 /**
  * Created by ane on 8/14/16.
  */
-class PropertyValueQueryPredicate extends QueryPredicate {
+class PropertyValueQueryPredicate extends QueryPredicate<PropertyValueQuery> {
 
-    private final PropertyValueQuery query;
-
-    PropertyValueQueryPredicate(Map<String, Method> propertyReaders, PropertyValueQuery query) {
-        super(propertyReaders);
-        this.query = query;
+    PropertyValueQueryPredicate(PropertyValueQuery query) {
+        super(query);
     }
 
     @Override
-    public boolean check(GeneralDataEntity entity) throws InvocationTargetException, IllegalAccessException {
+    public boolean check(GeneralDataEntity entity, Map<String, Method> propertyReaders) throws InvocationTargetException, IllegalAccessException {
         SimplePropertyPayload property = query.getProperty();
         Object value = propertyReaders.get(property.getName()).invoke(entity);
         switch (query.getType()) {
@@ -43,5 +42,10 @@ class PropertyValueQueryPredicate extends QueryPredicate {
 
         }
 
+    }
+
+    @Override
+    Set<String> parseRelevantProperties() {
+        return Collections.singleton(query.getProperty().getName());
     }
 }
