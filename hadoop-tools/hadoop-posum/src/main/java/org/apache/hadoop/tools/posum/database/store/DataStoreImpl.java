@@ -7,6 +7,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.PropertyInQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
@@ -196,6 +197,10 @@ public class DataStoreImpl implements LockBasedDataStore {
         }
     }
 
+    private DBQuery.Query interpretQuery(PropertyInQuery query) {
+        return DBQuery.in(query.getPropertyName(), query.getValues());
+    }
+
     private DBQuery.Query interpretQuery(DatabaseQuery query) {
         if (query == null)
             return DBQuery.empty();
@@ -203,6 +208,8 @@ public class DataStoreImpl implements LockBasedDataStore {
             return interpretQuery((CompositionQuery) query);
         if (query instanceof PropertyValueQuery)
             return interpretQuery((PropertyValueQuery) query);
+        if (query instanceof PropertyInQuery)
+            return interpretQuery((PropertyInQuery) query);
         throw new PosumException("Query type not recognized: " + query.getClass());
     }
 

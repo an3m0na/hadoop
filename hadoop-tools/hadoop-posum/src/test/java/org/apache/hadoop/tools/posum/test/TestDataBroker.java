@@ -143,9 +143,7 @@ public abstract class TestDataBroker {
                 DataEntityCollection.APP,
                 QueryUtils.is("finishTime", clusterTimestamp - DURATION_UNIT),
                 ID_FIELD,
-                false,
-                0,
-                0
+                false
         );
         List<AppProfile> apps = mainDB.executeDatabaseCall(findByFinishTime).getEntities();
         assertEquals(2, apps.size());
@@ -155,6 +153,40 @@ public abstract class TestDataBroker {
         assertEquals(1, apps.size());
         ApplicationId app3Id = ApplicationId.newInstance(clusterTimestamp, 3);
         assertEquals(app3Id.toString(), apps.get(0).getId());
+    }
+
+    @Test
+    public void testInStringsQuery() throws Exception {
+        ApplicationId app2Id = ApplicationId.newInstance(clusterTimestamp, 2);
+        ApplicationId app3Id = ApplicationId.newInstance(clusterTimestamp, 3);
+
+        IdsByQueryCall findTwoAndThree = IdsByQueryCall.newInstance(
+                DataEntityCollection.APP,
+                QueryUtils.in(ID_FIELD, Arrays.<Object>asList(clusterTimestamp - DURATION_UNIT)),
+                ID_FIELD,
+                false
+        );
+        List<String> appIds = mainDB.executeDatabaseCall(findTwoAndThree).getEntries();
+        assertEquals(2, appIds.size());
+        assertEquals(app2Id.toString(), appIds.get(0));
+        assertEquals(app3Id.toString(), appIds.get(1));
+    }
+
+    @Test
+    public void testInNumbersQuery() throws Exception {
+        ApplicationId app2Id = ApplicationId.newInstance(clusterTimestamp, 2);
+        ApplicationId app3Id = ApplicationId.newInstance(clusterTimestamp, 3);
+
+        IdsByQueryCall findTwoAndThree = IdsByQueryCall.newInstance(
+                DataEntityCollection.APP,
+                QueryUtils.in("finishTime", Collections.<Object>singletonList(clusterTimestamp - DURATION_UNIT)),
+                ID_FIELD,
+                false
+        );
+        List<String> appIds = mainDB.executeDatabaseCall(findTwoAndThree).getEntries();
+        assertEquals(2, appIds.size());
+        assertEquals(app2Id.toString(), appIds.get(0));
+        assertEquals(app3Id.toString(), appIds.get(1));
     }
 
     @Test

@@ -4,6 +4,7 @@ package org.apache.hadoop.tools.posum.database.mock;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.PropertyInQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
@@ -132,6 +133,10 @@ public class MockDataStoreImpl implements LockBasedDataStore {
         }
         if (query instanceof CompositionQuery) {
             return parseRelevantProperties((CompositionQuery) query);
+        }
+        if (query instanceof PropertyInQuery) {
+            ret.add(((PropertyInQuery) query).getPropertyName());
+            return ret;
         }
         throw new PosumException("Query type not recognized: " + query.getClass());
     }

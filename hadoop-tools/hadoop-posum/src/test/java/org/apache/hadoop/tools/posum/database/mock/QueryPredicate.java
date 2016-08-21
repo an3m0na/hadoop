@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.database.mock;
 
 import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.PropertyInQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
@@ -36,6 +37,8 @@ public abstract class QueryPredicate {
             return new PropertyValueQueryPredicate(propertyReaders, (PropertyValueQuery) query);
         if(query instanceof CompositionQuery)
             return new CompositionQueryPredicate(propertyReaders, (CompositionQuery) query);
+        if(query instanceof PropertyInQuery)
+            return new PropertyInQueryPredicate(propertyReaders, (PropertyInQuery) query);
         throw new PosumException("Query type not recognized: " + query.getClass());
     }
 }
