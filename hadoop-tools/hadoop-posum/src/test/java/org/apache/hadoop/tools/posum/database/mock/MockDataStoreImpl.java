@@ -2,16 +2,12 @@ package org.apache.hadoop.tools.posum.database.mock;
 
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
-import org.apache.hadoop.tools.posum.common.records.call.query.PropertyInQuery;
-import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.client.Database;
-import org.apache.hadoop.tools.posum.database.store.DataStoreImpl;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.bson.types.ObjectId;
 
@@ -115,31 +111,7 @@ public class MockDataStoreImpl implements LockBasedDataStore {
         ).keySet());
     }
 
-    private static Set<String> parseRelevantProperties(CompositionQuery query) {
-        Set<String> ret = new HashSet<>(query.getQueries().size());
-        for (DatabaseQuery innerQuery : query.getQueries()) {
-            ret.addAll(parseRelevantProperties(innerQuery));
-        }
-        return ret;
-    }
 
-    private static Set<String> parseRelevantProperties(DatabaseQuery query) {
-        Set<String> ret = new HashSet<>();
-        if (query == null)
-            return ret;
-        if (query instanceof PropertyValueQuery) {
-            ret.add(((PropertyValueQuery) query).getProperty().getName());
-            return ret;
-        }
-        if (query instanceof CompositionQuery) {
-            return parseRelevantProperties((CompositionQuery) query);
-        }
-        if (query instanceof PropertyInQuery) {
-            ret.add(((PropertyInQuery) query).getPropertyName());
-            return ret;
-        }
-        throw new PosumException("Query type not recognized: " + query.getClass());
-    }
 
     private static <T extends GeneralDataEntity> Map<String, T> findEntitiesByQuery(Map<String, T> entities,
                                                                                     DatabaseQuery query,
@@ -152,14 +124,14 @@ public class MockDataStoreImpl implements LockBasedDataStore {
         List<SimplePropertyPayload> relevant = new LinkedList<>();
         Map<String, T> results = new LinkedHashMap<>();
         Class entityClass = entities.values().iterator().next().getClass();
-        Set<String> relevantProperties = parseRelevantProperties(query);
+        QueryPredicate<? extends DatabaseQuery> predicate = QueryPredicateFactory.fromQuery(query);
+        Set<String> relevantProperties = new HashSet<>(predicate.getCheckedProperties());
         if (sortField != null)
             relevantProperties.add(sortField);
         try {
             Map<String, Method> propertyReaders = Utils.getBeanPropertyReaders(entityClass, relevantProperties);
-            QueryPredicate predicate = QueryPredicate.fromQuery(query, propertyReaders);
             for (Map.Entry<String, T> entry : entities.entrySet()) {
-                if (predicate.check(entry.getValue())) {
+                if (predicate.check(entry.getValue(), propertyReaders)) {
                     Object sortablePropertyValue = null;
                     if (sortField != null) {
                         sortablePropertyValue = propertyReaders.get(sortField).invoke(entry.getValue());

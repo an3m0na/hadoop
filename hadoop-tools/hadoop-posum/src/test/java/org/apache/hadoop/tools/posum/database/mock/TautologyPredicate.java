@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.database.mock;
 
-import org.apache.hadoop.tools.posum.common.records.call.query.PropertyInQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 
 import java.lang.reflect.InvocationTargetException;
@@ -9,23 +10,24 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+
 /**
  * Created by ane on 8/14/16.
  */
-class PropertyInQueryPredicate extends QueryPredicate<PropertyInQuery> {
+class TautologyPredicate extends QueryPredicate<DatabaseQuery> {
 
-    PropertyInQueryPredicate(PropertyInQuery query) {
+    TautologyPredicate(PropertyValueQuery query) {
         super(query);
     }
 
     @Override
     public boolean check(GeneralDataEntity entity, Map<String, Method> propertyReaders) throws InvocationTargetException, IllegalAccessException {
-        Object value = propertyReaders.get(query.getPropertyName()).invoke(entity);
-        return query.getValues().contains(value);
+        return true;
+
     }
 
     @Override
     Set<String> parseRelevantProperties() {
-        return Collections.singleton(query.getPropertyName());
+        return Collections.emptySet();
     }
 }

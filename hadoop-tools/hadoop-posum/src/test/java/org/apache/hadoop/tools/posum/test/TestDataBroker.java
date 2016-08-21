@@ -162,7 +162,7 @@ public abstract class TestDataBroker {
 
         IdsByQueryCall findTwoAndThree = IdsByQueryCall.newInstance(
                 DataEntityCollection.APP,
-                QueryUtils.in(ID_FIELD, Arrays.<Object>asList(clusterTimestamp - DURATION_UNIT)),
+                QueryUtils.in(ID_FIELD, Arrays.<Object>asList(app2Id.toString(), app3Id.toString())),
                 ID_FIELD,
                 false
         );
