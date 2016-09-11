@@ -12,9 +12,9 @@ import java.util.Map;
  */
 public interface LockBasedDataStore {
 
-    <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id);
+    <T extends GeneralDataEntity<T>> T findById(DataEntityDB db, DataEntityCollection collection, String id);
 
-    <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
+    <T extends GeneralDataEntity<T>> List<T> find(DataEntityDB db,
                                                DataEntityCollection collection,
                                                DatabaseQuery query,
                                                String sortField,
@@ -30,11 +30,11 @@ public interface LockBasedDataStore {
                          int offsetOrZero,
                          int limitOrZero);
 
-    <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toStore);
+    <T extends GeneralDataEntity<T>> String store(DataEntityDB db, DataEntityCollection collection, T toStore);
 
-    <T extends GeneralDataEntity> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore);
+    <T extends GeneralDataEntity<T>> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore);
 
-    <T extends GeneralDataEntity> String updateOrStore(DataEntityDB db, DataEntityCollection apps, T toUpdate);
+    <T extends GeneralDataEntity<T>> String updateOrStore(DataEntityDB db, DataEntityCollection apps, T toUpdate);
 
     void delete(DataEntityDB db, DataEntityCollection collection, String id);
 

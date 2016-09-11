@@ -71,6 +71,11 @@ public class LogEntryPBImpl<T extends Payload> extends GeneralDataEntityPBImpl<L
     }
 
     @Override
+    public LogEntry<T> copy() {
+        return new LogEntryPBImpl<>(getProto());
+    }
+
+    @Override
     public Long getTimestamp() {
         LogEntryProtoOrBuilder p = viaProto ? proto : builder;
         if (!p.hasTimestamp())

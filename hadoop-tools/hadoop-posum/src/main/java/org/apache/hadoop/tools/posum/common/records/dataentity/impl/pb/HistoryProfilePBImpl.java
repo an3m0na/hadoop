@@ -21,6 +21,10 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
 
     }
 
+    public HistoryProfilePBImpl(HistoryProfileProto proto) {
+        super(proto);
+    }
+
     public HistoryProfilePBImpl(DataEntityCollection type, T original) {
         super();
         long timestamp = System.currentTimeMillis();
@@ -64,6 +68,11 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
             return;
         }
         builder.setId(id);
+    }
+
+    @Override
+    public HistoryProfile copy() {
+        return new HistoryProfilePBImpl(getProto());
     }
 
     @Override

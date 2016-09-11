@@ -153,9 +153,14 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements Payl
     }
 
     @Override
-    public void setEntities(List<GeneralDataEntity> entities) {
+    public <T extends GeneralDataEntity<T>> void  setEntities(List<T> entities) {
         maybeInitBuilder();
-        this.entities = entities;
+        if(entities == null) {
+            this.entities = null;
+            return;
+        }
+        this.entities = new ArrayList<>(entities.size());
+        this.entities.addAll(entities);
     }
 
     @Override

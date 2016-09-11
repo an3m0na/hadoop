@@ -17,6 +17,13 @@ import java.util.Map;
 public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobProfileProto, JobProfileProto.Builder>
         implements JobProfile {
 
+    public JobProfilePBImpl() {
+    }
+
+    public JobProfilePBImpl(JobProfileProto proto) {
+        super(proto);
+    }
+
     @Override
     void initBuilder() {
         builder = viaProto ? JobProfileProto.newBuilder(proto) : JobProfileProto.newBuilder();
@@ -59,6 +66,11 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
             return;
         }
         builder.setId(id);
+    }
+
+    @Override
+    public JobProfile copy() {
+        return new JobProfilePBImpl(getProto());
     }
 
     @Override
