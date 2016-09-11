@@ -15,6 +15,13 @@ import org.apache.hadoop.yarn.proto.PosumProtos.AppProfileProtoOrBuilder;
 public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppProfileProto, AppProfileProto.Builder>
         implements AppProfile {
 
+    public AppProfilePBImpl() {
+    }
+
+    public AppProfilePBImpl(AppProfileProto proto) {
+       super(proto);
+    }
+
     @Override
     void initBuilder() {
         builder = viaProto ? AppProfileProto.newBuilder(proto) : AppProfileProto.newBuilder();
@@ -51,6 +58,11 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     }
 
     @Override
+    public AppProfile copy() {
+        return new AppProfilePBImpl(getProto());
+    }
+
+    @Override
     public Long getStartTime() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getStartTime();
@@ -69,7 +81,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public String getUser() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
-        if(!p.hasUser())
+        if (!p.hasUser())
             return null;
         return p.getUser();
     }
@@ -87,7 +99,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public String getName() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
-        if(!p.hasName())
+        if (!p.hasName())
             return null;
         return p.getName();
     }
@@ -185,7 +197,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public String getQueue() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
-        if(!p.hasQueue())
+        if (!p.hasQueue())
             return null;
         return p.getQueue();
     }

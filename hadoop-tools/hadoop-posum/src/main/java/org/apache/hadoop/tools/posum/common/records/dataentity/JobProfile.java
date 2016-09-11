@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Created by ane on 2/8/16.
  */
-public interface JobProfile extends GeneralDataEntity {
+public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
     //NOT INCLUDED:
 //    <failedReduceAttempts>0</failedReduceAttempts>

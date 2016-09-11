@@ -118,7 +118,7 @@ public class HistorySnapshotBrokerFromRumen extends MockDataStoreImpl {// implem
     }
 
     @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
+    public <T extends GeneralDataEntity<T>> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
         if (DataEntityCollection.JOB.equals(collection)) {
             for (JobProfile job : jobList)
                 if (job.getId().equals(id))

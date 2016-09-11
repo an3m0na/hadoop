@@ -67,7 +67,7 @@ public class StoreAllCallPBImpl extends StoreAllCall implements PayloadPB {
 
     @Override
     public void setEntities(List<? extends GeneralDataEntity> entities) {
-        multiEntityPayloadPB.setEntities((List<GeneralDataEntity>)entities);
+        multiEntityPayloadPB.setEntities(entities);
     }
 
     @Override

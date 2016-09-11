@@ -8,7 +8,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
  * Created by ane on 3/7/16.
  */
 @JsonDeserialize(using = LogEntryDeserializer.class)
-public interface LogEntry<T extends Payload> extends GeneralDataEntity {
+public interface LogEntry<T extends Payload> extends GeneralDataEntity<LogEntry<T>> {
 
     enum Type {
         POLICY_CHANGE(PayloadType.SIMPLE_PROPERTY, DataEntityCollection.AUDIT_LOG),

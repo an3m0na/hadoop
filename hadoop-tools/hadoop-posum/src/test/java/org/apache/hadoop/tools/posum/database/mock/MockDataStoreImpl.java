@@ -60,7 +60,7 @@ public class MockDataStoreImpl implements LockBasedDataStore {
         return assets;
     }
 
-    private <T extends GeneralDataEntity> Map<String, T> getCollection(DBAssets assets, DataEntityCollection collection) {
+    private <T extends GeneralDataEntity<T>> Map<String, T> getCollection(DBAssets assets, DataEntityCollection collection) {
         Map<String, ? extends GeneralDataEntity> dbCollection = assets.collections.get(collection);
         synchronized (this) {
             if (dbCollection == null) {
@@ -73,18 +73,21 @@ public class MockDataStoreImpl implements LockBasedDataStore {
 
 
     @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
-        return this.<T>getCollectionForRead(db, collection).get(id);
+    public <T extends GeneralDataEntity<T>> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
+        T ret = this.<T>getCollectionForRead(db, collection).get(id);
+        if (ret == null)
+            return null;
+        return ret.copy();
     }
 
     @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
-                                                      DataEntityCollection collection,
-                                                      DatabaseQuery query,
-                                                      String sortField,
-                                                      boolean sortDescending,
-                                                      int offsetOrZero,
-                                                      int limitOrZero) {
+    public <T extends GeneralDataEntity<T>> List<T> find(DataEntityDB db,
+                                                         DataEntityCollection collection,
+                                                         DatabaseQuery query,
+                                                         String sortField,
+                                                         boolean sortDescending,
+                                                         int offsetOrZero,
+                                                         int limitOrZero) {
         return new ArrayList<>(MockDataStoreImpl.findEntitiesByQuery(
                 this.<T>getCollectionForRead(db, collection),
                 query,
@@ -114,12 +117,12 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     }
 
 
-    private static <T extends GeneralDataEntity> Map<String, T> findEntitiesByQuery(Map<String, T> entities,
-                                                                                    DatabaseQuery query,
-                                                                                    String sortField,
-                                                                                    boolean sortDescending,
-                                                                                    int offsetOrZero,
-                                                                                    int limitOrZero) {
+    private static <T extends GeneralDataEntity<T>> Map<String, T> findEntitiesByQuery(Map<String, T> entities,
+                                                                                       DatabaseQuery query,
+                                                                                       String sortField,
+                                                                                       boolean sortDescending,
+                                                                                       int offsetOrZero,
+                                                                                       int limitOrZero) {
         if (entities.size() < 1)
             return Collections.emptyMap();
         List<SimplePropertyPayload> relevant = new LinkedList<>();
@@ -155,7 +158,7 @@ public class MockDataStoreImpl implements LockBasedDataStore {
             int count = limitOrZero != 0 ? limitOrZero : relevant.size();
             for (SimplePropertyPayload next : relevant) {
                 if (skip-- <= 0)
-                    results.put(next.getName(), entities.get(next.getName()));
+                    results.put(next.getName(), entities.get(next.getName()).copy());
                 if (--count == 0)
                     break;
             }
@@ -166,7 +169,7 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toStore) {
+    public <T extends GeneralDataEntity<T>> String store(DataEntityDB db, DataEntityCollection collection, T toStore) {
         if (toStore.getId() == null) {
             toStore.setId(ObjectId.get().toHexString());
         } else {
@@ -180,14 +183,14 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore) {
+    public <T extends GeneralDataEntity<T>> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore) {
         for (T entity : toStore) {
             store(db, collection, entity);
         }
     }
 
     @Override
-    public <T extends GeneralDataEntity> String updateOrStore(DataEntityDB db, DataEntityCollection collection, T toUpdate) {
+    public <T extends GeneralDataEntity<T>> String updateOrStore(DataEntityDB db, DataEntityCollection collection, T toUpdate) {
         boolean found = false;
         if (toUpdate.getId() != null)
             found = deleteReturnFound(db, collection, toUpdate.getId());

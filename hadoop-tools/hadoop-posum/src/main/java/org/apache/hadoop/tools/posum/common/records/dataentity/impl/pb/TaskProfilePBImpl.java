@@ -13,6 +13,13 @@ import org.apache.hadoop.yarn.proto.PosumProtos.TaskProfileProtoOrBuilder;
 public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, TaskProfileProto, TaskProfileProto.Builder>
         implements TaskProfile {
 
+    public TaskProfilePBImpl() {
+    }
+
+    public TaskProfilePBImpl(TaskProfileProto proto) {
+        super(proto);
+    }
+
     @Override
     void initBuilder() {
         builder = viaProto ? TaskProfileProto.newBuilder(proto) : TaskProfileProto.newBuilder();
@@ -46,6 +53,11 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
             return;
         }
         builder.setId(id);
+    }
+
+    @Override
+    public TaskProfile copy() {
+        return new TaskProfilePBImpl(getProto());
     }
 
     @Override

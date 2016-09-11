@@ -75,7 +75,7 @@ public class DataStoreImpl implements LockBasedDataStore {
         return assets;
     }
 
-    private <T extends GeneralDataEntity> JacksonDBCollection<T, String> getCollection(DataEntityDB db, DBAssets assets, DataEntityCollection collection) {
+    private <T extends GeneralDataEntity<T>> JacksonDBCollection<T, String> getCollection(DataEntityDB db, DBAssets assets, DataEntityCollection collection) {
         JacksonDBCollection dbCollection = assets.collections.get(collection);
         synchronized (this) {
             if (dbCollection == null) {
@@ -90,18 +90,18 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
+    public <T extends GeneralDataEntity<T>> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
         return this.<T>getCollectionForRead(db, collection).findOneById(id);
     }
 
     @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
-                                                      DataEntityCollection collection,
-                                                      DatabaseQuery query,
-                                                      String sortField,
-                                                      boolean sortDescending,
-                                                      int offsetOrZero,
-                                                      int limitOrZero) {
+    public <T extends GeneralDataEntity<T>> List<T> find(DataEntityDB db,
+                                                         DataEntityCollection collection,
+                                                         DatabaseQuery query,
+                                                         String sortField,
+                                                         boolean sortDescending,
+                                                         int offsetOrZero,
+                                                         int limitOrZero) {
         return find(db, collection, interpretQuery(query), sortField, sortDescending, offsetOrZero, limitOrZero);
     }
 
@@ -216,20 +216,20 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toStore) {
+    public <T extends GeneralDataEntity<T>> String store(DataEntityDB db, DataEntityCollection collection, T toStore) {
         WriteResult<T, String> result = this.<T>getCollectionForWrite(db, collection).insert(toStore);
         return result.getSavedId();
     }
 
     @Override
-    public <T extends GeneralDataEntity> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore) {
+    public <T extends GeneralDataEntity<T>> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore) {
         this.<T>getCollectionForWrite(db, collection).insert(toStore);
     }
 
     @Override
-    public <T extends GeneralDataEntity> String updateOrStore(DataEntityDB db,
-                                                              DataEntityCollection collection,
-                                                              T toUpdate) {
+    public <T extends GeneralDataEntity<T>> String updateOrStore(DataEntityDB db,
+                                                                 DataEntityCollection collection,
+                                                                 T toUpdate) {
         WriteResult<T, String> result = this.<T>getCollectionForWrite(db, collection)
                 .update(DBQuery.is(ID_FIELD, toUpdate.getId()), toUpdate, true, false);
         return (String) result.getUpsertedId();
@@ -354,7 +354,9 @@ public class DataStoreImpl implements LockBasedDataStore {
                         sourceAssets.collections.entrySet()) {
                     try {
                         lockForWrite(destinationDB);
-                        storeAll(destinationDB, collectionEntry.getKey(), collectionEntry.getValue().find().toArray());
+                        List entities = collectionEntry.getValue().find().toArray();
+                        if (entities.size() > 0)
+                            storeAll(destinationDB, collectionEntry.getKey(), entities);
                     } finally {
                         unlockForWrite(destinationDB);
                     }

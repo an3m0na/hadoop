@@ -11,7 +11,7 @@ import java.util.List;
  */
 public abstract class MultiEntityPayload implements Payload {
 
-    public static MultiEntityPayload newInstance(DataEntityCollection type, List<GeneralDataEntity> entities) {
+    public static <T extends GeneralDataEntity<T>> MultiEntityPayload newInstance(DataEntityCollection type, List<T> entities) {
         MultiEntityPayload payload = Records.newRecord(MultiEntityPayload.class);
         payload.setEntityCollection(type);
         payload.setEntities(entities);
@@ -22,7 +22,7 @@ public abstract class MultiEntityPayload implements Payload {
 
     public abstract void setEntityCollection(DataEntityCollection type);
 
-    public abstract <T extends GeneralDataEntity> List<T> getEntities();
+    public abstract <T extends GeneralDataEntity<T>> List<T> getEntities();
 
-    public abstract void setEntities(List<GeneralDataEntity> entities);
+    public abstract <T extends GeneralDataEntity<T>> void  setEntities(List<T> entities);
 }

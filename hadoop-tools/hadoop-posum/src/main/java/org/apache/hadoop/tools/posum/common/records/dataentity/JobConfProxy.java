@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Created by ane on 2/8/16.
  */
-public interface JobConfProxy extends GeneralDataEntity {
+public interface JobConfProxy extends GeneralDataEntity<JobConfProxy> {
 
     @JsonIgnore
     String getEntry(String name);
