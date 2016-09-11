@@ -140,19 +140,19 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public TaskType getType() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        TaskProfileProto.TaskTypeProto enumValue = p.getType();
-        if (enumValue == null || enumValue.name().equals("TYPE_NULL"))
+        if(!p.hasType())
             return null;
-        return TaskType.valueOf(enumValue.name().substring("TYPE_".length()));
+        return TaskType.valueOf(p.getType().name().substring("TYPE_".length()));
     }
 
     @Override
     public void setType(String type) {
         maybeInitBuilder();
-        if (type != null)
-            builder.setType(TaskProfileProto.TaskTypeProto.valueOf("TYPE_" + type));
-        else
-            builder.setType(TaskProfileProto.TaskTypeProto.TYPE_NULL);
+        if (type == null) {
+            builder.clearType();
+            return;
+        }
+        builder.setType(TaskProfileProto.TaskTypeProto.valueOf("TYPE_" + type));
     }
 
     @Override
