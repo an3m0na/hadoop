@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.database.mock;
+package org.apache.hadoop.tools.posum.database.mock.predicate;
 
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
@@ -18,6 +18,7 @@ class TautologyPredicate extends QueryPredicate<DatabaseQuery> {
 
     TautologyPredicate(PropertyValueQuery query) {
         super(query);
+        checkedProperties = Collections.emptySet();
     }
 
     @Override
@@ -26,8 +27,4 @@ class TautologyPredicate extends QueryPredicate<DatabaseQuery> {
 
     }
 
-    @Override
-    Set<String> parseRelevantProperties() {
-        return Collections.emptySet();
-    }
 }

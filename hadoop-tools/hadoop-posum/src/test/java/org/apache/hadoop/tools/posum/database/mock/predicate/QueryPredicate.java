@@ -1,10 +1,11 @@
-package org.apache.hadoop.tools.posum.database.mock;
+package org.apache.hadoop.tools.posum.database.mock.predicate;
 
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,18 +15,15 @@ import java.util.Set;
 public abstract class QueryPredicate<T extends DatabaseQuery> {
 
     final T query;
-    private final Set<String> checkedProperties;
+    Set<String> checkedProperties;
 
     QueryPredicate(T query) {
         this.query = query;
-        checkedProperties = parseRelevantProperties();
     }
 
     public abstract boolean check(GeneralDataEntity entity, Map<String, Method> propertyReaders) throws InvocationTargetException, IllegalAccessException;
 
-    abstract Set<String> parseRelevantProperties();
-
-    Set<String> getCheckedProperties() {
+    public Set<String> getCheckedProperties() {
         return checkedProperties;
     }
 }

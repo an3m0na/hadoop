@@ -7,7 +7,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
-import org.apache.hadoop.tools.posum.common.records.call.query.PropertyInQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.PropertyRangeQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
@@ -168,6 +168,8 @@ public class DataStoreImpl implements LockBasedDataStore {
         switch (query.getType()) {
             case IS:
                 return DBQuery.is(property.getName(), property.getValue());
+            case IS_NOT:
+                return DBQuery.notEquals(property.getName(), property.getValue());
             case LESS:
                 return DBQuery.lessThan(property.getName(), property.getValue());
             case LESS_OR_EQUAL:
@@ -197,7 +199,7 @@ public class DataStoreImpl implements LockBasedDataStore {
         }
     }
 
-    private DBQuery.Query interpretQuery(PropertyInQuery query) {
+    private DBQuery.Query interpretQuery(PropertyRangeQuery query) {
         return DBQuery.in(query.getPropertyName(), query.getValues());
     }
 
@@ -208,8 +210,8 @@ public class DataStoreImpl implements LockBasedDataStore {
             return interpretQuery((CompositionQuery) query);
         if (query instanceof PropertyValueQuery)
             return interpretQuery((PropertyValueQuery) query);
-        if (query instanceof PropertyInQuery)
-            return interpretQuery((PropertyInQuery) query);
+        if (query instanceof PropertyRangeQuery)
+            return interpretQuery((PropertyRangeQuery) query);
         throw new PosumException("Query type not recognized: " + query.getClass());
     }
 

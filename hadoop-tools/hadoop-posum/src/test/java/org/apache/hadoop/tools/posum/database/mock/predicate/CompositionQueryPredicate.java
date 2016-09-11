@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.database.mock;
+package org.apache.hadoop.tools.posum.database.mock.predicate;
 
 import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
@@ -15,14 +15,17 @@ import java.util.*;
 class CompositionQueryPredicate extends QueryPredicate<CompositionQuery> {
 
     private final CompositionQuery.Type type;
-    private final List<QueryPredicate<? extends DatabaseQuery>> innerPredicates;
+    private List<QueryPredicate<? extends DatabaseQuery>> innerPredicates;
 
     CompositionQueryPredicate(CompositionQuery query) {
         super(query);
         this.type = query.getType();
-        this.innerPredicates = new LinkedList<>();
+        innerPredicates = new ArrayList<>(query.getQueries().size());
+        checkedProperties = new HashSet<>(query.getQueries().size());
         for (DatabaseQuery innerQuery : query.getQueries()) {
-            innerPredicates.add(QueryPredicateFactory.fromQuery(innerQuery));
+            QueryPredicate<? extends DatabaseQuery> predicate = QueryPredicateFactory.fromQuery(innerQuery);
+            innerPredicates.add(predicate);
+            checkedProperties.addAll(predicate.checkedProperties);
         }
     }
 
@@ -44,14 +47,5 @@ class CompositionQueryPredicate extends QueryPredicate<CompositionQuery> {
             default:
                 throw new PosumException("Composition query type not recognized: " + type);
         }
-    }
-
-    @Override
-    Set<String> parseRelevantProperties() {
-            Set<String> ret = new HashSet<>(query.getQueries().size());
-            for (QueryPredicate<? extends DatabaseQuery> predicate : innerPredicates) {
-                ret.addAll(predicate.parseRelevantProperties());
-            }
-            return ret;
     }
 }
