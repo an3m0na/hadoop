@@ -24,10 +24,18 @@ public abstract class TransactionCall extends LockBasedDatabaseCallImpl<Payload>
     /**
      * Add a new database call to the call list
      *
-     * @param call
+     * @param call the call to be added
      * @return the modified TransactionCall object (useful for chaining adds)
      */
     public abstract TransactionCall addCall(ThreePhaseDatabaseCall call);
+
+    /**
+     * Add a set of Database calls to the call list
+     *
+     * @param calls the list of calls to be added
+     * @return the modified TransactionCall object (useful for chaining adds)
+     */
+    public abstract TransactionCall addAllCalls(List<? extends ThreePhaseDatabaseCall> calls);
 
 
     @Override
