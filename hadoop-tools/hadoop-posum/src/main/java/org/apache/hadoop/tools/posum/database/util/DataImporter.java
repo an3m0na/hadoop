@@ -1,7 +1,6 @@
-package org.apache.hadoop.tools.posum.database.store;
+package org.apache.hadoop.tools.posum.database.util;
 
 import org.apache.hadoop.tools.posum.common.records.call.StoreAllCall;
-import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
@@ -21,10 +20,10 @@ import java.util.regex.Pattern;
 /**
  * Created by ane on 7/28/16.
  */
-public class DataStoreImporter {
+public class DataImporter {
     private Map<DataEntityDB, Map<DataEntityCollection, File>> dataFiles = new HashMap<>(DataEntityDB.Type.values().length);
 
-    public DataStoreImporter(String dumpPath) {
+    public DataImporter(String dumpPath) {
         File dumpDir = new File(dumpPath);
         try {
             File[] files = dumpDir.listFiles();

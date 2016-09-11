@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.database.store;
+package org.apache.hadoop.tools.posum.database.util;
 
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
@@ -10,18 +10,17 @@ import org.apache.hadoop.tools.posum.database.client.DataBroker;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Created by ane on 7/28/16.
  */
-public class DataStoreExporter {
+public class DataExporter {
     private Map<DataEntityDB, List<DataEntityCollection>> collections;
     private DataBroker dataBroker;
 
-    public DataStoreExporter(DataBroker dataBroker) {
+    public DataExporter(DataBroker dataBroker) {
         this.dataBroker = dataBroker;
         collections = dataBroker.listExistingCollections();
     }
