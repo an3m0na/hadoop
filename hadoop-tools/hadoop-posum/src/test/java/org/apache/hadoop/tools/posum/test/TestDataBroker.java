@@ -223,7 +223,7 @@ public abstract class TestDataBroker {
         AppProfile returned = returnedApps.get(0);
         assertEquals(app3Id.toString(), returned.getId());
         assertEquals(queueName, returned.getQueue());
-        assertEquals("", returned.getUser());
+        assertNull(returned.getUser());
         assertEquals(new Long(0), returned.getStartTime());
         assertEquals(new Long(0), returned.getFinishTime());
 
