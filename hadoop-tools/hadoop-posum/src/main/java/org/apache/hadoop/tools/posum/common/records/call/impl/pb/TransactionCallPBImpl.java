@@ -135,6 +135,13 @@ public class TransactionCallPBImpl extends TransactionCall implements PayloadPB 
     }
 
     @Override
+    public TransactionCall addAllCalls(List<? extends ThreePhaseDatabaseCall> calls) {
+        maybeInitBuilder();
+        getCallList().addAll(calls);
+        return this;
+    }
+
+    @Override
     public ByteString getProtoBytes() {
         return getProto().toByteString();
     }
