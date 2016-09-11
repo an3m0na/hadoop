@@ -184,7 +184,7 @@ public class HistorySnapshotBrokerImpl implements HistorySnapshotBroker {
                 .addCall(DeleteByQueryCall.newInstance(fromHistory ? APP_HISTORY : APP,
                         QueryUtils.in(ID_FIELD, appIdsToRemove)))
                 .addCall(DeleteByQueryCall.newInstance(fromHistory ? JOB_HISTORY : JOB,
-                        QueryUtils.in(ID_FIELD, appIdsToRemove)))
+                        QueryUtils.in(ID_FIELD, toRemove)))
                 .addCall(DeleteByQueryCall.newInstance(fromHistory ? TASK_HISTORY : TASK,
                         QueryUtils.in(ID_FIELD, taskIdsToRemove)))
                 .addCall(DeleteByQueryCall.newInstance(fromHistory ? JOB_CONF_HISTORY : JOB_CONF,
