@@ -3,13 +3,13 @@ package org.apache.hadoop.tools.posum.common.records.call.query.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.call.query.PropertyInQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.PropertyRangeQuery;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SimplePropertyPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.PosumProtos.SimplePropertyPayloadProto;
-import org.apache.hadoop.yarn.proto.PosumProtos.PropertyInQueryProto;
-import org.apache.hadoop.yarn.proto.PosumProtos.PropertyInQueryProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.PropertyRangeQueryProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.PropertyRangeQueryProtoOrBuilder;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -18,23 +18,23 @@ import java.util.List;
 /**
  * Created by ane on 3/20/16.
  */
-public class PropertyInQueryPBImpl extends PropertyInQuery implements PayloadPB {
-    private PropertyInQueryProto proto = PropertyInQueryProto.getDefaultInstance();
-    private PropertyInQueryProto.Builder builder = null;
+public class PropertyRangeQueryPBImpl extends PropertyRangeQuery implements PayloadPB {
+    private PropertyRangeQueryProto proto = PropertyRangeQueryProto.getDefaultInstance();
+    private PropertyRangeQueryProto.Builder builder = null;
     private boolean viaProto = false;
 
     private List<Object> values;
 
-    public PropertyInQueryPBImpl() {
-        builder = PropertyInQueryProto.newBuilder();
+    public PropertyRangeQueryPBImpl() {
+        builder = PropertyRangeQueryProto.newBuilder();
     }
 
-    public PropertyInQueryPBImpl(PropertyInQueryProto proto) {
+    public PropertyRangeQueryPBImpl(PropertyRangeQueryProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public PropertyInQueryProto getProto() {
+    public PropertyRangeQueryProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -72,7 +72,7 @@ public class PropertyInQueryPBImpl extends PropertyInQuery implements PayloadPB 
                     public Iterator<SimplePropertyPayloadProto> iterator() {
                         return new Iterator<SimplePropertyPayloadProto>() {
 
-                            Iterator<Object> iterator = values.iterator();
+                            Iterator<?> iterator = values.iterator();
 
                             @Override
                             public void remove() {
@@ -106,14 +106,14 @@ public class PropertyInQueryPBImpl extends PropertyInQuery implements PayloadPB 
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = PropertyInQueryProto.newBuilder(proto);
+            builder = PropertyRangeQueryProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
     public String getPropertyName() {
-        PropertyInQueryProtoOrBuilder p = viaProto ? proto : builder;
+        PropertyRangeQueryProtoOrBuilder p = viaProto ? proto : builder;
         if (!p.hasPropertyName())
             return null;
         return p.getPropertyName();
@@ -130,21 +130,39 @@ public class PropertyInQueryPBImpl extends PropertyInQuery implements PayloadPB 
     }
 
     @Override
-    public List<Object> getValues() {
+    public Type getType() {
+        PropertyRangeQueryProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasType())
+            return null;
+        return Type.valueOf(p.getType().name().substring("RQRY_".length()));
+    }
+
+    @Override
+    public void setType(Type type) {
+        maybeInitBuilder();
+        if (type == null) {
+            builder.clearType();
+            return;
+        }
+        builder.setType(PropertyRangeQueryProto.TypeProto.valueOf("RQRY_" + type.name()));
+    }
+
+    @Override
+    public <T> List<T> getValues() {
         if (values == null) {
-            PropertyInQueryProtoOrBuilder p = viaProto ? proto : builder;
+            PropertyRangeQueryProtoOrBuilder p = viaProto ? proto : builder;
             values = new ArrayList<>(p.getValuesCount());
             for (SimplePropertyPayloadProto propertyProto : p.getValuesList()) {
                 values.add(new SimplePropertyPayloadPBImpl(propertyProto).getValue());
             }
         }
-        return values;
+        return (List<T>)values;
     }
 
     @Override
-    public void setValues(List<Object> values) {
+    public void setValues(List<?> values) {
         maybeInitBuilder();
-        this.values = values;
+        this.values = new ArrayList<>(values);
     }
 
     @Override
@@ -154,7 +172,7 @@ public class PropertyInQueryPBImpl extends PropertyInQuery implements PayloadPB 
 
     @Override
     public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        proto = PropertyInQueryProto.parseFrom(data);
+        proto = PropertyRangeQueryProto.parseFrom(data);
         viaProto = true;
     }
 }

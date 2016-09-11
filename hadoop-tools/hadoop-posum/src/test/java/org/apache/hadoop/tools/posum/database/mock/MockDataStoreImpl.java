@@ -8,6 +8,8 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayloa
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.client.Database;
+import org.apache.hadoop.tools.posum.database.mock.predicate.QueryPredicate;
+import org.apache.hadoop.tools.posum.database.mock.predicate.QueryPredicateFactory;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.bson.types.ObjectId;
 
@@ -110,7 +112,6 @@ public class MockDataStoreImpl implements LockBasedDataStore {
                 limitOrZero
         ).keySet());
     }
-
 
 
     private static <T extends GeneralDataEntity> Map<String, T> findEntitiesByQuery(Map<String, T> entities,
@@ -272,12 +273,15 @@ public class MockDataStoreImpl implements LockBasedDataStore {
             if (sourceAssets == null)
                 return;
             sourceAssets.lock.readLock().lock();
+            lockForWrite(destinationDB);
             try {
+
                 for (Map.Entry<DataEntityCollection, Map<String, ? extends GeneralDataEntity>> collectionEntry :
                         sourceAssets.collections.entrySet()) {
                     storeAll(destinationDB, collectionEntry.getKey(), new ArrayList<>(collectionEntry.getValue().values()));
                 }
             } finally {
+                unlockForWrite(destinationDB);
                 sourceAssets.lock.readLock().unlock();
             }
         } finally {

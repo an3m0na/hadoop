@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.database.mock;
+package org.apache.hadoop.tools.posum.database.mock.predicate;
 
 import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
@@ -20,6 +20,7 @@ class PropertyValueQueryPredicate extends QueryPredicate<PropertyValueQuery> {
 
     PropertyValueQueryPredicate(PropertyValueQuery query) {
         super(query);
+        checkedProperties = Collections.singleton(query.getProperty().getName());
     }
 
     @Override
@@ -29,6 +30,8 @@ class PropertyValueQueryPredicate extends QueryPredicate<PropertyValueQuery> {
         switch (query.getType()) {
             case IS:
                 return safeEquals(value, property.getValue());
+            case IS_NOT:
+                return !safeEquals(value, property.getValue());
             case LESS:
                 return property.getValue() != null && ((Comparable) property.getValue()).compareTo(value) > 0;
             case LESS_OR_EQUAL:
@@ -42,10 +45,5 @@ class PropertyValueQueryPredicate extends QueryPredicate<PropertyValueQuery> {
 
         }
 
-    }
-
-    @Override
-    Set<String> parseRelevantProperties() {
-        return Collections.singleton(query.getProperty().getName());
     }
 }
