@@ -110,14 +110,13 @@ message JobProfileProto {
     repeated string splitLocations = 32;
 
     enum JobStateProto {
-        STATE_NULL = 0;
-        STATE_NEW = 1;
-        STATE_INITED = 2;
-        STATE_RUNNING = 3;
-        STATE_SUCCEEDED = 4;
-        STATE_FAILED = 5;
-        STATE_KILLED = 6;
-        STATE_ERROR = 7;
+        STATE_NEW = 0;
+        STATE_INITED = 1;
+        STATE_RUNNING = 2;
+        STATE_SUCCEEDED = 3;
+        STATE_FAILED = 4;
+        STATE_KILLED = 5;
+        STATE_ERROR = 6;
     }
 }
 
@@ -147,9 +146,8 @@ message TaskProfileProto {
     optional string httpAddress = 17;
 
     enum TaskTypeProto {
-        TYPE_NULL = 0;
-        TYPE_MAP = 1;
-        TYPE_REDUCE = 2;
+        TYPE_MAP = 0;
+        TYPE_REDUCE = 1;
     }
 }
 
@@ -188,6 +186,8 @@ message SimpleRequestProto {
         REQ_SYSTEM_ADDRESSES = 3;
         REQ_LIST_COLLECTIONS = 4;
         REQ_CLEAR_DATA = 5;
+        REQ_CLEAR_DB = 6;
+        REQ_COPY_DB = 7;
     }
 }
 
@@ -321,6 +321,11 @@ message TaskPredictionPayloadProto {
     optional int64 duration = 3;
 }
 
+message DatabaseAlterationPayloadProto {
+    optional EntityDBProto source = 1;
+    optional EntityDBProto destination = 2;
+}
+
 // --------- Database Calls ---------
 
 
@@ -342,6 +347,7 @@ message DatabaseCallProto {
         CALL_STORE_LOG = 10;
         CALL_FIND_BY_QUERY = 11;
         CALL_DOCUMENTS_BY_QUERY = 12;
+        CALL_STORE_ALL = 13;
     }
 }
 
@@ -390,6 +396,7 @@ message DatabaseQueryProto {
     enum TypeProto {
         QRY_COMPOSITION = 0;
         QRY_PROPERTY_VALUE = 1;
+        QRY_PROPERTY_IN = 2;
     }
 }
 
@@ -398,11 +405,12 @@ message PropertyValueQueryProto {
     required SimplePropertyPayloadProto property = 2;
 
     enum TypeProto {
-        PQRY_IS = 0;
-        PQRY_LESS = 1;
-        PQRY_LESS_OR_EQUAL = 2;
-        PQRY_GREATER = 3;
-        PQRY_GREATER_OR_EQUAL = 4;
+        VQRY_IS = 0;
+        VQRY_IS_NOT = 1;
+        VQRY_LESS = 2;
+        VQRY_LESS_OR_EQUAL = 3;
+        VQRY_GREATER = 4;
+        VQRY_GREATER_OR_EQUAL = 5;
     }
 }
 
@@ -413,5 +421,16 @@ message CompositionQueryProto {
     enum TypeProto {
         CQRY_AND = 0;
         CQRY_OR = 1;
+    }
+}
+
+message PropertyRangeQueryProto {
+    required string propertyName = 1;
+    required TypeProto type = 2;
+    repeated SimplePropertyPayloadProto values = 3;
+
+    enum TypeProto {
+        RQRY_IN = 0;
+        RQRY_NOT_IN = 1;
     }
 }

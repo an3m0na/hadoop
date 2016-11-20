@@ -7,7 +7,7 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 /**
  * Created by ane on 2/24/16.
  */
-public interface AppProfile extends GeneralDataEntity {
+public interface AppProfile extends GeneralDataEntity<AppProfile> {
 
     Long getStartTime();
 

@@ -38,7 +38,7 @@ public abstract class SaveJobFlexFieldsCall extends LockBasedDatabaseCallImpl<Vo
     @Override
     public VoidPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
         DataEntityCollection type = getForHistory() ? DataEntityCollection.JOB_HISTORY : DataEntityCollection.JOB;
-        JobProfile job = dataStore.findById(db, type, getJobId());
+        JobProfile job = dataStore.<JobProfile>findById(db, type, getJobId());
         if (job == null)
             throw new PosumException("Could not find job to save flex-fields: " + getJobId());
         job.addAll(getNewFields());

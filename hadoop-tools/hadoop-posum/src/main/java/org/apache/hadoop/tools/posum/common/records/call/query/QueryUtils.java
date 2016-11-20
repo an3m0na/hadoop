@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.call.query;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,6 +29,10 @@ public class QueryUtils {
         return PropertyValueQuery.newInstance(PropertyValueQuery.Type.IS, propertyName, propertyValue);
     }
 
+    public static DatabaseQuery isNot(String propertyName, Object propertyValue) {
+        return PropertyValueQuery.newInstance(PropertyValueQuery.Type.IS_NOT, propertyName, propertyValue);
+    }
+
     public static DatabaseQuery lessThan(String propertyName, Object propertyValue) {
         return PropertyValueQuery.newInstance(PropertyValueQuery.Type.LESS, propertyName, propertyValue);
     }
@@ -42,6 +47,14 @@ public class QueryUtils {
 
     public static DatabaseQuery greaterThanOrEqual(String propertyName, Object propertyValue) {
         return PropertyValueQuery.newInstance(PropertyValueQuery.Type.GREATER_OR_EQUAL, propertyName, propertyValue);
+    }
+
+    public static DatabaseQuery in(String propertyName, List<?> propertyValues) {
+        return PropertyRangeQuery.newInstance(propertyName, PropertyRangeQuery.Type.IN, propertyValues);
+    }
+
+    public static DatabaseQuery notIn(String propertyName, List<?> propertyValues) {
+        return PropertyRangeQuery.newInstance(propertyName, PropertyRangeQuery.Type.NOT_IN, propertyValues);
     }
 
 }

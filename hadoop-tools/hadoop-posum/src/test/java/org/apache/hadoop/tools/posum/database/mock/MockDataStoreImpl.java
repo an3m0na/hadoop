@@ -2,14 +2,14 @@ package org.apache.hadoop.tools.posum.database.mock;
 
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
-import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.database.client.Database;
+import org.apache.hadoop.tools.posum.database.mock.predicate.QueryPredicate;
+import org.apache.hadoop.tools.posum.database.mock.predicate.QueryPredicateFactory;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.bson.types.ObjectId;
 
@@ -60,7 +60,7 @@ public class MockDataStoreImpl implements LockBasedDataStore {
         return assets;
     }
 
-    private <T extends GeneralDataEntity> Map<String, T> getCollection(DBAssets assets, DataEntityCollection collection) {
+    private <T extends GeneralDataEntity<T>> Map<String, T> getCollection(DBAssets assets, DataEntityCollection collection) {
         Map<String, ? extends GeneralDataEntity> dbCollection = assets.collections.get(collection);
         synchronized (this) {
             if (dbCollection == null) {
@@ -73,18 +73,21 @@ public class MockDataStoreImpl implements LockBasedDataStore {
 
 
     @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
-        return this.<T>getCollectionForRead(db, collection).get(id);
+    public <T extends GeneralDataEntity<T>> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
+        T ret = this.<T>getCollectionForRead(db, collection).get(id);
+        if (ret == null)
+            return null;
+        return ret.copy();
     }
 
     @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
-                                                      DataEntityCollection collection,
-                                                      DatabaseQuery query,
-                                                      String sortField,
-                                                      boolean sortDescending,
-                                                      int offsetOrZero,
-                                                      int limitOrZero) {
+    public <T extends GeneralDataEntity<T>> List<T> find(DataEntityDB db,
+                                                         DataEntityCollection collection,
+                                                         DatabaseQuery query,
+                                                         String sortField,
+                                                         boolean sortDescending,
+                                                         int offsetOrZero,
+                                                         int limitOrZero) {
         return new ArrayList<>(MockDataStoreImpl.findEntitiesByQuery(
                 this.<T>getCollectionForRead(db, collection),
                 query,
@@ -113,47 +116,26 @@ public class MockDataStoreImpl implements LockBasedDataStore {
         ).keySet());
     }
 
-    private static Set<String> parseRelevantProperties(CompositionQuery query) {
-        Set<String> ret = new HashSet<>(query.getQueries().size());
-        for (DatabaseQuery innerQuery : query.getQueries()) {
-            ret.addAll(parseRelevantProperties(innerQuery));
-        }
-        return ret;
-    }
 
-    private static Set<String> parseRelevantProperties(DatabaseQuery query) {
-        Set<String> ret = new HashSet<>();
-        if (query == null)
-            return ret;
-        if (query instanceof PropertyValueQuery) {
-            ret.add(((PropertyValueQuery) query).getProperty().getName());
-            return ret;
-        }
-        if (query instanceof CompositionQuery) {
-            return parseRelevantProperties((CompositionQuery) query);
-        }
-        throw new PosumException("Query type not recognized: " + query.getClass());
-    }
-
-    private static <T extends GeneralDataEntity> Map<String, T> findEntitiesByQuery(Map<String, T> entities,
-                                                                                    DatabaseQuery query,
-                                                                                    String sortField,
-                                                                                    boolean sortDescending,
-                                                                                    int offsetOrZero,
-                                                                                    int limitOrZero) {
+    private static <T extends GeneralDataEntity<T>> Map<String, T> findEntitiesByQuery(Map<String, T> entities,
+                                                                                       DatabaseQuery query,
+                                                                                       String sortField,
+                                                                                       boolean sortDescending,
+                                                                                       int offsetOrZero,
+                                                                                       int limitOrZero) {
         if (entities.size() < 1)
             return Collections.emptyMap();
         List<SimplePropertyPayload> relevant = new LinkedList<>();
         Map<String, T> results = new LinkedHashMap<>();
         Class entityClass = entities.values().iterator().next().getClass();
-        Set<String> relevantProperties = parseRelevantProperties(query);
+        QueryPredicate<? extends DatabaseQuery> predicate = QueryPredicateFactory.fromQuery(query);
+        Set<String> relevantProperties = new HashSet<>(predicate.getCheckedProperties());
         if (sortField != null)
             relevantProperties.add(sortField);
         try {
             Map<String, Method> propertyReaders = Utils.getBeanPropertyReaders(entityClass, relevantProperties);
-            QueryPredicate predicate = QueryPredicate.fromQuery(query, propertyReaders);
             for (Map.Entry<String, T> entry : entities.entrySet()) {
-                if (predicate.check(entry.getValue())) {
+                if (predicate.check(entry.getValue(), propertyReaders)) {
                     Object sortablePropertyValue = null;
                     if (sortField != null) {
                         sortablePropertyValue = propertyReaders.get(sortField).invoke(entry.getValue());
@@ -176,7 +158,7 @@ public class MockDataStoreImpl implements LockBasedDataStore {
             int count = limitOrZero != 0 ? limitOrZero : relevant.size();
             for (SimplePropertyPayload next : relevant) {
                 if (skip-- <= 0)
-                    results.put(next.getName(), entities.get(next.getName()));
+                    results.put(next.getName(), entities.get(next.getName()).copy());
                 if (--count == 0)
                     break;
             }
@@ -187,21 +169,28 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert) {
-        if (toInsert.getId() == null) {
-            toInsert.setId(ObjectId.get().toHexString());
+    public <T extends GeneralDataEntity<T>> String store(DataEntityDB db, DataEntityCollection collection, T toStore) {
+        if (toStore.getId() == null) {
+            toStore.setId(ObjectId.get().toHexString());
         } else {
-            if (findById(db, collection, toInsert.getId()) != null) {
-                throw new PosumException("Cannot insert duplicate key " + toInsert.getId());
+            if (findById(db, collection, toStore.getId()) != null) {
+                throw new PosumException("Cannot insert duplicate key " + toStore.getId());
             }
         }
-        getCollectionForWrite(db, collection).put(toInsert.getId(), toInsert);
-        return toInsert.getId();
+        getCollectionForWrite(db, collection).put(toStore.getId(), toStore);
+        return toStore.getId();
 
     }
 
     @Override
-    public <T extends GeneralDataEntity> String updateOrStore(DataEntityDB db, DataEntityCollection collection, T toUpdate) {
+    public <T extends GeneralDataEntity<T>> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore) {
+        for (T entity : toStore) {
+            store(db, collection, entity);
+        }
+    }
+
+    @Override
+    public <T extends GeneralDataEntity<T>> String updateOrStore(DataEntityDB db, DataEntityCollection collection, T toUpdate) {
         boolean found = false;
         if (toUpdate.getId() != null)
             found = deleteReturnFound(db, collection, toUpdate.getId());
@@ -258,6 +247,49 @@ public class MockDataStoreImpl implements LockBasedDataStore {
         lockAll();
         dbRegistry.clear();
         unlockAll();
+    }
+
+    @Override
+    public void clear(DataEntityDB db) {
+        masterLock.readLock().lock();
+        try {
+            DBAssets dbAssets = getDatabaseAssets(db);
+            if (dbAssets == null)
+                return;
+            dbAssets.lock.writeLock().lock();
+            try {
+                dbAssets.collections.clear();
+            } finally {
+                dbAssets.lock.writeLock().unlock();
+            }
+        } finally {
+            masterLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public void copy(DataEntityDB sourceDB, DataEntityDB destinationDB) {
+        masterLock.readLock().lock();
+        try {
+            DBAssets sourceAssets = getDatabaseAssets(sourceDB);
+            clear(destinationDB);
+            if (sourceAssets == null)
+                return;
+            sourceAssets.lock.readLock().lock();
+            lockForWrite(destinationDB);
+            try {
+
+                for (Map.Entry<DataEntityCollection, Map<String, ? extends GeneralDataEntity>> collectionEntry :
+                        sourceAssets.collections.entrySet()) {
+                    storeAll(destinationDB, collectionEntry.getKey(), new ArrayList<>(collectionEntry.getValue().values()));
+                }
+            } finally {
+                unlockForWrite(destinationDB);
+                sourceAssets.lock.readLock().unlock();
+            }
+        } finally {
+            masterLock.readLock().unlock();
+        }
     }
 
     @Override

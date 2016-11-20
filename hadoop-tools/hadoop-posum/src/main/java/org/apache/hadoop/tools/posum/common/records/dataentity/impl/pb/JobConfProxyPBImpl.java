@@ -18,6 +18,13 @@ import java.util.Map;
 public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, JobConfProxyProto, JobConfProxyProto.Builder>
         implements JobConfProxy {
 
+    public JobConfProxyPBImpl() {
+    }
+
+    public JobConfProxyPBImpl(JobConfProxyProto proto) {
+        super(proto);
+    }
+
     @Override
     void initBuilder() {
         builder = viaProto ? JobConfProxyProto.newBuilder(proto) : JobConfProxyProto.newBuilder();
@@ -61,6 +68,11 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
             return;
         }
         builder.setId(id);
+    }
+
+    @Override
+    public JobConfProxy copy() {
+        return new JobConfProxyPBImpl(getProto());
     }
 
     @Override

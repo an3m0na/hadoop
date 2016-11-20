@@ -8,9 +8,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
-public interface GeneralDataEntity{
+public interface GeneralDataEntity<T extends GeneralDataEntity>{
 
     String getId();
 
     void setId(String id);
+
+    T copy();
+
 }

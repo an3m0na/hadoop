@@ -16,7 +16,7 @@ public abstract class GeneralDataEntityPBImpl<
         E extends GeneralDataEntity,
         P extends com.google.protobuf.GeneratedMessage & com.google.protobuf.MessageOrBuilder,
         B extends com.google.protobuf.GeneratedMessage.Builder<B>>
-        implements GeneralDataEntity {
+        implements GeneralDataEntity<E> {
     @Id
     @JsonProperty("_id")
     // for serialization from the rest api this should be id, not _id, so no following line:

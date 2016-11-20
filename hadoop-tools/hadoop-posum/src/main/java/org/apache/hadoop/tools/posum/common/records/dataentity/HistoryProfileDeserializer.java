@@ -9,6 +9,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryPr
 
 import java.io.IOException;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
+
 /**
  * Created by ane on 3/29/16.
  */
@@ -19,7 +21,7 @@ public class HistoryProfileDeserializer extends JsonDeserializer<HistoryProfileP
             throws IOException {
         ObjectNode node = jp.readValueAsTree();
         DataEntityCollection type = DataEntityCollection.valueOf((node.get("type")).asText());
-        String id = (node.get("_id")).asText();
+        String id = (node.get(ID_FIELD)).asText();
         Long timestamp = (node.get("timestamp")).asLong();
 
         JsonNode originalNode = node.get("original");

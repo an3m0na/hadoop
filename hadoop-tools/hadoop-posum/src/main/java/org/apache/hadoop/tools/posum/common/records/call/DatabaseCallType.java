@@ -18,7 +18,8 @@ public enum DatabaseCallType {
     TRANSACTION(TransactionCallPBImpl.class, PayloadType.VOID),
     STORE_LOG(StoreLogCallPBImpl.class, PayloadType.SIMPLE_PROPERTY),
     FIND_BY_QUERY(FindByQueryCallPBImpl.class, PayloadType.MULTI_ENTITY),
-    DOCUMENTS_BY_QUERY(RawDocumentsByQueryCallPBImpl.class, PayloadType.SIMPLE_PROPERTY);
+    DOCUMENTS_BY_QUERY(RawDocumentsByQueryCallPBImpl.class, PayloadType.SIMPLE_PROPERTY),
+    STORE_ALL(StoreAllCallPBImpl.class, PayloadType.VOID);
 
     private Class<? extends DatabaseCall> mappedClass;
     private PayloadType payloadType;

@@ -78,7 +78,7 @@ public class PropertyValueQueryPBImpl extends PropertyValueQuery implements Payl
         PropertyValueQueryProtoOrBuilder p = viaProto ? proto : builder;
         if (!p.hasType())
             return null;
-        return Type.valueOf(p.getType().name().substring("PQRY_".length()));
+        return Type.valueOf(p.getType().name().substring("VQRY_".length()));
     }
 
     @Override
@@ -88,7 +88,7 @@ public class PropertyValueQueryPBImpl extends PropertyValueQuery implements Payl
             builder.clearType();
             return;
         }
-        builder.setType(PosumProtos.PropertyValueQueryProto.TypeProto.valueOf("PQRY_" + type.name()));
+        builder.setType(PosumProtos.PropertyValueQueryProto.TypeProto.valueOf("VQRY_" + type.name()));
     }
 
     @Override
