@@ -84,6 +84,10 @@ public class UpdateOrStoreCallPBImpl extends UpdateOrStoreCall implements Payloa
     @Override
     public void setEntityCollection(DataEntityCollection type) {
         maybeInitBuilder();
+        if (type == null) {
+            builder.clearCollection();
+            return;
+        }
         builder.setCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
     }
 
@@ -104,8 +108,11 @@ public class UpdateOrStoreCallPBImpl extends UpdateOrStoreCall implements Payloa
     @Override
     public void setEntity(GeneralDataEntity entity) {
         maybeInitBuilder();
-        if (entity != null)
-            builder.setEntity(((GeneralDataEntityPBImpl) entity).getProto().toByteString());
+        if (entity == null) {
+            builder.clearEntity();
+            return;
+        }
+        builder.setEntity(((GeneralDataEntityPBImpl) entity).getProto().toByteString());
     }
 
     @Override

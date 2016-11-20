@@ -8,7 +8,7 @@ import org.apache.hadoop.yarn.util.Records;
  */
 public abstract class PropertyValueQuery implements DatabaseQuery {
     public enum Type {
-        IS, LESS, LESS_OR_EQUAL, GREATER, GREATER_OR_EQUAL
+        IS, IS_NOT, LESS, LESS_OR_EQUAL, GREATER, GREATER_OR_EQUAL
     }
 
     protected static PropertyValueQuery newInstance(Type type, String propertyName, Object propertyValue) {

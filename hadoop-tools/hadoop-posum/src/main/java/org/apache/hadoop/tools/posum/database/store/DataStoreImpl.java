@@ -7,6 +7,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.call.query.CompositionQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
+import org.apache.hadoop.tools.posum.common.records.call.query.PropertyRangeQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
@@ -23,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
 
 /**
  * Created by ane on 2/9/16.
@@ -72,7 +75,7 @@ public class DataStoreImpl implements LockBasedDataStore {
         return assets;
     }
 
-    private <T extends GeneralDataEntity> JacksonDBCollection<T, String> getCollection(DataEntityDB db, DBAssets assets, DataEntityCollection collection) {
+    private <T extends GeneralDataEntity<T>> JacksonDBCollection<T, String> getCollection(DataEntityDB db, DBAssets assets, DataEntityCollection collection) {
         JacksonDBCollection dbCollection = assets.collections.get(collection);
         synchronized (this) {
             if (dbCollection == null) {
@@ -87,18 +90,18 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
+    public <T extends GeneralDataEntity<T>> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
         return this.<T>getCollectionForRead(db, collection).findOneById(id);
     }
 
     @Override
-    public <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
-                                                      DataEntityCollection collection,
-                                                      DatabaseQuery query,
-                                                      String sortField,
-                                                      boolean sortDescending,
-                                                      int offsetOrZero,
-                                                      int limitOrZero) {
+    public <T extends GeneralDataEntity<T>> List<T> find(DataEntityDB db,
+                                                         DataEntityCollection collection,
+                                                         DatabaseQuery query,
+                                                         String sortField,
+                                                         boolean sortDescending,
+                                                         int offsetOrZero,
+                                                         int limitOrZero) {
         return find(db, collection, interpretQuery(query), sortField, sortDescending, offsetOrZero, limitOrZero);
     }
 
@@ -165,6 +168,8 @@ public class DataStoreImpl implements LockBasedDataStore {
         switch (query.getType()) {
             case IS:
                 return DBQuery.is(property.getName(), property.getValue());
+            case IS_NOT:
+                return DBQuery.notEquals(property.getName(), property.getValue());
             case LESS:
                 return DBQuery.lessThan(property.getName(), property.getValue());
             case LESS_OR_EQUAL:
@@ -194,6 +199,10 @@ public class DataStoreImpl implements LockBasedDataStore {
         }
     }
 
+    private DBQuery.Query interpretQuery(PropertyRangeQuery query) {
+        return DBQuery.in(query.getPropertyName(), query.getValues());
+    }
+
     private DBQuery.Query interpretQuery(DatabaseQuery query) {
         if (query == null)
             return DBQuery.empty();
@@ -201,21 +210,28 @@ public class DataStoreImpl implements LockBasedDataStore {
             return interpretQuery((CompositionQuery) query);
         if (query instanceof PropertyValueQuery)
             return interpretQuery((PropertyValueQuery) query);
+        if (query instanceof PropertyRangeQuery)
+            return interpretQuery((PropertyRangeQuery) query);
         throw new PosumException("Query type not recognized: " + query.getClass());
     }
 
     @Override
-    public <T extends GeneralDataEntity> String store(DataEntityDB db, DataEntityCollection collection, T toInsert) {
-        WriteResult<T, String> result = this.<T>getCollectionForWrite(db, collection).insert(toInsert);
+    public <T extends GeneralDataEntity<T>> String store(DataEntityDB db, DataEntityCollection collection, T toStore) {
+        WriteResult<T, String> result = this.<T>getCollectionForWrite(db, collection).insert(toStore);
         return result.getSavedId();
     }
 
     @Override
-    public <T extends GeneralDataEntity> String updateOrStore(DataEntityDB db,
-                                                              DataEntityCollection collection,
-                                                              T toUpdate) {
+    public <T extends GeneralDataEntity<T>> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore) {
+        this.<T>getCollectionForWrite(db, collection).insert(toStore);
+    }
+
+    @Override
+    public <T extends GeneralDataEntity<T>> String updateOrStore(DataEntityDB db,
+                                                                 DataEntityCollection collection,
+                                                                 T toUpdate) {
         WriteResult<T, String> result = this.<T>getCollectionForWrite(db, collection)
-                .update(DBQuery.is("_id", toUpdate.getId()), toUpdate, true, false);
+                .update(DBQuery.is(ID_FIELD, toUpdate.getId()), toUpdate, true, false);
         return (String) result.getUpsertedId();
     }
 
@@ -297,16 +313,59 @@ public class DataStoreImpl implements LockBasedDataStore {
     public void clear() {
         lockAll();
         try {
-            for (Map.Entry<DataEntityDB, DBAssets> assetsEntry : dbRegistry.entrySet()) {
-                for (Map.Entry<DataEntityCollection, JacksonDBCollection> collectionEntry :
-                        assetsEntry.getValue().collections.entrySet()) {
-                    collectionEntry.getValue().drop();
-                }
-                assetsEntry.getValue().collections.clear();
-            }
+            for (DataEntityDB db : dbRegistry.keySet())
+                clear(db);
             dbRegistry.clear();
         } finally {
             unlockAll();
+        }
+    }
+
+    @Override
+    public void clear(DataEntityDB db) {
+        masterLock.readLock().lock();
+        try {
+            DBAssets dbAssets = getDatabaseAssets(db);
+            if (dbAssets == null)
+                return;
+            dbAssets.lock.writeLock().lock();
+            try {
+                mongoClient.getDatabase(db.getName()).drop();
+                dbAssets.collections.clear();
+            } finally {
+                dbAssets.lock.writeLock().unlock();
+            }
+        } finally {
+            masterLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public void copy(DataEntityDB sourceDB, DataEntityDB destinationDB) {
+        masterLock.readLock().lock();
+        try {
+            DBAssets sourceAssets = getDatabaseAssets(sourceDB);
+            clear(destinationDB);
+            if (sourceAssets == null)
+                return;
+            sourceAssets.lock.readLock().lock();
+            try {
+                for (Map.Entry<DataEntityCollection, JacksonDBCollection> collectionEntry :
+                        sourceAssets.collections.entrySet()) {
+                    try {
+                        lockForWrite(destinationDB);
+                        List entities = collectionEntry.getValue().find().toArray();
+                        if (entities.size() > 0)
+                            storeAll(destinationDB, collectionEntry.getKey(), entities);
+                    } finally {
+                        unlockForWrite(destinationDB);
+                    }
+                }
+            } finally {
+                sourceAssets.lock.readLock().unlock();
+            }
+        } finally {
+            masterLock.readLock().unlock();
         }
     }
 }

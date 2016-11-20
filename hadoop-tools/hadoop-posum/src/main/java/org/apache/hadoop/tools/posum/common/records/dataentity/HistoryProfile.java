@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * Created by ane on 3/7/16.
  */
 @JsonDeserialize(using = HistoryProfileDeserializer.class)
-public interface HistoryProfile<T extends GeneralDataEntity> extends GeneralDataEntity {
+public interface HistoryProfile<T extends GeneralDataEntity> extends GeneralDataEntity<HistoryProfile> {
 
      T getOriginal();
 

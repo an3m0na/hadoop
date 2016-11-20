@@ -15,6 +15,13 @@ import org.apache.hadoop.yarn.proto.PosumProtos.AppProfileProtoOrBuilder;
 public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppProfileProto, AppProfileProto.Builder>
         implements AppProfile {
 
+    public AppProfilePBImpl() {
+    }
+
+    public AppProfilePBImpl(AppProfileProto proto) {
+       super(proto);
+    }
+
     @Override
     void initBuilder() {
         builder = viaProto ? AppProfileProto.newBuilder(proto) : AppProfileProto.newBuilder();
@@ -51,6 +58,11 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     }
 
     @Override
+    public AppProfile copy() {
+        return new AppProfilePBImpl(getProto());
+    }
+
+    @Override
     public Long getStartTime() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
         return p.getStartTime();
@@ -59,34 +71,47 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setStartTime(Long startTime) {
         maybeInitBuilder();
-        if (startTime != null)
-            builder.setStartTime(startTime);
+        if (startTime == null) {
+            builder.clearStartTime();
+            return;
+        }
+        builder.setStartTime(startTime);
     }
 
     @Override
     public String getUser() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasUser())
+            return null;
         return p.getUser();
     }
 
     @Override
     public void setUser(String user) {
         maybeInitBuilder();
-        if (user != null)
-            builder.setUser(user);
+        if (user == null) {
+            builder.clearUser();
+            return;
+        }
+        builder.setUser(user);
     }
 
     @Override
     public String getName() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasName())
+            return null;
         return p.getName();
     }
 
     @Override
     public void setName(String name) {
         maybeInitBuilder();
-        if (name != null)
-            builder.setName(name);
+        if (name == null) {
+            builder.clearName();
+            return;
+        }
+        builder.setName(name);
     }
 
     @Override
@@ -134,8 +159,11 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setFinishTime(Long finishTime) {
         maybeInitBuilder();
-        if (finishTime != null)
-            builder.setFinishTime(finishTime);
+        if (finishTime == null) {
+            builder.clearFinishTime();
+            return;
+        }
+        builder.setFinishTime(finishTime);
     }
 
     @Override
@@ -159,14 +187,18 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     @Override
     public void setQueue(String queue) {
         maybeInitBuilder();
-        if (queue != null) {
-            builder.setQueue(queue);
+        if (queue == null) {
+            builder.clearQueue();
+            return;
         }
+        builder.setQueue(queue);
     }
 
     @Override
     public String getQueue() {
         AppProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasQueue())
+            return null;
         return p.getQueue();
     }
 }

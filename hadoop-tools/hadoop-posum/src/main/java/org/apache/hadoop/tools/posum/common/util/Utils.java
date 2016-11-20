@@ -3,12 +3,15 @@ package org.apache.hadoop.tools.posum.common.util;
 import org.apache.commons.lang.WordUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.mapreduce.FileSystemCounter;
+import org.apache.hadoop.mapreduce.TaskCounter;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.*;
+import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.CounterInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
@@ -44,15 +47,7 @@ import java.util.*;
 public class Utils {
 
     private static Log logger = LogFactory.getLog(Utils.class);
-
-    public static TaskType getTaskTypeFromId(String id) {
-        try {
-            String[] parts = id.split("_");
-            return "m".equals(parts[parts.length - 2]) ? TaskType.MAP : TaskType.REDUCE;
-        } catch (Exception e) {
-            throw new PosumException("Id parse exception for " + id, e);
-        }
-    }
+    public static final String ID_FIELD = "_id";
 
     public static ApplicationId parseApplicationId(String id) {
         try {
@@ -64,26 +59,17 @@ public class Utils {
         }
     }
 
-    public static JobId parseJobId(String appId, String id) {
-        try {
-            String[] parts = id.split("_");
-            JobId jobId = Records.newRecord(JobId.class);
-            jobId.setAppId(parseApplicationId(appId));
-            jobId.setId(Integer.parseInt(parts[parts.length - 1]));
-            return jobId;
-        } catch (Exception e) {
-            throw new PosumException("Id parse exception for " + id, e);
-        }
+    public static JobId composeJobId(Long timestamp, Integer actualId) {
+        JobId jobId = Records.newRecord(JobId.class);
+        jobId.setAppId(ApplicationId.newInstance(timestamp, actualId));
+        jobId.setId(actualId);
+        return jobId;
     }
 
-    public static TaskId parseTaskId(String appId, String id) {
+    public static JobId parseJobId(String id) {
         try {
             String[] parts = id.split("_");
-            TaskId taskId = Records.newRecord(TaskId.class);
-            taskId.setJobId(parseJobId(appId, parts[0] + "_" + parts[1] + "_" + parts[2]));
-            taskId.setTaskType("m".equals(parts[3]) ? TaskType.MAP : TaskType.REDUCE);
-            taskId.setId(Integer.parseInt(parts[4]));
-            return taskId;
+            return composeJobId(Long.parseLong(parts[1]), Integer.parseInt(parts[2]));
         } catch (Exception e) {
             throw new PosumException("Id parse exception for " + id, e);
         }
@@ -93,7 +79,7 @@ public class Utils {
         try {
             String[] parts = id.split("_");
             TaskId taskId = Records.newRecord(TaskId.class);
-            taskId.setJobId(parseJobId("application_" + parts[1] + "0000", parts[0] + "_" + parts[1] + "_" + parts[2]));
+            taskId.setJobId(composeJobId(Long.parseLong(parts[1]), Integer.parseInt(parts[2])));
             taskId.setTaskType("m".equals(parts[3]) ? TaskType.MAP : TaskType.REDUCE);
             taskId.setId(Integer.parseInt(parts[4]));
             return taskId;
@@ -106,13 +92,13 @@ public class Utils {
         sendSimpleRequest("ping", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"), handler);
     }
 
-    public static  <T extends Payload> T sendSimpleRequest(SimpleRequest.Type type, StandardProtocol handler) {
+    public static <T extends Payload> T sendSimpleRequest(SimpleRequest.Type type, StandardProtocol handler) {
         return sendSimpleRequest(type.name(), SimpleRequest.newInstance(type), handler);
     }
 
     public static <T extends Payload> T sendSimpleRequest(String label, SimpleRequest request, StandardProtocol handler) {
         try {
-            return (T)handleError(label, handler.handleSimpleRequest(request)).getPayload();
+            return (T) handleError(label, handler.handleSimpleRequest(request)).getPayload();
         } catch (IOException | YarnException e) {
             throw new PosumException("Error during RPC call", e);
         }
@@ -343,6 +329,167 @@ public class Utils {
             public void clear() {
                 dataStore.clear();
             }
+
+            @Override
+            public void clearDatabase(DataEntityDB db) {
+                dataStore.clear(db);
+            }
+
+            @Override
+            public void copyDatabase(DataEntityDB sourceDB, DataEntityDB destinationDB) {
+                dataStore.copy(sourceDB, destinationDB);
+            }
         };
+    }
+
+    public static void updateJobStatisticsFromCounters(JobProfile job, CountersProxy counters) {
+        if(counters == null)
+            return;
+        for (CounterGroupInfoPayload group : counters.getCounterGroup()) {
+            if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
+                for (CounterInfoPayload counter : group.getCounter()) {
+                    switch (counter.getName()) {
+                        // make sure to record map materialized (compressed) bytes if compression is enabled
+                        // this is because reduce_shuffle_bytes are also in compressed form
+                        case "MAP_OUTPUT_BYTES":
+                            Long previous = job.getMapOutputBytes();
+                            if (previous == null || previous == 0)
+                                job.setMapOutputBytes(counter.getTotalCounterValue());
+                            break;
+                        case "MAP_OUTPUT_MATERIALIZED_BYTES":
+                            Long value = counter.getTotalCounterValue();
+                            if (value > 0)
+                                job.setMapOutputBytes(value);
+                            break;
+                        case "REDUCE_SHUFFLE_BYTES":
+                            job.setReduceInputBytes(counter.getTotalCounterValue());
+                            break;
+                    }
+                }
+            if (FileSystemCounter.class.getName().equals(group.getCounterGroupName()))
+                for (CounterInfoPayload counter : group.getCounter()) {
+                    switch (counter.getName()) {
+                        case "FILE_BYTES_READ":
+                            job.setInputBytes(job.getInputBytes() + counter.getMapCounterValue());
+                            break;
+                        case "HDFS_BYTES_READ":
+                            job.setInputBytes(job.getInputBytes() + counter.getMapCounterValue());
+                            break;
+                        case "HDFS_BYTES_WRITTEN":
+                            job.setOutputBytes(job.getOutputBytes() + counter.getReduceCounterValue());
+                            break;
+                    }
+                }
+        }
+    }
+
+    public static void updateJobStatisticsFromTasks(JobProfile job, List<TaskProfile> tasks) {
+        if (tasks == null)
+            return;
+        long mapDuration = 0, reduceDuration = 0, reduceTime = 0, shuffleTime = 0, mergeTime = 0, avgDuration = 0;
+        int mapNo = 0, reduceNo = 0, avgNo = 0;
+        long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
+
+        for (TaskProfile task : tasks) {
+            if (task.getDuration() <= 0)
+                // skip unfinished tasks
+                continue;
+            if (TaskType.MAP.equals(task.getType())) {
+                mapDuration += task.getDuration();
+                mapNo++;
+                mapInputSize += task.getInputBytes();
+                mapOutputSize += task.getOutputBytes();
+                if (job.getSplitLocations() != null && task.getHttpAddress() != null) {
+                    int splitIndex = Utils.parseTaskId(task.getId()).getId();
+                    if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
+                        task.setLocal(true);
+                }
+            }
+            if (TaskType.REDUCE.equals(task.getType())) {
+                reduceDuration += task.getDuration();
+                reduceTime += task.getReduceTime();
+                shuffleTime += task.getShuffleTime();
+                mergeTime += task.getMergeTime();
+                reduceNo++;
+                reduceInputSize += task.getInputBytes();
+                reduceOutputSize += task.getOutputBytes();
+            }
+            avgDuration += task.getDuration();
+            avgNo++;
+        }
+
+        if (avgNo > 0) {
+            job.setAvgTaskDuration(avgDuration / avgNo);
+            if (mapNo > 0) {
+                job.setAvgMapDuration(mapDuration / mapNo);
+            }
+            if (reduceNo > 0) {
+                job.setAvgReduceDuration(reduceDuration / reduceNo);
+                job.setAvgShuffleTime(shuffleTime / reduceNo);
+                job.setAvgMergeTime(mergeTime / reduceNo);
+                job.setAvgReduceTime(reduceTime / reduceNo);
+            }
+        }
+
+        job.setInputBytes(mapInputSize);
+        job.setMapOutputBytes(mapOutputSize);
+        job.setReduceInputBytes(reduceInputSize);
+        job.setOutputBytes(reduceOutputSize);
+        // update in case of discrepancy
+        job.setCompletedMaps(mapNo);
+        job.setCompletedReduces(reduceNo);
+    }
+
+    public static void updateTaskStatisticsFromCounters(TaskProfile task, CountersProxy counters) {
+        if (counters == null)
+            return;
+        for (CounterGroupInfoPayload group : counters.getCounterGroup()) {
+            if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
+                for (CounterInfoPayload counter : group.getCounter()) {
+                    switch (counter.getName()) {
+                        // make sure to record map materialized (compressed) bytes if compression is enabled
+                        // this is because reduce_shuffle_bytes are also in compressed form
+                        case "MAP_OUTPUT_BYTES":
+                            if (task.getType().equals(TaskType.MAP)) {
+                                Long previous = task.getOutputBytes();
+                                if (previous == null || previous == 0)
+                                    task.setOutputBytes(counter.getTotalCounterValue());
+                            }
+                            break;
+                        case "MAP_OUTPUT_MATERIALIZED_BYTES":
+                            if (task.getType().equals(TaskType.MAP)) {
+                                Long value = counter.getTotalCounterValue();
+                                if (value > 0)
+                                    task.setOutputBytes(value);
+                            }
+                            break;
+                        case "REDUCE_SHUFFLE_BYTES":
+                            if (task.getType().equals(TaskType.REDUCE))
+                                task.setInputBytes(counter.getTotalCounterValue());
+                            break;
+                    }
+                }
+            if (FileSystemCounter.class.getName().equals(group.getCounterGroupName()))
+                for (CounterInfoPayload counter : group.getCounter()) {
+                    switch (counter.getName()) {
+                        case "FILE_BYTES_READ":
+                            if (task.getType().equals(TaskType.MAP))
+                                task.setOutputBytes(task.getOutputBytes() +
+                                        counter.getTotalCounterValue());
+                            break;
+                        case "HDFS_BYTES_READ":
+                            if (task.getType().equals(TaskType.MAP)) {
+                                task.setInputBytes(task.getInputBytes() +
+                                        counter.getTotalCounterValue());
+                            }
+                            break;
+                        case "HDFS_BYTES_WRITTEN":
+                            if (task.getType().equals(TaskType.REDUCE))
+                                task.setOutputBytes(task.getOutputBytes() +
+                                        counter.getTotalCounterValue());
+                            break;
+                    }
+                }
+        }
     }
 }

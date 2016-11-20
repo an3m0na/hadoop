@@ -9,6 +9,8 @@ import org.apache.hadoop.yarn.util.Records;
 
 import java.io.IOException;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
+
 /**
  * Created by ane on 3/29/16.
  */
@@ -19,7 +21,7 @@ public class LogEntryDeserializer extends JsonDeserializer<LogEntry> {
             throws IOException {
         ObjectNode node = jp.readValueAsTree();
         LogEntry.Type type = LogEntry.Type.valueOf((node.get("type")).asText());
-        String id = (node.get("_id")).asText();
+        String id = (node.get(ID_FIELD)).asText();
         Long timestamp = (node.get("timestamp")).asLong();
 
         JsonNode detailsNode = node.get("details");

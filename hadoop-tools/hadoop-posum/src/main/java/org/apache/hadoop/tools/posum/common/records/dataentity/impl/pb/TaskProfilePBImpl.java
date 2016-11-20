@@ -13,6 +13,13 @@ import org.apache.hadoop.yarn.proto.PosumProtos.TaskProfileProtoOrBuilder;
 public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, TaskProfileProto, TaskProfileProto.Builder>
         implements TaskProfile {
 
+    public TaskProfilePBImpl() {
+    }
+
+    public TaskProfilePBImpl(TaskProfileProto proto) {
+        super(proto);
+    }
+
     @Override
     void initBuilder() {
         builder = viaProto ? TaskProfileProto.newBuilder(proto) : TaskProfileProto.newBuilder();
@@ -46,6 +53,11 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
             return;
         }
         builder.setId(id);
+    }
+
+    @Override
+    public TaskProfile copy() {
+        return new TaskProfilePBImpl(getProto());
     }
 
     @Override
@@ -140,19 +152,19 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public TaskType getType() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        TaskProfileProto.TaskTypeProto enumValue = p.getType();
-        if (enumValue == null || enumValue.name().equals("TYPE_NULL"))
+        if(!p.hasType())
             return null;
-        return TaskType.valueOf(enumValue.name().substring("TYPE_".length()));
+        return TaskType.valueOf(p.getType().name().substring("TYPE_".length()));
     }
 
     @Override
     public void setType(String type) {
         maybeInitBuilder();
-        if (type != null)
-            builder.setType(TaskProfileProto.TaskTypeProto.valueOf("TYPE_" + type));
-        else
-            builder.setType(TaskProfileProto.TaskTypeProto.TYPE_NULL);
+        if (type == null) {
+            builder.clearType();
+            return;
+        }
+        builder.setType(TaskProfileProto.TaskTypeProto.valueOf("TYPE_" + type));
     }
 
     @Override
