@@ -1,13 +1,13 @@
 package org.apache.hadoop.tools.posum.database.store;
 
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.apache.hadoop.tools.posum.test.TestDataBroker;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.After;
+import org.junit.experimental.categories.Category;
 
-/**
- * Created by ane on 3/4/16.
- */
+@Category(IntegrationTest.class)
 public class TestDataStore extends TestDataBroker {
 
     @Override
