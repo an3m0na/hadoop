@@ -8,7 +8,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.orchestrator.master.OrchestratorMaster;
+import org.apache.hadoop.tools.posum.orchestration.master.OrchestratorMaster;
 import org.apache.hadoop.tools.posum.data.master.DataMaster;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.apache.hadoop.tools.posum.test.ServiceRunner;
