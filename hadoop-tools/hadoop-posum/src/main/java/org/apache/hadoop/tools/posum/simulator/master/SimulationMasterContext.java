@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.simulator.master;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 
 public class SimulationMasterContext {
@@ -36,7 +36,7 @@ public class SimulationMasterContext {
         return commService;
     }
 
-    public DataBroker getDataBroker(){
+    public DataStore getDataBroker(){
         return commService.getDataMaster();
     }
 

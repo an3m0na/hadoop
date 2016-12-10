@@ -57,12 +57,11 @@ public class TestUtils {
     public void testBeanPropertiesMatchAfterModification() throws IllegalAccessException, IntrospectionException, InvocationTargetException {
         ComplicatedBean bean = new ComplicatedBean();
         String newString = "modifiedString";
-        boolean newDone = true;
         bean.setaString(newString);
         bean.setDone(true);
         Map<String, Object> properties = new HashMap<>(5);
         properties.put("aString", newString);
-        properties.put("done", newDone);
+        properties.put("done", true);
         properties.put("extraProperty", bean.getExtraProperty());
         assertTrue(Utils.checkBeanPropertiesMatch(bean, properties));
     }

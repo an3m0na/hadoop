@@ -2,11 +2,11 @@ package org.apache.hadoop.tools.posum.simulator.master;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
-import org.apache.hadoop.tools.posum.database.client.Database;
+import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 
 import java.util.concurrent.Callable;
@@ -18,22 +18,22 @@ public class Simulation implements Callable<SimulationResultPayload> {
     private volatile boolean exit = false;
     private String policy;
     private JobBehaviorPredictor predictor;
-    private DataBroker dataBroker;
+    private DataStore dataStore;
     private DataEntityDB dbReference;
     private SimulationStatistics stats;
 
-    public Simulation(JobBehaviorPredictor predictor, String policy, DataBroker dataBroker) {
+    public Simulation(JobBehaviorPredictor predictor, String policy, DataStore dataStore) {
         this.predictor = predictor;
         this.policy = policy;
-        this.dataBroker = dataBroker;
+        this.dataStore = dataStore;
         this.stats = new SimulationStatistics();
     }
 
     private void setUp() {
         dbReference = DataEntityDB.get(DataEntityDB.Type.SIMULATION, policy);
-        dataBroker.clearDatabase(dbReference);
-        dataBroker.copyDatabase(DataEntityDB.getSimulation(), dbReference);
-        Database db = dataBroker.bindTo(dbReference);
+        dataStore.clearDatabase(dbReference);
+        dataStore.copyDatabase(DataEntityDB.getSimulation(), dbReference);
+        Database db = Database.extractFrom(dataStore, dbReference);
         predictor.initialize(db);
         //TODO setStartTimeCluster (once lastUpdated is in place)
         stats.setStartTimePhysical(System.currentTimeMillis());
@@ -42,7 +42,7 @@ public class Simulation implements Callable<SimulationResultPayload> {
     private void tearDown() {
         //TODO setEndTimeCluster
         stats.setEndTimePhysical(System.currentTimeMillis());
-        dataBroker.clearDatabase(dbReference);
+        dataStore.clearDatabase(dbReference);
         //TODO log stats
     }
 
