@@ -7,7 +7,7 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.client.data.Database;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
@@ -106,7 +106,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
     public Database getDatabase() {
         if (dataClient == null)
             return null;
-        return Database.extractFrom(dataClient, DataEntityDB.getMain());
+        return Database.extractFrom(dataClient, DatabaseReference.getMain());
     }
 
     public OrchestratorMasterInterface getMaster() {

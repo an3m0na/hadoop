@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.common.records.call;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
 import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
@@ -22,7 +22,7 @@ public abstract class StoreAllCall extends WriteToCollectionCall<VoidPayload> {
     public abstract void setEntities(List<? extends GeneralDataEntity> entities);
 
     @Override
-    public VoidPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
+    public VoidPayload execute(LockBasedDataStore dataStore, DatabaseReference db) {
         dataStore.storeAll(db, getEntityCollection(), getEntities());
         return VoidPayload.newInstance();
     }

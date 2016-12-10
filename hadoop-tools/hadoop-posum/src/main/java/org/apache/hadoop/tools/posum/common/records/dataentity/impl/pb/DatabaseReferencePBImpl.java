@@ -1,27 +1,27 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.yarn.proto.PosumProtos.EntityDBProto;
-import org.apache.hadoop.yarn.proto.PosumProtos.EntityDBProtoOrBuilder;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
+import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseProto;
+import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseProtoOrBuilder;
 
-public class DataEntityDBPBImpl extends DataEntityDB {
+public class DatabaseReferencePBImpl extends DatabaseReference {
 
-    private EntityDBProto proto = EntityDBProto.getDefaultInstance();
-    private EntityDBProto.Builder builder = null;
+    private DatabaseProto proto = DatabaseProto.getDefaultInstance();
+    private DatabaseProto.Builder builder = null;
     private boolean viaProto = false;
 
 
-    public DataEntityDBPBImpl() {
-        builder = EntityDBProto.newBuilder();
+    public DatabaseReferencePBImpl() {
+        builder = DatabaseProto.newBuilder();
     }
 
-    public DataEntityDBPBImpl(EntityDBProto proto) {
+    public DatabaseReferencePBImpl(DatabaseProto proto) {
         this.proto = proto;
         viaProto = true;
     }
 
-    public EntityDBProto getProto() {
+    public DatabaseProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
         viaProto = true;
@@ -62,26 +62,26 @@ public class DataEntityDBPBImpl extends DataEntityDB {
 
     private void maybeInitBuilder() {
         if (viaProto || builder == null) {
-            builder = EntityDBProto.newBuilder(proto);
+            builder = DatabaseProto.newBuilder(proto);
         }
         viaProto = false;
     }
 
     @Override
-    public DataEntityDB.Type getType() {
-        EntityDBProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityDB.Type.valueOf(p.getType().name().substring("DB_".length()));
+    public DatabaseReference.Type getType() {
+        DatabaseProtoOrBuilder p = viaProto ? proto : builder;
+        return DatabaseReference.Type.valueOf(p.getType().name().substring("DB_".length()));
     }
 
     @Override
-    public void setType(DataEntityDB.Type type) {
+    public void setType(DatabaseReference.Type type) {
         maybeInitBuilder();
-        builder.setType(EntityDBProto.EntityDBTypeProto.valueOf("DB_" + type.name()));
+        builder.setType(DatabaseProto.DatabaseTypeProto.valueOf("DB_" + type.name()));
     }
 
     @Override
     public String getView() {
-        EntityDBProtoOrBuilder p = viaProto ? proto : builder;
+        DatabaseProtoOrBuilder p = viaProto ? proto : builder;
         return p.hasView()? p.getView() : null;
     }
 

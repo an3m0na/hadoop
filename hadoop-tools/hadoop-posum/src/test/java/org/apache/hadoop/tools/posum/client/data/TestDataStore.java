@@ -2,12 +2,10 @@ package org.apache.hadoop.tools.posum.client.data;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.impl.pb.JobIdPBImpl;
-import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.*;
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
@@ -28,7 +26,7 @@ public abstract class TestDataStore {
     @Before
     public void setUp() throws Exception {
         setUpDataStore();
-        mainDB = Database.extractFrom(dataStore, DataEntityDB.getMain());
+        mainDB = Database.extractFrom(dataStore, DatabaseReference.getMain());
         Utils.loadThreeDefaultAppsAndJobs(clusterTimestamp, mainDB);
     }
 
@@ -332,9 +330,9 @@ public abstract class TestDataStore {
 
     @Test
     public void testListCollections() throws Exception {
-        Map<DataEntityDB, List<DataEntityCollection>> collectionMap = dataStore.listCollections();
+        Map<DatabaseReference, List<DataEntityCollection>> collectionMap = dataStore.listCollections();
         System.out.println("Collections are: " + collectionMap);
-        List<DataEntityCollection> collections = collectionMap.get(DataEntityDB.getMain());
+        List<DataEntityCollection> collections = collectionMap.get(DatabaseReference.getMain());
         assertNotNull(collections);
         assertTrue(collections.contains(DataEntityCollection.JOB));
         assertTrue(collections.contains(DataEntityCollection.APP));
@@ -358,10 +356,10 @@ public abstract class TestDataStore {
         int appNo = mainDB.executeDatabaseCall(allIds).getEntries().size();
         allIds.setEntityCollection(DataEntityCollection.JOB);
         int jobNo = mainDB.executeDatabaseCall(allIds).getEntries().size();
-        DataEntityDB otherDB = DataEntityDB.get(DataEntityDB.Type.MAIN, "testCopy");
+        DatabaseReference otherDB = DatabaseReference.get(DatabaseReference.Type.MAIN, "testCopy");
         dataStore.copyDatabase(mainDB.getTarget(), otherDB);
         dataStore.clearDatabase(mainDB.getTarget());
-        Map<DataEntityDB, List<DataEntityCollection>> collectionMap = dataStore.listCollections();
+        Map<DatabaseReference, List<DataEntityCollection>> collectionMap = dataStore.listCollections();
         assertNull(collectionMap.get(mainDB.getTarget()));
         assertEquals(collectionNo, collectionMap.get(otherDB).size());
         assertEquals(jobNo, dataStore.executeDatabaseCall(allIds, otherDB).getEntries().size());

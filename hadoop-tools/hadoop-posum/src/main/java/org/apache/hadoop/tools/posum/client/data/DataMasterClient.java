@@ -62,7 +62,7 @@ public class DataMasterClient extends AbstractService implements DataStore {
         super.serviceStop();
     }
 
-    public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DataEntityDB db) {
+    public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DatabaseReference db) {
         try {
             return (T) Utils.handleError("executeDatabaseCall",
                     dmClient.executeDatabaseCall(DatabaseCallExecutionRequest.newInstance(call, db))).getPayload();
@@ -72,7 +72,7 @@ public class DataMasterClient extends AbstractService implements DataStore {
     }
 
     @Override
-    public Map<DataEntityDB, List<DataEntityCollection>> listCollections() {
+    public Map<DatabaseReference, List<DataEntityCollection>> listCollections() {
         return Utils.<CollectionMapPayload>sendSimpleRequest(SimpleRequest.Type.LIST_COLLECTIONS, dmClient).getEntries();
     }
 
@@ -82,7 +82,7 @@ public class DataMasterClient extends AbstractService implements DataStore {
     }
 
     @Override
-    public void clearDatabase(DataEntityDB db) {
+    public void clearDatabase(DatabaseReference db) {
         Utils.sendSimpleRequest(
                 "clearDatabase",
                 SimpleRequest.newInstance(SimpleRequest.Type.CLEAR_DB, DatabaseAlterationPayload.newInstance(db)),
@@ -91,7 +91,7 @@ public class DataMasterClient extends AbstractService implements DataStore {
     }
 
     @Override
-    public void copyDatabase(DataEntityDB sourceDB, DataEntityDB destinationDB) {
+    public void copyDatabase(DatabaseReference sourceDB, DatabaseReference destinationDB) {
         Utils.sendSimpleRequest(
                 "clearDatabase",
                 SimpleRequest.newInstance(SimpleRequest.Type.COPY_DB,

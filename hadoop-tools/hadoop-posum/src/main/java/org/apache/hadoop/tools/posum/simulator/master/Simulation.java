@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.simulator.master;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.client.data.Database;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
@@ -19,7 +19,7 @@ public class Simulation implements Callable<SimulationResultPayload> {
     private String policy;
     private JobBehaviorPredictor predictor;
     private DataStore dataStore;
-    private DataEntityDB dbReference;
+    private DatabaseReference dbReference;
     private SimulationStatistics stats;
 
     public Simulation(JobBehaviorPredictor predictor, String policy, DataStore dataStore) {
@@ -30,9 +30,9 @@ public class Simulation implements Callable<SimulationResultPayload> {
     }
 
     private void setUp() {
-        dbReference = DataEntityDB.get(DataEntityDB.Type.SIMULATION, policy);
+        dbReference = DatabaseReference.get(DatabaseReference.Type.SIMULATION, policy);
         dataStore.clearDatabase(dbReference);
-        dataStore.copyDatabase(DataEntityDB.getSimulation(), dbReference);
+        dataStore.copyDatabase(DatabaseReference.getSimulation(), dbReference);
         Database db = Database.extractFrom(dataStore, dbReference);
         predictor.initialize(db);
         //TODO setStartTimeCluster (once lastUpdated is in place)
