@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
@@ -16,8 +17,7 @@ import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.orchestrator.client.OrchestratorMasterClient;
 import org.apache.hadoop.tools.posum.orchestrator.client.OrchestratorMasterInterface;
 import org.apache.hadoop.tools.posum.scheduler.meta.client.MetaSchedulerInterface;
-import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
-import org.apache.hadoop.tools.posum.database.client.Database;
+import org.apache.hadoop.tools.posum.client.data.DataMasterClient;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -72,7 +72,6 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
         dataClient = new DataMasterClient(dmAddress);
         dataClient.init(getConfig());
         addIfService(dataClient);
-        dataClient.bindTo(DataEntityDB.getMain());
         dataClient.start();
     }
 
@@ -107,7 +106,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
     public Database getDatabase() {
         if (dataClient == null)
             return null;
-        return dataClient.bindTo(DataEntityDB.getMain());
+        return Database.extractFrom(dataClient, DataEntityDB.getMain());
     }
 
     public OrchestratorMasterInterface getMaster() {

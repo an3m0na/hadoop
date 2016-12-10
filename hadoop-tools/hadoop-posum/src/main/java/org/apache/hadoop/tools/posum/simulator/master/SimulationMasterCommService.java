@@ -13,7 +13,7 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.orchestrator.client.OrchestratorMasterClient;
 import org.apache.hadoop.tools.posum.orchestrator.client.OrchestratorMasterInterface;
-import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
+import org.apache.hadoop.tools.posum.client.data.DataMasterClient;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;

@@ -8,7 +8,6 @@ import org.apache.hadoop.mapreduce.TaskCounter;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
-import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterInfoPayload;
@@ -21,10 +20,6 @@ import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
-import org.apache.hadoop.tools.posum.database.client.Database;
-import org.apache.hadoop.tools.posum.database.client.DatabaseImpl;
-import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.proto.PosumProtos;
@@ -303,40 +298,6 @@ public class Utils {
                 return false;
         }
         return true;
-    }
-
-    public static DataBroker exposeDataStoreAsBroker(final LockBasedDataStore dataStore) {
-        return new DataBroker() {
-            @Override
-            public Database bindTo(DataEntityDB db) {
-                return new DatabaseImpl(this, db);
-            }
-
-            @Override
-            public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DataEntityDB db) {
-                return call.executeCall(dataStore, db);
-            }
-
-            @Override
-            public Map<DataEntityDB, List<DataEntityCollection>> listExistingCollections() {
-                return dataStore.listExistingCollections();
-            }
-
-            @Override
-            public void clear() {
-                dataStore.clear();
-            }
-
-            @Override
-            public void clearDatabase(DataEntityDB db) {
-                dataStore.clear(db);
-            }
-
-            @Override
-            public void copyDatabase(DataEntityDB sourceDB, DataEntityDB destinationDB) {
-                dataStore.copy(sourceDB, destinationDB);
-            }
-        };
     }
 
     public static void updateJobStatisticsFromCounters(JobProfile job, CountersProxy counters) {
