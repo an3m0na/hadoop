@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.data.core;
 
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 public class DataExporter {
-    private Map<DataEntityDB, List<DataEntityCollection>> collections;
+    private Map<DatabaseReference, List<DataEntityCollection>> collections;
     private DataStore dataStore;
 
     public DataExporter(DataStore dataStore) {
@@ -28,7 +28,7 @@ public class DataExporter {
             if (!dumpDir.mkdirs())
                 throw new PosumException("Could not create data dump directory: " + dumpPath);
         FindByQueryCall findAll = FindByQueryCall.newInstance(null, null);
-        for (Map.Entry<DataEntityDB, List<DataEntityCollection>> dbMapEntry : collections.entrySet()) {
+        for (Map.Entry<DatabaseReference, List<DataEntityCollection>> dbMapEntry : collections.entrySet()) {
             for (DataEntityCollection collection : dbMapEntry.getValue()) {
                 findAll.setEntityCollection(collection);
                 List<GeneralDataEntity> entities =

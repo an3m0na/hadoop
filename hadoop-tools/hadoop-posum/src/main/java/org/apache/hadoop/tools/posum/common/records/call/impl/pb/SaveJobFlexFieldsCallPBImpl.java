@@ -4,8 +4,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.call.SaveJobFlexFieldsCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.StringStringMapPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.PosumProtos.SaveJobFlexFieldsCallProto;

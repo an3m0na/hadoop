@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.data.core;
 
 import org.apache.hadoop.tools.posum.common.records.call.StoreAllCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
@@ -18,7 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DataImporter {
-    private Map<DataEntityDB, Map<DataEntityCollection, File>> dataFiles = new HashMap<>(DataEntityDB.Type.values().length);
+    private Map<DatabaseReference, Map<DataEntityCollection, File>> dataFiles = new HashMap<>(DatabaseReference.Type.values().length);
 
     public DataImporter(String dumpPath) {
         File dumpDir = new File(dumpPath);
@@ -28,7 +28,7 @@ public class DataImporter {
             for (File file : files) {
                 Matcher m = p.matcher(file.getName());
                 if (m.find()) {
-                    DataEntityDB db = DataEntityDB.fromName(m.group(1));
+                    DatabaseReference db = DatabaseReference.fromName(m.group(1));
                     DataEntityCollection collection = DataEntityCollection.fromLabel(m.group(2));
                     if (db == null || collection == null)
                         continue;
@@ -46,7 +46,7 @@ public class DataImporter {
     }
 
     public void importTo(DataStore dataStore) {
-        for (Map.Entry<DataEntityDB, Map<DataEntityCollection, File>> dbMapEntry : dataFiles.entrySet()) {
+        for (Map.Entry<DatabaseReference, Map<DataEntityCollection, File>> dbMapEntry : dataFiles.entrySet()) {
             StoreAllCall storeEntity = StoreAllCall.newInstance(null, null);
             for (Map.Entry<DataEntityCollection, File> fileEntry : dbMapEntry.getValue().entrySet()) {
                 storeEntity.setEntityCollection(fileEntry.getKey());

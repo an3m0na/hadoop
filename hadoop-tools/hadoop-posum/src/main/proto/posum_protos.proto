@@ -12,10 +12,10 @@ import "yarn_server_common_service_protos.proto";
 
 // --------- Entities ---------
 
-message EntityDBProto {
-    required EntityDBTypeProto type = 1;
+message DatabaseProto {
+    required DatabaseTypeProto type = 1;
     optional string view = 2;
-    enum EntityDBTypeProto {
+    enum DatabaseTypeProto {
         DB_MAIN = 0;
         DB_LOGS = 1;
         DB_SIMULATION = 2;
@@ -208,7 +208,7 @@ message RegistrationRequestProto {
 }
 
 message DatabaseCallExecutionRequestProto {
-    optional EntityDBProto entityDB = 1;
+    optional DatabaseProto db = 1;
     required DatabaseCallProto call = 2;
 }
 
@@ -265,7 +265,7 @@ message CollectionMapPayloadProto {
 }
 
 message CollectionEntryProto {
-    required EntityDBProto entityDB = 1;
+    required DatabaseProto db = 1;
     repeated EntityCollectionProto collections = 2;
 }
 
@@ -322,8 +322,8 @@ message TaskPredictionPayloadProto {
 }
 
 message DatabaseAlterationPayloadProto {
-    optional EntityDBProto source = 1;
-    optional EntityDBProto destination = 2;
+    optional DatabaseProto source = 1;
+    optional DatabaseProto destination = 2;
 }
 
 // --------- Database Calls ---------

@@ -4,8 +4,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DatabaseReferencePBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.CollectionMapPayload;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.PosumProtos;
@@ -20,7 +20,7 @@ public class CollectionMapPayloadPBImpl extends CollectionMapPayload implements 
     private CollectionMapPayloadProto.Builder builder = null;
     private boolean viaProto = false;
 
-    private Map<DataEntityDB, List<DataEntityCollection>> entries;
+    private Map<DatabaseReference, List<DataEntityCollection>> entries;
 
     public CollectionMapPayloadPBImpl() {
         builder = CollectionMapPayloadProto.newBuilder();
@@ -70,7 +70,7 @@ public class CollectionMapPayloadPBImpl extends CollectionMapPayload implements 
                     public Iterator<CollectionEntryProto> iterator() {
                         return new Iterator<CollectionEntryProto>() {
 
-                            Iterator<Map.Entry<DataEntityDB, List<DataEntityCollection>>> entryIterator =
+                            Iterator<Map.Entry<DatabaseReference, List<DataEntityCollection>>> entryIterator =
                                     entries.entrySet().iterator();
 
                             @Override
@@ -80,9 +80,9 @@ public class CollectionMapPayloadPBImpl extends CollectionMapPayload implements 
 
                             @Override
                             public CollectionEntryProto next() {
-                                Map.Entry<DataEntityDB, List<DataEntityCollection>> mapEntry = entryIterator.next();
+                                Map.Entry<DatabaseReference, List<DataEntityCollection>> mapEntry = entryIterator.next();
                                 CollectionEntryProto.Builder builder = CollectionEntryProto.newBuilder()
-                                        .setEntityDB(((DataEntityDBPBImpl) mapEntry.getKey()).getProto());
+                                        .setDb(((DatabaseReferencePBImpl) mapEntry.getKey()).getProto());
                                 if (mapEntry.getValue() != null) {
                                     for (DataEntityCollection collection : mapEntry.getValue()) {
                                         builder.addCollections(PosumProtos.EntityCollectionProto.valueOf("COLL_" + collection.name()));
@@ -117,7 +117,7 @@ public class CollectionMapPayloadPBImpl extends CollectionMapPayload implements 
     }
 
     @Override
-    public Map<DataEntityDB, List<DataEntityCollection>> getEntries() {
+    public Map<DatabaseReference, List<DataEntityCollection>> getEntries() {
         if (entries == null) {
             CollectionMapPayloadProtoOrBuilder p = viaProto ? proto : builder;
             entries = new HashMap<>(p.getEntriesCount());
@@ -126,14 +126,14 @@ public class CollectionMapPayloadPBImpl extends CollectionMapPayload implements 
                 for (PosumProtos.EntityCollectionProto collectionProto : entryProto.getCollectionsList()) {
                     collections.add(DataEntityCollection.valueOf(collectionProto.name().substring("COLL_".length())));
                 }
-                entries.put(new DataEntityDBPBImpl(entryProto.getEntityDB()), collections);
+                entries.put(new DatabaseReferencePBImpl(entryProto.getDb()), collections);
             }
         }
         return entries;
     }
 
     @Override
-    public void setEntries(Map<DataEntityDB, List<DataEntityCollection>> entries) {
+    public void setEntries(Map<DatabaseReference, List<DataEntityCollection>> entries) {
         maybeInitBuilder();
         this.entries = entries;
     }

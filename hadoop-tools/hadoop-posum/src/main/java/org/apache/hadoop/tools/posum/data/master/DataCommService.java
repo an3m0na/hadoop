@@ -98,7 +98,7 @@ public class DataCommService extends CompositeService implements DataMasterProto
         }
         try {
             return SimpleResponse.newInstance(callType.getPayloadType(),
-                    dmContext.getDataStore().executeDatabaseCall(request.getCall(), request.getEntityDB()));
+                    dmContext.getDataStore().executeDatabaseCall(request.getCall(), request.getDatabase()));
         } catch (Exception e) {
             String message = "Exception executing call " + callType;
             logger.error(message, e);

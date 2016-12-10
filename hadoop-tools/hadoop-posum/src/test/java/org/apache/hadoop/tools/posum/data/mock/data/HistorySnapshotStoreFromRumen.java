@@ -114,7 +114,7 @@ public class HistorySnapshotStoreFromRumen extends MockDataStoreImpl {// impleme
     }
 
     @Override
-    public <T extends GeneralDataEntity<T>> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
+    public <T extends GeneralDataEntity<T>> T findById(DatabaseReference db, DataEntityCollection collection, String id) {
         if (DataEntityCollection.JOB.equals(collection)) {
             for (JobProfile job : jobList)
                 if (job.getId().equals(id))
@@ -139,7 +139,7 @@ public class HistorySnapshotStoreFromRumen extends MockDataStoreImpl {// impleme
         return ret;
     }
 
-    public List<JobProfile> getComparableProfiles(DataEntityDB db, String user, int count) {
+    public List<JobProfile> getComparableProfiles(DatabaseReference db, String user, int count) {
         TreeMap<Long, JobProfile> latest = new TreeMap<>();
         TreeMap<Long, JobProfile> relevant = new TreeMap<>();
         for (JobProfile job : jobList) {

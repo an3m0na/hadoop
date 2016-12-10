@@ -9,9 +9,9 @@ import java.util.Map;
 
 public interface LockBasedDataStore extends DataStore{
 
-    <T extends GeneralDataEntity<T>> T findById(DataEntityDB db, DataEntityCollection collection, String id);
+    <T extends GeneralDataEntity<T>> T findById(DatabaseReference db, DataEntityCollection collection, String id);
 
-    <T extends GeneralDataEntity<T>> List<T> find(DataEntityDB db,
+    <T extends GeneralDataEntity<T>> List<T> find(DatabaseReference db,
                                                DataEntityCollection collection,
                                                DatabaseQuery query,
                                                String sortField,
@@ -19,7 +19,7 @@ public interface LockBasedDataStore extends DataStore{
                                                int offsetOrZero,
                                                int limitOrZero);
 
-    List<String> findIds(DataEntityDB db,
+    List<String> findIds(DatabaseReference db,
                          DataEntityCollection collection,
                          DatabaseQuery query,
                          String sortField,
@@ -27,35 +27,35 @@ public interface LockBasedDataStore extends DataStore{
                          int offsetOrZero,
                          int limitOrZero);
 
-    <T extends GeneralDataEntity<T>> String store(DataEntityDB db, DataEntityCollection collection, T toStore);
+    <T extends GeneralDataEntity<T>> String store(DatabaseReference db, DataEntityCollection collection, T toStore);
 
-    <T extends GeneralDataEntity<T>> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore);
+    <T extends GeneralDataEntity<T>> void storeAll(DatabaseReference db, DataEntityCollection collection, List<T> toStore);
 
-    <T extends GeneralDataEntity<T>> String updateOrStore(DataEntityDB db, DataEntityCollection apps, T toUpdate);
+    <T extends GeneralDataEntity<T>> String updateOrStore(DatabaseReference db, DataEntityCollection apps, T toUpdate);
 
-    void delete(DataEntityDB db, DataEntityCollection collection, String id);
+    void delete(DatabaseReference db, DataEntityCollection collection, String id);
 
-    void delete(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query);
+    void delete(DatabaseReference db, DataEntityCollection collection, DatabaseQuery query);
 
-    String getRawDocuments(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query);
+    String getRawDocuments(DatabaseReference db, DataEntityCollection collection, DatabaseQuery query);
 
-    void lockForRead(DataEntityDB db);
+    void lockForRead(DatabaseReference db);
 
-    void lockForWrite(DataEntityDB db);
+    void lockForWrite(DatabaseReference db);
 
-    void unlockForRead(DataEntityDB db);
+    void unlockForRead(DatabaseReference db);
 
-    void unlockForWrite(DataEntityDB db);
+    void unlockForWrite(DatabaseReference db);
 
     void lockAll();
 
     void unlockAll();
 
-    Map<DataEntityDB, List<DataEntityCollection>> listCollections();
+    Map<DatabaseReference, List<DataEntityCollection>> listCollections();
 
     void clear();
 
-    void clearDatabase(DataEntityDB db);
+    void clearDatabase(DatabaseReference db);
 
-    void copyDatabase(DataEntityDB sourceDB, DataEntityDB destinationDB);
+    void copyDatabase(DatabaseReference sourceDB, DatabaseReference destinationDB);
 }

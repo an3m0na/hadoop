@@ -9,7 +9,7 @@ import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload;
@@ -62,7 +62,7 @@ public class PosumInfoCollector {
         for (String policy : policies) {
             policyMap.put(policy, PolicyInfoPayload.newInstance());
         }
-        Database db = Database.extractFrom(dataStore, DataEntityDB.getMain());
+        Database db = Database.extractFrom(dataStore, DatabaseReference.getMain());
 //        predictor = JobBehaviorPredictor.newInstance(conf);
         basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
         basicPredictor.initialize(db);
@@ -81,7 +81,7 @@ public class PosumInfoCollector {
             if (now - lastPrediction > predictionTimeout) {
                 // make new predictions
                 IdsByQueryCall getAllTasks = IdsByQueryCall.newInstance(DataEntityCollection.TASK, null);
-                List<String> taskIds = dataStore.executeDatabaseCall(getAllTasks, DataEntityDB.getMain()).getEntries();
+                List<String> taskIds = dataStore.executeDatabaseCall(getAllTasks, DatabaseReference.getMain()).getEntries();
                 for (String taskId : taskIds) {
                     // prediction can throw exception if data model changes state during calculation
 //                    storePredictionForTask(predictor, taskId);
@@ -101,7 +101,7 @@ public class PosumInfoCollector {
                         QueryUtils.lessThanOrEqual("timestamp", now)
                 ));
         List<LogEntry<SimplePropertyPayload>> policyChanges =
-                dataStore.executeDatabaseCall(findChoices, DataEntityDB.getLogs()).getEntities();
+                dataStore.executeDatabaseCall(findChoices, DatabaseReference.getLogs()).getEntities();
         if (policyChanges.size() > 0) {
             if (schedulingStart == 0)
                 schedulingStart = policyChanges.get(0).getTimestamp();

@@ -33,7 +33,7 @@ public class DataStoreImpl implements LockBasedDataStore {
 
     private MongoClient mongoClient;
     private ReentrantReadWriteLock masterLock = new ReentrantReadWriteLock();
-    private Map<DataEntityDB, DBAssets> dbRegistry = new ConcurrentHashMap<>(DataEntityDB.Type.values().length);
+    private Map<DatabaseReference, DBAssets> dbRegistry = new ConcurrentHashMap<>(DatabaseReference.Type.values().length);
 
     private static class DBAssets {
         public ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -47,21 +47,21 @@ public class DataStoreImpl implements LockBasedDataStore {
         mongoClient = new MongoClient();
     }
 
-    private <T extends GeneralDataEntity> JacksonDBCollection<T, String> getCollectionForRead(DataEntityDB db, DataEntityCollection collection) {
+    private <T extends GeneralDataEntity> JacksonDBCollection<T, String> getCollectionForRead(DatabaseReference db, DataEntityCollection collection) {
         DBAssets assets = getDatabaseAssets(db);
         if (assets.lock.getReadHoldCount() < 1 && !assets.lock.writeLock().isHeldByCurrentThread())
             throw new PosumException("No read session found for thread on " + db);
         return getCollection(db, assets, collection);
     }
 
-    private <T extends GeneralDataEntity> JacksonDBCollection<T, String> getCollectionForWrite(DataEntityDB db, DataEntityCollection collection) {
+    private <T extends GeneralDataEntity> JacksonDBCollection<T, String> getCollectionForWrite(DatabaseReference db, DataEntityCollection collection) {
         DBAssets assets = getDatabaseAssets(db);
         if (!assets.lock.writeLock().isHeldByCurrentThread())
             throw new PosumException("No write session found for thread on " + db);
         return getCollection(db, assets, collection);
     }
 
-    private DBAssets getDatabaseAssets(DataEntityDB db) {
+    private DBAssets getDatabaseAssets(DatabaseReference db) {
         DBAssets assets = dbRegistry.get(db);
         synchronized (this) {
             if (assets == null) {
@@ -72,7 +72,7 @@ public class DataStoreImpl implements LockBasedDataStore {
         return assets;
     }
 
-    private <T extends GeneralDataEntity<T>> JacksonDBCollection<T, String> getCollection(DataEntityDB db, DBAssets assets, DataEntityCollection collection) {
+    private <T extends GeneralDataEntity<T>> JacksonDBCollection<T, String> getCollection(DatabaseReference db, DBAssets assets, DataEntityCollection collection) {
         JacksonDBCollection dbCollection = assets.collections.get(collection);
         synchronized (this) {
             if (dbCollection == null) {
@@ -87,12 +87,12 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity<T>> T findById(DataEntityDB db, DataEntityCollection collection, String id) {
+    public <T extends GeneralDataEntity<T>> T findById(DatabaseReference db, DataEntityCollection collection, String id) {
         return this.<T>getCollectionForRead(db, collection).findOneById(id);
     }
 
     @Override
-    public <T extends GeneralDataEntity<T>> List<T> find(DataEntityDB db,
+    public <T extends GeneralDataEntity<T>> List<T> find(DatabaseReference db,
                                                          DataEntityCollection collection,
                                                          DatabaseQuery query,
                                                          String sortField,
@@ -103,7 +103,7 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public List<String> findIds(DataEntityDB db,
+    public List<String> findIds(DatabaseReference db,
                                 DataEntityCollection collection,
                                 DatabaseQuery query,
                                 String sortField,
@@ -118,7 +118,7 @@ public class DataStoreImpl implements LockBasedDataStore {
         return ret;
     }
 
-    private <T extends GeneralDataEntity> List<T> find(DataEntityDB db,
+    private <T extends GeneralDataEntity> List<T> find(DatabaseReference db,
                                                        DataEntityCollection collection,
                                                        DBQuery.Query query,
                                                        String sortField,
@@ -213,18 +213,18 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public <T extends GeneralDataEntity<T>> String store(DataEntityDB db, DataEntityCollection collection, T toStore) {
+    public <T extends GeneralDataEntity<T>> String store(DatabaseReference db, DataEntityCollection collection, T toStore) {
         WriteResult<T, String> result = this.<T>getCollectionForWrite(db, collection).insert(toStore);
         return result.getSavedId();
     }
 
     @Override
-    public <T extends GeneralDataEntity<T>> void storeAll(DataEntityDB db, DataEntityCollection collection, List<T> toStore) {
+    public <T extends GeneralDataEntity<T>> void storeAll(DatabaseReference db, DataEntityCollection collection, List<T> toStore) {
         this.<T>getCollectionForWrite(db, collection).insert(toStore);
     }
 
     @Override
-    public <T extends GeneralDataEntity<T>> String updateOrStore(DataEntityDB db,
+    public <T extends GeneralDataEntity<T>> String updateOrStore(DatabaseReference db,
                                                                  DataEntityCollection collection,
                                                                  T toUpdate) {
         WriteResult<T, String> result = this.<T>getCollectionForWrite(db, collection)
@@ -233,17 +233,17 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public void delete(DataEntityDB db, DataEntityCollection collection, String id) {
+    public void delete(DatabaseReference db, DataEntityCollection collection, String id) {
         getCollectionForWrite(db, collection).removeById(id);
     }
 
     @Override
-    public void delete(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query) {
+    public void delete(DatabaseReference db, DataEntityCollection collection, DatabaseQuery query) {
         getCollectionForWrite(db, collection).remove(interpretQuery(query));
     }
 
     @Override
-    public String getRawDocuments(DataEntityDB db, DataEntityCollection collection, DatabaseQuery query) {
+    public String getRawDocuments(DatabaseReference db, DataEntityCollection collection, DatabaseQuery query) {
         DBObject queryObject = getCollectionForRead(db, collection).serializeQuery(interpretQuery(query));
         return mongoClient.getDatabase(db.getName())
                 .getCollection(collection.getLabel())
@@ -251,25 +251,25 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public void lockForRead(DataEntityDB db) {
+    public void lockForRead(DatabaseReference db) {
         masterLock.readLock().lock();
         getDatabaseAssets(db).lock.readLock().lock();
     }
 
     @Override
-    public void lockForWrite(DataEntityDB db) {
+    public void lockForWrite(DatabaseReference db) {
         masterLock.readLock().lock();
         getDatabaseAssets(db).lock.writeLock().lock();
     }
 
     @Override
-    public void unlockForRead(DataEntityDB db) {
+    public void unlockForRead(DatabaseReference db) {
         getDatabaseAssets(db).lock.readLock().unlock();
         masterLock.readLock().unlock();
     }
 
     @Override
-    public void unlockForWrite(DataEntityDB db) {
+    public void unlockForWrite(DatabaseReference db) {
         getDatabaseAssets(db).lock.writeLock().unlock();
         masterLock.readLock().unlock();
     }
@@ -285,14 +285,14 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DataEntityDB db) {
+    public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DatabaseReference db) {
         return call.executeCall(this, db);
     }
 
     @Override
-    public Map<DataEntityDB, List<DataEntityCollection>> listCollections() {
-        Map<DataEntityDB, List<DataEntityCollection>> ret = new HashMap<>(dbRegistry.size());
-        for (Map.Entry<DataEntityDB, DBAssets> assetsEntry : dbRegistry.entrySet()) {
+    public Map<DatabaseReference, List<DataEntityCollection>> listCollections() {
+        Map<DatabaseReference, List<DataEntityCollection>> ret = new HashMap<>(dbRegistry.size());
+        for (Map.Entry<DatabaseReference, DBAssets> assetsEntry : dbRegistry.entrySet()) {
             List<DataEntityCollection> collections = new ArrayList<>(DataEntityCollection.values().length / 2);
             for (Map.Entry<DataEntityCollection, JacksonDBCollection> collectionEntry :
                     assetsEntry.getValue().collections.entrySet()) {
@@ -310,7 +310,7 @@ public class DataStoreImpl implements LockBasedDataStore {
     public void clear() {
         lockAll();
         try {
-            for (DataEntityDB db : dbRegistry.keySet())
+            for (DatabaseReference db : dbRegistry.keySet())
                 clearDatabase(db);
             dbRegistry.clear();
         } finally {
@@ -319,7 +319,7 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public void clearDatabase(DataEntityDB db) {
+    public void clearDatabase(DatabaseReference db) {
         masterLock.readLock().lock();
         try {
             DBAssets dbAssets = getDatabaseAssets(db);
@@ -338,7 +338,7 @@ public class DataStoreImpl implements LockBasedDataStore {
     }
 
     @Override
-    public void copyDatabase(DataEntityDB sourceDB, DataEntityDB destinationDB) {
+    public void copyDatabase(DatabaseReference sourceDB, DatabaseReference destinationDB) {
         masterLock.readLock().lock();
         try {
             DBAssets sourceAssets = getDatabaseAssets(sourceDB);

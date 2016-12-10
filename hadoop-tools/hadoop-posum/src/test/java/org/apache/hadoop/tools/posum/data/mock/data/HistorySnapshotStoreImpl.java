@@ -20,8 +20,8 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
     private Long traceFinish = 0L;
     private Long currentOffset = 0L;
     private Long currentTime = 0L;
-    private DataEntityDB mainDB = DataEntityDB.getMain();
-    private DataEntityDB shadowDB = DataEntityDB.get(DataEntityDB.Type.MAIN, "shadow");
+    private DatabaseReference mainDB = DatabaseReference.getMain();
+    private DatabaseReference shadowDB = DatabaseReference.get(DatabaseReference.Type.MAIN, "shadow");
     private DataStore broker;
 
     public HistorySnapshotStoreImpl(String dataDumpFolderName) {
@@ -330,12 +330,12 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
     }
 
     @Override
-    public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DataEntityDB db) {
+    public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DatabaseReference db) {
         return broker.executeDatabaseCall(call, db);
     }
 
     @Override
-    public Map<DataEntityDB, List<DataEntityCollection>> listCollections() {
+    public Map<DatabaseReference, List<DataEntityCollection>> listCollections() {
         return broker.listCollections();
     }
 
@@ -345,12 +345,12 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
     }
 
     @Override
-    public void clearDatabase(DataEntityDB db) {
+    public void clearDatabase(DatabaseReference db) {
         broker.clearDatabase(db);
     }
 
     @Override
-    public void copyDatabase(DataEntityDB sourceDB, DataEntityDB destinationDB) {
+    public void copyDatabase(DatabaseReference sourceDB, DatabaseReference destinationDB) {
         broker.copyDatabase(sourceDB, destinationDB);
     }
 }

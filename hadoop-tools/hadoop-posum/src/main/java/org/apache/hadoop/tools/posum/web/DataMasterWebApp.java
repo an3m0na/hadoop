@@ -8,7 +8,7 @@ import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.RawDocumentsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoPayload;
@@ -80,7 +80,7 @@ public class DataMasterWebApp extends PosumWebApp {
                                                         DataEntityCollection.fromLabel(collection),
                                                         QueryUtils.withParams(request.getParameterMap())
                                                 ),
-                                                DataEntityDB.fromName(db)));
+                                                DatabaseReference.fromName(db)));
                                         break;
                                     }
                                     ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
@@ -113,7 +113,7 @@ public class DataMasterWebApp extends PosumWebApp {
     private JsonObject composePolicyMap() {
         JsonObject ret = new JsonObject();
         LogEntry<PolicyInfoMapPayload> policyReport = context.getDataStore().executeDatabaseCall(
-                CallUtils.findStatReportCall(LogEntry.Type.POLICY_MAP), DataEntityDB.getLogs()).getEntity();
+                CallUtils.findStatReportCall(LogEntry.Type.POLICY_MAP), DatabaseReference.getLogs()).getEntity();
         if (policyReport != null) {
             for (Map.Entry<String, PolicyInfoPayload> policyInfo : policyReport.getDetails().getEntries().entrySet()) {
                 ret.put(policyInfo.getKey(), new JsonObject()
@@ -133,7 +133,7 @@ public class DataMasterWebApp extends PosumWebApp {
                         QueryUtils.greaterThan("timestamp", since)
                 ));
         List<LogEntry<SimplePropertyPayload>> choiceLogs =
-                context.getDataStore().executeDatabaseCall(findChoices, DataEntityDB.getLogs()).getEntities();
+                context.getDataStore().executeDatabaseCall(findChoices, DatabaseReference.getLogs()).getEntities();
         for (LogEntry<SimplePropertyPayload> choiceEntry : choiceLogs) {
             times.add(choiceEntry.getTimestamp());
             choices.add((String) choiceEntry.getDetails().getValue());
