@@ -5,6 +5,7 @@ import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.*;
 import org.mockito.*;
 
@@ -25,10 +26,7 @@ public class TestHistorySnapshotBrokerImpl {
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
-        URL workloadUrl = getClass().getClassLoader().getResource("test_workload");
-        if (workloadUrl == null)
-            throw new RuntimeException("Default test workload folder was not found");
-        testSubject = new HistorySnapshotBrokerImpl(workloadUrl.getPath());
+        testSubject = Utils.mockDefaultWorkload();
     }
 
     @Test

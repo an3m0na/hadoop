@@ -8,9 +8,14 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayl
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
+import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by ane on 4/19/16.
@@ -21,17 +26,23 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
 
     private SimulationMasterContext context;
     private PolicyPortfolio policies;
-    private Map<String, Simulation> simulationMap;
-    private HandleSimResultRequest resultRequest;
+    private Map<String, PendingResult> simulationMap;
+    private JobBehaviorPredictor predictor;
+    private ExecutorService executor;
+    private ResultAggregator resultAggregator;
 
     public SimulatorImpl(SimulationMasterContext context) {
         super(SimulatorImpl.class.getName());
         this.context = context;
+
     }
 
     @Override
     protected void serviceInit(Configuration conf) throws Exception {
+        predictor = JobBehaviorPredictor.newInstance(context.getConf());
         policies = new PolicyPortfolio(conf);
+        executor = Executors.newFixedThreadPool(policies.size());
+
         super.serviceInit(conf);
     }
 
@@ -42,25 +53,45 @@ public class SimulatorImpl extends CompositeService implements SimulatorInterfac
 
     @Override
     public synchronized void startSimulation() {
-        resultRequest = HandleSimResultRequest.newInstance();
         simulationMap = new HashMap<>(policies.size());
         for (String policyName : policies.keySet()) {
             logger.trace("Starting simulation for " + policyName);
-            Simulation simulation = new Simulation(this, policyName, context);
-            simulationMap.put(policyName, simulation);
-            simulation.start();
+            Simulation simulation = new Simulation(predictor, policyName, context.getDataBroker());
+            simulationMap.put(policyName, new PendingResult(simulation, executor.submit(simulation)));
         }
+        resultAggregator = new ResultAggregator(simulationMap.values(), this);
+        executor.execute(resultAggregator);
     }
 
-    synchronized void simulationDone(SimulationResultPayload result) {
+    void simulationsDone(List<SimulationResultPayload> results) {
+        HandleSimResultRequest resultRequest = HandleSimResultRequest.newInstance();
+        resultRequest.setResults(results);
+        logger.trace("Sending simulation result request");
+        context.getCommService().getOrchestratorMaster().handleSimulationResult(resultRequest);
+
+    }
+
+    @Override
+    protected void serviceStop() throws Exception {
+        shutdownExecutor();
+        super.serviceStop();
+    }
+
+    private void shutdownExecutor() {
+        executor.shutdown(); // Disable new tasks from being submitted
         try {
-            resultRequest.addResult(result);
-            if (resultRequest.getResults().size() == policies.size()) {
-                logger.trace("Sending simulation result request");
-                context.getCommService().getMaster().handleSimulationResult(resultRequest);
+            // Wait a while for existing tasks to terminate
+            if (!executor.awaitTermination(20, TimeUnit.SECONDS)) {
+                executor.shutdownNow(); // Cancel currently executing tasks
+                // Wait a while for tasks to respond to being cancelled
+                if (!executor.awaitTermination(10, TimeUnit.SECONDS))
+                    System.err.println("Pool did not terminate");
             }
-        } catch (Exception e) {
-            logger.error("Error processing simulation", e);
+        } catch (InterruptedException ie) {
+            // (Re-)Cancel if current thread also interrupted
+            executor.shutdownNow();
+            // Preserve interrupt status
+            Thread.currentThread().interrupt();
         }
     }
 }

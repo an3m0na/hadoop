@@ -7,12 +7,15 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.database.client.Database;
+import org.apache.hadoop.tools.posum.database.mock.HistorySnapshotBroker;
+import org.apache.hadoop.tools.posum.database.mock.HistorySnapshotBrokerImpl;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URL;
 
 /**
  * Created by ane on 7/29/16.
@@ -133,5 +136,12 @@ public class Utils {
                 System.out.println(s);
             throw new RuntimeException("Could not stop MongoDB");
         }
+    }
+
+    public static HistorySnapshotBrokerImpl mockDefaultWorkload(){
+        URL workloadUrl = Utils.class.getClassLoader().getResource("test_workload");
+        if (workloadUrl == null)
+            throw new RuntimeException("Default test workload folder was not found");
+        return new HistorySnapshotBrokerImpl(workloadUrl.getPath());
     }
 }

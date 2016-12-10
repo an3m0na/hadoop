@@ -17,7 +17,7 @@ public class SimulationMaster extends CompositeService implements PosumMasterPro
 
     private SimulatorImpl simulator;
     private SimulationMasterContext smContext;
-    private SimulatorCommService commService;
+    private SimulationMasterCommService commService;
     private SimulatorWebApp webApp;
 
 
@@ -35,7 +35,7 @@ public class SimulationMaster extends CompositeService implements PosumMasterPro
         addIfService(simulator);
         smContext.setSimulator(simulator);
 
-        commService = new SimulatorCommService(smContext);
+        commService = new SimulationMasterCommService(smContext);
         commService.init(conf);
         addIfService(commService);
         smContext.setCommService(commService);

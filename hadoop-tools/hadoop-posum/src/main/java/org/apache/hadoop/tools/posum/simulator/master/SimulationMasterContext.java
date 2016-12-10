@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.simulator.master;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 
 /**
@@ -9,8 +10,10 @@ import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
  */
 public class SimulationMasterContext {
     private DummyTokenSecretManager tokenSecretManager;
-    private SimulatorCommService commService;
+    private SimulationMasterCommService commService;
     private Configuration conf;
+    private SimulatorInterface simulator;
+
 
     public SimulatorInterface getSimulator() {
         return simulator;
@@ -20,8 +23,6 @@ public class SimulationMasterContext {
         this.simulator = simulator;
     }
 
-    private SimulatorInterface simulator;
-
     public void setTokenSecretManager(DummyTokenSecretManager tokenSecretManager) {
         this.tokenSecretManager = tokenSecretManager;
     }
@@ -30,12 +31,16 @@ public class SimulationMasterContext {
         return tokenSecretManager;
     }
 
-    public void setCommService(SimulatorCommService commService) {
+    public void setCommService(SimulationMasterCommService commService) {
         this.commService = commService;
     }
 
-    public SimulatorCommService getCommService(){
+    public SimulationMasterCommService getCommService(){
         return commService;
+    }
+
+    public DataBroker getDataBroker(){
+        return commService.getDataMaster();
     }
 
     public Configuration getConf(){
