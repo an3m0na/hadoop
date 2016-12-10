@@ -21,9 +21,9 @@ import java.net.InetSocketAddress;
 /**
  * Created by ane on 3/19/16.
  */
-public class SimulatorCommService extends CompositeService implements SimulatorMasterProtocol {
+public class SimulationMasterCommService extends CompositeService implements SimulatorMasterProtocol {
 
-    private static Log logger = LogFactory.getLog(SimulatorCommService.class);
+    private static Log logger = LogFactory.getLog(SimulationMasterCommService.class);
 
     SimulationMasterContext context;
     private Server simulatorServer;
@@ -31,8 +31,8 @@ public class SimulatorCommService extends CompositeService implements SimulatorM
     private DataMasterClient dataClient;
     private String connectAddress;
 
-    SimulatorCommService(SimulationMasterContext context) {
-        super(SimulatorCommService.class.getName());
+    SimulationMasterCommService(SimulationMasterContext context) {
+        super(SimulationMasterCommService.class.getName());
         this.context = context;
     }
 
@@ -105,11 +105,11 @@ public class SimulatorCommService extends CompositeService implements SimulatorM
         return SimpleResponse.newInstance(true);
     }
 
-    public DataMasterClient getDataClient() {
+    public DataMasterClient getDataMaster() {
         return dataClient;
     }
 
-    public OrchestratorMasterInterface getMaster() {
+    public OrchestratorMasterInterface getOrchestratorMaster() {
         return masterClient;
     }
 
