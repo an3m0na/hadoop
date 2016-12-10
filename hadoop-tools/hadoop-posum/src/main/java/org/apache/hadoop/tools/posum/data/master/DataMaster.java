@@ -26,7 +26,7 @@ public class DataMaster extends CompositeService  implements PosumMasterProcess 
     }
 
     private DataMasterContext dmContext;
-    private DataCommService commService;
+    private DataMasterCommService commService;
     private LockBasedDataStore dataStore;
     private HadoopMonitor hadoopMonitor;
     private PosumMonitor posumMonitor;
@@ -39,7 +39,7 @@ public class DataMaster extends CompositeService  implements PosumMasterProcess 
         dmContext.setDataStore(dataStore);
 
         //service to give database access to other POSUM processes
-        commService = new DataCommService(dmContext);
+        commService = new DataMasterCommService(dmContext);
         commService.init(conf);
         addIfService(commService);
         dmContext.setCommService(commService);

@@ -20,10 +20,10 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
-import org.apache.hadoop.tools.posum.simulator.predictor.BasicPredictor;
-import org.apache.hadoop.tools.posum.simulator.predictor.DetailedPredictor;
-import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
-import org.apache.hadoop.tools.posum.simulator.predictor.StandardPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.BasicPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.DetailedPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.StandardPredictor;
 
 import java.util.HashMap;
 import java.util.List;

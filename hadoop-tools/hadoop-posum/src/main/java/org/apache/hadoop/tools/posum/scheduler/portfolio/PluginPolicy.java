@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.scheduler.meta.MetaSchedulerCommService;
+import org.apache.hadoop.tools.posum.scheduler.core.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSAppAttempt;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSQueue;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSchedulerNode;
