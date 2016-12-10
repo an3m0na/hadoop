@@ -13,9 +13,6 @@ import org.apache.hadoop.yarn.event.EventHandler;
 
 import java.util.concurrent.ConcurrentSkipListSet;
 
-/**
- * Created by ane on 4/20/16.
- */
 public class Orchestrator extends CompositeService implements EventHandler<PosumEvent> {
 
     private static Log logger = LogFactory.getLog(Orchestrator.class);

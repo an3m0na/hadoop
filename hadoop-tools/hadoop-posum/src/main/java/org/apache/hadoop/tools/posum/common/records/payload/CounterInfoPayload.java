@@ -4,9 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.CounterInfoPayloadPBImpl;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 3/20/16.
- */
 @JsonDeserialize(as = CounterInfoPayloadPBImpl.class)
 @org.codehaus.jackson.map.annotate.JsonDeserialize(as = CounterInfoPayloadPBImpl.class)
 public abstract class CounterInfoPayload implements Payload {

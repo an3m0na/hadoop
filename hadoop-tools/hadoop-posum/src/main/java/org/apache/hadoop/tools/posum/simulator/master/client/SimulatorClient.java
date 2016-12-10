@@ -16,9 +16,6 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
 
-/**
- * Created by ane on 4/13/16.
- */
 public class SimulatorClient extends AbstractService implements SimulatorInterface {
 
     private static Log logger = LogFactory.getLog(SimulatorClient.class);

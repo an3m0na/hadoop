@@ -7,9 +7,6 @@ import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 3/20/16.
- */
 public abstract class IdsByQueryCall extends ReadFromCollectionCall<StringListPayload> {
 
     public static IdsByQueryCall newInstance(DataEntityCollection collection, DatabaseQuery queryOrNull) {

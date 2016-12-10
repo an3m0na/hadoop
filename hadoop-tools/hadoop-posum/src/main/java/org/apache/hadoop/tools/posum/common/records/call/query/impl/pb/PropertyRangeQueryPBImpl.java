@@ -15,9 +15,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class PropertyRangeQueryPBImpl extends PropertyRangeQuery implements PayloadPB {
     private PropertyRangeQueryProto proto = PropertyRangeQueryProto.getDefaultInstance();
     private PropertyRangeQueryProto.Builder builder = null;

@@ -12,9 +12,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.proto.PosumProtos.ByIdCallProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.ByIdCallProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class DeleteByIdCallPBImpl extends DeleteByIdCall implements PayloadPB {
     private ByIdCallProto proto = ByIdCallProto.getDefaultInstance();
     private ByIdCallProto.Builder builder = null;

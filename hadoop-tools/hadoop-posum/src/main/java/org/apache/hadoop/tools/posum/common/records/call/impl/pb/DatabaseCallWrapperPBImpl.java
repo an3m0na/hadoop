@@ -10,9 +10,6 @@ import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallProtoOrBuilder;
 
-/**
- * Created by ane on 8/1/16.
- */
 public class DatabaseCallWrapperPBImpl implements PayloadPB {
     private DatabaseCallProto proto = DatabaseCallProto.getDefaultInstance();
     private DatabaseCallProto.Builder builder = null;

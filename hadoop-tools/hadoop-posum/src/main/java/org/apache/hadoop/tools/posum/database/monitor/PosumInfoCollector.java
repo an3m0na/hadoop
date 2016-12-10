@@ -30,9 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by ane on 2/4/16.
- */
 public class PosumInfoCollector {
 
     private static Log logger = LogFactory.getLog(PosumInfoCollector.class);

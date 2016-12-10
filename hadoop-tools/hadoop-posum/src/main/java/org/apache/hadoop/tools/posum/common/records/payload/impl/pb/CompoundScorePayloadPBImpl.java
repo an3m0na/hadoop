@@ -8,9 +8,6 @@ import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.PosumProtos.CompoundScorePayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.CompoundScorePayloadProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class CompoundScorePayloadPBImpl extends CompoundScorePayload implements PayloadPB {
     private CompoundScorePayloadProto proto = CompoundScorePayloadProto.getDefaultInstance();
     private CompoundScorePayloadProto.Builder builder = null;

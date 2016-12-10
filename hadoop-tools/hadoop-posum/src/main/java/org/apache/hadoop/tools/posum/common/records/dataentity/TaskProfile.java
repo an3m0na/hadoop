@@ -2,9 +2,6 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 
-/**
- * Created by ane on 2/8/16.
- */
 public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
 
     Long getInputBytes();

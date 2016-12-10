@@ -17,9 +17,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 4/1/16.
- */
 public abstract class PluginPolicy<
         A extends SchedulerApplicationAttempt,
         N extends SchedulerNode>

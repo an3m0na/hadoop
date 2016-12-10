@@ -5,9 +5,6 @@ import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.database.client.DataBroker;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 
-/**
- * Created by ane on 3/19/16.
- */
 public class SimulationMasterContext {
     private DummyTokenSecretManager tokenSecretManager;
     private SimulationMasterCommService commService;

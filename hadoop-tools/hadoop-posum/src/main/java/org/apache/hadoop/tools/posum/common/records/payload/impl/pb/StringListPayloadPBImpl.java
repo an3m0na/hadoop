@@ -10,9 +10,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.StringListPayloadProtoOrBuilder;
 
 import java.util.*;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class StringListPayloadPBImpl extends StringListPayload implements PayloadPB {
     private StringListPayloadProto proto = StringListPayloadProto.getDefaultInstance();
     private StringListPayloadProto.Builder builder = null;

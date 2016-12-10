@@ -22,9 +22,6 @@ import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
 
-/**
- * Created by ane on 4/13/16.
- */
 public class MetaSchedulerCommService extends CompositeService implements MetaSchedulerProtocol {
 
     private static Log logger = LogFactory.getLog(MetaSchedulerCommService.class);

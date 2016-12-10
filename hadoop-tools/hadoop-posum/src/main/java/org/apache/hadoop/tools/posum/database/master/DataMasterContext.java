@@ -6,9 +6,6 @@ import org.apache.hadoop.tools.posum.database.monitor.ClusterInfoCollector;
 import org.apache.hadoop.tools.posum.database.monitor.PosumInfoCollector;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
-/**
- * Created by ane on 3/19/16.
- */
 public class DataMasterContext {
     private Dispatcher dispatcher;
     private DummyTokenSecretManager tokenSecretManager;

@@ -22,9 +22,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAttempt, ExtCaSchedulerNode> {
 
 

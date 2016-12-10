@@ -12,9 +12,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.TransactionCallProtoOrBuilder;
 
 import java.util.*;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class TransactionCallPBImpl extends TransactionCall implements PayloadPB {
     private TransactionCallProto proto = TransactionCallProto.getDefaultInstance();
     private TransactionCallProto.Builder builder = null;

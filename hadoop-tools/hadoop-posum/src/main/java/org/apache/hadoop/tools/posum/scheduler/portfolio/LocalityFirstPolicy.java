@@ -8,9 +8,6 @@ import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaSchedulerNod
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class LocalityFirstPolicy extends ExtensibleCapacityScheduler<ExtCaAppAttempt, ExtCaSchedulerNode> {
 
     private static Log logger = LogFactory.getLog(LocalityFirstPolicy.class);

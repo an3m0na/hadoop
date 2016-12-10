@@ -11,9 +11,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.HistoryProfileProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.HistoryProfileProtoOrBuilder;
 import org.bson.types.ObjectId;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDataEntityPBImpl<HistoryProfile, HistoryProfileProto, HistoryProfileProto.Builder>
         implements HistoryProfile<T> {
 

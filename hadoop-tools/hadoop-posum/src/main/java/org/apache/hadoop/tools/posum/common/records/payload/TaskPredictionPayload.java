@@ -2,9 +2,6 @@ package org.apache.hadoop.tools.posum.common.records.payload;
 
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 4/20/16.
- */
 public abstract class TaskPredictionPayload implements Payload{
 
     public static TaskPredictionPayload newInstance(String predictor, String taskId, Long duration) {

@@ -23,9 +23,6 @@ import org.apache.hadoop.yarn.ipc.YarnRPC;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
-/**
- * Created by ane on 3/19/16.
- */
 public class DataCommService extends CompositeService implements DataMasterProtocol {
 
     private static Log logger = LogFactory.getLog(DataCommService.class);

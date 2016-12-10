@@ -13,9 +13,6 @@ import java.util.Set;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.safeEquals;
 
-/**
- * Created by ane on 8/14/16.
- */
 class PropertyValueQueryPredicate extends QueryPredicate<PropertyValueQuery> {
 
     PropertyValueQueryPredicate(PropertyValueQuery query) {

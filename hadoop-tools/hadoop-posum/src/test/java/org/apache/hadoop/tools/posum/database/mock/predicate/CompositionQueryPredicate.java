@@ -9,9 +9,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-/**
- * Created by ane on 8/14/16.
- */
 class CompositionQueryPredicate extends QueryPredicate<CompositionQuery> {
 
     private final CompositionQuery.Type type;

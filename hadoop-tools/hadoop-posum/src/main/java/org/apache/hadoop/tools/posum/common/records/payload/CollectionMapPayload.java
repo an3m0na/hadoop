@@ -7,9 +7,6 @@ import org.apache.hadoop.yarn.util.Records;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 8/11/16.
- */
 public abstract class CollectionMapPayload implements Payload{
 
     public static CollectionMapPayload newInstance(Map<DataEntityDB, List<DataEntityCollection>> collections) {

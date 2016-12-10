@@ -12,9 +12,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.JobConfProxyProtoOrBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, JobConfProxyProto, JobConfProxyProto.Builder>
         implements JobConfProxy {
 

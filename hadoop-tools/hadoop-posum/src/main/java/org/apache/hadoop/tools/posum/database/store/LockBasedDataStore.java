@@ -7,9 +7,6 @@ import org.apache.hadoop.tools.posum.database.client.Database;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 2/9/16.
- */
 public interface LockBasedDataStore {
 
     <T extends GeneralDataEntity<T>> T findById(DataEntityDB db, DataEntityCollection collection, String id);

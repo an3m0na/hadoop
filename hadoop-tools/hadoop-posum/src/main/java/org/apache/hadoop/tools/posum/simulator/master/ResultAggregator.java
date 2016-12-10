@@ -9,9 +9,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Created by ane on 12/10/16.
- */
 public class ResultAggregator implements Runnable {
     private static Log logger = LogFactory.getLog(SimulatorImpl.class);
 

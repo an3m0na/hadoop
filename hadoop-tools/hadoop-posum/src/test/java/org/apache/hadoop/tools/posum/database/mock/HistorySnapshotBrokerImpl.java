@@ -16,9 +16,6 @@ import java.util.*;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.*;
 import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
 
-/**
- * Created by ane on 7/26/16.
- */
 public class HistorySnapshotBrokerImpl implements HistorySnapshotBroker {
 
     private Long traceStart = 0L;

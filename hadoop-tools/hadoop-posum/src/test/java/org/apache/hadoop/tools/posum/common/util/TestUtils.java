@@ -9,9 +9,6 @@ import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
 
-/**
- * Created by ane on 7/26/16.
- */
 public class TestUtils {
 
     private static final long defaultNoGetterProperty = 1234567L;

@@ -15,9 +15,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.CollectionMapPayloadProtoOrBuild
 
 import java.util.*;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class CollectionMapPayloadPBImpl extends CollectionMapPayload implements PayloadPB {
     private CollectionMapPayloadProto proto = CollectionMapPayloadProto.getDefaultInstance();
     private CollectionMapPayloadProto.Builder builder = null;

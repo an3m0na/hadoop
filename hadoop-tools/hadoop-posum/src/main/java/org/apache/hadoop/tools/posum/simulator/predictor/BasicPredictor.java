@@ -12,9 +12,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 
 import java.util.List;
 
-/**
- * Created by ane on 2/9/16.
- */
 public class BasicPredictor extends JobBehaviorPredictor {
 
     private static final Log logger = LogFactory.getLog(BasicPredictor.class);

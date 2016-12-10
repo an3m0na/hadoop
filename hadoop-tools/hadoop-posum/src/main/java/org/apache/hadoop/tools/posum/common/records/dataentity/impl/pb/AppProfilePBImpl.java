@@ -9,9 +9,6 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.proto.PosumProtos.AppProfileProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.AppProfileProtoOrBuilder;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppProfileProto, AppProfileProto.Builder>
         implements AppProfile {
 

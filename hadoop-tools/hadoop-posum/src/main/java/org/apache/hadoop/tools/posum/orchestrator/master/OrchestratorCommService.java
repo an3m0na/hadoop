@@ -33,9 +33,6 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by ane on 3/19/16.
- */
 public class OrchestratorCommService extends CompositeService implements OrchestratorMasterProtocol {
 
     private static Log logger = LogFactory.getLog(OrchestratorCommService.class);

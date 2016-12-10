@@ -11,9 +11,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.proto.PosumProtos.SimpleResponseProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.SimpleResponseProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class SimpleResponsePBImpl<T extends Payload> extends SimpleResponse<T> {
     private SimpleResponseProto proto = SimpleResponseProto.getDefaultInstance();
     private SimpleResponseProto.Builder builder = null;

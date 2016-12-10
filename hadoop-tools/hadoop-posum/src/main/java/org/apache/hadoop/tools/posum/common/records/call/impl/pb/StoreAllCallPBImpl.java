@@ -12,9 +12,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.MultiEntityPayloadProto;
 
 import java.util.List;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class StoreAllCallPBImpl extends StoreAllCall implements PayloadPB {
     private MultiEntityPayloadPBImpl multiEntityPayloadPB;
 

@@ -11,9 +11,6 @@ import java.io.IOException;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
 
-/**
- * Created by ane on 3/29/16.
- */
 public class LogEntryDeserializer extends JsonDeserializer<LogEntry> {
 
     @Override

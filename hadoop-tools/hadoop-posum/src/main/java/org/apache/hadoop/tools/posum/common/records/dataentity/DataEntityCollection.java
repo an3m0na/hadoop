@@ -2,9 +2,6 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.*;
 
-/**
- * Created by ane on 3/3/16.
- */
 public enum DataEntityCollection {
     JOB("jobs", JobProfilePBImpl.class),
     JOB_HISTORY("jobs_history", JobProfilePBImpl.class),

@@ -7,9 +7,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by ane on 3/23/16.
- */
 public abstract class SimplePropertyPayload implements Payload, Comparable {
 
     public enum PropertyType {

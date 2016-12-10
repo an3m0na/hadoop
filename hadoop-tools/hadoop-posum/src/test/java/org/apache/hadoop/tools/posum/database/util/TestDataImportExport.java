@@ -21,9 +21,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Created by ane on 7/29/16.
- */
 public class TestDataImportExport {
     private Database db;
     private DataBroker dataBroker;

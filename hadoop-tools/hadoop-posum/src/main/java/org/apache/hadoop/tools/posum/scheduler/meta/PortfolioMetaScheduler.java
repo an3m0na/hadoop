@@ -39,9 +39,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- * Created by ane on 2/4/16.
- */
 public class PortfolioMetaScheduler extends
         AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode> implements
         Configurable, MetaSchedulerInterface {
