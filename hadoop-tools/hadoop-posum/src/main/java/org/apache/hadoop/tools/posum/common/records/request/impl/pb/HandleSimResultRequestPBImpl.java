@@ -14,9 +14,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
 
     private HandleSimResultRequestProto proto = HandleSimResultRequestProto.getDefaultInstance();

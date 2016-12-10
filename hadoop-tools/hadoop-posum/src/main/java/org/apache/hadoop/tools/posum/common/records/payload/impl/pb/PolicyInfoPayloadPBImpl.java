@@ -8,9 +8,6 @@ import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.PosumProtos.PolicyInfoPayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.PolicyInfoPayloadProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class PolicyInfoPayloadPBImpl extends PolicyInfoPayload implements PayloadPB {
     private PolicyInfoPayloadProto proto = PolicyInfoPayloadProto.getDefaultInstance();
     private PolicyInfoPayloadProto.Builder builder = null;

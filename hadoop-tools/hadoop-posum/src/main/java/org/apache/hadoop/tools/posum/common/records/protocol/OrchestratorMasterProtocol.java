@@ -9,9 +9,6 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
 
-/**
- * Created by ane on 3/19/16.
- */
 public interface OrchestratorMasterProtocol extends StandardProtocol{
    SimpleResponse handleSimulationResult(HandleSimResultRequest resultRequest) throws IOException, YarnException;
    SimpleResponse registerProcess(RegistrationRequest request) throws IOException, YarnException;

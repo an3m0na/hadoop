@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
-/**
- * Created by ane on 3/7/16.
- */
 @JsonDeserialize(using = LogEntryDeserializer.class)
 public interface LogEntry<T extends Payload> extends GeneralDataEntity<LogEntry<T>> {
 

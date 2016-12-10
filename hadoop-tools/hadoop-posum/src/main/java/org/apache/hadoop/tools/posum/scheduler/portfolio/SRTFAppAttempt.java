@@ -11,9 +11,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManage
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class SRTFAppAttempt extends ExtCaAppAttempt {
     private static final Log logger = LogFactory.getLog(SRTFAppAttempt.class);
 

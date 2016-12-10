@@ -27,9 +27,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
 
-/**
- * Created by ane on 2/9/16.
- */
 public class DataStoreImpl implements LockBasedDataStore {
 
     private static Log logger = LogFactory.getLog(DataStoreImpl.class);

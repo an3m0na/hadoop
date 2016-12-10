@@ -11,9 +11,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.LogEntryProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.LogEntryProtoOrBuilder;
 import org.bson.types.ObjectId;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class LogEntryPBImpl<T extends Payload> extends GeneralDataEntityPBImpl<LogEntry<T>, LogEntryProto, LogEntryProto.Builder>
         implements LogEntry<T> {
 

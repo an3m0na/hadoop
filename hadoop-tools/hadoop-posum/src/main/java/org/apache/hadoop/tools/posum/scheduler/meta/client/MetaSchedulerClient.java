@@ -16,9 +16,6 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
 
-/**
- * Created by ane on 2/9/16.
- */
 public class MetaSchedulerClient extends AbstractService implements MetaSchedulerInterface{
 
     private static Log logger = LogFactory.getLog(MetaSchedulerClient.class);

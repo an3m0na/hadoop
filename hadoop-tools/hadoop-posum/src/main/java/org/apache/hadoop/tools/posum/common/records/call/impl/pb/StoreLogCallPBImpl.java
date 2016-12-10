@@ -9,9 +9,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.LogEntryP
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.PosumProtos.LogEntryProto;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class StoreLogCallPBImpl extends StoreLogCall implements PayloadPB {
     private LogEntryProto proto = LogEntryProto.getDefaultInstance();
 

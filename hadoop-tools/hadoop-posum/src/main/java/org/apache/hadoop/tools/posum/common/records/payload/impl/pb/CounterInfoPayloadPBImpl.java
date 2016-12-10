@@ -10,9 +10,6 @@ import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.PosumProtos.CounterInfoPayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.CounterInfoPayloadProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public class CounterInfoPayloadPBImpl extends CounterInfoPayload implements PayloadPB {

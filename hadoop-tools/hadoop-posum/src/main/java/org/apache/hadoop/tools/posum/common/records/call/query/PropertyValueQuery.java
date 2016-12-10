@@ -3,9 +3,6 @@ package org.apache.hadoop.tools.posum.common.records.call.query;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 8/13/16.
- */
 public abstract class PropertyValueQuery implements DatabaseQuery {
     public enum Type {
         IS, IS_NOT, LESS, LESS_OR_EQUAL, GREATER, GREATER_OR_EQUAL

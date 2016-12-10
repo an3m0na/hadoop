@@ -13,9 +13,6 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Created by ane on 2/9/16.
- */
 public class StandardPredictor extends JobBehaviorPredictor {
 
     private static final Log logger = LogFactory.getLog(StandardPredictor.class);

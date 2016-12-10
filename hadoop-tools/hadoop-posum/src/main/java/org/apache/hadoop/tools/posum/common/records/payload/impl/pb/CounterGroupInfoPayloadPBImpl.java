@@ -17,9 +17,6 @@ import java.util.Iterator;
 import java.util.List;
 
 
-/**
- * Created by ane on 3/20/16.
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public class CounterGroupInfoPayloadPBImpl extends CounterGroupInfoPayload implements PayloadPB {

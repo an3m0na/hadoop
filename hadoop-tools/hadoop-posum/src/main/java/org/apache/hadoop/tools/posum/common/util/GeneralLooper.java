@@ -5,9 +5,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.AbstractService;
 
-/**
- * Created by ane on 4/18/16.
- */
 public abstract class GeneralLooper<T> extends AbstractService {
 
     private Log logger = LogFactory.getLog(getClass());

@@ -19,9 +19,6 @@ import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
 import static org.apache.hadoop.tools.posum.test.Utils.*;
 import static org.junit.Assert.*;
 
-/**
- * Created by ane on 7/26/16.
- */
 public abstract class TestDataBroker {
     protected DataBroker dataBroker;
     protected Database mainDB;

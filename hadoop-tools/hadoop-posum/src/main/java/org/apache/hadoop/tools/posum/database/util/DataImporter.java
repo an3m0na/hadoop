@@ -17,9 +17,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Created by ane on 7/28/16.
- */
 public class DataImporter {
     private Map<DataEntityDB, Map<DataEntityCollection, File>> dataFiles = new HashMap<>(DataEntityDB.Type.values().length);
 

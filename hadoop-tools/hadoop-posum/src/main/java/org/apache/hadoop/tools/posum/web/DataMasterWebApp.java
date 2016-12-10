@@ -26,9 +26,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 4/29/16.
- */
 public class DataMasterWebApp extends PosumWebApp {
     private static Log logger = LogFactory.getLog(PosumWebApp.class);
 

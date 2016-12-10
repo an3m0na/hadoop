@@ -17,9 +17,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 
-/**
- * Created by ane on 7/29/16.
- */
 public class Utils {
     public static final Long DURATION_UNIT = 60000L; // 1 minute
     public static final String JOB_NAME_ROOT = "Dummy Job";

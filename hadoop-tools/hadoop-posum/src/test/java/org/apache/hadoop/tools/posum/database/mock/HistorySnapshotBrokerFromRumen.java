@@ -15,9 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-/**
- * Created by ane on 7/26/16.
- */
 //TODO rewrite this to make use of MockDataStoreImpl features
 public class HistorySnapshotBrokerFromRumen extends MockDataStoreImpl {// implements TraceSnapshotMockDS {
     private List<JobProfile> jobList = new ArrayList<>();

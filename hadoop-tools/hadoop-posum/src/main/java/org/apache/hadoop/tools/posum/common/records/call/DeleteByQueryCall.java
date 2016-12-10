@@ -7,9 +7,6 @@ import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 3/20/16.
- */
 public abstract class DeleteByQueryCall extends DeleteCall {
 
     public static DeleteByQueryCall newInstance(DataEntityCollection type, DatabaseQuery queryOrNull) {

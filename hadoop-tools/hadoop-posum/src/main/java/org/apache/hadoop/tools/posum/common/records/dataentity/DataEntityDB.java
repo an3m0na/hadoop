@@ -9,9 +9,6 @@ import java.util.List;
 import static org.apache.hadoop.tools.posum.common.util.Utils.safeEquals;
 import static org.apache.hadoop.tools.posum.common.util.Utils.safeHashCode;
 
-/**
- * Created by ane on 5/17/16.
- */
 
 public abstract class DataEntityDB {
     private static final String ROOT = "posum";

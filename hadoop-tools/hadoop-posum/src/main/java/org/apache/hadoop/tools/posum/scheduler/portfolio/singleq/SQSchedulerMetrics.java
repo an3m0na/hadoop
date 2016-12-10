@@ -7,9 +7,6 @@ import org.apache.hadoop.yarn.sls.scheduler.SchedulerMetrics;
 
 import java.lang.reflect.Constructor;
 
-/**
- * Created by ane on 1/29/16.
- */
 public class SQSchedulerMetrics extends SchedulerMetrics {
 
         public SQSchedulerMetrics() {

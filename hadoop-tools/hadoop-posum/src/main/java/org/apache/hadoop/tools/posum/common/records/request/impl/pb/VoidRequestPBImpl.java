@@ -5,9 +5,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
 import org.apache.hadoop.yarn.proto.PosumProtos;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class VoidRequestPBImpl extends SimpleRequestPBImpl<VoidPayload> {
 
     public VoidRequestPBImpl() {

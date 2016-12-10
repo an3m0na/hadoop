@@ -11,9 +11,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.proto.PosumProtos.PropertyValueQueryProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.PropertyValueQueryProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class PropertyValueQueryPBImpl extends PropertyValueQuery implements PayloadPB {
     private PropertyValueQueryProto proto = PropertyValueQueryProto.getDefaultInstance();
     private PropertyValueQueryProto.Builder builder = null;

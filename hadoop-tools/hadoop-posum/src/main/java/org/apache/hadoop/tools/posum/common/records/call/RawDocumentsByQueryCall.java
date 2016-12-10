@@ -7,9 +7,6 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayloa
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 3/20/16.
- */
 public abstract class RawDocumentsByQueryCall extends ReadFromCollectionCall<SimplePropertyPayload> {
 
     public static RawDocumentsByQueryCall newInstance(DataEntityCollection type, DatabaseQuery queryOrNull) {

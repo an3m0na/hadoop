@@ -4,9 +4,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.yarn.proto.PosumProtos;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class StringRequestPBImpl extends SimpleRequestPBImpl<String> {
 
     public StringRequestPBImpl(){

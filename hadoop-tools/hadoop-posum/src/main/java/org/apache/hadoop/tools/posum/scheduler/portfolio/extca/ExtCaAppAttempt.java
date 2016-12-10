@@ -27,9 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
     private static Log logger = LogFactory.getLog(ExtCaAppAttempt.class);

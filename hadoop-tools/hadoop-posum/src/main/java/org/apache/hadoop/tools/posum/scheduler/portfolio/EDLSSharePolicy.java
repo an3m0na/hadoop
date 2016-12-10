@@ -3,9 +3,6 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
 
-/**
- * Created by ane on 5/31/16.
- */
 public class EDLSSharePolicy extends EDLSPolicy<EDLSSharePolicy> {
 
     public EDLSSharePolicy() {

@@ -6,9 +6,6 @@ import org.apache.hadoop.tools.posum.common.records.call.query.PropertyRangeQuer
 import org.apache.hadoop.tools.posum.common.records.call.query.PropertyValueQuery;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 
-/**
- * Created by ane on 8/21/16.
- */
 public class QueryPredicateFactory {
 
     public static QueryPredicate<? extends DatabaseQuery> fromQuery(DatabaseQuery query) {

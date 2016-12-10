@@ -2,9 +2,6 @@ package org.apache.hadoop.tools.posum.common.records.payload;
 
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 8/15/16.
- */
 public abstract class PolicyInfoPayload implements Payload{
 
     public static PolicyInfoPayload newInstance() {

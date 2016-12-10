@@ -5,9 +5,6 @@ import org.apache.hadoop.conf.Configuration;
 
 import java.util.Map;
 
-/**
- * Created by ane on 2/8/16.
- */
 public interface JobConfProxy extends GeneralDataEntity<JobConfProxy> {
 
     @JsonIgnore

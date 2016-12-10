@@ -10,9 +10,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.PosumProtos;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class IdsByQueryCallPBImpl extends IdsByQueryCall implements PayloadPB {
     private PosumProtos.ByQueryCallProto proto = PosumProtos.ByQueryCallProto.getDefaultInstance();
     private PosumProtos.ByQueryCallProto.Builder builder = null;

@@ -9,9 +9,6 @@ import org.junit.Before;
 
 import java.lang.reflect.InvocationTargetException;
 
-/**
- * Created by ane on 2/10/16.
- */
 public abstract class TestPredictor<T extends JobBehaviorPredictor> {
     protected Configuration conf = PosumConfiguration.newInstance();
     protected T predictor;

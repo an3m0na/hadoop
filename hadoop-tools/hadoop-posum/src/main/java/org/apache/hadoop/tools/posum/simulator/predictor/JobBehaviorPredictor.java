@@ -9,9 +9,6 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.database.client.Database;
 
-/**
- * Created by ane on 2/9/16.
- */
 public abstract class JobBehaviorPredictor {
 
     protected Configuration conf;

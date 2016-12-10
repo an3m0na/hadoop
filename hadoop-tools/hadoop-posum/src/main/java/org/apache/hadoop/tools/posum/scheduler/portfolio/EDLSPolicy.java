@@ -24,9 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-/**
- * Created by ane on 5/31/16.
- */
 public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacityScheduler<EDLSAppAttempt, ExtCaSchedulerNode> {
 
     protected Log logger;

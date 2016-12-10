@@ -11,9 +11,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.JobProfileProtoOrBuilder;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobProfileProto, JobProfileProto.Builder>
         implements JobProfile {
 

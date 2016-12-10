@@ -13,9 +13,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 7/28/16.
- */
 public class DataExporter {
     private Map<DataEntityDB, List<DataEntityCollection>> collections;
     private DataBroker dataBroker;

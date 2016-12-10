@@ -3,9 +3,6 @@ package org.apache.hadoop.tools.posum.common.util.json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * Created by ane on 5/15/16.
- */
 public class JsonElement {
 
     protected JsonNode innerElement;

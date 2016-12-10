@@ -11,9 +11,6 @@ import java.util.Map;
 import java.util.Set;
 
 
-/**
- * Created by ane on 8/14/16.
- */
 class TautologyPredicate extends QueryPredicate<DatabaseQuery> {
 
     TautologyPredicate(PropertyValueQuery query) {

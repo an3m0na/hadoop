@@ -10,9 +10,6 @@ import org.mortbay.jetty.handler.AbstractHandler;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * Created by ane on 4/29/16.
- */
 public class OrchestratorWebApp extends PosumWebApp {
     private OrchestratorMasterContext context;
 

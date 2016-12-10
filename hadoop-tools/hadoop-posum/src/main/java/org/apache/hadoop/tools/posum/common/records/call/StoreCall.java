@@ -7,9 +7,6 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayloa
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 7/29/16.
- */
 public abstract class StoreCall extends WriteToCollectionCall<SimplePropertyPayload> {
     public static StoreCall newInstance(DataEntityCollection collection, GeneralDataEntity object) {
         StoreCall call = Records.newRecord(StoreCall.class);

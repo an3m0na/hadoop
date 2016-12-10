@@ -11,9 +11,6 @@ import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;
 
-/**
- * Created by ane on 8/2/16.
- */
 public abstract class JobForAppCall extends LockBasedDatabaseCallImpl<SingleEntityPayload> {
 
     public static JobForAppCall newInstance(String appId, String user) {

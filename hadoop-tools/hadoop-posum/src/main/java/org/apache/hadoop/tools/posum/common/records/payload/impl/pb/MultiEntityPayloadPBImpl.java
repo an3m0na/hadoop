@@ -17,9 +17,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements PayloadPB {
     private MultiEntityPayloadProto proto = MultiEntityPayloadProto.getDefaultInstance();
     private MultiEntityPayloadProto.Builder builder = null;

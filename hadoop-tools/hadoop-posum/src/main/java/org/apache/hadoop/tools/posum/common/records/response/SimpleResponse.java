@@ -6,9 +6,6 @@ import org.apache.hadoop.tools.posum.common.records.response.impl.pb.*;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 3/31/16.
- */
 public abstract class SimpleResponse<T extends Payload> {
 
     public static SimpleResponse newInstance(boolean successful, String text) {
