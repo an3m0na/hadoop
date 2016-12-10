@@ -9,20 +9,21 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayloa
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.orchestrator.master.OrchestratorMaster;
 import org.apache.hadoop.tools.posum.database.master.DataMaster;
+import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.apache.hadoop.tools.posum.test.ServiceRunner;
 import org.apache.hadoop.tools.posum.test.TestDataBroker;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-/**
- * Created by ane on 3/21/16.
- */
+
+@Category(IntegrationTest.class)
 public class TestDataMasterClient extends TestDataBroker {
     private ServiceRunner posumMaster, dataMaster;
     private DataMasterClient client;
