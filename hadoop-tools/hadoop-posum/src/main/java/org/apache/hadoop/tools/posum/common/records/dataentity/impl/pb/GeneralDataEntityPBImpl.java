@@ -9,9 +9,6 @@ import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.mongojack.Id;
 
-/**
- * Created by ane on 3/21/16.
- */
 public abstract class GeneralDataEntityPBImpl<
         E extends GeneralDataEntity,
         P extends com.google.protobuf.GeneratedMessage & com.google.protobuf.MessageOrBuilder,

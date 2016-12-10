@@ -4,9 +4,6 @@ import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;
 
-/**
- * Created by ane on 8/13/16.
- */
 public abstract class PropertyRangeQuery implements DatabaseQuery {
 
     public enum Type {

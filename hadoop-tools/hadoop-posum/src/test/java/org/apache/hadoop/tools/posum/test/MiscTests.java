@@ -19,9 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 4/20/16.
- */
 public class MiscTests {
     //    @Test
     public void checkRegistration() {

@@ -12,9 +12,6 @@ import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutio
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallExecutionRequestProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallExecutionRequestProtoOrBuilder;
 
-/**
- * Created by ane on 8/1/16.
- */
 public class DatabaseCallExecutionRequestPBImpl extends DatabaseCallExecutionRequest implements PayloadPB {
     private DatabaseCallExecutionRequestProto proto = DatabaseCallExecutionRequestProto.getDefaultInstance();
     private DatabaseCallExecutionRequestProto.Builder builder = null;

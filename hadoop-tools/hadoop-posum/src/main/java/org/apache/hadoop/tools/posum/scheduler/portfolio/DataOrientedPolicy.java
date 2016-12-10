@@ -13,9 +13,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaS
 
 import java.util.*;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttempt, ExtCaSchedulerNode> {
 
     private static Log logger = LogFactory.getLog(DataOrientedPolicy.class);

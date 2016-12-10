@@ -13,9 +13,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.SaveJobFlexFieldsCallProtoOrBuil
 
 import java.util.Map;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class SaveJobFlexFieldsCallPBImpl extends SaveJobFlexFieldsCall implements PayloadPB {
     private SaveJobFlexFieldsCallProto proto = SaveJobFlexFieldsCallProto.getDefaultInstance();
     private SaveJobFlexFieldsCallProto.Builder builder = null;

@@ -18,9 +18,6 @@ import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
 
-/**
- * Created by ane on 3/19/16.
- */
 public class SimulationMasterCommService extends CompositeService implements SimulatorMasterProtocol {
 
     private static Log logger = LogFactory.getLog(SimulationMasterCommService.class);

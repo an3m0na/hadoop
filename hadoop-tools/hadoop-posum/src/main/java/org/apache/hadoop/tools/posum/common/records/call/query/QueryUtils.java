@@ -3,9 +3,6 @@ package org.apache.hadoop.tools.posum.common.records.call.query;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 8/13/16.
- */
 public class QueryUtils {
 
     public static DatabaseQuery withParams(Map<String, Object> params) {

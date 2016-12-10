@@ -8,9 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
-/**
- * Created by ane on 7/28/16.
- */
 public class JsonFileReader {
     private JsonParser jsonParser;
 

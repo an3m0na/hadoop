@@ -7,9 +7,6 @@ import org.apache.hadoop.tools.posum.common.util.GeneralLooper;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.orchestrator.master.OrchestratorMasterContext;
 
-/**
- * Created by ane on 4/18/16.
- */
 public class SimulationManager extends GeneralLooper<SimulationManager> {
     private static Log logger = LogFactory.getLog(SimulationManager.class);
 

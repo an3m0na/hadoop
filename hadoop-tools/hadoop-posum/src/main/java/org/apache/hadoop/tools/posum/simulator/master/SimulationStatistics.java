@@ -1,8 +1,5 @@
 package org.apache.hadoop.tools.posum.simulator.master;
 
-/**
- * Created by ane on 11/25/16.
- */
 public class SimulationStatistics {
     private Long startTimeCluster;
     private Long endTimeCluster;

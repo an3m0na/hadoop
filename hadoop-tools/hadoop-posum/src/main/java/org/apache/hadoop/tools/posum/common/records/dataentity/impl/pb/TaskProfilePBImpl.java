@@ -7,9 +7,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.yarn.proto.PosumProtos.TaskProfileProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.TaskProfileProtoOrBuilder;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, TaskProfileProto, TaskProfileProto.Builder>
         implements TaskProfile {
 

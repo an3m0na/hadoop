@@ -6,9 +6,6 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.database.master.DataMasterContext;
 
-/**
- * Created by ane on 2/4/16.
- */
 public class PosumMonitor extends GeneralLooper<PosumMonitor> {
 
 

@@ -10,9 +10,6 @@ import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;
 
-/**
- * Created by ane on 7/29/16.
- */
 public abstract class StoreAllCall extends WriteToCollectionCall<VoidPayload> {
     public static StoreAllCall newInstance(DataEntityCollection collection, List<? extends GeneralDataEntity> entities) {
         StoreAllCall call = Records.newRecord(StoreAllCall.class);

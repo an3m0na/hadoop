@@ -8,9 +8,6 @@ import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.proto.PosumProtos.SimpleRequestProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.SimpleRequestProtoOrBuilder;
 
-/**
- * Created by ane on 3/21/16.
- */
 public abstract class SimpleRequestPBImpl<T> extends SimpleRequest<T> {
 
     public SimpleRequestPBImpl() {

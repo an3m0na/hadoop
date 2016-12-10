@@ -19,9 +19,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class SQSQueue implements Queue {
 
     private final List<SQSAppAttempt> apps = new ArrayList<>();

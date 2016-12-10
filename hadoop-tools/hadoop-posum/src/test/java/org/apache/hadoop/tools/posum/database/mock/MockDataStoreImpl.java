@@ -21,9 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- * Created by ane on 2/10/16.
- */
 public class MockDataStoreImpl implements LockBasedDataStore {
 
     private Map<DataEntityDB, DBAssets> dbRegistry = new ConcurrentHashMap<>();

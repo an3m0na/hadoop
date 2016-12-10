@@ -8,9 +8,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-/**
- * Created by ane on 3/19/16.
- */
 public class DummyTokenIdentifier extends TokenIdentifier {
     public static final Text KIND_NAME = new Text("POSUM_DUMMY_TOKEN");
 

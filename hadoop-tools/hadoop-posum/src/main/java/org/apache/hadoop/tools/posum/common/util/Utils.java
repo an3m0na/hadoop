@@ -41,9 +41,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-/**
- * Created by ane on 3/3/16.
- */
 public class Utils {
 
     private static Log logger = LogFactory.getLog(Utils.class);

@@ -10,9 +10,6 @@ import org.apache.hadoop.yarn.util.Records;
 
 import java.util.Map;
 
-/**
- * Created by ane on 3/20/16.
- */
 public abstract class SaveJobFlexFieldsCall extends LockBasedDatabaseCallImpl<VoidPayload> {
 
     public static SaveJobFlexFieldsCall newInstance(String jobId, Map<String, String> newFields, boolean forHistory) {

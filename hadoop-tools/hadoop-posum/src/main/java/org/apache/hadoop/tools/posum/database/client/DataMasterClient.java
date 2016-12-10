@@ -22,9 +22,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 2/9/16.
- */
 public class DataMasterClient extends AbstractService implements DataBroker {
 
     private static Log logger = LogFactory.getLog(DataMasterClient.class);

@@ -13,9 +13,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class CountersProxyPBImpl extends GeneralDataEntityPBImpl<CountersProxy, CountersProxyProto, CountersProxyProto.Builder>
         implements CountersProxy {
 

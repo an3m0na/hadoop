@@ -4,9 +4,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 
-/**
- * Created by ane on 7/29/16.
- */
 abstract class ThreePhaseDatabaseCallImpl<T extends Payload> implements ThreePhaseDatabaseCall<T> {
 
     @Override

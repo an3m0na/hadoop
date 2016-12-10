@@ -12,9 +12,6 @@ import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 import java.util.concurrent.Callable;
 
 
-/**
- * Created by ane on 4/20/16.
- */
 public class Simulation implements Callable<SimulationResultPayload> {
     private static final Log logger = LogFactory.getLog(SimulationMaster.class);
 

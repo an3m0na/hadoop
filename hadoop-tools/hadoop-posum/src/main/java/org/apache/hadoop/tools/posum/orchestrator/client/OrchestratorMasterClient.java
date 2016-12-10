@@ -21,9 +21,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by ane on 4/13/16.
- */
 public class OrchestratorMasterClient extends AbstractService implements OrchestratorMasterInterface {
 
     private static Log logger = LogFactory.getLog(OrchestratorMasterClient.class);

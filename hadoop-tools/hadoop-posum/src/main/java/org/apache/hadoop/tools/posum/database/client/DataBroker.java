@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 
-/**
- * Created by ane on 7/28/16.
- */
 public interface DataBroker {
 
     Database bindTo(DataEntityDB db);

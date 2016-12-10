@@ -16,9 +16,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class CompositionQueryPBImpl extends CompositionQuery implements PayloadPB {
     private CompositionQueryProto proto = CompositionQueryProto.getDefaultInstance();
     private CompositionQueryProto.Builder builder = null;

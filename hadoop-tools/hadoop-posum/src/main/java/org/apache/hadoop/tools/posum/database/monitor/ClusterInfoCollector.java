@@ -34,9 +34,6 @@ import java.util.*;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.*;
 
-/**
- * Created by ane on 2/4/16.
- */
 public class ClusterInfoCollector {
 
     private static Log logger = LogFactory.getLog(ClusterInfoCollector.class);

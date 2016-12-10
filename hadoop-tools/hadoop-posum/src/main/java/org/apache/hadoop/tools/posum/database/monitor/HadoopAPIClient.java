@@ -23,9 +23,6 @@ import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.util.*;
 
-/**
- * Created by ane on 3/7/16.
- */
 public class HadoopAPIClient {
 
     private static Log logger = LogFactory.getLog(HadoopAPIClient.class);

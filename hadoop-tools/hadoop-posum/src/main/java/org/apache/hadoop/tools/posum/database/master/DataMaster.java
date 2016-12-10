@@ -18,9 +18,6 @@ import org.apache.hadoop.tools.posum.web.DataMasterWebApp;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
-/**
- * Created by ane on 2/4/16.
- */
 public class DataMaster extends CompositeService  implements PosumMasterProcess {
     private static final Log logger = LogFactory.getLog(DataMaster.class);
 

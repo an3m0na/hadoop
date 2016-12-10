@@ -10,9 +10,6 @@ import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseQueryProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseQueryProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class DatabaseQueryWrapperPBImpl implements PayloadPB {
     private DatabaseQueryProto proto = DatabaseQueryProto.getDefaultInstance();
     private DatabaseQueryProto.Builder builder = null;

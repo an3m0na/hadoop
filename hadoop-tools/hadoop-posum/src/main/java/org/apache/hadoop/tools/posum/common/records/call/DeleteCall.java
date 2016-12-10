@@ -5,9 +5,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
 import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
 
-/**
- * Created by ane on 7/29/16.
- */
 public abstract class DeleteCall extends LockBasedDatabaseCallImpl<VoidPayload> {
 
     public abstract DataEntityCollection getEntityCollection();

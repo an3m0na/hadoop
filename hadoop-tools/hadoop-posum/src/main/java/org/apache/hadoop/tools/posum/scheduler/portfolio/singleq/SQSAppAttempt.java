@@ -15,9 +15,6 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class SQSAppAttempt extends SchedulerApplicationAttempt {
 
     private static Log logger = LogFactory.getLog(SQSAppAttempt.class);

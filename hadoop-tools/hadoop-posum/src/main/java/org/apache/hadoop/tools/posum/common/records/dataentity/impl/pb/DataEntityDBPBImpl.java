@@ -5,9 +5,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.yarn.proto.PosumProtos.EntityDBProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.EntityDBProtoOrBuilder;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class DataEntityDBPBImpl extends DataEntityDB {
 
     private EntityDBProto proto = EntityDBProto.getDefaultInstance();

@@ -4,9 +4,6 @@ import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;
 
-/**
- * Created by ane on 3/23/16.
- */
 public abstract class StringListPayload implements Payload{
 
     public static StringListPayload newInstance(List<String> list) {

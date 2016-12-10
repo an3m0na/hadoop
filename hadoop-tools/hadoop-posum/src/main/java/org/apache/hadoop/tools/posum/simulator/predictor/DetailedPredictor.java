@@ -19,9 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 2/9/16.
- */
 public class DetailedPredictor extends JobBehaviorPredictor {
 
     private static final Log logger = LogFactory.getLog(DetailedPredictor.class);

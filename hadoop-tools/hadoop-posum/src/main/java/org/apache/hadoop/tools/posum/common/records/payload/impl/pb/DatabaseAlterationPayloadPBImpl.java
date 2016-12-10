@@ -16,9 +16,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseAlterationPayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseAlterationPayloadProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class DatabaseAlterationPayloadPBImpl extends DatabaseAlterationPayload implements PayloadPB {
     private DatabaseAlterationPayloadProto proto = DatabaseAlterationPayloadProto.getDefaultInstance();
     private DatabaseAlterationPayloadProto.Builder builder = null;

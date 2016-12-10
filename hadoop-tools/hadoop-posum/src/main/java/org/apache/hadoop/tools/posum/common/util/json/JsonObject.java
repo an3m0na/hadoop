@@ -2,9 +2,6 @@ package org.apache.hadoop.tools.posum.common.util.json;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-/**
- * Created by ane on 5/15/16.
- */
 public class JsonObject extends JsonElement {
 
     private ObjectNode inner;

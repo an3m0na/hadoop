@@ -14,9 +14,6 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 
-/**
- * Created by ane on 2/24/16.
- */
 public class RestClient {
 
     private static Log logger = LogFactory.getLog(RestClient.class);

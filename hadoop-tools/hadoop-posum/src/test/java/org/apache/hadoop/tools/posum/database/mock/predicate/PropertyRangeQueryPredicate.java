@@ -10,9 +10,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by ane on 8/14/16.
- */
 class PropertyRangeQueryPredicate extends QueryPredicate<PropertyRangeQuery> {
 
     PropertyRangeQueryPredicate(PropertyRangeQuery query) {

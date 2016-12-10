@@ -10,9 +10,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManage
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class DOSAppAttempt extends ExtCaAppAttempt {
     private static final Log logger = LogFactory.getLog(DOSAppAttempt.class);
 

@@ -6,9 +6,6 @@ import org.apache.hadoop.yarn.util.Records;
 import java.util.List;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-/**
- * Created by ane on 4/20/16.
- */
 public abstract class HandleSimResultRequest {
 
     public static HandleSimResultRequest newInstance() {

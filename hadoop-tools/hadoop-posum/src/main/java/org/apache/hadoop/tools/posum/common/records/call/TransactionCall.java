@@ -8,9 +8,6 @@ import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;
 
-/**
- * Created by ane on 7/30/16.
- */
 public abstract class TransactionCall extends LockBasedDatabaseCallImpl<Payload> {
 
     public static TransactionCall newInstance() {

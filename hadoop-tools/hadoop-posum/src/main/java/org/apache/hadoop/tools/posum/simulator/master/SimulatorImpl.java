@@ -17,9 +17,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by ane on 4/19/16.
- */
 public class SimulatorImpl extends CompositeService implements SimulatorInterface {
 
     private static Log logger = LogFactory.getLog(SimulatorImpl.class);

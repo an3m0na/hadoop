@@ -9,9 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * Created by ane on 7/28/16.
- */
 public class JsonFileWriter {
     private JsonGenerator jsonGenerator;
 

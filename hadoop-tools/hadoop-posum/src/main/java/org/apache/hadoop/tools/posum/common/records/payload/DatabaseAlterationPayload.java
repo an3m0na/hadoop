@@ -3,9 +3,6 @@ package org.apache.hadoop.tools.posum.common.records.payload;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 3/20/16.
- */
 public abstract class DatabaseAlterationPayload implements Payload {
 
     public static DatabaseAlterationPayload newInstance(DataEntityDB db) {
