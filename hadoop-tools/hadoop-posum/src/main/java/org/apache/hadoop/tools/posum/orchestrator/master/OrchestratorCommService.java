@@ -21,8 +21,8 @@ import org.apache.hadoop.tools.posum.orchestrator.management.PosumEvent;
 import org.apache.hadoop.tools.posum.orchestrator.management.PosumEventType;
 import org.apache.hadoop.tools.posum.scheduler.meta.client.MetaSchedulerClient;
 import org.apache.hadoop.tools.posum.scheduler.meta.client.MetaSchedulerInterface;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
-import org.apache.hadoop.tools.posum.database.client.DataMasterClient;
+import org.apache.hadoop.tools.posum.client.data.DataStore;
+import org.apache.hadoop.tools.posum.client.data.DataMasterClient;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorClient;
 import org.apache.hadoop.tools.posum.simulator.master.client.SimulatorInterface;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -170,7 +170,7 @@ public class OrchestratorCommService extends CompositeService implements Orchest
         return SimpleResponse.newInstance(true, dataClient.getConnectAddress());
     }
 
-    public DataBroker getDataBroker() {
+    public DataStore getDataBroker() {
         if (dataClient != null && dataClient.isInState(STATE.STARTED))
             return dataClient;
         else return null;

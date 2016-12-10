@@ -3,9 +3,8 @@ package org.apache.hadoop.tools.posum.common.records.call;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
-import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
+import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;

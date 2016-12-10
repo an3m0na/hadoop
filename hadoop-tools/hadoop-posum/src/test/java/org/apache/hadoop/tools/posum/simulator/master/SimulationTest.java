@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.simulator.master; 
 
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
-import org.apache.hadoop.tools.posum.database.client.DataBroker;
+import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.simulator.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.Before;
@@ -13,7 +13,7 @@ import org.mockito.MockitoAnnotations;
 public class SimulationTest { 
     private Simulation testSubject; 
 
-    private DataBroker dataBrokerMock;
+    private DataStore dataStoreMock;
     @Mock
     private JobBehaviorPredictor predictorMock;
  
@@ -21,8 +21,8 @@ public class SimulationTest {
     @Before 
     public void init() { 
         MockitoAnnotations.initMocks(this);
-        dataBrokerMock = Utils.mockDefaultWorkload();
-        testSubject = new Simulation(predictorMock, null, dataBrokerMock);
+        dataStoreMock = Utils.mockDefaultWorkload();
+        testSubject = new Simulation(predictorMock, null, dataStoreMock);
     } 
 
     @Test

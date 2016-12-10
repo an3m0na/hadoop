@@ -2,13 +2,12 @@ package org.apache.hadoop.tools.posum.test;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.impl.pb.JobIdPBImpl;
+import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.database.client.Database;
-import org.apache.hadoop.tools.posum.database.mock.HistorySnapshotBroker;
-import org.apache.hadoop.tools.posum.database.mock.HistorySnapshotBrokerImpl;
+import org.apache.hadoop.tools.posum.data.mock.data.HistorySnapshotStoreImpl;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 
@@ -135,10 +134,10 @@ public class Utils {
         }
     }
 
-    public static HistorySnapshotBrokerImpl mockDefaultWorkload(){
+    public static HistorySnapshotStoreImpl mockDefaultWorkload(){
         URL workloadUrl = Utils.class.getClassLoader().getResource("test_workload");
         if (workloadUrl == null)
             throw new RuntimeException("Default test workload folder was not found");
-        return new HistorySnapshotBrokerImpl(workloadUrl.getPath());
+        return new HistorySnapshotStoreImpl(workloadUrl.getPath());
     }
 }
