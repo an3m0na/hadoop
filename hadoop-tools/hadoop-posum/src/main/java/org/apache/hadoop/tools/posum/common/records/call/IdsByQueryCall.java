@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.call;
 
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
 import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
@@ -58,7 +58,7 @@ public abstract class IdsByQueryCall extends ReadFromCollectionCall<StringListPa
     public abstract void setSortDescending(boolean descending);
 
     @Override
-    public StringListPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
+    public StringListPayload execute(LockBasedDataStore dataStore, DatabaseReference db) {
         return StringListPayload.newInstance(dataStore.findIds(
                 db,
                 getEntityCollection(),

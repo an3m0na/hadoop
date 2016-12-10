@@ -2,11 +2,9 @@ package org.apache.hadoop.tools.posum.data.core;
 
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
-import org.apache.hadoop.tools.posum.data.core.DataExporter;
-import org.apache.hadoop.tools.posum.data.core.DataImporter;
 import org.apache.hadoop.tools.posum.data.mock.data.MockDataStoreImpl;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -29,7 +27,7 @@ public class TestDataImportExport {
     @Before
     public void setUp() throws Exception {
         dataStore = new MockDataStoreImpl();
-        db = Database.extractFrom(dataStore, DataEntityDB.getMain());
+        db = Database.extractFrom(dataStore, DatabaseReference.getMain());
         Utils.loadThreeDefaultAppsAndJobs(clusterTimestamp, db);
     }
 

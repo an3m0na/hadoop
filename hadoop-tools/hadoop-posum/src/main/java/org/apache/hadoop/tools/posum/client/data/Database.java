@@ -1,15 +1,15 @@
 package org.apache.hadoop.tools.posum.client.data;
 
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 
 public class Database {
 
     private final DataStore dataStore;
-    private DataEntityDB selectedDatabase;
+    private DatabaseReference selectedDatabase;
 
-    public Database(DataStore dataStore, DataEntityDB selectedDatabase) {
+    public Database(DataStore dataStore, DatabaseReference selectedDatabase) {
         this.dataStore = dataStore;
         this.selectedDatabase = selectedDatabase;
     }
@@ -22,11 +22,11 @@ public class Database {
         dataStore.clearDatabase(selectedDatabase);
     }
 
-    public DataEntityDB getTarget() {
+    public DatabaseReference getTarget() {
         return selectedDatabase;
     }
 
-    public static Database extractFrom(DataStore dataStore, DataEntityDB db){
+    public static Database extractFrom(DataStore dataStore, DatabaseReference db){
         return new Database(dataStore, db);
     }
 }

@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.data.mock.data;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.*;
@@ -50,38 +50,38 @@ public class TestHistorySnapshotStoreImpl {
         IdsByQueryCall getIds = IdsByQueryCall.newInstance(JOB_HISTORY, null, ID_FIELD, false);
 
         // check that finished jobs are there
-        List<String> jobIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        List<String> jobIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(6, jobIds.size());
 
         // check that their confs and counters are there
         getIds.setEntityCollection(JOB_CONF_HISTORY);
-        List<String> associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        List<String> associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(6, associatedIds.size());
         getIds.setEntityCollection(COUNTER_HISTORY);
         getIds.setQuery(QueryUtils.in(ID_FIELD, jobIds));
-        associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(6, associatedIds.size());
 
         //check that their tasks are there
         getIds.setEntityCollection(TASK_HISTORY);
         getIds.setQuery(QueryUtils.in("jobId", jobIds));
-        List<String> taskIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        List<String> taskIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(251, taskIds.size());
 
         //check that their tasks' counters are there
         getIds.setEntityCollection(COUNTER_HISTORY);
         getIds.setQuery(QueryUtils.in(ID_FIELD, taskIds));
-        associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(251, associatedIds.size());
 
         // check that running jobs are there
         getIds = IdsByQueryCall.newInstance(JOB, null, ID_FIELD, false);
-        jobIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        jobIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(2, jobIds.size());
         assertEquals("job_1470865342479_0007", jobIds.get(0));
         assertEquals("job_1470865342479_0008", jobIds.get(1));
         List<JobProfile> runningJobs = testSubject.executeDatabaseCall(
-                FindByQueryCall.newInstance(JOB, QueryUtils.in(ID_FIELD, jobIds)), DataEntityDB.getMain()
+                FindByQueryCall.newInstance(JOB, QueryUtils.in(ID_FIELD, jobIds)), DatabaseReference.getMain()
         ).getEntities();
         for (JobProfile runningJob : runningJobs) {
             assertEquals(Long.valueOf(0L), runningJob.getFinishTime());
@@ -90,27 +90,27 @@ public class TestHistorySnapshotStoreImpl {
         // check that their confs and counters are there
         getIds.setEntityCollection(JOB_CONF);
         getIds.setQuery(QueryUtils.in(ID_FIELD, jobIds));
-        associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(2, associatedIds.size());
         getIds.setEntityCollection(COUNTER);
         getIds.setQuery(QueryUtils.in(ID_FIELD, jobIds));
-        associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(0, associatedIds.size());
 
         //check that their tasks are there
         getIds.setEntityCollection(TASK);
         getIds.setQuery(QueryUtils.in("jobId", jobIds));
-        taskIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        taskIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(136, taskIds.size());
 
         //check that their finished tasks' counters are there
         getIds.setEntityCollection(COUNTER);
         getIds.setQuery(QueryUtils.in(ID_FIELD, taskIds));
-        associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         IdsByQueryCall getFinishedTaskIds = IdsByQueryCall.newInstance(TASK,
                 QueryUtils.and(QueryUtils.in("jobId", jobIds), QueryUtils.isNot("finishTime", 0L)), ID_FIELD, false);
         List<String> finishedTaskIds =
-                testSubject.executeDatabaseCall(getFinishedTaskIds, DataEntityDB.getMain()).getEntries();
+                testSubject.executeDatabaseCall(getFinishedTaskIds, DatabaseReference.getMain()).getEntries();
         assertArrayEquals(finishedTaskIds.toArray(), associatedIds.toArray());
 
     }
@@ -130,47 +130,47 @@ public class TestHistorySnapshotStoreImpl {
         IdsByQueryCall getIds = IdsByQueryCall.newInstance(JOB_HISTORY, null, ID_FIELD, false);
 
         // check that finished jobs are there
-        List<String> jobIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        List<String> jobIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(16, jobIds.size());
 
         // check that the finish time of the finished jobs are set
         IdsByQueryCall getUnfinishedJobs = IdsByQueryCall.newInstance(JOB_HISTORY, QueryUtils.is("finishTime", 0L));
-        List<String> unfinishedJobIds = testSubject.executeDatabaseCall(getUnfinishedJobs, DataEntityDB.getMain()).getEntries();
+        List<String> unfinishedJobIds = testSubject.executeDatabaseCall(getUnfinishedJobs, DatabaseReference.getMain()).getEntries();
         assertEquals(0, unfinishedJobIds.size());
 
         // check that their confs and counters are there
         getIds.setEntityCollection(JOB_CONF_HISTORY);
-        List<String> associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        List<String> associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(16, associatedIds.size());
         getIds.setEntityCollection(COUNTER_HISTORY);
         getIds.setQuery(QueryUtils.in(ID_FIELD, jobIds));
-        associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(16, associatedIds.size());
 
         //check that their tasks are there
         getIds.setEntityCollection(TASK_HISTORY);
         getIds.setQuery(QueryUtils.in("jobId", jobIds));
-        List<String> taskIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        List<String> taskIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(988, taskIds.size());
 
         //check that their tasks' counters are there
         getIds.setEntityCollection(COUNTER_HISTORY);
         getIds.setQuery(QueryUtils.in(ID_FIELD, taskIds));
-        associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(988, associatedIds.size());
 
         // check that there are no running jobs, confs, counters, or tasks
         getIds = IdsByQueryCall.newInstance(JOB, null, ID_FIELD, false);
-        jobIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        jobIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(0, jobIds.size());
         getIds.setEntityCollection(JOB_CONF);
-        associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(0, associatedIds.size());
         getIds.setEntityCollection(COUNTER);
-        associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(0, associatedIds.size());
         getIds.setEntityCollection(TASK);
-        associatedIds = testSubject.executeDatabaseCall(getIds, DataEntityDB.getMain()).getEntries();
+        associatedIds = testSubject.executeDatabaseCall(getIds, DatabaseReference.getMain()).getEntries();
         assertEquals(0, associatedIds.size());
     }
 } 

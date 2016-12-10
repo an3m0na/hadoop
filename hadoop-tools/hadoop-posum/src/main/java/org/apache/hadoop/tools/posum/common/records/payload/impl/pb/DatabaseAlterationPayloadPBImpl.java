@@ -3,16 +3,10 @@ package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DatabaseReferencePBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.DatabaseAlterationPayload;
-import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseAlterationPayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseAlterationPayloadProtoOrBuilder;
 
@@ -76,39 +70,39 @@ public class DatabaseAlterationPayloadPBImpl extends DatabaseAlterationPayload i
     }
 
     @Override
-    public DataEntityDB getSourceDB() {
+    public DatabaseReference getSourceDB() {
         DatabaseAlterationPayloadProtoOrBuilder p = viaProto ? proto : builder;
         if(!p.hasSource())
             return null;
-        return new DataEntityDBPBImpl(p.getSource());
+        return new DatabaseReferencePBImpl(p.getSource());
     }
 
     @Override
-    public void setSourceDB(DataEntityDB db) {
+    public void setSourceDB(DatabaseReference db) {
         maybeInitBuilder();
         if (db == null) {
             builder.clearSource();
             return;
         }
-        builder.setSource(((DataEntityDBPBImpl) db).getProto());
+        builder.setSource(((DatabaseReferencePBImpl) db).getProto());
     }
 
     @Override
-    public DataEntityDB getDestinationDB() {
+    public DatabaseReference getDestinationDB() {
         DatabaseAlterationPayloadProtoOrBuilder p = viaProto ? proto : builder;
         if(!p.hasDestination())
             return null;
-        return new DataEntityDBPBImpl(p.getDestination());
+        return new DatabaseReferencePBImpl(p.getDestination());
     }
 
     @Override
-    public void setDestinationDB(DataEntityDB db) {
+    public void setDestinationDB(DatabaseReference db) {
         maybeInitBuilder();
         if (db == null) {
             builder.clearDestination();
             return;
         }
-        builder.setDestination(((DataEntityDBPBImpl) db).getProto());
+        builder.setDestination(((DatabaseReferencePBImpl) db).getProto());
     }
 
 

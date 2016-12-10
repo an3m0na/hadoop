@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.call;
 
 import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
@@ -21,7 +21,7 @@ public abstract class RawDocumentsByQueryCall extends ReadFromCollectionCall<Sim
     public abstract void setQuery(DatabaseQuery query);
 
     @Override
-    public SimplePropertyPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
+    public SimplePropertyPayload execute(LockBasedDataStore dataStore, DatabaseReference db) {
         String documents = dataStore.getRawDocuments(db, getEntityCollection(), getQuery());
         return SimplePropertyPayload.newInstance("", documents);
     }

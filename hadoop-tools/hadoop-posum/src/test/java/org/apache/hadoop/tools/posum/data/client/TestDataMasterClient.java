@@ -4,7 +4,7 @@ import org.apache.hadoop.tools.posum.client.data.DataMasterClient;
 import org.apache.hadoop.tools.posum.common.records.call.*;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
@@ -103,7 +103,7 @@ public class TestDataMasterClient extends TestDataStore {
                 logId
         );
         LogEntry<SimplePropertyPayload> log =
-                client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntity();
+                client.executeDatabaseCall(getLog, DatabaseReference.getLogs()).getEntity();
         assertEquals(logId, log.getId());
         assertEquals(timestamp, log.getTimestamp());
         assertEquals(message, log.getDetails().getValue());
@@ -131,7 +131,7 @@ public class TestDataMasterClient extends TestDataStore {
                 )
         );
         List<LogEntry> logs =
-                client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntities();
+                client.executeDatabaseCall(getLog, DatabaseReference.getLogs()).getEntities();
         assertEquals(1, logs.size());
         assertEquals(secondId, logs.get(0).getId());
 
@@ -143,7 +143,7 @@ public class TestDataMasterClient extends TestDataStore {
                         QueryUtils.lessThan("timestamp", secondTimestamp)
                 )
         );
-        logs = client.executeDatabaseCall(getLog, DataEntityDB.getLogs()).getEntities();
+        logs = client.executeDatabaseCall(getLog, DatabaseReference.getLogs()).getEntities();
         assertEquals(1, logs.size());
         assertEquals(firstId, logs.get(0).getId());
     }
