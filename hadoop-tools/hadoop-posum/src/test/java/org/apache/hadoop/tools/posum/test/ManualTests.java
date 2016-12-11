@@ -2,12 +2,9 @@ package org.apache.hadoop.tools.posum.test;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetUtils;
-import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.data.master.DataMasterContext;
-import org.apache.hadoop.tools.posum.data.monitor.HadoopAPIClient;
-import org.apache.hadoop.tools.posum.data.monitor.HadoopMonitor;
+import org.apache.hadoop.tools.posum.data.monitor.cluster.ClusterMonitor;
 import org.apache.hadoop.tools.posum.data.core.DataStoreImpl;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -15,9 +12,6 @@ import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class ManualTests {
     @Test
@@ -90,7 +84,7 @@ public class ManualTests {
         DataStoreImpl dataStore = new DataStoreImpl(conf);
         DataMasterContext context = new DataMasterContext();
         context.setDataStore(dataStore);
-        HadoopMonitor monitor = new HadoopMonitor(context);
+        ClusterMonitor monitor = new ClusterMonitor(context);
         monitor.start();
         try {
             Thread.sleep(100000);
