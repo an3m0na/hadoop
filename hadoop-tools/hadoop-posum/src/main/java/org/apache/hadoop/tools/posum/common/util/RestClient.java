@@ -90,7 +90,7 @@ public class RestClient {
 
     public <T> T getInfo(Class<T> tClass, TrackingUI trackingUI, String path, String[] args) {
         ClientResponse response;
-        String destination = String.format(trackingUI.root + path, args);
+        String destination = String.format(trackingUI.root + path, (Object[]) args);
         try {
             WebResource resource = client.resource(trackingUI.address).path(destination);
             response = resource.head();

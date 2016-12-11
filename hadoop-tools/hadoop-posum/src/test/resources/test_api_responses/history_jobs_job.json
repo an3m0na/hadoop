@@ -1,0 +1,38 @@
+{
+  "job" : {
+    "submitTime":  1326381446500,
+    "avgReduceTime" : 124961,
+    "failedReduceAttempts" : 0,
+    "state" : "SUCCEEDED",
+    "successfulReduceAttempts" : 1,
+    "acls" : [
+      {
+        "value" : " ",
+        "name" : "mapreduce.job.acl-modify-job"
+      },
+      {
+        "value" : " ",
+        "name" : "mapreduce.job.acl-view-job"
+      }
+    ],
+    "user" : "user1",
+    "reducesTotal" : 1,
+    "mapsCompleted" : 1,
+    "startTime" : 1326381446529,
+    "id" : "job_1326821518301_0005",
+    "avgMapTime" : 2638,
+    "successfulMapAttempts" : 1,
+    "name" : "Sleep job",
+    "avgShuffleTime" : 2540,
+    "reducesCompleted" : 1,
+    "diagnostics" : "",
+    "failedMapAttempts" : 0,
+    "avgMergeTime" : 2589,
+    "killedReduceAttempts" : 0,
+    "mapsTotal" : 1,
+    "queue" : "a1",
+    "uberized" : false,
+    "killedMapAttempts" : 0,
+    "finishTime" : 1326381582106
+  }
+}

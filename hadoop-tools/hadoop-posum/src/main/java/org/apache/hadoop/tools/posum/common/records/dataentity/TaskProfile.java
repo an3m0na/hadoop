@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.dataentity;
 
+import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 
 public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
@@ -24,7 +25,7 @@ public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
 
     void setFinishTime(Long finishTime);
 
-    void setType(String type);
+    void setType(TaskType type);
 
     void setReportedProgress(Float reportedProgress);
 
@@ -69,4 +70,8 @@ public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
     void setHttpAddress(String address);
 
     String getHttpAddress();
+
+    TaskState getState();
+
+    void setState(TaskState state);
 }

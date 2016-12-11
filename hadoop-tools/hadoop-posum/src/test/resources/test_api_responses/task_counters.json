@@ -1,0 +1,184 @@
+{
+  "jobTaskCounters": {
+    "id": "task_1326821518301_0005_m_0",
+    "taskCounterGroup": [
+      {
+        "counterGroupName": "Shuffle Errors",
+        "counter": [
+          {
+            "value": 0,
+            "name": "BAD_ID"
+          },
+          {
+            "value": 0,
+            "name": "CONNECTION"
+          },
+          {
+            "value": 0,
+            "name": "IO_ERROR"
+          },
+          {
+            "value": 0,
+            "name": "WRONG_LENGTH"
+          },
+          {
+            "value": 0,
+            "name": "WRONG_MAP"
+          },
+          {
+            "value": 0,
+            "name": "WRONG_REDUCE"
+          }
+        ]
+      },
+      {
+        "counterGroupName": "org.apache.hadoop.mapreduce.FileSystemCounter",
+        "counter": [
+          {
+            "value": 2483,
+            "name": "FILE_BYTES_READ"
+          },
+          {
+            "value": 108525,
+            "name": "FILE_BYTES_WRITTEN"
+          },
+          {
+            "value": 0,
+            "name": "FILE_READ_OPS"
+          },
+          {
+            "value": 0,
+            "name": "FILE_LARGE_READ_OPS"
+          },
+          {
+            "value": 0,
+            "name": "FILE_WRITE_OPS"
+          },
+          {
+            "value": 48,
+            "name": "HDFS_BYTES_READ"
+          },
+          {
+            "value": 0,
+            "name": "HDFS_BYTES_WRITTEN"
+          },
+          {
+            "value": 1,
+            "name": "HDFS_READ_OPS"
+          },
+          {
+            "value": 0,
+            "name": "HDFS_LARGE_READ_OPS"
+          },
+          {
+            "value": 0,
+            "name": "HDFS_WRITE_OPS"
+          }
+        ]
+      },
+      {
+        "counterGroupName": "org.apache.hadoop.mapreduce.TaskCounter",
+        "counter": [
+          {
+            "value": 1,
+            "name": "MAP_INPUT_RECORDS"
+          },
+          {
+            "value": 1200,
+            "name": "MAP_OUTPUT_RECORDS"
+          },
+          {
+            "value": 4800,
+            "name": "MAP_OUTPUT_BYTES"
+          },
+          {
+            "value": 2235,
+            "name": "MAP_OUTPUT_MATERIALIZED_BYTES"
+          },
+          {
+            "value": 48,
+            "name": "SPLIT_RAW_BYTES"
+          },
+          {
+            "value": 0,
+            "name": "COMBINE_INPUT_RECORDS"
+          },
+          {
+            "value": 0,
+            "name": "COMBINE_OUTPUT_RECORDS"
+          },
+          {
+            "value": 1200,
+            "name": "REDUCE_INPUT_GROUPS"
+          },
+          {
+            "value": 2235,
+            "name": "REDUCE_SHUFFLE_BYTES"
+          },
+          {
+            "value": 1200,
+            "name": "REDUCE_INPUT_RECORDS"
+          },
+          {
+            "value": 0,
+            "name": "REDUCE_OUTPUT_RECORDS"
+          },
+          {
+            "value": 2400,
+            "name": "SPILLED_RECORDS"
+          },
+          {
+            "value": 1,
+            "name": "SHUFFLED_MAPS"
+          },
+          {
+            "value": 0,
+            "name": "FAILED_SHUFFLE"
+          },
+          {
+            "value": 1,
+            "name": "MERGED_MAP_OUTPUTS"
+          },
+          {
+            "value": 113,
+            "name": "GC_TIME_MILLIS"
+          },
+          {
+            "value": 1830,
+            "name": "CPU_MILLISECONDS"
+          },
+          {
+            "value": 478068736,
+            "name": "PHYSICAL_MEMORY_BYTES"
+          },
+          {
+            "value": 2159284224,
+            "name": "VIRTUAL_MEMORY_BYTES"
+          },
+          {
+            "value": 378863616,
+            "name": "COMMITTED_HEAP_BYTES"
+          }
+        ]
+      },
+      {
+        "counterGroupName": "org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter",
+        "counter": [
+          {
+            "value": 0,
+            "name": "BYTES_READ"
+          }
+        ]
+      },
+      {
+        "counterGroupName": "org.apache.hadoop.mapreduce.lib.output.FileOutputFormatCounter",
+        "counter": [
+          {
+            "value": 0,
+            "name": "BYTES_WRITTEN"
+          }
+        ]
+      }
+    ]
+  }
+}

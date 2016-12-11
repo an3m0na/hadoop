@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.*;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.CountersProxyPBImpl;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
@@ -19,7 +19,6 @@ import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.util.Records;
 
-import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.util.*;
 
@@ -27,26 +26,24 @@ public class HadoopAPIClient {
 
     private static Log logger = LogFactory.getLog(HadoopAPIClient.class);
 
-    private final RestClient restClient;
-    private final Configuration conf;
+    private RestClient restClient;
     private final ObjectMapper mapper;
 
-    private static class JobCountersWrapper {
+    static class JobCountersWrapper {
         public CountersProxyPBImpl jobCounters;
     }
 
-    private static class TaskCountersWrapper {
+    static class TaskCountersWrapper {
         public CountersProxyPBImpl jobTaskCounters;
     }
 
 
-    public HadoopAPIClient(Configuration conf) {
+    public HadoopAPIClient() {
         restClient = new RestClient();
-        this.conf = conf;
         mapper = new ObjectMapper();
     }
 
-    public List<AppProfile> getAppsInfo() {
+    List<AppProfile> getAppsInfo() {
         try {
             String rawString = restClient.getInfo(String.class,
                     RestClient.TrackingUI.RM, "cluster/apps", new String[]{});
@@ -82,7 +79,7 @@ public class HadoopAPIClient {
         }
     }
 
-    public boolean checkAppFinished(AppProfile app) {
+    boolean checkAppFinished(AppProfile app) {
         try {
             String rawString = restClient.getInfo(String.class,
                     RestClient.TrackingUI.RM, "cluster/apps/%s", new String[]{app.getId()});
@@ -106,7 +103,7 @@ public class HadoopAPIClient {
         return false;
     }
 
-    public JobProfile getFinishedJobInfo(String appId) {
+    JobProfile getFinishedJobInfo(String appId) {
         ApplicationId realAppId = Utils.parseApplicationId(appId);
         JobId expectedRealJobId = Records.newRecord(JobId.class);
         expectedRealJobId.setAppId(realAppId);
@@ -144,7 +141,7 @@ public class HadoopAPIClient {
         }
     }
 
-    public JobProfile getFinishedJobInfo(String appId, String jobId, JobProfile previousJob) {
+    JobProfile getFinishedJobInfo(String appId, String jobId, JobProfile previousJob) {
         try {
             String rawString = restClient.getInfo(String.class,
                     RestClient.TrackingUI.HISTORY, "jobs/%s", new String[]{jobId});
@@ -166,10 +163,12 @@ public class HadoopAPIClient {
             job.setUser(rawJob.get("user").asText());
             job.setQueue(rawJob.get("queue").asText());
             job.setState(JobState.valueOf(rawJob.get("state").asText()));
-            job.setCompletedMaps(rawJob.get("mapsCompleted").asInt());
-            job.setCompletedReduces(rawJob.get("reducesCompleted").asInt());
             job.setTotalMapTasks(rawJob.get("mapsTotal").asInt());
             job.setTotalReduceTasks(rawJob.get("reducesTotal").asInt());
+            job.setCompletedMaps(rawJob.get("mapsCompleted").asInt());
+            job.setCompletedReduces(rawJob.get("reducesCompleted").asInt());
+            job.setMapProgress(100 * (job.getTotalMapTasks() <= 0 ? 1f : job.getCompletedMaps() / job.getTotalMapTasks()));
+            job.setReduceProgress(100 * (job.getTotalReduceTasks() <= 0 ? 1f : job.getCompletedReduces() / job.getTotalReduceTasks()));
             job.setUberized(rawJob.get("uberized").asBoolean());
             job.setAvgMapDuration(rawJob.get("avgMapTime").asLong());
             job.setAvgReduceTime(rawJob.get("avgReduceTime").asLong());
@@ -183,7 +182,7 @@ public class HadoopAPIClient {
         }
     }
 
-    public JobProfile getRunningJobInfo(String appId, String queue, JobProfile previousJob) {
+    JobProfile getRunningJobInfo(String appId, String queue, JobProfile previousJob) {
         try {
             String rawString = restClient.getInfo(String.class,
                     RestClient.TrackingUI.AM, "jobs", new String[]{appId});
@@ -200,10 +199,12 @@ public class HadoopAPIClient {
                 throw new PosumException("Unexpected number of jobs for mapreduce app " + appId);
             JsonNode rawJob = rawJobs.get(0);
             JobProfile job = previousJob != null ? previousJob : Records.newRecord(JobProfile.class);
+            job.setId(rawJob.get("id").asText());
             job.setAppId(appId);
+            job.setName(rawJob.get("name").asText());
             job.setQueue(queue);
-            job.setSubmitTime(rawJob.get("startTime").asLong());
-            job.setStartTime(job.getSubmitTime());
+            job.setUser(rawJob.get("user").asText());
+            job.setStartTime(rawJob.get("startTime").asLong());
             job.setFinishTime(rawJob.get("finishTime").asLong());
             job.setState(JobState.valueOf(rawJob.get("state").asText()));
             job.setMapProgress(new Double(rawJob.get("mapProgress").asDouble()).floatValue());
@@ -220,7 +221,7 @@ public class HadoopAPIClient {
         }
     }
 
-    public List<TaskProfile> getFinishedTasksInfo(String jobId) {
+    List<TaskProfile> getFinishedTasksInfo(String jobId) {
         try {
             String rawString = restClient.getInfo(String.class,
                     RestClient.TrackingUI.HISTORY, "jobs/%s/tasks", new String[]{jobId});
@@ -239,10 +240,11 @@ public class HadoopAPIClient {
                 TaskProfile task = Records.newRecord(TaskProfile.class);
                 task.setId(rawTask.get("id").asText());
                 task.setJobId(jobId);
-                task.setType(rawTask.get("type").asText());
+                task.setType(TaskType.valueOf(rawTask.get("type").asText()));
                 task.setStartTime(rawTask.get("startTime").asLong());
                 task.setFinishTime(rawTask.get("finishTime").asLong());
                 task.setReportedProgress(new Double(rawTask.get("progress").asDouble()).floatValue());
+                task.setState(TaskState.valueOf(rawTask.get("state").asText()));
                 task.setSuccessfulAttempt(rawTask.get("successfulAttempt").asText());
                 tasks.add(task);
             }
@@ -253,7 +255,7 @@ public class HadoopAPIClient {
         }
     }
 
-    public List<TaskProfile> getRunningTasksInfo(JobProfile job) {
+    List<TaskProfile> getRunningTasksInfo(JobProfile job) {
         try {
             String rawString = restClient.getInfo(String.class,
                     RestClient.TrackingUI.AM, "jobs/%s/tasks", new String[]{job.getAppId(), job.getId()});
@@ -273,10 +275,11 @@ public class HadoopAPIClient {
                 task.setId(rawTask.get("id").asText());
                 task.setAppId(job.getAppId());
                 task.setJobId(job.getId());
-                task.setType(rawTask.get("type").asText());
+                task.setType(TaskType.valueOf(rawTask.get("type").asText()));
                 task.setStartTime(rawTask.get("startTime").asLong());
                 task.setFinishTime(rawTask.get("finishTime").asLong());
                 task.setReportedProgress(new Double(rawTask.get("progress").asDouble()).floatValue());
+                task.setState(TaskState.valueOf(rawTask.get("state").asText()));
                 tasks.add(task);
             }
             return tasks;
@@ -286,7 +289,7 @@ public class HadoopAPIClient {
         }
     }
 
-    public boolean addRunningAttemptInfo(TaskProfile task) {
+    boolean addRunningAttemptInfo(TaskProfile task) {
         try {
             String rawString = restClient.getInfo(String.class,
                     RestClient.TrackingUI.AM, "jobs/%s/tasks/%s/attempts", new String[]{task.getAppId(), task.getJobId(), task.getId()});
@@ -324,7 +327,7 @@ public class HadoopAPIClient {
         return false;
     }
 
-    public void addFinishedAttemptInfo(TaskProfile task) {
+    void addFinishedAttemptInfo(TaskProfile task) {
         try {
             String rawString = restClient.getInfo(String.class,
                     RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/attempts", new String[]{task.getJobId(), task.getId()});
@@ -359,7 +362,7 @@ public class HadoopAPIClient {
         }
     }
 
-    public CountersProxy getRunningJobCounters(String appId, String jobId) {
+    CountersProxy getRunningJobCounters(String appId, String jobId) {
         try {
             JobCountersWrapper wrapper = restClient.getInfo(JobCountersWrapper.class,
                     RestClient.TrackingUI.AM, "jobs/%s/counters", new String[]{appId, jobId});
@@ -372,7 +375,7 @@ public class HadoopAPIClient {
         return null;
     }
 
-    public CountersProxy getRunningTaskCounters(String appId, String jobId, String taskId) {
+    CountersProxy getRunningTaskCounters(String appId, String jobId, String taskId) {
         try {
             TaskCountersWrapper wrapper = restClient.getInfo(TaskCountersWrapper.class,
                     RestClient.TrackingUI.AM, "jobs/%s/tasks/%s/counters", new String[]{appId, jobId, taskId});
@@ -385,32 +388,7 @@ public class HadoopAPIClient {
         return null;
     }
 
-    public Map<String, String> getJobConfProperties(String appId, String jobId, Map<String, String> requested) {
-
-        try {
-            Map<String, String> ret = new HashMap<>(requested.size());
-            String rawString = restClient.getInfo(String.class,
-                    RestClient.TrackingUI.AM, "jobs/%s/conf", new String[]{appId, jobId});
-            if (rawString == null)
-                return null;
-            JsonNode wrapper = mapper.readTree(rawString);
-            JsonNode properties = wrapper.get("conf").get("property");
-            for (int i = 0; i < properties.size(); i++) {
-                JsonNode property = properties.get(i);
-                String requestedLabel = requested.get(property.get("name").asText());
-                if (requestedLabel != null)
-                    ret.put(requestedLabel, property.get("value").asText());
-            }
-            return ret;
-        } catch (WebApplicationException e) {
-            logger.error("Could not get job conf for " + jobId, e);
-        } catch (IOException e) {
-            logger.debug("Exception parsing JSON string", e);
-        }
-        return null;
-    }
-
-    public JobConfProxy getFinishedJobConf(String jobId) {
+    JobConfProxy getFinishedJobConf(String jobId) {
         try {
             String rawString = restClient.getInfo(String.class,
                     RestClient.TrackingUI.HISTORY, "jobs/%s/conf", new String[]{jobId});
@@ -439,7 +417,7 @@ public class HadoopAPIClient {
         }
     }
 
-    public CountersProxy getFinishedJobCounters(String jobId) {
+    CountersProxy getFinishedJobCounters(String jobId) {
         try {
             JobCountersWrapper wrapper = restClient.getInfo(JobCountersWrapper.class,
                     RestClient.TrackingUI.HISTORY, "jobs/%s/counters", new String[]{jobId});
@@ -452,7 +430,7 @@ public class HadoopAPIClient {
         return null;
     }
 
-    public CountersProxy getFinishedTaskCounters(String jobId, String taskId) {
+    CountersProxy getFinishedTaskCounters(String jobId, String taskId) {
         try {
             TaskCountersWrapper wrapper = restClient.getInfo(TaskCountersWrapper.class,
                     RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/counters", new String[]{jobId, taskId});

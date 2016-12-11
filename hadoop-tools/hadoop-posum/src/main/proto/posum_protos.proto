@@ -144,10 +144,20 @@ message TaskProfileProto {
     optional int64 reduceTime = 15;
     optional bool local = 16;
     optional string httpAddress = 17;
+    optional TaskStateProto state = 18;
 
     enum TaskTypeProto {
         TYPE_MAP = 0;
         TYPE_REDUCE = 1;
+    }
+
+    enum TaskStateProto {
+        STATE_NEW = 0;
+        STATE_SCHEDULED = 1;
+        STATE_RUNNING = 2;
+        STATE_SUCCEEDED = 3;
+        STATE_FAILED = 4;
+        STATE_KILLED = 5;
     }
 }
 

@@ -15,6 +15,7 @@
         <mongodb.version>3.2.1</mongodb.version>
         <mongojack.version>2.6.0</mongojack.version>
         <mockito.version>1.10.19</mockito.version>
+        <hamcrest.version>1.3</hamcrest.version>
     </properties>
     <name>Apache Hadoop PortfoliO SchedUler for Mapreduce</name>
     <packaging>jar</packaging>
@@ -75,6 +76,11 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <version>${hamcrest.version}</version>
         </dependency>
         <dependency>
             <groupId>com.codahale.metrics</groupId>

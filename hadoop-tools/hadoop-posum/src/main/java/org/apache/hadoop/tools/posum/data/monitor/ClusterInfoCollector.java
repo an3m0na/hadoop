@@ -49,7 +49,7 @@ public class ClusterInfoCollector {
 
     public ClusterInfoCollector(Configuration conf, Database db) {
         this.db = db;
-        this.api = new HadoopAPIClient(conf);
+        this.api = new HadoopAPIClient();
         this.conf = conf;
         this.auditEnabled = conf.getBoolean(PosumConfiguration.MONITOR_KEEP_HISTORY,
                 PosumConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
