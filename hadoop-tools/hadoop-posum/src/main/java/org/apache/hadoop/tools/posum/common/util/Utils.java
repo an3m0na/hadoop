@@ -430,11 +430,6 @@ public class Utils {
             if (FileSystemCounter.class.getName().equals(group.getCounterGroupName()))
                 for (CounterInfoPayload counter : group.getCounter()) {
                     switch (counter.getName()) {
-                        case "FILE_BYTES_READ":
-                            if (task.getType().equals(TaskType.MAP))
-                                task.setOutputBytes(task.getOutputBytes() +
-                                        counter.getTotalCounterValue());
-                            break;
                         case "HDFS_BYTES_READ":
                             if (task.getType().equals(TaskType.MAP)) {
                                 task.setInputBytes(task.getInputBytes() +
