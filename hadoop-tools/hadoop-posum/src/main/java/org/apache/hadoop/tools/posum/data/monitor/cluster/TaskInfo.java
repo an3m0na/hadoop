@@ -9,6 +9,10 @@ class TaskInfo {
     private List<TaskProfile> tasks;
     private List<CountersProxy> counters;
 
+    TaskInfo(){
+
+    }
+
     TaskInfo(List<TaskProfile> tasks, List<CountersProxy> counters) {
         this.tasks = tasks;
         this.counters = counters;

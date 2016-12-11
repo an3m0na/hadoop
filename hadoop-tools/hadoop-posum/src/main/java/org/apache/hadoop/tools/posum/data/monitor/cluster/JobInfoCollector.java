@@ -55,13 +55,13 @@ class JobInfoCollector {
         if (profile == null) {
             // if not found, force the reading of the configuration
             try {
-                logger.debug("Forcing fetch of profile info from conf for " + app.getId());
+                logger.debug("Forcing fetch of job info from conf for " + app.getId());
                 info = getSubmittedJobInfo(app.getId(), app.getUser());
             } catch (Exception e) {
-                logger.debug("Could not retrieve profile info for app " + app.getId(), e);
+                logger.debug("Could not retrieve job info for app " + app.getId(), e);
             }
         }
-        // update profile
+        // update job
         profile = api.getRunningJobInfo(app.getId(), app.getQueue(), profile);
         if (profile == null)
             // job might have finished; return
@@ -88,6 +88,8 @@ class JobInfoCollector {
 
         CountersProxy counters = api.getFinishedJobCounters(profile.getId());
         info.setJobCounters(counters);
+        Utils.updateJobStatisticsFromCounters(profile, counters);
+
         return info;
     }
 
@@ -96,7 +98,7 @@ class JobInfoCollector {
         JobForAppCall getJobForApp = JobForAppCall.newInstance(appId, app.getUser());
         JobProfile job = db.executeDatabaseCall(getJobForApp).getEntity();
         if (job == null) {
-            // there is no running record of the profile
+            // there is no running record of the job
             job = api.getFinishedJobInfo(appId);
         } else {
             // update the running info with the history info
@@ -129,11 +131,11 @@ class JobInfoCollector {
                 user != null ? user : UserGroupInformation.getCurrentUser().getUserName());
         confPath = fs.makeQualified(confPath);
 
-        //DANGER We assume there can only be one profile / application
+        //DANGER We assume there can only be one job / application
         Path jobConfDir = new Path(confPath,
                 Utils.composeJobId(appId.getClusterTimestamp(), appId.getId()).toString());
         logger.debug("Checking file path for conf: " + jobConfDir);
-        Path jobConfPath = new Path(jobConfDir, "profile.xml");
+        Path jobConfPath = new Path(jobConfDir, "job.xml");
         Configuration jobConf = new JobConf(false);
         jobConf.addResource(fs.open(jobConfPath), jobConfPath.toString());
         JobConfProxy proxy = Records.newRecord(JobConfProxy.class);
@@ -149,7 +151,7 @@ class JobInfoCollector {
         Path jobConfDir;
         try {
             jobConfDir = new Path(new URI(jobConfDirPath));
-            //DANGER We assume there can only be one profile / application
+            //DANGER We assume there can only be one job / application
             return getJobProfileFromConf(
                     appId,
                     Utils.composeJobId(appId.getClusterTimestamp(), appId.getId()),

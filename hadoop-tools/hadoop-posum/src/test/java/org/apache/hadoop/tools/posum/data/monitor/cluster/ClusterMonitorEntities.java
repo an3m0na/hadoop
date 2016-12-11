@@ -43,7 +43,7 @@ class ClusterMonitorEntities {
         RUNNING_APP.setQueue("a1");
         RUNNING_APP.setUser("user1");
         RUNNING_APP.setState(YarnApplicationState.RUNNING);
-        RUNNING_APP.setName("Sleep profile");
+        RUNNING_APP.setName("Sleep job");
         RUNNING_APP.setStartTime(1326824544552L);
         RUNNING_APP.setTrackingUI(RestClient.TrackingUI.AM);
         RUNNING_APP.setStatus(FinalApplicationStatus.UNDEFINED);
@@ -66,7 +66,7 @@ class ClusterMonitorEntities {
         RUNNING_JOB.setFinishTime(0L);
         RUNNING_JOB.setQueue("a1");
         RUNNING_JOB.setUser("user1");
-        RUNNING_JOB.setName("Sleep profile");
+        RUNNING_JOB.setName("Sleep job");
         RUNNING_JOB.setStartTime(1326381446529L);
         RUNNING_JOB.setUberized(false);
         RUNNING_JOB.setTotalMapTasks(1);

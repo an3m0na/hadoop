@@ -16,8 +16,10 @@ class TaskInfoCollector {
         this.api = api;
     }
 
-    List<TaskProfile> getFinishedTaskInfo(JobProfile job) {
+    TaskInfo getFinishedTaskInfo(JobProfile job) {
         List<TaskProfile> tasks = api.getFinishedTasksInfo(job.getId());
+        List<CountersProxy> countersList = new ArrayList<>(tasks.size());
+
         for (TaskProfile task : tasks) {
             api.addFinishedAttemptInfo(task);
             task.setAppId(job.getAppId());
@@ -26,39 +28,27 @@ class TaskInfoCollector {
                 if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
                     task.setLocal(true);
             }
-        }
-        return tasks;
-    }
-
-    List<CountersProxy> updateFinishedTasksFromCounters(List<TaskProfile> tasks) {
-        List<CountersProxy> countersList = new ArrayList<>(tasks.size());
-        for (TaskProfile task : tasks) {
             CountersProxy counters = api.getFinishedTaskCounters(task.getJobId(), task.getId());
             if (counters != null) {
                 Utils.updateTaskStatisticsFromCounters(task, counters);
                 countersList.add(counters);
             }
         }
-        return countersList;
+        return new TaskInfo(tasks, countersList);
     }
 
-    List<TaskProfile> getRunningTaskInfo(JobProfile job) {
+    TaskInfo getRunningTaskInfo(JobProfile job) {
         List<TaskProfile> tasks = api.getRunningTasksInfo(job);
         if (tasks == null) {
             return null;
         }
+        List<CountersProxy> countersList = new ArrayList<>(tasks.size());
+
         for (TaskProfile task : tasks) {
             task.setAppId(job.getAppId());
             if (!api.addRunningAttemptInfo(task)) {
                 return null;
             }
-        }
-        return tasks;
-    }
-
-    List<CountersProxy> updateRunningTasksFromCounters(List<TaskProfile> tasks) {
-        List<CountersProxy> countersList = new ArrayList<>(tasks.size());
-        for (TaskProfile task : tasks) {
             CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
             if (counters == null) {
                 return null;
@@ -66,6 +56,6 @@ class TaskInfoCollector {
             Utils.updateTaskStatisticsFromCounters(task, counters);
             countersList.add(counters);
         }
-        return countersList;
+        return new TaskInfo(tasks, countersList);
     }
 }
