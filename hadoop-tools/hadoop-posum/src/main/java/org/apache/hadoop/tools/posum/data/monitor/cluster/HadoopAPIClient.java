@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.data.monitor;
+package org.apache.hadoop.tools.posum.data.monitor.cluster;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

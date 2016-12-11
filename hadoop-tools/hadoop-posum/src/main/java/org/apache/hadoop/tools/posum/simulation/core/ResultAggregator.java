@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class ResultAggregator implements Runnable {
-    private static Log logger = LogFactory.getLog(SimulatorImpl.class);
+    private static Log logger = LogFactory.getLog(ResultAggregator.class);
 
 
     private volatile boolean exit = false;
