@@ -52,7 +52,6 @@ public class TestHadoopAPIClient {
         testSubject = new HadoopAPIClient();
         MockitoAnnotations.initMocks(this);
         entities = new ClusterMonitorEntities();
-
     }
 
     @Test
@@ -65,7 +64,7 @@ public class TestHadoopAPIClient {
         when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("cluster/apps"), any(String[].class)))
                 .thenReturn(Utils.getApiJson("apps.json"));
         ret = testSubject.getAppsInfo();
-        assertThat(ret, containsInAnyOrder(entities.APPS));
+        assertThat(ret, containsInAnyOrder(entities.FINISHED_APPS));
     }
 
     @Test
