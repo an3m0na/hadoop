@@ -1,30 +1,19 @@
 package org.apache.hadoop.tools.posum.data.monitor.cluster;
 
-import org.apache.hadoop.tools.posum.client.data.Database;
-import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
-import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.COUNTER;
-import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.HISTORY;
-import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
-import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
-
-public class TaskInfoCollector {
+class TaskInfoCollector {
 
     private HadoopAPIClient api;
-    private Database db;
 
-    TaskInfoCollector(HadoopAPIClient api, Database db) {
+    TaskInfoCollector(HadoopAPIClient api) {
         this.api = api;
-        this.db = db;
     }
 
     List<TaskProfile> getFinishedTaskInfo(JobProfile job) {
