@@ -17,6 +17,13 @@ public abstract class CounterInfoPayload implements Payload {
         return payload;
     }
 
+    public static CounterInfoPayload newInstance(String name, long value) {
+        CounterInfoPayload payload = Records.newRecord(CounterInfoPayload.class);
+        payload.setName(name);
+        payload.setTotalCounterValue(value);
+        return payload;
+    }
+
     public abstract long getReduceCounterValue();
 
     public abstract void setReduceCounterValue(long reduce);

@@ -64,24 +64,24 @@ public class ManualTests {
         }
     }
 
-    @Test
-    @Ignore
-    public void testHadoopAPIClient() {
-        HadoopAPIClient apiClient = new HadoopAPIClient(PosumConfiguration.newInstance());
-        List<AppProfile> apps = apiClient.getAppsInfo();
-        System.out.println(apps);
-        for (AppProfile app : apps) {
-            if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-                System.out.println("For job: " + app.getId());
-                Map<String, String> requested = new HashMap<>(2);
-                requested.put("mapreduce.input.fileinputformat.inputdir", "inputdir");
-                requested.put("mapreduce.input.fileinputformat.numinputfiles", "numinputfiles");
-                Map<String, String> properties = apiClient.getJobConfProperties(app.getId(), app.getId(), requested);
-                System.out.println("Input dir is: " + properties.get("inputdir"));
-                System.out.println("Input files are: " + properties.get("numinputfiles"));
-            }
-        }
-    }
+//    @Test
+//    @Ignore
+//    public void testHadoopAPIClient() {
+//        HadoopAPIClient apiClient = new HadoopAPIClient();
+//        List<AppProfile> apps = apiClient.getAppsInfo();
+//        System.out.println(apps);
+//        for (AppProfile app : apps) {
+//            if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
+//                System.out.println("For job: " + app.getId());
+//                Map<String, String> requested = new HashMap<>(2);
+//                requested.put("mapreduce.input.fileinputformat.inputdir", "inputdir");
+//                requested.put("mapreduce.input.fileinputformat.numinputfiles", "numinputfiles");
+//                Map<String, String> properties = apiClient.getJobConfProperties(app.getId(), app.getId(), requested);
+//                System.out.println("Input dir is: " + properties.get("inputdir"));
+//                System.out.println("Input files are: " + properties.get("numinputfiles"));
+//            }
+//        }
+//    }
 
     @Test
     @Ignore
