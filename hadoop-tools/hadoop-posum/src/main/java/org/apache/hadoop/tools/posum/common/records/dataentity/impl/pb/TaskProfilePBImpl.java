@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.yarn.proto.PosumProtos.TaskProfileProto;
@@ -155,13 +156,13 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     }
 
     @Override
-    public void setType(String type) {
+    public void setType(TaskType type) {
         maybeInitBuilder();
         if (type == null) {
             builder.clearType();
             return;
         }
-        builder.setType(TaskProfileProto.TaskTypeProto.valueOf("TYPE_" + type));
+        builder.setType(TaskProfileProto.TaskTypeProto.valueOf("TYPE_" + type.name()));
     }
 
     @Override
@@ -330,5 +331,23 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
         if (!p.hasHttpAddress())
             return null;
         return p.getHttpAddress();
+    }
+
+    @Override
+    public TaskState getState() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasState())
+            return null;
+        return TaskState.valueOf(p.getState().name().substring("STATE_".length()));
+    }
+
+    @Override
+    public void setState(TaskState state) {
+        maybeInitBuilder();
+        if (state == null) {
+            builder.clearState();
+            return;
+        }
+        builder.setState(TaskProfileProto.TaskStateProto.valueOf("STATE_" + state.name()));
     }
 }

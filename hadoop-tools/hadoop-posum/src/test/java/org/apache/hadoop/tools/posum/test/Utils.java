@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.test;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.impl.pb.JobIdPBImpl;
 import org.apache.hadoop.tools.posum.client.data.Database;
@@ -12,6 +13,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -22,6 +24,8 @@ public class Utils {
     public static final String FIRST_USER = "dummy";
     public static final String SECOND_USER = "geek";
     public static final String TEST_TMP_DIR = "testTmpDir";
+    public static final String WORKLOAD_DIR = "test_workload";
+    public static final String API_RESPONSES_DIR = "test_api_responses";
 
     public static void loadThreeDefaultAppsAndJobs(Long clusterTimestamp, Database db) {
         AppProfile app1 = Records.newRecord(AppProfile.class);
@@ -134,10 +138,17 @@ public class Utils {
         }
     }
 
-    public static HistorySnapshotStoreImpl mockDefaultWorkload(){
-        URL workloadUrl = Utils.class.getClassLoader().getResource("test_workload");
+    public static HistorySnapshotStoreImpl mockDefaultWorkload() {
+        URL workloadUrl = Utils.class.getClassLoader().getResource(WORKLOAD_DIR);
         if (workloadUrl == null)
             throw new RuntimeException("Default test workload folder was not found");
         return new HistorySnapshotStoreImpl(workloadUrl.getPath());
+    }
+
+    public static String getApiJson(String resource) throws Exception {
+        URL apiUrl = Utils.class.getClassLoader().getResource(API_RESPONSES_DIR + File.separator + resource);
+        if (apiUrl == null)
+            throw new RuntimeException("Default test api folder was not found");
+        return FileUtils.readFileToString(new File(apiUrl.getPath()));
     }
 }
