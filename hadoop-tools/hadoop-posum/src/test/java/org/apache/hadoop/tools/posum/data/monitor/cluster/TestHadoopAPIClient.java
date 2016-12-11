@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.data.monitor;
+package org.apache.hadoop.tools.posum.data.monitor.cluster;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,9 @@ public class TestHadoopAPIClient {
     private AppProfile[] APPS;
     private JobProfile FINISHED_JOB, RUNNING_JOB;
     private TaskProfile[] FINISHED_TASKS, RUNNING_TASKS;
-    private TaskProfile FINISHED_REDUCE_TASK, FINISHED_MAP_TASK, RUNNING_MAP_TASK, RUNNING_REDUCE_TASK, DETAILED_REDUCE_TASK, FINISHED_DETAILED_REDUCE_TASK;
+    private TaskProfile RUNNING_REDUCE_TASK;
+    private TaskProfile DETAILED_REDUCE_TASK;
+    private TaskProfile FINISHED_DETAILED_REDUCE_TASK;
     private CountersProxy JOB_COUNTERS, TASK_COUNTERS;
     private JobConfProxy JOB_CONF;
 
@@ -124,7 +127,7 @@ public class TestHadoopAPIClient {
         FINISHED_JOB.setMapProgress(100f);
         FINISHED_JOB.setReduceProgress(100f);
 
-        RUNNING_MAP_TASK = Records.newRecord(TaskProfile.class);
+        TaskProfile RUNNING_MAP_TASK = Records.newRecord(TaskProfile.class);
         RUNNING_MAP_TASK.setId("task_1326821518301_0005_m_0");
         RUNNING_MAP_TASK.setAppId(APP_ID);
         RUNNING_MAP_TASK.setJobId(JOB_ID);
@@ -146,14 +149,14 @@ public class TestHadoopAPIClient {
 
         RUNNING_TASKS = new TaskProfile[]{RUNNING_MAP_TASK, RUNNING_REDUCE_TASK};
 
-        FINISHED_MAP_TASK = RUNNING_MAP_TASK.copy();
+        TaskProfile FINISHED_MAP_TASK = RUNNING_MAP_TASK.copy();
         FINISHED_MAP_TASK.setAppId(null);
         FINISHED_MAP_TASK.setFinishTime(1326381453318L);
         FINISHED_MAP_TASK.setSuccessfulAttempt("attempt_1326821518301_0005_m_0_0");
         FINISHED_MAP_TASK.setState(TaskState.SUCCEEDED);
         FINISHED_MAP_TASK.setReportedProgress(100f);
 
-        FINISHED_REDUCE_TASK = RUNNING_REDUCE_TASK.copy();
+        TaskProfile FINISHED_REDUCE_TASK = RUNNING_REDUCE_TASK.copy();
         FINISHED_REDUCE_TASK.setAppId(null);
         FINISHED_REDUCE_TASK.setFinishTime(1326381582103L);
         FINISHED_REDUCE_TASK.setSuccessfulAttempt("attempt_1326821518301_0005_r_0_0");
@@ -234,10 +237,10 @@ public class TestHadoopAPIClient {
                         CounterInfoPayload.newInstance("VIRTUAL_MEMORY_BYTES", 2159284224L),
                         CounterInfoPayload.newInstance("COMMITTED_HEAP_BYTES", 378863616)
                 )),
-                CounterGroupInfoPayload.newInstance("org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter", Arrays.asList(
+                CounterGroupInfoPayload.newInstance("org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter", Collections.singletonList(
                         CounterInfoPayload.newInstance("BYTES_READ", 0)
                 )),
-                CounterGroupInfoPayload.newInstance("org.apache.hadoop.mapreduce.lib.output.FileOutputFormatCounter", Arrays.asList(
+                CounterGroupInfoPayload.newInstance("org.apache.hadoop.mapreduce.lib.output.FileOutputFormatCounter", Collections.singletonList(
                         CounterInfoPayload.newInstance("BYTES_WRITTEN", 0)
                 ))
         );

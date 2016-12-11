@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.data.monitor;
+package org.apache.hadoop.tools.posum.data.monitor.cluster;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -9,13 +9,13 @@ import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.data.master.DataMasterContext;
 
 
-public class HadoopMonitor extends GeneralLooper<HadoopMonitor> {
-    private static Log logger = LogFactory.getLog(HadoopMonitor.class);
+public class ClusterMonitor extends GeneralLooper<ClusterMonitor> {
+    private static Log logger = LogFactory.getLog(ClusterMonitor.class);
 
     private final DataMasterContext context;
 
-    public HadoopMonitor(DataMasterContext context) {
-        super(HadoopMonitor.class);
+    public ClusterMonitor(DataMasterContext context) {
+        super(ClusterMonitor.class);
         this.context = context;
     }
 

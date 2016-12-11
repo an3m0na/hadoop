@@ -10,8 +10,8 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumMasterProcess;
 import org.apache.hadoop.tools.posum.data.core.DataStoreImpl;
 import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
-import org.apache.hadoop.tools.posum.data.monitor.ClusterInfoCollector;
-import org.apache.hadoop.tools.posum.data.monitor.HadoopMonitor;
+import org.apache.hadoop.tools.posum.data.monitor.cluster.AppInfoCollector;
+import org.apache.hadoop.tools.posum.data.monitor.cluster.ClusterMonitor;
 import org.apache.hadoop.tools.posum.data.monitor.PosumInfoCollector;
 import org.apache.hadoop.tools.posum.data.monitor.PosumMonitor;
 import org.apache.hadoop.tools.posum.web.DataMasterWebApp;
@@ -28,7 +28,7 @@ public class DataMaster extends CompositeService  implements PosumMasterProcess 
     private DataMasterContext dmContext;
     private DataMasterCommService commService;
     private LockBasedDataStore dataStore;
-    private HadoopMonitor hadoopMonitor;
+    private ClusterMonitor clusterMonitor;
     private PosumMonitor posumMonitor;
 
     @Override
@@ -44,10 +44,10 @@ public class DataMaster extends CompositeService  implements PosumMasterProcess 
         addIfService(commService);
         dmContext.setCommService(commService);
 
-        dmContext.setClusterInfo(new ClusterInfoCollector(conf, Database.extractFrom(dataStore, DatabaseReference.getMain())));
-        hadoopMonitor = new HadoopMonitor(dmContext);
-        hadoopMonitor.init(conf);
-        addIfService(hadoopMonitor);
+        dmContext.setClusterInfo(new AppInfoCollector(conf, Database.extractFrom(dataStore, DatabaseReference.getMain())));
+        clusterMonitor = new ClusterMonitor(dmContext);
+        clusterMonitor.init(conf);
+        addIfService(clusterMonitor);
 
         dmContext.setPosumInfo(new PosumInfoCollector(conf, dmContext.getDataStore()));
         posumMonitor = new PosumMonitor(dmContext);
