@@ -25,8 +25,9 @@ class ClusterMonitorEntities {
 
     final AppProfile FINISHED_APP, RUNNING_APP;
     final String APP_ID, JOB_ID;
-    final AppProfile[] APPS;
+    final AppProfile[] FINISHED_APPS, RUNNING_APPS;
     final JobProfile FINISHED_JOB, RUNNING_JOB;
+    final JobProfile[] RUNNING_JOBS;
     final TaskProfile[] FINISHED_TASKS, RUNNING_TASKS;
     final TaskProfile RUNNING_REDUCE_TASK;
     final TaskProfile DETAILED_REDUCE_TASK;
@@ -42,10 +43,12 @@ class ClusterMonitorEntities {
         RUNNING_APP.setQueue("a1");
         RUNNING_APP.setUser("user1");
         RUNNING_APP.setState(YarnApplicationState.RUNNING);
-        RUNNING_APP.setName("Sleep job");
+        RUNNING_APP.setName("Sleep profile");
         RUNNING_APP.setStartTime(1326824544552L);
         RUNNING_APP.setTrackingUI(RestClient.TrackingUI.AM);
         RUNNING_APP.setStatus(FinalApplicationStatus.UNDEFINED);
+
+        RUNNING_APPS = new AppProfile[]{RUNNING_APP};
 
         FINISHED_APP = RUNNING_APP.copy();
         FINISHED_APP.setFinishTime(1326824991300L);
@@ -53,7 +56,7 @@ class ClusterMonitorEntities {
         FINISHED_APP.setTrackingUI(RestClient.TrackingUI.HISTORY);
         FINISHED_APP.setStatus(FinalApplicationStatus.SUCCEEDED);
 
-        APPS = new AppProfile[]{FINISHED_APP};
+        FINISHED_APPS = new AppProfile[]{FINISHED_APP};
 
         JOB_ID = "job_1326821518301_0005";
 
@@ -63,7 +66,7 @@ class ClusterMonitorEntities {
         RUNNING_JOB.setFinishTime(0L);
         RUNNING_JOB.setQueue("a1");
         RUNNING_JOB.setUser("user1");
-        RUNNING_JOB.setName("Sleep job");
+        RUNNING_JOB.setName("Sleep profile");
         RUNNING_JOB.setStartTime(1326381446529L);
         RUNNING_JOB.setUberized(false);
         RUNNING_JOB.setTotalMapTasks(1);
@@ -73,6 +76,8 @@ class ClusterMonitorEntities {
         RUNNING_JOB.setCompletedReduces(0);
         RUNNING_JOB.setMapProgress(58f);
         RUNNING_JOB.setReduceProgress(0f);
+
+        RUNNING_JOBS = new JobProfile[]{RUNNING_JOB};
 
         FINISHED_JOB = RUNNING_JOB.copy();
         FINISHED_JOB.setSubmitTime(1326381446500L);
@@ -146,7 +151,7 @@ class ClusterMonitorEntities {
 
         JOB_CONF = Records.newRecord(JobConfProxy.class);
         JOB_CONF.setId(JOB_ID);
-        JOB_CONF.setConfPath("hdfs://host.domain.com:9000/user/user1/.staging/job_1326381300833_0002/job.xml");
+        JOB_CONF.setConfPath("hdfs://host.domain.com:9000/user/user1/.staging/job_1326381300833_0002/profile.xml");
         Map<String, String> properties = new HashMap<>();
         properties.put("dfs.datanode.data.dir", "/home/hadoop/hdfs/data");
         properties.put("hadoop.http.filter.initializers", "org.apache.hadoop.yarn.server.webproxy.amfilter.AmFilterInitializer");

@@ -112,13 +112,13 @@ public class HadoopAPIClient {
 
         String rawString = restClient.getInfo(String.class,
                 RestClient.TrackingUI.HISTORY, "jobs", new String[]{});
-        JsonNode rawJobs = getRawNode(rawString, "jobs", "job");
+        JsonNode rawJobs = getRawNode(rawString, "jobs", "profile");
         if (rawJobs == null)
             return null;
         String lastRelatedJobId = null;
         for (int i = 0; i < rawJobs.size(); i++) {
             //FIXME not so sure this is the way to make the connection between apps and historical jobs
-            // it chooses the job with its id the same as the appId, and, if none have it,
+            // it chooses the profile with its id the same as the appId, and, if none have it,
             // the one with an identical timestamp with the appId
             String jobId = rawJobs.get(i).get("id").asText();
             if (expectedJobId.equals(jobId))
@@ -135,7 +135,7 @@ public class HadoopAPIClient {
     JobProfile getFinishedJobInfo(String appId, String jobId, JobProfile previousJob) {
         String rawString = restClient.getInfo(String.class,
                 RestClient.TrackingUI.HISTORY, "jobs/%s", new String[]{jobId});
-        JsonNode rawJob = getRawNode(rawString, "job");
+        JsonNode rawJob = getRawNode(rawString, "profile");
         if (rawJob == null)
             return null;
         JobProfile job = previousJob != null ? previousJob : Records.newRecord(JobProfile.class);
@@ -166,7 +166,7 @@ public class HadoopAPIClient {
     JobProfile getRunningJobInfo(String appId, String queue, JobProfile previousJob) {
         String rawString = restClient.getInfo(String.class,
                 RestClient.TrackingUI.AM, "jobs", new String[]{appId});
-        JsonNode rawJobs = getRawNode(rawString, "jobs", "job");
+        JsonNode rawJobs = getRawNode(rawString, "jobs", "profile");
         if (rawJobs == null)
             return null;
         if (rawJobs.size() != 1)
