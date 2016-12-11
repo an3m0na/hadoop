@@ -44,7 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-public class AppInfoCollectorTest {
+public class TestAppInfoCollector {
 
     @Mock
     private HadoopAPIClient apiMock;
@@ -84,9 +84,10 @@ public class AppInfoCollectorTest {
     @Test
     public void refreshRunningTest() {
         when(apiMock.getAppsInfo()).thenReturn(Arrays.asList(entities.RUNNING_APPS));
-        when(jobInfoCollector.getRunningJobInfo(entities.RUNNING_APP)).thenReturn(new JobInfo(entities.RUNNING_JOB, entities.JOB_CONF, entities.JOB_COUNTERS));
-        when(taskInfoCollector.getRunningTaskInfo(entities.RUNNING_JOB)).thenReturn(Arrays.asList(entities.RUNNING_TASKS));
-        when(taskInfoCollector.updateRunningTasksFromCounters(Arrays.asList(entities.RUNNING_TASKS))).thenReturn(Arrays.asList(entities.TASK_COUNTERS, entities.TASK_COUNTERS));
+        when(jobInfoCollector.getRunningJobInfo(entities.RUNNING_APP))
+                .thenReturn(new JobInfo(entities.RUNNING_JOB, entities.JOB_CONF, entities.JOB_COUNTERS));
+        when(taskInfoCollector.getRunningTaskInfo(entities.RUNNING_JOB))
+                .thenReturn(new TaskInfo(Arrays.asList(entities.RUNNING_TASKS), Arrays.asList(entities.TASK_COUNTERS, entities.TASK_COUNTERS)));
 
         // first refresh on running job
         testSubject.refresh();
@@ -154,9 +155,10 @@ public class AppInfoCollectorTest {
     @Test
     public void refreshUnknownFinishedTest() {
         when(apiMock.getAppsInfo()).thenReturn(Arrays.asList(entities.FINISHED_APPS));
-        when(jobInfoCollector.getFinishedJobInfo(entities.FINISHED_APP)).thenReturn(new JobInfo(entities.FINISHED_JOB, entities.JOB_CONF, entities.JOB_COUNTERS));
-        when(taskInfoCollector.getFinishedTaskInfo(entities.FINISHED_JOB)).thenReturn(Arrays.asList(entities.FINISHED_TASKS));
-        when(taskInfoCollector.updateFinishedTasksFromCounters(Arrays.asList(entities.FINISHED_TASKS))).thenReturn(Arrays.asList(entities.TASK_COUNTERS, entities.TASK_COUNTERS));
+        when(jobInfoCollector.getFinishedJobInfo(entities.FINISHED_APP))
+                .thenReturn(new JobInfo(entities.FINISHED_JOB, entities.JOB_CONF, entities.JOB_COUNTERS));
+        when(taskInfoCollector.getFinishedTaskInfo(entities.FINISHED_JOB))
+                .thenReturn(new TaskInfo(Arrays.asList(entities.FINISHED_TASKS), Arrays.asList(entities.TASK_COUNTERS, entities.TASK_COUNTERS)));
 
         testSubject.refresh();
 
