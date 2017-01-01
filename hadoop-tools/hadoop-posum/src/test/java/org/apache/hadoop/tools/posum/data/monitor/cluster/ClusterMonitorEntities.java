@@ -156,6 +156,10 @@ class ClusterMonitorEntities {
         properties.put("dfs.datanode.data.dir", "/home/hadoop/hdfs/data");
         properties.put("hadoop.http.filter.initializers", "org.apache.hadoop.yarn.server.webproxy.amfilter.AmFilterInitializer");
         properties.put("mapreduce.cluster.temp.dir", "/home/hadoop/tmp");
+        properties.put("mapreduce.job.name", "Sleep job");
+        properties.put("mapreduce.job.user.name", "user1");
+        properties.put("mapreduce.job.queuename", "a1");
+        properties.put("mapreduce.job.reduces", "1");
         JOB_CONF.setPropertyMap(properties);
     }
 

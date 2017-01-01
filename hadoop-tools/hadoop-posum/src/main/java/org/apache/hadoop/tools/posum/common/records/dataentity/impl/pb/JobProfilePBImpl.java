@@ -545,7 +545,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     public void setMapperClass(String name) {
         maybeInitBuilder();
         if (name == null) {
-            builder.clearName();
+            builder.clearMapperClass();
             return;
         }
         builder.setMapperClass(name);

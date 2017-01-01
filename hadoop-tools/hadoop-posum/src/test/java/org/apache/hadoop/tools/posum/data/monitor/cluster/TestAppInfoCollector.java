@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.apache.hadoop.fs.FileSystem.DEFAULT_FS;
+import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP_HISTORY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.COUNTER;
@@ -65,6 +67,7 @@ public class TestAppInfoCollector {
         Configuration confMock = mock(Configuration.class);
         when(confMock.getBoolean(PosumConfiguration.MONITOR_KEEP_HISTORY, PosumConfiguration.MONITOR_KEEP_HISTORY_DEFAULT))
                 .thenReturn(true);
+        when(confMock.get(FS_DEFAULT_NAME_KEY, DEFAULT_FS)).thenReturn(DEFAULT_FS);
         dbMock = Database.extractFrom(new MockDataStoreImpl(), DatabaseReference.getMain());
         testSubject = new AppInfoCollector(confMock, dbMock);
         MockitoAnnotations.initMocks(this);

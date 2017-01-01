@@ -41,4 +41,34 @@ class JobInfo {
     void setJobCounters(CountersProxy jobCounters) {
         this.jobCounters = jobCounters;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        JobInfo jobInfo = (JobInfo) o;
+
+        if (profile != null ? !profile.equals(jobInfo.profile) : jobInfo.profile != null) return false;
+        if (conf != null ? !conf.equals(jobInfo.conf) : jobInfo.conf != null) return false;
+        return jobCounters != null ? jobCounters.equals(jobInfo.jobCounters) : jobInfo.jobCounters == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = profile != null ? profile.hashCode() : 0;
+        result = 31 * result + (conf != null ? conf.hashCode() : 0);
+        result = 31 * result + (jobCounters != null ? jobCounters.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "JobInfo{" +
+                "profile=" + profile +
+                ", conf=" + conf +
+                ", jobCounters=" + jobCounters +
+                '}';
+    }
 }
