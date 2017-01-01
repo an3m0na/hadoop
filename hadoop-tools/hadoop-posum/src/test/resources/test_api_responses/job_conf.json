@@ -16,6 +16,26 @@
         "value" : "/home/hadoop/tmp",
         "name" : "mapreduce.cluster.temp.dir",
         "source" : ["mapred-site.xml"]
+      },
+      {
+        "value" : "Sleep job",
+        "name" : "mapreduce.job.name",
+        "source" : ["job.xml"]
+      },
+      {
+        "value" : "user1",
+        "name" : "mapreduce.job.user.name",
+        "source" : ["job.xml"]
+      },
+      {
+        "value" : "a1",
+        "name" : "mapreduce.job.queuename",
+        "source" : ["job.xml"]
+      },
+      {
+        "value" : "1",
+        "name" : "mapreduce.job.reduces",
+        "source" : ["job.xml"]
       }
     ]
   }
