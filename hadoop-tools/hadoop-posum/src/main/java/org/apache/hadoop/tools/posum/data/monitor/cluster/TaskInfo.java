@@ -33,4 +33,23 @@ class TaskInfo {
     void setCounters(List<CountersProxy> counters) {
         this.counters = counters;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TaskInfo taskInfo = (TaskInfo) o;
+
+        if (tasks != null ? !tasks.equals(taskInfo.tasks) : taskInfo.tasks != null) return false;
+        return counters != null ? counters.equals(taskInfo.counters) : taskInfo.counters == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = tasks != null ? tasks.hashCode() : 0;
+        result = 31 * result + (counters != null ? counters.hashCode() : 0);
+        return result;
+    }
 }
