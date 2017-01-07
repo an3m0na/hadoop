@@ -9,9 +9,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-public class ResultAggregator implements Runnable {
+class ResultAggregator implements Runnable {
     private static Log logger = LogFactory.getLog(ResultAggregator.class);
-
 
     private volatile boolean exit = false;
     private Collection<PendingResult> pendingResults;
