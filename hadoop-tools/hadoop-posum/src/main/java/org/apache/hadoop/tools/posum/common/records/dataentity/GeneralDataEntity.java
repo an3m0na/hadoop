@@ -11,6 +11,10 @@ public interface GeneralDataEntity<T extends GeneralDataEntity>{
 
     void setId(String id);
 
+    Long getLastUpdated();
+
+    void setLastUpdated(Long timestamp);
+
     T copy();
 
 }

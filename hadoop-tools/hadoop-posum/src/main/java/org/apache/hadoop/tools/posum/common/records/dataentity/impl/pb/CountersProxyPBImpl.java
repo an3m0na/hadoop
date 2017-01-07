@@ -90,6 +90,24 @@ public class CountersProxyPBImpl extends GeneralDataEntityPBImpl<CountersProxy, 
     }
 
     @Override
+    public Long getLastUpdated() {
+        CountersProxyProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasLastUpdated())
+            return p.getLastUpdated();
+        return null;
+    }
+
+    @Override
+    public void setLastUpdated(Long timestamp) {
+        maybeInitBuilder();
+        if (timestamp == null) {
+            builder.clearLastUpdated();
+            return;
+        }
+        builder.setLastUpdated(timestamp);
+    }
+
+    @Override
     public CountersProxy copy() {
         return new CountersProxyPBImpl(getProto());
     }

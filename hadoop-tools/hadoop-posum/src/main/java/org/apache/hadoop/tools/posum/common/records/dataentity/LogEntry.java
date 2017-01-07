@@ -39,8 +39,4 @@ public interface LogEntry<T extends Payload> extends GeneralDataEntity<LogEntry<
     T getDetails();
 
     void setDetails(T details);
-
-    Long getTimestamp();
-
-    void setTimestamp(Long timestamp);
 }

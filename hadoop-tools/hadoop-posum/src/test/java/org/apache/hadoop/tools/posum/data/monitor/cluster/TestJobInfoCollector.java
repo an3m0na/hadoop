@@ -107,6 +107,8 @@ public class TestJobInfoCollector {
                 .thenReturn(new JobSplit.TaskSplitMetaInfo[]{new JobSplit.TaskSplitMetaInfo(null, LOCATIONS, INPUT_LENGTH)});
         JobInfo ret = testSubject.getSubmittedJobInfo(entities.APP_ID, entities.RUNNING_APP.getUser());
 
+        ret.getProfile().setLastUpdated(entities.RUNNING_JOB.getLastUpdated());
+
         JobProfile expectedJob = entities.RUNNING_JOB.copy();
         expectedJob.setStartTime(null);
         expectedJob.setFinishTime(null);
