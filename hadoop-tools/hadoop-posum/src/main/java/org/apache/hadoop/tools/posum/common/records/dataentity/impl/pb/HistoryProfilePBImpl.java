@@ -24,10 +24,8 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
 
     public HistoryProfilePBImpl(DataEntityCollection type, T original) {
         super();
-        long timestamp = System.currentTimeMillis();
         setId(ObjectId.get().toHexString());
         setType(type);
-        setTimestamp(timestamp);
         setOriginal(original);
         setOriginalId(original.getId());
     }
@@ -68,6 +66,24 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
     }
 
     @Override
+    public Long getLastUpdated() {
+        HistoryProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasLastUpdated())
+            return p.getLastUpdated();
+        return null;
+    }
+
+    @Override
+    public void setLastUpdated(Long timestamp) {
+        maybeInitBuilder();
+        if (timestamp == null) {
+            builder.clearLastUpdated();
+            return;
+        }
+        builder.setLastUpdated(timestamp);
+    }
+
+    @Override
     public HistoryProfile copy() {
         return new HistoryProfilePBImpl(getProto());
     }
@@ -103,19 +119,6 @@ public class HistoryProfilePBImpl<T extends GeneralDataEntity> extends GeneralDa
     public void setType(DataEntityCollection type) {
         maybeInitBuilder();
         builder.setCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
-    }
-
-    @Override
-    public Long getTimestamp() {
-        HistoryProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getTimestamp();
-    }
-
-    @Override
-    public void setTimestamp(Long timestamp) {
-        maybeInitBuilder();
-        if (timestamp != null)
-            builder.setTimestamp(timestamp);
     }
 
     @Override

@@ -97,24 +97,24 @@ public class PosumInfoCollector {
         FindByQueryCall findChoices = FindByQueryCall.newInstance(LogEntry.Type.POLICY_CHANGE.getCollection(),
                 QueryUtils.and(
                         QueryUtils.is("type", LogEntry.Type.POLICY_CHANGE),
-                        QueryUtils.greaterThan("timestamp", lastCollectTime),
-                        QueryUtils.lessThanOrEqual("timestamp", now)
+                        QueryUtils.greaterThan("lastUpdated", lastCollectTime),
+                        QueryUtils.lessThanOrEqual("lastUpdated", now)
                 ));
         List<LogEntry<SimplePropertyPayload>> policyChanges =
                 dataStore.executeDatabaseCall(findChoices, DatabaseReference.getLogs()).getEntities();
         if (policyChanges.size() > 0) {
             if (schedulingStart == 0)
-                schedulingStart = policyChanges.get(0).getTimestamp();
+                schedulingStart = policyChanges.get(0).getLastUpdated();
             for (LogEntry<SimplePropertyPayload> change : policyChanges) {
                 String policy = (String) change.getDetails().getValue();
                 PolicyInfoPayload info = policyMap.get(policy);
                 if (!policy.equals(lastUsedPolicy)) {
                     if (lastUsedPolicy != null) {
-                        policyMap.get(lastUsedPolicy).stop(change.getTimestamp());
+                        policyMap.get(lastUsedPolicy).stop(change.getLastUpdated());
                     }
                     lastUsedPolicy = policy;
                 }
-                info.start(change.getTimestamp());
+                info.start(change.getLastUpdated());
             }
             dataStore.executeDatabaseCall(CallUtils.storeStatReportCall(LogEntry.Type.POLICY_MAP,
                     PolicyInfoMapPayload.newInstance(policyMap)), null);

@@ -66,6 +66,24 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
+    public Long getLastUpdated() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasLastUpdated())
+            return p.getLastUpdated();
+        return null;
+    }
+
+    @Override
+    public void setLastUpdated(Long timestamp) {
+        maybeInitBuilder();
+        if (timestamp == null) {
+            builder.clearLastUpdated();
+            return;
+        }
+        builder.setLastUpdated(timestamp);
+    }
+
+    @Override
     public JobProfile copy() {
         return new JobProfilePBImpl(getProto());
     }

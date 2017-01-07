@@ -22,6 +22,7 @@ public abstract class GeneralDataEntityPBImpl<
 
     public GeneralDataEntityPBImpl() {
         initBuilder();
+        setLastUpdated(System.currentTimeMillis());
     }
 
     public GeneralDataEntityPBImpl(P proto) {

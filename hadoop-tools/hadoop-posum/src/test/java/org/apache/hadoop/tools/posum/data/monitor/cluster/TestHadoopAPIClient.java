@@ -64,6 +64,7 @@ public class TestHadoopAPIClient {
         when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("cluster/apps"), any(String[].class)))
                 .thenReturn(Utils.getApiJson("apps.json"));
         ret = testSubject.getAppsInfo();
+        ret.get(0).setLastUpdated(entities.FINISHED_APP.getLastUpdated());
         assertThat(ret, containsInAnyOrder(entities.FINISHED_APPS));
     }
 
@@ -109,6 +110,7 @@ public class TestHadoopAPIClient {
         when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs"), any(String[].class)))
                 .thenReturn(Utils.getApiJson("jobs.json"));
         ret = testSubject.getRunningJobInfo(entities.APP_ID, entities.RUNNING_APP.getQueue(), null);
+        ret.setLastUpdated(entities.RUNNING_JOB.getLastUpdated());
         assertThat(ret, is(entities.RUNNING_JOB));
     }
 
@@ -122,6 +124,8 @@ public class TestHadoopAPIClient {
         when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s/tasks"), any(String[].class)))
                 .thenReturn(Utils.getApiJson("history_tasks.json"));
         ret = testSubject.getFinishedTasksInfo(entities.JOB_ID);
+        ret.get(0).setLastUpdated(entities.FINISHED_TASKS[0].getLastUpdated());
+        ret.get(1).setLastUpdated(entities.FINISHED_TASKS[1].getLastUpdated());
         assertThat(ret, containsInAnyOrder(entities.FINISHED_TASKS));
     }
 
@@ -134,7 +138,11 @@ public class TestHadoopAPIClient {
 
         when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs/%s/tasks"), any(String[].class)))
                 .thenReturn(Utils.getApiJson("tasks.json"));
+
         ret = testSubject.getRunningTasksInfo(entities.RUNNING_JOB);
+
+        ret.get(0).setLastUpdated(entities.RUNNING_MAP_TASK.getLastUpdated());
+        ret.get(1).setLastUpdated(entities.RUNNING_REDUCE_TASK.getLastUpdated());
         assertThat(ret, containsInAnyOrder(entities.RUNNING_TASKS));
     }
 
@@ -172,6 +180,7 @@ public class TestHadoopAPIClient {
     public void jobCountersMappingTest() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         HadoopAPIClient.JobCountersWrapper counters = mapper.readValue(Utils.getApiJson("job_counters.json"), HadoopAPIClient.JobCountersWrapper.class);
+        counters.jobCounters.setLastUpdated(entities.JOB_COUNTERS.getLastUpdated());
         assertThat(counters.jobCounters, is(entities.JOB_COUNTERS));
     }
 
@@ -179,6 +188,7 @@ public class TestHadoopAPIClient {
     public void taskCountersMappingTest() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         HadoopAPIClient.TaskCountersWrapper counters = mapper.readValue(Utils.getApiJson("task_counters.json"), HadoopAPIClient.TaskCountersWrapper.class);
+        counters.jobTaskCounters.setLastUpdated(entities.TASK_COUNTERS.getLastUpdated());
         assertThat(counters.jobTaskCounters, is(entities.TASK_COUNTERS));
     }
 

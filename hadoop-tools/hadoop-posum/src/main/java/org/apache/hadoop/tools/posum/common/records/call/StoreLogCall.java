@@ -42,7 +42,7 @@ public abstract class StoreLogCall extends LockBasedDatabaseCallImpl<SimplePrope
             return SimplePropertyPayload.newInstance("logId",
                     dataStore.updateOrStore(DatabaseReference.getLogs(), getLogEntry().getType().getCollection(), getLogEntry()));
         }
-        return SimplePropertyPayload.newInstance("logId", (String) null);
+        return SimplePropertyPayload.newInstance("logId", null);
     }
 
     @Override
