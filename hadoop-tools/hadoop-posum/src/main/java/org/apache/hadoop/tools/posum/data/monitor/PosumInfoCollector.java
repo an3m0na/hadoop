@@ -24,6 +24,7 @@ import org.apache.hadoop.tools.posum.simulation.predictor.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.DetailedPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.StandardPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 
 import java.util.HashMap;
 import java.util.List;
@@ -127,7 +128,7 @@ public class PosumInfoCollector {
             TaskPredictionPayload prediction = TaskPredictionPayload.newInstance(
                     predictor.getClass().getSimpleName(),
                     taskId,
-                    predictor.predictTaskDuration(taskId)
+                    predictor.predictTaskDuration(new TaskPredictionInput(taskId)).getDuration()
             );
             StoreLogCall storePrediction = CallUtils.storeStatReportCall(LogEntry.Type.TASK_PREDICTION, prediction);
             dataStore.executeDatabaseCall(storePrediction, null);

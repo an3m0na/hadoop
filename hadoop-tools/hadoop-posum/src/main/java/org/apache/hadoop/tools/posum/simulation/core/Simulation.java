@@ -18,6 +18,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.simulation.master.SimulationMaster;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 
 import java.util.List;
 import java.util.Queue;
@@ -105,7 +106,7 @@ class Simulation implements Callable<SimulationResultPayload> {
 
         List<TaskProfile> allocatedTasks = db.executeDatabaseCall(findAllocatedTasks).getEntities();
         for (TaskProfile allocatedTask : allocatedTasks) {
-            Long duration = predictor.predictTaskDuration(allocatedTask.getId());
+            Long duration = predictor.predictTaskDuration(new TaskPredictionInput(allocatedTask.getId())).getDuration();
             Float progress = allocatedTask.getReportedProgress();
             if (progress != null && progress > 0) {
                 Float timeLeft = (1 - progress) * duration;
