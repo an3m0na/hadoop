@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
@@ -85,7 +86,7 @@ class Simulation implements Callable<SimulationResultPayload> {
         setUp();
         try {
             initializeDaemonSimulators();
-            predictBehavior();
+            loadInitialEvents();
             processQueue();
             return SimulationResultPayload.newInstance(policy, CompoundScorePayload.newInstance(runtime, penalty, cost));
         } catch (Exception e) {
@@ -100,13 +101,21 @@ class Simulation implements Callable<SimulationResultPayload> {
         // TODO initialize the state of the hadoop daemon simulators (ResourceManager, ApplicationMasters and NodeManagers)
     }
 
-    private void predictBehavior() {
-        IdsByQueryCall getAllTasks = IdsByQueryCall.newInstance(DataEntityCollection.TASK, null);
-        List<String> taskIds = dataStore.executeDatabaseCall(getAllTasks, DatabaseReference.getMain()).getEntries();
-        for (String taskId : taskIds) {
-            Long duration = predictor.predictTaskDuration(taskId);
-            eventQueue.add(new SimulationEvent<>(TASK_FINISHED, clusterTime + duration, new TaskFinishedDetails(taskId)));
+    private void loadInitialEvents() {
+        FindByQueryCall findAllocatedTasks =
+                FindByQueryCall.newInstance(DataEntityCollection.TASK, QueryUtils.isNot("httpAddress", null));
+
+        List<TaskProfile> allocatedTasks = db.executeDatabaseCall(findAllocatedTasks).getEntities();
+        for (TaskProfile allocatedTask : allocatedTasks) {
+            Long duration = predictor.predictTaskDuration(allocatedTask.getId());
+            Float progress = allocatedTask.getReportedProgress();
+            if (progress != null && progress > 0) {
+                Float timeLeft = (1 - progress) * duration;
+                duration = timeLeft.longValue();
+            }
+            eventQueue.add(new SimulationEvent<>(TASK_FINISHED, clusterTime + duration, new TaskFinishedDetails(allocatedTask.getId())));
         }
+        // TODO for all other nodes that do not have a task running on them, send NODE_FREE events to the scheduler
     }
 
     private void processQueue() {
@@ -142,12 +151,8 @@ class Simulation implements Callable<SimulationResultPayload> {
     }
 
     private boolean checkLastTask(TaskProfile task, JobProfile job) {
-        switch (task.getType()) {
-            case REDUCE:
-                return job.getTotalReduceTasks() - job.getCompletedReduces() == 1;
-            default:
-                return job.getTotalMapTasks() - job.getCompletedMaps() == 1;
-        }
+        if (task.getType() == TaskType.REDUCE)
+            return job.getTotalReduceTasks() - job.getCompletedReduces() == 1;
+        return job.getTotalMapTasks() - job.getCompletedMaps() == 1;
     }
-
 }
