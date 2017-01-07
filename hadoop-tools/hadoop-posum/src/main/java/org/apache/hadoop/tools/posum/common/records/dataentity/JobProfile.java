@@ -7,14 +7,6 @@ import java.util.Map;
 
 public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
-    //NOT INCLUDED:
-//    <failedReduceAttempts>0</failedReduceAttempts>
-//    <killedReduceAttempts>0</killedReduceAttempts>
-//    <successfulReduceAttempts>1</successfulReduceAttempts>
-//    <failedMapAttempts>0</failedMapAttempts>
-//    <killedMapAttempts>0</killedMapAttempts>
-//    <successfulMapAttempts>30</successfulMapAttempts>
-
     String getName();
 
     void setName(String name);
@@ -26,8 +18,6 @@ public interface JobProfile extends GeneralDataEntity<JobProfile> {
     Long getFinishTime();
 
     void setFinishTime(Long finishTime);
-
-    Long getDuration();
 
     void setTotalMapTasks(Integer totalMapTasks);
 
@@ -104,10 +94,6 @@ public interface JobProfile extends GeneralDataEntity<JobProfile> {
     Long getAvgReduceDuration();
 
     void setAvgReduceDuration(Long avgReduceDuration);
-
-    Long getAvgTaskDuration();
-
-    void setAvgTaskDuration(Long avgTaskDuration);
 
     void setAvgShuffleTime(Long time);
 
