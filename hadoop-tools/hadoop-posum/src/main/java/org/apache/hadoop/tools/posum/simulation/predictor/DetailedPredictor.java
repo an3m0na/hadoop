@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.simulation.predictor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
@@ -12,12 +13,12 @@ import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.apache.hadoop.tools.posum.common.util.Utils.getDuration;
 
 public class DetailedPredictor extends JobBehaviorPredictor {
 
@@ -27,6 +28,10 @@ public class DetailedPredictor extends JobBehaviorPredictor {
 
     private enum FlexKeys {
         PROFILED, MAP_REMOTE, MAP_LOCAL, MAP_SELECTIVITY, SHUFFLE_FIRST, SHUFFLE_TYPICAL, MERGE, REDUCE
+    }
+
+    public DetailedPredictor(Configuration conf) {
+        super(conf);
     }
 
     @Override
@@ -54,18 +59,6 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         getDatabase().executeDatabaseCall(saveFlexFields);
     }
 
-    private JobProfile calculateCurrentProfile(String jobId) {
-        FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, jobId);
-        JobProfile job = getDatabase().executeDatabaseCall(getJob).getEntity();
-        FindByQueryCall getTasks = FindByQueryCall.newInstance(DataEntityCollection.TASK,
-                QueryUtils.is("jobId", job.getId()));
-        Map<String, String> flexFields = calculateCurrentProfile(job,
-                getDatabase().executeDatabaseCall(getTasks).<TaskProfile>getEntities());
-        SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), flexFields, false);
-        getDatabase().executeDatabaseCall(saveFlexFields);
-        return job;
-    }
-
     private Map<String, String> calculateCurrentProfile(JobProfile job, List<TaskProfile> tasks) {
 
         //WARNING! the job and tasks stats might not be consistent because they were queried separately
@@ -84,14 +77,14 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                     Double.toString(1.0 * job.getMapOutputBytes() / parsedInputBytes));
 
             for (TaskProfile task : tasks) {
-                if (task.getDuration() <= 0)
+                if (getDuration(task) <= 0)
                     continue;
                 if (task.getType().equals(TaskType.MAP)) {
                     // this is a finished map task; split stats into remote and local
                     if (mapFinish < task.getFinishTime())
                         mapFinish = task.getFinishTime();
                     // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-                    Double newRate = 1.0 * inputPerMap / task.getDuration();
+                    Double newRate = 1.0 * inputPerMap / getDuration(task);
                     if (task.isLocal()) {
                         mapLocalRate += newRate;
                         mapLocalNo++;
@@ -117,7 +110,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
 
         if (job.getCompletedReduces() > 0 && job.getTotalReduceTasks() > 0) {
             for (TaskProfile task : tasks) {
-                if (task.getDuration() <= 0)
+                if (getDuration(task) <= 0)
                     continue;
                 if (task.getType().equals(TaskType.REDUCE)) {
                     reduceNo++;
@@ -155,81 +148,46 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         return fieldMap;
     }
 
-    private List<JobProfile> getComparableProfiles(JobProfile job, TaskType type) {
-        int bufferLimit = conf.getInt(PosumConfiguration.PREDICTION_BUFFER,
-                PosumConfiguration.PREDICTION_BUFFER_DEFAULT);
-        // get past jobs with the same name
-        FindByQueryCall getComparableJobs = FindByQueryCall.newInstance(
-                DataEntityCollection.JOB_HISTORY,
-                QueryUtils.is(type.equals(TaskType.MAP) ? "mapperClass" : "reducerClass",
-                        type.equals(TaskType.MAP) ? job.getMapperClass() : job.getReducerClass()),
-                -bufferLimit,
-                bufferLimit
-        );
-        List<JobProfile> comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
-        if (comparable.size() < 1) {
-            // get past jobs at least by the same user
-            getComparableJobs.setQuery(QueryUtils.is("user", job.getUser()));
-            comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
-        }
-        return comparable;
+
+    @Override
+    public JobPredictionOutput predictJobDuration(JobPredictionInput input) {
+        TaskPredictionInput taskInput = new TaskPredictionInput(input.getJobId(), TaskType.MAP);
+        completeInput(taskInput);
+        Long mapDuration = predictMapTaskDuration(taskInput).getDuration() * taskInput.getJob().getTotalMapTasks();
+        taskInput.setTaskType(TaskType.REDUCE);
+        Long reduceDuration = predictReduceTaskDuration(taskInput).getDuration() * taskInput.getJob().getTotalReduceTasks();
+        return new JobPredictionOutput(mapDuration + reduceDuration);
     }
 
     @Override
-    public Long predictJobDuration(String jobId) {
-        JobProfile job = calculateCurrentProfile(jobId);
-        return predictMapTaskDuration(job, null) * job.getTotalMapTasks() +
-                predictReduceTaskDuration(job) * job.getTotalReduceTasks();
+    public TaskPredictionOutput predictTaskDuration(TaskPredictionInput input) {
+        completeInput(input);
+        if (input.getTaskType().equals(TaskType.MAP))
+            return predictMapTaskDuration(input);
+        return predictReduceTaskDuration(input);
     }
 
-    @Override
-    public Long predictTaskDuration(String jobId, TaskType type) {
-        JobProfile job = calculateCurrentProfile(jobId);
-        if (type.equals(TaskType.MAP)) {
-            // assuming the task is remote
-            return predictMapTaskDuration(job, null);
-        } else {
-            return predictReduceTaskDuration(job);
-        }
-    }
-
-    @Override
-    public Long predictTaskDuration(String taskId) {
-        FindByIdCall getTask = FindByIdCall.newInstance(DataEntityCollection.TASK, taskId);
-        TaskProfile task = getDatabase().executeDatabaseCall(getTask).getEntity();
-        if (task == null)
-            throw new PosumException("Task not found for id " + taskId);
-        if (task.getDuration() > 0)
-            throw new PosumException("Task has already finished: " + taskId);
-        if (task.getType().equals(TaskType.MAP) && task.getHttpAddress() != null) {
-            // apply locality-aware logic for this map task
-            JobProfile job = calculateCurrentProfile(task.getJobId());
-            Boolean locality = task.isLocal();
-            return predictMapTaskDuration(job, locality);
-        }
-        // apply general task duration calculation
-        return predictTaskDuration(task.getJobId(), task.getType());
-    }
-
-    private Long handleNoMapHistory(JobProfile job) {
+    private TaskPredictionOutput handleNoMapHistory(JobProfile job) {
         if (job.getAvgMapDuration() != 0)
             // if we do have at least the current average duration, return that, regardless of location
-            return job.getAvgMapDuration();
+            return new TaskPredictionOutput(job.getAvgMapDuration());
         logger.debug("No map history data for " + job.getId() + ". Using default");
         // return the default; there is nothing we can do
-        return conf.getLong(PosumConfiguration.AVERAGE_TASK_DURATION,
-                PosumConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
+        return new TaskPredictionOutput(DEFAULT_TASK_DURATION);
     }
 
-    private Long predictMapTaskDuration(JobProfile job, Boolean remote) {
-        Double rate = 0.0;
-        String rateKey = FLEX_KEY_PREFIX + (remote == null || remote ? FlexKeys.MAP_REMOTE : FlexKeys.MAP_LOCAL);
+    private TaskPredictionOutput predictMapTaskDuration(TaskPredictionInput input) {
+        JobProfile job = input.getJob();
 
-        if (remote == null) {
+        Double rate = 0.0;
+        boolean local = input.getNodeAddress() != null && input.getJob().getSplitLocations().contains(input.getNodeAddress());
+        String rateKey = FLEX_KEY_PREFIX + (local ? FlexKeys.MAP_LOCAL : FlexKeys.MAP_REMOTE);
+
+        if (input.getNodeAddress() == null) {
             // we don't know the task locality
             if (job.getAvgMapDuration() != 0)
                 // we have the current average duration, so return it
-                return job.getAvgMapDuration();
+                return new TaskPredictionOutput(job.getAvgMapDuration());
         } else {
             // we know the locality, so consider the rate of that type
             Map<String, String> flexFields = job.getFlexFields();
@@ -241,19 +199,19 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         if (rate == 0) {
             // we don't know the rate of that type
             // compute the appropriate average map processing rate from history
-            List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
+            List<JobProfile> comparable = getComparableProfilesByType(job, TaskType.MAP);
             if (comparable.size() < 1)
                 return handleNoMapHistory(job);
             if (!comparable.get(0).getMapperClass().equals(job.getMapperClass()) && job.getAvgMapDuration() != 0)
                 // if history is not relevant and we have the current average duration, return it
-                return job.getAvgMapDuration();
+                return new TaskPredictionOutput(job.getAvgMapDuration());
             Integer numRates = 0;
             for (JobProfile profile : comparable) {
                 logger.debug("Comparing map of " + job.getId() + " with " + profile.getId());
                 if (profile.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null) {
                     completeProfile(profile);
                 }
-                if (remote != null) {
+                if (input.getNodeAddress() != null) {
                     // if we know task locality, we average the map rates of tasks with the same locality
                     String rateString = profile.getFlexField(rateKey);
                     if (rateString != null) {
@@ -276,12 +234,12 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         Long splitSize = Math.max(job.getTotalInputBytes() / job.getTotalMapTasks(), 1);
         Double duration = splitSize / rate;
         logger.debug("Map duration for " + job.getId() + " should be " + splitSize + " / " + rate + "=" + duration);
-        return duration.longValue();
+        return new TaskPredictionOutput(duration.longValue());
     }
 
     private Double calculateMapTaskSelectivity(JobProfile job) {
         // we try to compute selectivity from the map history
-        List<JobProfile> comparable = getComparableProfiles(job, TaskType.MAP);
+        List<JobProfile> comparable = getComparableProfilesByType(job, TaskType.MAP);
         if (comparable.size() < 1 || !comparable.get(0).getMapperClass().equals(job.getMapperClass())) {
             // there is no history, or it is not relevant for selectivity
             if (job.getCompletedMaps() > 0) {
@@ -306,13 +264,12 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         return avgSelectivity / comparable.size();
     }
 
-    private Long handleNoReduceHistory(JobProfile job, Double avgSelectivity) {
+    private TaskPredictionOutput handleNoReduceHistory(JobProfile job, Double avgSelectivity) {
         if (avgSelectivity == 0 || job.getCompletedMaps() == 0) {
             // our selectivity or map rate data is unreliable
             // just return default duration
             logger.debug("No data to compute reduce for " + job.getName() + ". Using default");
-            return conf.getLong(PosumConfiguration.AVERAGE_TASK_DURATION,
-                    PosumConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
+            return new TaskPredictionOutput(DEFAULT_TASK_DURATION);
         }
 
         // calculate the current map rate and assume reduce rate is the same
@@ -327,10 +284,12 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         Double inputPerTask = Math.max(job.getTotalInputBytes() * avgSelectivity / job.getTotalReduceTasks(), 1);
         Double duration = inputPerTask / mapRate;
         logger.debug("Reduce duration computed based on map data for " + job.getId() + " as " + duration + "from (remote) mapRate=" + mapRate + " and selectivity=" + avgSelectivity);
-        return duration.longValue();
+        return new TaskPredictionOutput(duration.longValue());
     }
 
-    private Long predictReduceTaskDuration(JobProfile job) {
+    private TaskPredictionOutput predictReduceTaskDuration(TaskPredictionInput input) {
+        JobProfile job = input.getJob();
+
         Double mergeRate = null, reduceRate = null, typicalShuffleRate = null;
         Long shuffleFirst = null;
 
@@ -356,7 +315,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         if (typicalShuffleRate == null || shuffleFirst == null || mergeRate == null || reduceRate == null) {
             // if the typical shuffle rate is not calculated, we are clearly missing information
             // compute averages based on history
-            List<JobProfile> comparable = getComparableProfiles(job, TaskType.REDUCE);
+            List<JobProfile> comparable = getComparableProfilesByType(job, TaskType.REDUCE);
             if (comparable.size() < 1)
                 return handleNoReduceHistory(job, avgSelectivity);
 
@@ -398,7 +357,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 // our selectivity or reduce rate data is unreliable
                 // just return average reduce duration of historical jobs
                 logger.debug("Reduce duration calculated as simple average for " + job.getId() + " =  " + avgReduceDuration);
-                return avgReduceDuration.longValue();
+                return new TaskPredictionOutput(avgReduceDuration.longValue());
             }
             if (typicalShuffles > 0)
                 typicalShuffleRate = avgShuffleRate / typicalShuffles;
@@ -425,12 +384,12 @@ public class DetailedPredictor extends JobBehaviorPredictor {
                 logger.debug("Reduce duration for " + job.getId() + " should be " + shuffleTime + " + " +
                         inputPerTask + " / " + mergeRate + " + " +
                         inputPerTask + " / " + reduceRate + "=" + duration);
-                return duration.longValue();
+                return new TaskPredictionOutput(duration.longValue());
             }
         }
         // we are missing information; guessing now won't work
         // just return average reduce duration of historical jobs
         logger.debug("Reduce duration calculated as simple average for " + job.getId() + " =  " + avgReduceDuration);
-        return avgReduceDuration.longValue();
+        return new TaskPredictionOutput(avgReduceDuration.longValue());
     }
 }
