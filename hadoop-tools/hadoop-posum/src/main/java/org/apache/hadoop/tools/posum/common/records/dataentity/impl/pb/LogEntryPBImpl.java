@@ -22,7 +22,6 @@ public class LogEntryPBImpl<T extends Payload> extends GeneralDataEntityPBImpl<L
 
     public LogEntryPBImpl() {
         setId(ObjectId.get().toHexString());
-        setTimestamp(System.currentTimeMillis());
     }
 
     public LogEntryPBImpl(Type type, T details) {
@@ -68,26 +67,26 @@ public class LogEntryPBImpl<T extends Payload> extends GeneralDataEntityPBImpl<L
     }
 
     @Override
-    public LogEntry<T> copy() {
-        return new LogEntryPBImpl<>(getProto());
-    }
-
-    @Override
-    public Long getTimestamp() {
+    public Long getLastUpdated() {
         LogEntryProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasTimestamp())
-            return null;
-        return p.getTimestamp();
+        if (p.hasLastUpdated())
+            return p.getLastUpdated();
+        return null;
     }
 
     @Override
-    public void setTimestamp(Long timestamp) {
+    public void setLastUpdated(Long timestamp) {
         maybeInitBuilder();
         if (timestamp == null) {
-            builder.clearTimestamp();
+            builder.clearLastUpdated();
             return;
         }
-        builder.setTimestamp(timestamp);
+        builder.setLastUpdated(timestamp);
+    }
+
+    @Override
+    public LogEntry<T> copy() {
+        return new LogEntryPBImpl<>(getProto());
     }
 
     @Override

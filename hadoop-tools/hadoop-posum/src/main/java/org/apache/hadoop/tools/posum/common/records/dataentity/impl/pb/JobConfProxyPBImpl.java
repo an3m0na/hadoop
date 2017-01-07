@@ -68,6 +68,24 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
     }
 
     @Override
+    public Long getLastUpdated() {
+        JobConfProxyProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasLastUpdated())
+            return p.getLastUpdated();
+        return null;
+    }
+
+    @Override
+    public void setLastUpdated(Long timestamp) {
+        maybeInitBuilder();
+        if (timestamp == null) {
+            builder.clearLastUpdated();
+            return;
+        }
+        builder.setLastUpdated(timestamp);
+    }
+
+    @Override
     public JobConfProxy copy() {
         return new JobConfProxyPBImpl(getProto());
     }

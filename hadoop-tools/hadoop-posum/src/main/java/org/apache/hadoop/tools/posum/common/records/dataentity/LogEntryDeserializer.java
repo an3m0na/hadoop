@@ -19,14 +19,14 @@ public class LogEntryDeserializer extends JsonDeserializer<LogEntry> {
         ObjectNode node = jp.readValueAsTree();
         LogEntry.Type type = LogEntry.Type.valueOf((node.get("type")).asText());
         String id = (node.get(ID_FIELD)).asText();
-        Long timestamp = (node.get("timestamp")).asLong();
+        Long timestamp = (node.get("lastUpdated")).asLong();
 
         JsonNode detailsNode = node.get("details");
         JsonParser parser = detailsNode.traverse();
         parser.setCodec(jp.getCodec());
         LogEntry entry = Records.newRecord(LogEntry.class);
         entry.setId(id);
-        entry.setTimestamp(timestamp);
+        entry.setLastUpdated(timestamp);
         entry.setType(type);
         entry.setDetails(parser.readValueAs(type.getDetailsType().getImplClass()));
         return entry;

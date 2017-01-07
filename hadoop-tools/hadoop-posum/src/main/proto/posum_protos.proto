@@ -49,6 +49,7 @@ message AppProfileProto {
     optional AppStateProto state = 7;
     optional AppStatusProto status = 8;
     optional AppTrackingUIProto trackingUI = 9;
+    optional int64 lastUpdated = 10;
 
     enum AppStateProto {
         STATE_NEW = 0;
@@ -108,6 +109,7 @@ message JobProfileProto {
     optional string reducerClass = 30;
     optional StringStringMapPayloadProto flexFields = 31;
     repeated string splitLocations = 32;
+    optional int64 lastUpdated = 33;
 
     enum JobStateProto {
         STATE_NEW = 0;
@@ -124,6 +126,7 @@ message JobConfProxyProto {
     required string id = 1;
     optional StringStringMapPayloadProto properties = 2;
     optional string confPath = 3;
+    optional int64 lastUpdated = 4;
 }
 
 message TaskProfileProto {
@@ -145,6 +148,7 @@ message TaskProfileProto {
     optional bool local = 16;
     optional string httpAddress = 17;
     optional TaskStateProto state = 18;
+    optional int64 lastUpdated = 19;
 
     enum TaskTypeProto {
         TYPE_MAP = 0;
@@ -164,16 +168,16 @@ message TaskProfileProto {
 message HistoryProfileProto {
     required string id = 1;
     required EntityCollectionProto collection = 2;
-    required int64 timestamp = 3;
-    required string originalId = 4;
-    required bytes original = 5;
+    required string originalId = 3;
+    required bytes original = 4;
+    optional int64 lastUpdated = 5;
 }
 
 message LogEntryProto {
     required string id = 1;
-    required int64 timestamp = 3;
-    required LogTypeProto type = 4;
-    optional bytes details = 5;
+    required LogTypeProto type = 2;
+    optional bytes details = 3;
+    optional int64 lastUpdated = 4;
 
     enum LogTypeProto {
         LG_POLICY_CHANGE = 1;
@@ -181,6 +185,12 @@ message LogEntryProto {
         LG_TASK_PREDICTION = 3;
         LG_GENERAL = 4;
     }
+}
+
+message CountersProxyProto {
+    required string id = 1;
+    repeated CounterGroupInfoPayloadProto groups = 2;
+    optional int64 lastUpdated = 3;
 }
 
 // --------- Requests ---------
@@ -306,11 +316,6 @@ message StringStringMapPayloadProto {
 
 message StringListPayloadProto {
     repeated string entries = 1;
-}
-
-message CountersProxyProto {
-    required string id = 1;
-    repeated CounterGroupInfoPayloadProto groups = 2;
 }
 
 message CounterGroupInfoPayloadProto {

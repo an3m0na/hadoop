@@ -54,6 +54,24 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     }
 
     @Override
+    public Long getLastUpdated() {
+        TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasLastUpdated())
+            return p.getLastUpdated();
+        return null;
+    }
+
+    @Override
+    public void setLastUpdated(Long timestamp) {
+        maybeInitBuilder();
+        if (timestamp == null) {
+            builder.clearLastUpdated();
+            return;
+        }
+        builder.setLastUpdated(timestamp);
+    }
+
+    @Override
     public TaskProfile copy() {
         return new TaskProfilePBImpl(getProto());
     }

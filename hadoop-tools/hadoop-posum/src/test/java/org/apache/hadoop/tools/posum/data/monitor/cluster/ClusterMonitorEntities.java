@@ -29,7 +29,7 @@ class ClusterMonitorEntities {
     final JobProfile FINISHED_JOB, RUNNING_JOB;
     final JobProfile[] RUNNING_JOBS;
     final TaskProfile[] FINISHED_TASKS, RUNNING_TASKS;
-    final TaskProfile RUNNING_REDUCE_TASK;
+    final TaskProfile RUNNING_REDUCE_TASK, RUNNING_MAP_TASK;
     final TaskProfile DETAILED_REDUCE_TASK;
     final TaskProfile FINISHED_DETAILED_REDUCE_TASK;
     final CountersProxy JOB_COUNTERS, TASK_COUNTERS;
@@ -93,7 +93,7 @@ class ClusterMonitorEntities {
         FINISHED_JOB.setMapProgress(100f);
         FINISHED_JOB.setReduceProgress(100f);
 
-        TaskProfile RUNNING_MAP_TASK = Records.newRecord(TaskProfile.class);
+        RUNNING_MAP_TASK = Records.newRecord(TaskProfile.class);
         RUNNING_MAP_TASK.setId("task_1326821518301_0005_m_0");
         RUNNING_MAP_TASK.setAppId(APP_ID);
         RUNNING_MAP_TASK.setJobId(JOB_ID);

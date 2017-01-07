@@ -130,12 +130,12 @@ public class DataMasterWebApp extends PosumWebApp {
         FindByQueryCall findChoices = FindByQueryCall.newInstance(LogEntry.Type.POLICY_CHANGE.getCollection(),
                 QueryUtils.and(
                         QueryUtils.is("type", LogEntry.Type.POLICY_CHANGE),
-                        QueryUtils.greaterThan("timestamp", since)
+                        QueryUtils.greaterThan("lastUpdated", since)
                 ));
         List<LogEntry<SimplePropertyPayload>> choiceLogs =
                 context.getDataStore().executeDatabaseCall(findChoices, DatabaseReference.getLogs()).getEntities();
         for (LogEntry<SimplePropertyPayload> choiceEntry : choiceLogs) {
-            times.add(choiceEntry.getTimestamp());
+            times.add(choiceEntry.getLastUpdated());
             choices.add((String) choiceEntry.getDetails().getValue());
         }
         return new JsonObject().put("times", times).put("policies", choices);
