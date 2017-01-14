@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.test;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.mapreduce.v2.api.records.impl.pb.JobIdPBImpl;
 import org.apache.hadoop.mapreduce.v2.api.records.impl.pb.TaskIdPBImpl;
 import org.apache.hadoop.tools.posum.client.data.Database;
@@ -48,11 +49,14 @@ public class Utils {
   public static final JobProfile JOB1 = Records.newRecord(JobProfile.class);
   public static final JobProfile JOB2 = Records.newRecord(JobProfile.class);
   public static final JobProfile JOB3 = Records.newRecord(JobProfile.class);
-
   public static final TaskProfile TASK11 = Records.newRecord(TaskProfile.class);
   public static final TaskProfile TASK12 = Records.newRecord(TaskProfile.class);
+  public static final TaskProfile TASK21 = Records.newRecord(TaskProfile.class);
+  public static final TaskProfile TASK22 = Records.newRecord(TaskProfile.class);
   public static final TaskId TASK11_ID = new TaskIdPBImpl();
   public static final TaskId TASK12_ID = new TaskIdPBImpl();
+  public static final TaskId TASK21_ID = new TaskIdPBImpl();
+  public static final TaskId TASK22_ID = new TaskIdPBImpl();
 
   public static final String RACK1 = "firstRack";
   public static final String RACK2 = "secondRack";
@@ -81,6 +85,7 @@ public class Utils {
 
     TASK11_ID.setJobId(JOB1_ID);
     TASK11_ID.setId(1);
+    TASK11.setType(TaskType.MAP);
     TASK11.setId(TASK11_ID.toString());
     TASK11.setStartTime(JOB1.getStartTime());
     TASK11.setFinishTime(TASK11.getStartTime() + DURATION_UNIT * 3);
@@ -88,6 +93,7 @@ public class Utils {
 
     TASK12_ID.setJobId(JOB1_ID);
     TASK12_ID.setId(2);
+    TASK11.setType(TaskType.REDUCE);
     TASK12.setId(TASK12_ID.toString());
     TASK12.setStartTime(TASK11.getFinishTime());
     TASK12.setFinishTime(JOB1.getFinishTime());
@@ -111,6 +117,22 @@ public class Utils {
     JOB2.setTotalReduceTasks(0);
     JOB2.setStartTime(APP2.getStartTime());
     JOB2.setFinishTime(APP2.getFinishTime());
+
+    TASK21_ID.setJobId(JOB2_ID);
+    TASK21_ID.setId(1);
+    TASK11.setType(TaskType.MAP);
+    TASK21.setId(TASK21_ID.toString());
+    TASK21.setStartTime(JOB2.getStartTime());
+    TASK21.setFinishTime(TASK21.getStartTime() + DURATION_UNIT);
+    TASK21.setHttpAddress(NODE2);
+
+    TASK22_ID.setJobId(JOB2_ID);
+    TASK22_ID.setId(2);
+    TASK11.setType(TaskType.MAP);
+    TASK22.setId(TASK22_ID.toString());
+    TASK22.setStartTime(TASK21.getFinishTime());
+    TASK22.setFinishTime(JOB2.getFinishTime());
+    TASK22.setHttpAddress(NODE2);
 
     APP3.setId(APP3_ID.toString());
     APP3.setName(JOB_NAME_ROOT + " 3");
