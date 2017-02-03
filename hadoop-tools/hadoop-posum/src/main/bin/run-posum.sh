@@ -49,9 +49,8 @@ runMaster() {
         "org.apache.hadoop.tools.posum.simulator.master.SimulationMaster"
         )
 
-    HADOOP_BASE=`which hadoop`
-    HADOOP_BASE=`dirname $HADOOP_BASE`/..
-    POSUM_CLASSPATH=`hadoop classpath`:${HADOOP_BASE}/share/hadoop/tools/lib/*
+    HADOOP_BIN=${HADOOP_HOME}/bin
+    POSUM_CLASSPATH=`${HADOOP_BIN}/hadoop classpath`:${HADOOP_HOME}/share/hadoop/tools/lib/*
 
     if [[ ${doStop} == true ]] || [[ ${doRestart} == true ]]; then
 
@@ -69,7 +68,7 @@ runMaster() {
     echo ">>> Starting POSUM processes" > run-posum.out
     for (( i=0; i<${#PROCESSES[@]}; i++ )); do
       echo ">> Starting ${PROCESSES[${i}]}" >> run-posum.out
-      java -cp ${POSUM_CLASSPATH} -Xmx${maxmem}M -Dhadoop.log.dir="${HADOOP_BASE}/logs" ${PROCESSES[${i}]} >> run-posum.out 2>&1 &
+      java -cp ${POSUM_CLASSPATH} -Xmx${maxmem}M -Dhadoop.log.dir="${HADOOP_HOME}/logs" ${PROCESSES[${i}]} >> run-posum.out 2>&1 &
       sleep 3
     done
 

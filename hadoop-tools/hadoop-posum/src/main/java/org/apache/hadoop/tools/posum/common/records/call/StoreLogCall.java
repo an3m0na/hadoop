@@ -43,7 +43,7 @@ public abstract class StoreLogCall extends LockBasedDatabaseCallImpl<SimplePrope
         if (db == null || !db.isOfType(DataEntityDB.Type.SIMULATION)) {
             // do not store unintended logs from simulations
             return SimplePropertyPayload.newInstance("logId",
-                    dataStore.store(DataEntityDB.getLogs(), getLogEntry().getType().getCollection(), getLogEntry()));
+                    dataStore.updateOrStore(DataEntityDB.getLogs(), getLogEntry().getType().getCollection(), getLogEntry()));
         }
         return SimplePropertyPayload.newInstance("logId", (String) null);
     }

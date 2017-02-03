@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.payload;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Map;
 /**
  * Created by ane on 8/15/16.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class PolicyInfoMapPayload implements Payload{
     public static PolicyInfoMapPayload newInstance(Map<String, PolicyInfoPayload> entries) {
         PolicyInfoMapPayload map = Records.newRecord(PolicyInfoMapPayload.class);
