@@ -11,6 +11,11 @@
 
     <artifactId>hadoop-posum</artifactId>
     <description>Apache Hadoop PortfoliO SchedUler for Mapreduce</description>
+    <properties>
+        <mongodb.version>3.2.1</mongodb.version>
+        <mongojack.version>2.6.0</mongojack.version>
+        <mockito.version>1.10.19</mockito.version>
+    </properties>
     <name>Apache Hadoop PortfoliO SchedUler for Mapreduce</name>
     <packaging>jar</packaging>
 
@@ -33,7 +38,15 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-sls</artifactId>
+            <artifactId>hadoop-mapreduce-client-app</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-rumen</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -51,27 +64,23 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver</artifactId>
-            <version>3.2.1</version>
+            <version>${mongodb.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mongojack</groupId>
             <artifactId>mongojack</artifactId>
-            <version>2.6.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-hdfs</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-mapreduce-client-app</artifactId>
+            <version>${mongojack.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>1.10.19</version>
+            <version>${mockito.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.codahale.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>

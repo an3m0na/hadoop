@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
@@ -33,6 +34,7 @@ public class PolicyInfoMapPayloadPBImpl extends PolicyInfoMapPayload implements 
         viaProto = true;
     }
 
+    @JsonIgnore
     public PolicyInfoMapPayloadProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
@@ -81,7 +83,10 @@ public class PolicyInfoMapPayloadPBImpl extends PolicyInfoMapPayload implements 
 
                             @Override
                             public PolicyInfoPayloadProto next() {
-                                return ((PolicyInfoPayloadPBImpl) entryIterator.next()).getProto();
+                                Map.Entry<String, PolicyInfoPayload> entry = entryIterator.next();
+                                PolicyInfoPayloadPBImpl ret = ((PolicyInfoPayloadPBImpl) entry.getValue());
+                                ret.setPolicyName(entry.getKey());
+                                return ret.getProto();
                             }
 
                             @Override
@@ -130,6 +135,7 @@ public class PolicyInfoMapPayloadPBImpl extends PolicyInfoMapPayload implements 
     }
 
     @Override
+    @JsonIgnore
     public ByteString getProtoBytes() {
         return getProto().toByteString();
     }

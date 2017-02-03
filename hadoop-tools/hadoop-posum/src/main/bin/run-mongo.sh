@@ -36,9 +36,8 @@ parseArgs() {
 ###############################################################################
 runMaster() {
 
-  HADOOP_BASE=`which hadoop`
-  HADOOP_BASE=`dirname $HADOOP_BASE`/..
-  POSUM_CLASSPATH=`hadoop classpath`:${HADOOP_BASE}/share/hadoop/tools/lib/*
+  HADOOP_BIN=${HADOOP_HOME}/bin
+  POSUM_CLASSPATH=`${HADOOP_BIN}/hadoop classpath`:${HADOOP_HOME}/share/hadoop/tools/lib/*
 
   echo ">>> Checking mongod..."
   pid=`pgrep mongod`
@@ -53,12 +52,12 @@ runMaster() {
   else
     if [[ -z ${pid} ]]; then
       echo " >> Starting mongod"
-      mkdir -p ${HADOOP_BASE}/logs
+      mkdir -p ${HADOOP_HOME}/logs
       if [[ ${noClear} == false ]]; then
         rm -rf ${dbPath}
       fi
       mkdir -p ${dbPath}
-      mongod --fork --logpath ${HADOOP_BASE}/logs/mongodb.log --dbpath ${dbPath} --bind_ip 127.0.0.1
+      mongod --fork --logpath ${HADOOP_HOME}/logs/mongodb.log --dbpath ${dbPath} --bind_ip 127.0.0.1
 	fi
   fi
 }
