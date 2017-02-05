@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
@@ -25,6 +26,7 @@ public class PolicyInfoPayloadPBImpl extends PolicyInfoPayload implements Payloa
         viaProto = true;
     }
 
+    @JsonIgnore
     public PolicyInfoPayloadProto getProto() {
         mergeLocalToProto();
         proto = viaProto ? proto : builder.build();
@@ -74,7 +76,7 @@ public class PolicyInfoPayloadPBImpl extends PolicyInfoPayload implements Payloa
     public Integer getUsageNumber() {
         PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
         if (!p.hasUsageNumber())
-            return null;
+            return 0;
         return p.getUsageNumber();
 
     }
@@ -91,7 +93,7 @@ public class PolicyInfoPayloadPBImpl extends PolicyInfoPayload implements Payloa
     public Long getUsageTime() {
         PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
         if (!p.hasUsageTime())
-            return null;
+            return 0L;
         return p.getUsageTime();
     }
 
@@ -107,7 +109,7 @@ public class PolicyInfoPayloadPBImpl extends PolicyInfoPayload implements Payloa
     public Long getLastStarted() {
         PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
         if (!p.hasLastStarted())
-            return null;
+            return 0L;
         return p.getLastStarted();
     }
 
@@ -120,7 +122,25 @@ public class PolicyInfoPayloadPBImpl extends PolicyInfoPayload implements Payloa
         builder.setLastStarted(lastStarted);
     }
 
+
+    public String getPolicyName(){
+        PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
+        if (!p.hasPolicyName())
+            return null;
+        return p.getPolicyName();
+    }
+
+    public void setPolicyName(String policyName){
+        maybeInitBuilder();
+        if (policyName == null) {
+            builder.clearPolicyName();
+            return;
+        }
+        builder.setPolicyName(policyName);
+    }
+
     @Override
+    @JsonIgnore
     public ByteString getProtoBytes() {
         return getProto().toByteString();
     }

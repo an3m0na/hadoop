@@ -1,10 +1,12 @@
 package org.apache.hadoop.tools.posum.common.records.payload;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.hadoop.yarn.util.Records;
 
 /**
  * Created by ane on 8/15/16.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class PolicyInfoPayload implements Payload{
 
     public static PolicyInfoPayload newInstance() {
