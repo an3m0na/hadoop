@@ -44,9 +44,9 @@ runMaster() {
     set -e
 
     PROCESSES=(
-        "org.apache.hadoop.tools.posum.orchestrator.master.OrchestratorMaster"
-        "org.apache.hadoop.tools.posum.database.master.DataMaster"
-        "org.apache.hadoop.tools.posum.simulator.master.SimulationMaster"
+        "org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMaster"
+        "org.apache.hadoop.tools.posum.data.master.DataMaster"
+        "org.apache.hadoop.tools.posum.simulation.master.SimulationMaster"
         )
 
     HADOOP_BIN=${HADOOP_HOME}/bin

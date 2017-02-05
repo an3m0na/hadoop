@@ -129,7 +129,7 @@ public class Utils {
     }
 
     public enum PosumProcess {
-        OM("OrchestratorMaster",
+        OM("OrchestrationMaster",
                 PosumConfiguration.PM_ADDRESS_DEFAULT + ":" + PosumConfiguration.PM_PORT_DEFAULT,
                 OrchestratorMasterProtocol.class),
         DM("DataMaster",

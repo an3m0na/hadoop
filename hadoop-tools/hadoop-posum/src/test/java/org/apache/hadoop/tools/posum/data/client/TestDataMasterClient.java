@@ -4,7 +4,7 @@ import org.apache.hadoop.tools.posum.client.data.DataMasterClient;
 import org.apache.hadoop.tools.posum.client.data.TestDataStore;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.data.master.DataMaster;
-import org.apache.hadoop.tools.posum.orchestration.master.OrchestratorMaster;
+import org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMaster;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.apache.hadoop.tools.posum.test.ServiceRunner;
 import org.apache.hadoop.tools.posum.test.Utils;
@@ -21,7 +21,7 @@ public class TestDataMasterClient extends TestDataStore {
     protected void setUpDataStore() throws Exception {
         System.out.println("Starting MongoDB and POSUM processes...");
         Utils.runMongoDB();
-        posumMaster = new ServiceRunner<>(OrchestratorMaster.class);
+        posumMaster = new ServiceRunner<>(OrchestrationMaster.class);
         posumMaster.start();
         dataMaster = new ServiceRunner<>(DataMaster.class);
         dataMaster.start();

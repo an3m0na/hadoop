@@ -43,7 +43,7 @@ public class SimulatorClient extends AbstractService implements Simulator {
                     SimulatorMasterProtocol.class).createProxy();
             checkPing();
         } catch (IOException e) {
-            throw new PosumException("Could not init OrchestratorMaster client", e);
+            throw new PosumException("Could not init OrchestrationMaster client", e);
         }
         super.serviceStart();
     }

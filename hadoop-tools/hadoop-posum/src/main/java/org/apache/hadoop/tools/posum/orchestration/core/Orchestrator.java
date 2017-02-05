@@ -7,7 +7,7 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.orchestration.master.OrchestratorMasterContext;
+import org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMasterContext;
 import org.apache.hadoop.tools.posum.client.scheduler.MetaScheduler;
 import org.apache.hadoop.yarn.event.EventHandler;
 
@@ -17,11 +17,11 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
 
     private static Log logger = LogFactory.getLog(Orchestrator.class);
 
-    private OrchestratorMasterContext pmContext;
+    private OrchestrationMasterContext pmContext;
     private SimulationManager simulationManager;
     private boolean switchEnabled;
 
-    public Orchestrator(OrchestratorMasterContext pmContext) {
+    public Orchestrator(OrchestrationMasterContext pmContext) {
         super(Orchestrator.class.getName());
         this.pmContext = pmContext;
     }

@@ -33,11 +33,11 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OrchestratorCommService extends CompositeService implements OrchestratorMasterProtocol {
+public class OrchestrationCommService extends CompositeService implements OrchestratorMasterProtocol {
 
-    private static Log logger = LogFactory.getLog(OrchestratorCommService.class);
+    private static Log logger = LogFactory.getLog(OrchestrationCommService.class);
 
-    OrchestratorMasterContext pmContext;
+    OrchestrationMasterContext pmContext;
     private Server server;
     private MetaSchedulerClient schedulerClient;
     private DataMasterClient dataClient;
@@ -45,8 +45,8 @@ public class OrchestratorCommService extends CompositeService implements Orchest
 
     private String connectAddress;
 
-    public OrchestratorCommService(OrchestratorMasterContext context) {
-        super(OrchestratorCommService.class.getName());
+    public OrchestrationCommService(OrchestrationMasterContext context) {
+        super(OrchestrationCommService.class.getName());
         this.pmContext = context;
     }
 

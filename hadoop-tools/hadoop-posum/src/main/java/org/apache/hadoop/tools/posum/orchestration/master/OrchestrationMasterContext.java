@@ -3,10 +3,10 @@ package org.apache.hadoop.tools.posum.orchestration.master;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
-public class OrchestratorMasterContext {
+public class OrchestrationMasterContext {
     private Dispatcher dispatcher;
     private DummyTokenSecretManager tokenSecretManager;
-    private OrchestratorCommService commService;
+    private OrchestrationCommService commService;
 
     public void setDispatcher(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -24,11 +24,11 @@ public class OrchestratorMasterContext {
         return tokenSecretManager;
     }
 
-    public void setCommService(OrchestratorCommService commService) {
+    public void setCommService(OrchestrationCommService commService) {
         this.commService = commService;
     }
 
-    public OrchestratorCommService getCommService() {
+    public OrchestrationCommService getCommService() {
         return commService;
     }
 
