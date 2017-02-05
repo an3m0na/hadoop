@@ -31,7 +31,7 @@ public class RestClient {
         HISTORY("History", JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_ADDRESS, "ws/v1/history/mapreduce/"),
         AM("ApplicationMaster", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, "proxy/%s/ws/v1/mapreduce/"),
         PS("PortfolioScheduler", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS + PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT, "/ajax/"),
-        OM("OrchestratorMaster", "http://localhost:" + PosumConfiguration.MASTER_WEBAPP_PORT_DEFAULT, "/ajax/"),
+        OM("OrchestrationMaster", "http://localhost:" + PosumConfiguration.MASTER_WEBAPP_PORT_DEFAULT, "/ajax/"),
         SM("SimulationMaster", "http://localhost:" + PosumConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT, "/ajax/"),
         DM("DataMaster", "http://localhost:" + PosumConfiguration.DM_WEBAPP_PORT_DEFAULT, "/ajax/");
 

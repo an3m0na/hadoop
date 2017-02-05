@@ -42,7 +42,7 @@ public class OrchestrationMasterClient extends AbstractService implements Orches
                     OrchestratorMasterProtocol.class).createProxy();
             checkPing();
         } catch (IOException e) {
-            throw new PosumException("Could not init OrchestratorMaster client", e);
+            throw new PosumException("Could not init OrchestrationMaster client", e);
         }
         super.serviceStart();
     }
@@ -69,7 +69,7 @@ public class OrchestrationMasterClient extends AbstractService implements Orches
 
     private void checkPing() {
         sendSimpleRequest("checkPing", SimpleRequest.newInstance(SimpleRequest.Type.PING, "Hello world!"));
-        logger.info("Successfully connected to OrchestratorMaster");
+        logger.info("Successfully connected to OrchestrationMaster");
     }
 
     @Override
