@@ -318,9 +318,7 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
     @Override
     public Boolean isLocal() {
         TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasLocal())
-            return null;
-        return p.getLocal();
+        return p.hasLocal() && p.getLocal();
     }
 
     @Override

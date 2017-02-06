@@ -7,12 +7,13 @@ import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
-import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.simulation.master.SimulationMaster;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 
 
@@ -42,19 +43,22 @@ public class Simulation implements Callable<SimulationResultPayload> {
         dataStore.copyDatabase(DatabaseReference.getSimulation(), dbReference);
         Database db = Database.extractFrom(dataStore, dbReference);
         predictor.initialize(db);
-        MultiEntityPayload latest = dataStore.executeDatabaseCall(GET_LATEST, dbReference);
-        if(latest != null)
-            stats.setStartTimeCluster(latest.getEntities().get(0).getLastUpdated());
+        stats.setStartTimeCluster(getLastUpdated());
         stats.setStartTimePhysical(System.currentTimeMillis());
     }
 
     private void tearDown() {
-        MultiEntityPayload latest = dataStore.executeDatabaseCall(GET_LATEST, dbReference);
-        if(latest != null)
-            stats.setEndTimeCluster(latest.getEntities().get(0).getLastUpdated());
+        stats.setEndTimeCluster(getLastUpdated());
         stats.setEndTimePhysical(System.currentTimeMillis());
         dataStore.clearDatabase(dbReference);
         //TODO log stats
+    }
+
+    private Long getLastUpdated(){
+        List<JobProfile> latest = dataStore.executeDatabaseCall(GET_LATEST, dbReference).getEntities();
+        if(latest != null && latest.size() > 0)
+            return latest.get(0).getLastUpdated();
+        return null;
     }
 
     @Override
