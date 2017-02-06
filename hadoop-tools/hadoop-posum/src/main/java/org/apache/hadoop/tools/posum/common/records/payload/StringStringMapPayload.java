@@ -4,9 +4,6 @@ import org.apache.hadoop.yarn.util.Records;
 
 import java.util.Map;
 
-/**
- * Created by ane on 3/23/16.
- */
 public abstract class StringStringMapPayload implements Payload{
 
     public static StringStringMapPayload newInstance(Map<String, String> map) {

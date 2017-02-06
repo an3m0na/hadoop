@@ -22,9 +22,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class OrchestratorMasterProtocolPBClientImpl implements OrchestratorMasterProtocol, Closeable {
 
     private OrchestratorMasterProtocolPB proxy;

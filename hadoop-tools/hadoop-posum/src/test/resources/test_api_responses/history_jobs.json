@@ -1,0 +1,20 @@
+{
+  "jobs" : {
+    "job" : [
+      {
+        "submitTime" : 1326381446500,
+        "state" : "SUCCEEDED",
+        "user" : "user1",
+        "reducesTotal" : 1,
+        "mapsCompleted" : 1,
+        "startTime" : 1326381446529,
+        "id" : "job_1326821518301_0005",
+        "name" : "Sleep job",
+        "reducesCompleted" : 1,
+        "mapsTotal" : 1,
+        "queue" : "a1",
+        "finishTime" : 1326381582106
+      }
+    ]
+  }
+}

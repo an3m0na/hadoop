@@ -9,9 +9,6 @@ import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.PosumProtos.SimulationResultPayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.SimulationResultPayloadProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class SimulationResultPayloadPBImpl extends SimulationResultPayload implements PayloadPB {
     private SimulationResultPayloadProto proto = SimulationResultPayloadProto.getDefaultInstance();
     private SimulationResultPayloadProto.Builder builder = null;

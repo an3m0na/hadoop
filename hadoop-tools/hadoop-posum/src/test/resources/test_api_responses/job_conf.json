@@ -1,0 +1,42 @@
+{
+  "conf" : {
+    "path" : "hdfs://host.domain.com:9000/user/user1/.staging/job_1326381300833_0002/job.xml",
+    "property" : [
+      {
+        "value" : "/home/hadoop/hdfs/data",
+        "name" : "dfs.datanode.data.dir",
+        "source" : ["hdfs-site.xml", "job.xml"]
+      },
+      {
+        "value" : "org.apache.hadoop.yarn.server.webproxy.amfilter.AmFilterInitializer",
+        "name" : "hadoop.http.filter.initializers",
+        "source" : ["programatically", "job.xml"]
+      },
+      {
+        "value" : "/home/hadoop/tmp",
+        "name" : "mapreduce.cluster.temp.dir",
+        "source" : ["mapred-site.xml"]
+      },
+      {
+        "value" : "Sleep job",
+        "name" : "mapreduce.job.name",
+        "source" : ["job.xml"]
+      },
+      {
+        "value" : "user1",
+        "name" : "mapreduce.job.user.name",
+        "source" : ["job.xml"]
+      },
+      {
+        "value" : "a1",
+        "name" : "mapreduce.job.queuename",
+        "source" : ["job.xml"]
+      },
+      {
+        "value" : "1",
+        "name" : "mapreduce.job.reduces",
+        "source" : ["job.xml"]
+      }
+    ]
+  }
+}

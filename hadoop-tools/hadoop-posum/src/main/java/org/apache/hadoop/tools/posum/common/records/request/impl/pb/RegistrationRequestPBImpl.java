@@ -7,9 +7,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.proto.PosumProtos.RegistrationRequestProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.RegistrationRequestProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class RegistrationRequestPBImpl extends RegistrationRequest {
     private RegistrationRequestProto proto = RegistrationRequestProto.getDefaultInstance();
     private RegistrationRequestProto.Builder builder = null;

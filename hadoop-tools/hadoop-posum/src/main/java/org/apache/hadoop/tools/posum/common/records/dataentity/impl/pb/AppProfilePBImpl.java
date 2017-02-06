@@ -9,9 +9,6 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.proto.PosumProtos.AppProfileProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.AppProfileProtoOrBuilder;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppProfileProto, AppProfileProto.Builder>
         implements AppProfile {
 
@@ -19,7 +16,7 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
     }
 
     public AppProfilePBImpl(AppProfileProto proto) {
-       super(proto);
+        super(proto);
     }
 
     @Override
@@ -55,6 +52,24 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
             return;
         }
         builder.setId(id);
+    }
+
+    @Override
+    public Long getLastUpdated() {
+        AppProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasLastUpdated())
+            return p.getLastUpdated();
+        return null;
+    }
+
+    @Override
+    public void setLastUpdated(Long timestamp) {
+        maybeInitBuilder();
+        if (timestamp == null) {
+            builder.clearLastUpdated();
+            return;
+        }
+        builder.setLastUpdated(timestamp);
     }
 
     @Override

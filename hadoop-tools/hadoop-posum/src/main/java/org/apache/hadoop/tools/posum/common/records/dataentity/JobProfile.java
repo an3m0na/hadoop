@@ -5,9 +5,6 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 2/8/16.
- */
 public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
     //NOT INCLUDED:

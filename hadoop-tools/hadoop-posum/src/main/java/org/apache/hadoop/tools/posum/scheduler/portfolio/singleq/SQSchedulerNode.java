@@ -13,9 +13,6 @@ import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class SQSchedulerNode extends SchedulerNode {
 
     private static Log logger = LogFactory.getLog(SQSchedulerNode.class);

@@ -2,26 +2,23 @@ package org.apache.hadoop.tools.posum.common.records.request;
 
 
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 3/20/16.
- */
 
 
 public abstract class DatabaseCallExecutionRequest {
 
-    public static DatabaseCallExecutionRequest newInstance(DatabaseCall call, DataEntityDB db) {
+    public static DatabaseCallExecutionRequest newInstance(DatabaseCall call, DatabaseReference db) {
         DatabaseCallExecutionRequest request = Records.newRecord(DatabaseCallExecutionRequest.class);
-        request.setEntityDB(db);
+        request.setDatabase(db);
         request.setCall(call);
         return request;
     }
 
-    public abstract DataEntityDB getEntityDB();
+    public abstract DatabaseReference getDatabase();
 
-    public abstract void setEntityDB(DataEntityDB db);
+    public abstract void setDatabase(DatabaseReference db);
 
     public abstract DatabaseCall getCall();
 

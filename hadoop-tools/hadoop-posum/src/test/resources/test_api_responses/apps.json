@@ -1,0 +1,29 @@
+{
+  "apps":
+  {
+    "app":
+    [
+      {
+        "finishedTime" : 1326824991300,
+        "amContainerLogs" : "http://host.domain.com:8042/node/containerlogs/container_1326821518301_0005_01_000001",
+        "trackingUI" : "History",
+        "state" : "FINISHED",
+        "user" : "user1",
+        "id" : "application_1326821518301_0005",
+        "clusterId" : 1326821518301,
+        "finalStatus" : "SUCCEEDED",
+        "amHostHttpAddress" : "host.domain.com:8042",
+        "progress" : 100,
+        "name" : "Sleep job",
+        "startedTime" : 1326824544552,
+        "elapsedTime" : 446748,
+        "diagnostics" : "",
+        "trackingUrl" : "http://host.domain.com:8088/proxy/application_1326821518301_0005/jobhistory/job/job_1326821518301_5_5",
+        "queue" : "a1",
+        "allocatedMB" : 0,
+        "allocatedVCores" : 0,
+        "runningContainers" : 1
+      }
+    ]
+  }
+}

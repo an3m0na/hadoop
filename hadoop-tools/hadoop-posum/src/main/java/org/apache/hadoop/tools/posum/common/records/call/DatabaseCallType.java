@@ -3,9 +3,6 @@ package org.apache.hadoop.tools.posum.common.records.call;
 import org.apache.hadoop.tools.posum.common.records.call.impl.pb.*;
 import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
 
-/**
- * Created by ane on 8/1/16.
- */
 public enum DatabaseCallType {
     FIND_BY_ID(FindByIdCallPBImpl.class, PayloadType.SINGLE_ENTITY),
     DELETE_BY_ID(DeleteByIdCallPBImpl.class, PayloadType.VOID),

@@ -37,9 +37,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-/**
- * Created by ane on 1/22/16.
- */
 public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
         N extends SQSchedulerNode,
         Q extends SQSQueue,

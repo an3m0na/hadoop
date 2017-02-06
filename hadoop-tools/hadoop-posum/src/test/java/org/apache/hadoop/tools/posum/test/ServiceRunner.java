@@ -9,9 +9,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by ane on 8/2/16.
- */
 public class ServiceRunner<T extends PosumMasterProcess> extends Thread {
 
     private T service = null;

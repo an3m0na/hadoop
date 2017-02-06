@@ -41,9 +41,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Created by ane on 1/22/16.
- */
 public abstract class ExtensibleCapacityScheduler<
         A extends ExtCaAppAttempt,
         N extends ExtCaSchedulerNode>

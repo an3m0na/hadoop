@@ -12,9 +12,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.JobConfProxyProtoOrBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, JobConfProxyProto, JobConfProxyProto.Builder>
         implements JobConfProxy {
 
@@ -68,6 +65,24 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
             return;
         }
         builder.setId(id);
+    }
+
+    @Override
+    public Long getLastUpdated() {
+        JobConfProxyProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasLastUpdated())
+            return p.getLastUpdated();
+        return null;
+    }
+
+    @Override
+    public void setLastUpdated(Long timestamp) {
+        maybeInitBuilder();
+        if (timestamp == null) {
+            builder.clearLastUpdated();
+            return;
+        }
+        builder.setLastUpdated(timestamp);
     }
 
     @Override

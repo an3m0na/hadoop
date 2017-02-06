@@ -1,16 +1,13 @@
 package org.apache.hadoop.tools.posum.common.records.call;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
-import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
+import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
 
-/**
- * Created by ane on 7/29/16.
- */
 abstract class ThreePhaseDatabaseCallImpl<T extends Payload> implements ThreePhaseDatabaseCall<T> {
 
     @Override
-    public T executeCall(LockBasedDataStore dataStore, DataEntityDB db) {
+    public T executeCall(LockBasedDataStore dataStore, DatabaseReference db) {
         prepare(dataStore, db);
         try {
             T ret = execute(dataStore, db);

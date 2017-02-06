@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.scheduler.meta.MetaSchedulerCommService;
+import org.apache.hadoop.tools.posum.scheduler.core.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSAppAttempt;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSQueue;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSchedulerNode;
@@ -17,9 +17,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 4/1/16.
- */
 public abstract class PluginPolicy<
         A extends SchedulerApplicationAttempt,
         N extends SchedulerNode>

@@ -4,9 +4,6 @@ import org.apache.hadoop.tools.posum.common.records.call.query.impl.pb.Compositi
 import org.apache.hadoop.tools.posum.common.records.call.query.impl.pb.PropertyRangeQueryPBImpl;
 import org.apache.hadoop.tools.posum.common.records.call.query.impl.pb.PropertyValueQueryPBImpl;
 
-/**
- * Created by ane on 8/13/16.
- */
 public enum DatabaseQueryType {
     COMPOSITION(CompositionQueryPBImpl.class),
     PROPERTY_VALUE(PropertyValueQueryPBImpl.class),

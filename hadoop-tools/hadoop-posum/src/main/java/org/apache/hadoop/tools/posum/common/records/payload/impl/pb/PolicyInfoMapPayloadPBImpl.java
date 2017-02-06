@@ -15,9 +15,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class PolicyInfoMapPayloadPBImpl extends PolicyInfoMapPayload implements PayloadPB {
     private PolicyInfoMapPayloadProto proto = PolicyInfoMapPayloadProto.getDefaultInstance();
     private PolicyInfoMapPayloadProto.Builder builder = null;

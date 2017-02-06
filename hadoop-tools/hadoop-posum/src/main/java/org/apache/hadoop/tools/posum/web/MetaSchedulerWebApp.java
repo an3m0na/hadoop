@@ -6,7 +6,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.util.*;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
-import org.apache.hadoop.tools.posum.scheduler.meta.PortfolioMetaScheduler;
+import org.apache.hadoop.tools.posum.scheduler.core.PortfolioMetaScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;
 import org.mortbay.jetty.Handler;
@@ -16,9 +16,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
-/**
- * Created by ane on 4/29/16.
- */
 public class MetaSchedulerWebApp extends PosumWebApp {
     private static Log logger = LogFactory.getLog(PosumWebApp.class);
 

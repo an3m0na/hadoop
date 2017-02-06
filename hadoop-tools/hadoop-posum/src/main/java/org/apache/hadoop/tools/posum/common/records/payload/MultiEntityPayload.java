@@ -6,9 +6,6 @@ import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;
 
-/**
- * Created by ane on 3/20/16.
- */
 public abstract class MultiEntityPayload implements Payload {
 
     public static <T extends GeneralDataEntity<T>> MultiEntityPayload newInstance(DataEntityCollection type, List<T> entities) {

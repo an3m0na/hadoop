@@ -11,9 +11,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.JobProfileProtoOrBuilder;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobProfileProto, JobProfileProto.Builder>
         implements JobProfile {
 
@@ -66,6 +63,24 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
             return;
         }
         builder.setId(id);
+    }
+
+    @Override
+    public Long getLastUpdated() {
+        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasLastUpdated())
+            return p.getLastUpdated();
+        return null;
+    }
+
+    @Override
+    public void setLastUpdated(Long timestamp) {
+        maybeInitBuilder();
+        if (timestamp == null) {
+            builder.clearLastUpdated();
+            return;
+        }
+        builder.setLastUpdated(timestamp);
     }
 
     @Override
@@ -548,7 +563,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     public void setMapperClass(String name) {
         maybeInitBuilder();
         if (name == null) {
-            builder.clearName();
+            builder.clearMapperClass();
             return;
         }
         builder.setMapperClass(name);

@@ -12,9 +12,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.SimpleResponseProto;
 
 import java.io.IOException;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class MetaSchedulerProtocolPBServiceImpl implements MetaSchedulerProtocolPB {
 
     private MetaSchedulerProtocol real;

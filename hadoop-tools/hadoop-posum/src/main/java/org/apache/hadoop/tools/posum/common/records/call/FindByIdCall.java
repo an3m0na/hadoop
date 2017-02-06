@@ -1,14 +1,11 @@
 package org.apache.hadoop.tools.posum.common.records.call;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
-import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
+import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 3/20/16.
- */
 public abstract class FindByIdCall extends ReadFromCollectionCall<SingleEntityPayload> {
 
     public static FindByIdCall newInstance(DataEntityCollection type, String id) {
@@ -23,7 +20,7 @@ public abstract class FindByIdCall extends ReadFromCollectionCall<SingleEntityPa
     public abstract void setId(String id);
 
     @Override
-    public SingleEntityPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
+    public SingleEntityPayload execute(LockBasedDataStore dataStore, DatabaseReference db) {
         return SingleEntityPayload.newInstance(getEntityCollection(),
                 dataStore.findById(db, getEntityCollection(), getId()));
     }

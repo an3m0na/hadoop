@@ -1,15 +1,12 @@
 package org.apache.hadoop.tools.posum.common.records.call;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
-import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
+import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 7/29/16.
- */
 public abstract class StoreLogCall extends LockBasedDatabaseCallImpl<SimplePropertyPayload> {
     public static StoreLogCall newInstance(LogEntry logEntry) {
         StoreLogCall call = Records.newRecord(StoreLogCall.class);
@@ -39,26 +36,26 @@ public abstract class StoreLogCall extends LockBasedDatabaseCallImpl<SimplePrope
 
 
     @Override
-    public SimplePropertyPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
-        if (db == null || !db.isOfType(DataEntityDB.Type.SIMULATION)) {
+    public SimplePropertyPayload execute(LockBasedDataStore dataStore, DatabaseReference db) {
+        if (db == null || !db.isOfType(DatabaseReference.Type.SIMULATION)) {
             // do not store unintended logs from simulations
             return SimplePropertyPayload.newInstance("logId",
-                    dataStore.updateOrStore(DataEntityDB.getLogs(), getLogEntry().getType().getCollection(), getLogEntry()));
+                    dataStore.updateOrStore(DatabaseReference.getLogs(), getLogEntry().getType().getCollection(), getLogEntry()));
         }
-        return SimplePropertyPayload.newInstance("logId", (String) null);
+        return SimplePropertyPayload.newInstance("logId", null);
     }
 
     @Override
-    protected void lockDatabase(LockBasedDataStore dataStore, DataEntityDB db) {
-        if (db == null || !db.isOfType(DataEntityDB.Type.SIMULATION))
+    protected void lockDatabase(LockBasedDataStore dataStore, DatabaseReference db) {
+        if (db == null || !db.isOfType(DatabaseReference.Type.SIMULATION))
             // only lock if it is not a simulation
-            dataStore.lockForWrite(DataEntityDB.getLogs());
+            dataStore.lockForWrite(DatabaseReference.getLogs());
     }
 
     @Override
-    protected void unlockDatabase(LockBasedDataStore dataStore, DataEntityDB db) {
-        if (db == null || !db.isOfType(DataEntityDB.Type.SIMULATION))
+    protected void unlockDatabase(LockBasedDataStore dataStore, DatabaseReference db) {
+        if (db == null || !db.isOfType(DatabaseReference.Type.SIMULATION))
             // only unlock if it is not a simulation
-            dataStore.unlockForWrite(DataEntityDB.getLogs());
+            dataStore.unlockForWrite(DatabaseReference.getLogs());
     }
 }

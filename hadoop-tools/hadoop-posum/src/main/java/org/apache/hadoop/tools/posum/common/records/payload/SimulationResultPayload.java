@@ -2,9 +2,6 @@ package org.apache.hadoop.tools.posum.common.records.payload;
 
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 4/20/16.
- */
 public abstract class SimulationResultPayload implements Comparable<SimulationResultPayload>, Payload{
 
     public static SimulationResultPayload newInstance(String policyName, CompoundScorePayload score) {

@@ -6,9 +6,6 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayloa
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SimplePropertyPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.PosumProtos;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class SimplePropertyRequestPBImpl extends SimpleRequestPBImpl<SimplePropertyPayload> {
 
     public SimplePropertyRequestPBImpl(){

@@ -13,9 +13,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class StringStringMapPayloadPBImpl extends StringStringMapPayload implements PayloadPB {
     private StringStringMapPayloadProto proto = StringStringMapPayloadProto.getDefaultInstance();
     private StringStringMapPayloadProto.Builder builder = null;

@@ -12,10 +12,10 @@ import "yarn_server_common_service_protos.proto";
 
 // --------- Entities ---------
 
-message EntityDBProto {
-    required EntityDBTypeProto type = 1;
+message DatabaseProto {
+    required DatabaseTypeProto type = 1;
     optional string view = 2;
-    enum EntityDBTypeProto {
+    enum DatabaseTypeProto {
         DB_MAIN = 0;
         DB_LOGS = 1;
         DB_SIMULATION = 2;
@@ -49,6 +49,7 @@ message AppProfileProto {
     optional AppStateProto state = 7;
     optional AppStatusProto status = 8;
     optional AppTrackingUIProto trackingUI = 9;
+    optional int64 lastUpdated = 10;
 
     enum AppStateProto {
         STATE_NEW = 0;
@@ -108,6 +109,7 @@ message JobProfileProto {
     optional string reducerClass = 30;
     optional StringStringMapPayloadProto flexFields = 31;
     repeated string splitLocations = 32;
+    optional int64 lastUpdated = 33;
 
     enum JobStateProto {
         STATE_NEW = 0;
@@ -124,6 +126,7 @@ message JobConfProxyProto {
     required string id = 1;
     optional StringStringMapPayloadProto properties = 2;
     optional string confPath = 3;
+    optional int64 lastUpdated = 4;
 }
 
 message TaskProfileProto {
@@ -144,26 +147,37 @@ message TaskProfileProto {
     optional int64 reduceTime = 15;
     optional bool local = 16;
     optional string httpAddress = 17;
+    optional TaskStateProto state = 18;
+    optional int64 lastUpdated = 19;
 
     enum TaskTypeProto {
         TYPE_MAP = 0;
         TYPE_REDUCE = 1;
+    }
+
+    enum TaskStateProto {
+        STATE_NEW = 0;
+        STATE_SCHEDULED = 1;
+        STATE_RUNNING = 2;
+        STATE_SUCCEEDED = 3;
+        STATE_FAILED = 4;
+        STATE_KILLED = 5;
     }
 }
 
 message HistoryProfileProto {
     required string id = 1;
     required EntityCollectionProto collection = 2;
-    required int64 timestamp = 3;
-    required string originalId = 4;
-    required bytes original = 5;
+    required string originalId = 3;
+    required bytes original = 4;
+    optional int64 lastUpdated = 5;
 }
 
 message LogEntryProto {
     required string id = 1;
-    required int64 timestamp = 3;
-    required LogTypeProto type = 4;
-    optional bytes details = 5;
+    required LogTypeProto type = 2;
+    optional bytes details = 3;
+    optional int64 lastUpdated = 4;
 
     enum LogTypeProto {
         LG_POLICY_CHANGE = 1;
@@ -171,6 +185,12 @@ message LogEntryProto {
         LG_TASK_PREDICTION = 3;
         LG_GENERAL = 4;
     }
+}
+
+message CountersProxyProto {
+    required string id = 1;
+    repeated CounterGroupInfoPayloadProto groups = 2;
+    optional int64 lastUpdated = 3;
 }
 
 // --------- Requests ---------
@@ -208,7 +228,7 @@ message RegistrationRequestProto {
 }
 
 message DatabaseCallExecutionRequestProto {
-    optional EntityDBProto entityDB = 1;
+    optional DatabaseProto db = 1;
     required DatabaseCallProto call = 2;
 }
 
@@ -265,7 +285,7 @@ message CollectionMapPayloadProto {
 }
 
 message CollectionEntryProto {
-    required EntityDBProto entityDB = 1;
+    required DatabaseProto db = 1;
     repeated EntityCollectionProto collections = 2;
 }
 
@@ -298,11 +318,6 @@ message StringListPayloadProto {
     repeated string entries = 1;
 }
 
-message CountersProxyProto {
-    required string id = 1;
-    repeated CounterGroupInfoPayloadProto groups = 2;
-}
-
 message CounterGroupInfoPayloadProto {
     required string name = 1;
     repeated CounterInfoPayloadProto counters = 2;
@@ -322,8 +337,8 @@ message TaskPredictionPayloadProto {
 }
 
 message DatabaseAlterationPayloadProto {
-    optional EntityDBProto source = 1;
-    optional EntityDBProto destination = 2;
+    optional DatabaseProto source = 1;
+    optional DatabaseProto destination = 2;
 }
 
 // --------- Database Calls ---------

@@ -5,9 +5,6 @@ import org.apache.hadoop.tools.posum.scheduler.portfolio.*;
 
 import java.util.HashMap;
 
-/**
- * Created by ane on 4/20/16.
- */
 public class PolicyPortfolio extends HashMap<String, Class<? extends PluginPolicy>>{
 
     public enum StandardPolicy {

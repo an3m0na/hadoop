@@ -17,9 +17,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class ExtCaSchedulerNode extends FiCaSchedulerNode {
 
     private static Log logger = LogFactory.getLog(ExtCaSchedulerNode.class);

@@ -6,9 +6,6 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
 
-/**
- * Created by ane on 4/20/16.
- */
 public interface StandardProtocol {
     long versionID = 1L;
 

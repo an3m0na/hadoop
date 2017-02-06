@@ -13,9 +13,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class CountersProxyPBImpl extends GeneralDataEntityPBImpl<CountersProxy, CountersProxyProto, CountersProxyProto.Builder>
         implements CountersProxy {
 
@@ -90,6 +87,24 @@ public class CountersProxyPBImpl extends GeneralDataEntityPBImpl<CountersProxy, 
             return;
         }
         builder.setId(id);
+    }
+
+    @Override
+    public Long getLastUpdated() {
+        CountersProxyProtoOrBuilder p = viaProto ? proto : builder;
+        if (p.hasLastUpdated())
+            return p.getLastUpdated();
+        return null;
+    }
+
+    @Override
+    public void setLastUpdated(Long timestamp) {
+        maybeInitBuilder();
+        if (timestamp == null) {
+            builder.clearLastUpdated();
+            return;
+        }
+        builder.setLastUpdated(timestamp);
     }
 
     @Override
