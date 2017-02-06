@@ -4,9 +4,6 @@ import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayl
 
 import java.util.List;
 
-/**
- * Created by ane on 2/8/16.
- */
 public interface CountersProxy extends GeneralDataEntity<CountersProxy> {
 
     List<CounterGroupInfoPayload> getCounterGroup();

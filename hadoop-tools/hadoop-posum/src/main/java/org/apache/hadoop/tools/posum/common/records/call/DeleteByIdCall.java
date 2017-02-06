@@ -1,14 +1,11 @@
 package org.apache.hadoop.tools.posum.common.records.call;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
-import org.apache.hadoop.tools.posum.database.store.LockBasedDataStore;
+import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 3/20/16.
- */
 public abstract class DeleteByIdCall extends DeleteCall {
 
     public static DeleteByIdCall newInstance(DataEntityCollection type, String id) {
@@ -23,7 +20,7 @@ public abstract class DeleteByIdCall extends DeleteCall {
     public abstract void setId(String id);
 
     @Override
-    public VoidPayload execute(LockBasedDataStore dataStore, DataEntityDB db) {
+    public VoidPayload execute(LockBasedDataStore dataStore, DatabaseReference db) {
         dataStore.delete(db, getEntityCollection(), getId());
         return VoidPayload.newInstance();
     }

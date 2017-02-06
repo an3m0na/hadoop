@@ -4,15 +4,10 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.PosumProtos.JobForAppCallProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.JobForAppCallProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class JobForAppCallPBImpl extends JobForAppCall implements PayloadPB {
     private JobForAppCallProto proto = JobForAppCallProto.getDefaultInstance();
     private JobForAppCallProto.Builder builder = null;

@@ -6,18 +6,13 @@ import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.GeneralDataEntityPBImpl;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityPayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.SingleEntityPayloadProtoOrBuilder;
 
-/**
- * Created by ane on 3/20/16.
- */
 public class StoreCallPBImpl extends StoreCall implements PayloadPB {
     private SingleEntityPayloadProto proto = SingleEntityPayloadProto.getDefaultInstance();
     private SingleEntityPayloadProto.Builder builder = null;

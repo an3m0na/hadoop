@@ -2,9 +2,6 @@ package org.apache.hadoop.tools.posum.common.records.payload;
 
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 4/20/16.
- */
 public abstract class CompoundScorePayload implements Payload{
     public static CompoundScorePayload newInstance(Double runtime, Double penalty, Double cost) {
         CompoundScorePayload payload = Records.newRecord(CompoundScorePayload.class);

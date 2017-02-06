@@ -13,9 +13,6 @@ import org.apache.hadoop.yarn.proto.PosumProtos.SimplePropertyPayloadProtoOrBuil
 
 import java.io.IOException;
 
-/**
- * Created by ane on 3/20/16.
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implements PayloadPB {

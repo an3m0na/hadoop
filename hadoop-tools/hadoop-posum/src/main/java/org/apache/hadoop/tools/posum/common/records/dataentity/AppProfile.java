@@ -4,9 +4,6 @@ import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 
-/**
- * Created by ane on 2/24/16.
- */
 public interface AppProfile extends GeneralDataEntity<AppProfile> {
 
     Long getStartTime();

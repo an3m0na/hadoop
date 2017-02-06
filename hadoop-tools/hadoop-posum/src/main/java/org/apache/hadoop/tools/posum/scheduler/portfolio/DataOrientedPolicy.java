@@ -3,19 +3,16 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
-import org.apache.hadoop.tools.posum.database.client.Database;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 
 import java.util.*;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttempt, ExtCaSchedulerNode> {
 
     private static Log logger = LogFactory.getLog(DataOrientedPolicy.class);

@@ -4,9 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.CounterInfoPayloadPBImpl;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 3/20/16.
- */
 @JsonDeserialize(as = CounterInfoPayloadPBImpl.class)
 @org.codehaus.jackson.map.annotate.JsonDeserialize(as = CounterInfoPayloadPBImpl.class)
 public abstract class CounterInfoPayload implements Payload {
@@ -17,6 +14,13 @@ public abstract class CounterInfoPayload implements Payload {
         payload.setTotalCounterValue(total);
         payload.setMapCounterValue(map);
         payload.setReduceCounterValue(reduce);
+        return payload;
+    }
+
+    public static CounterInfoPayload newInstance(String name, long value) {
+        CounterInfoPayload payload = Records.newRecord(CounterInfoPayload.class);
+        payload.setName(name);
+        payload.setTotalCounterValue(value);
         return payload;
     }
 

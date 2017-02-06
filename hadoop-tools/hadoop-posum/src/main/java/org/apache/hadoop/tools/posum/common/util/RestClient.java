@@ -14,9 +14,6 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 
-/**
- * Created by ane on 2/24/16.
- */
 public class RestClient {
 
     private static Log logger = LogFactory.getLog(RestClient.class);
@@ -34,7 +31,7 @@ public class RestClient {
         HISTORY("History", JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_ADDRESS, "ws/v1/history/mapreduce/"),
         AM("ApplicationMaster", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, "proxy/%s/ws/v1/mapreduce/"),
         PS("PortfolioScheduler", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS + PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT, "/ajax/"),
-        OM("OrchestratorMaster", "http://localhost:" + PosumConfiguration.MASTER_WEBAPP_PORT_DEFAULT, "/ajax/"),
+        OM("OrchestrationMaster", "http://localhost:" + PosumConfiguration.MASTER_WEBAPP_PORT_DEFAULT, "/ajax/"),
         SM("SimulationMaster", "http://localhost:" + PosumConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT, "/ajax/"),
         DM("DataMaster", "http://localhost:" + PosumConfiguration.DM_WEBAPP_PORT_DEFAULT, "/ajax/");
 
@@ -93,7 +90,7 @@ public class RestClient {
 
     public <T> T getInfo(Class<T> tClass, TrackingUI trackingUI, String path, String[] args) {
         ClientResponse response;
-        String destination = String.format(trackingUI.root + path, args);
+        String destination = String.format(trackingUI.root + path, (Object[]) args);
         try {
             WebResource resource = client.resource(trackingUI.address).path(destination);
             response = resource.head();

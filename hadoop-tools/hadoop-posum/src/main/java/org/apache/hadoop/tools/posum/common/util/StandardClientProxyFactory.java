@@ -22,9 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by ane on 3/21/16.
- */
 public class StandardClientProxyFactory<T> {
 
     private static final Log LOG = LogFactory.getLog(StandardClientProxyFactory.class);

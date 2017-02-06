@@ -4,17 +4,14 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.tools.posum.common.records.call.impl.pb.DatabaseCallWrapperPBImpl;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityDB;
-import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DataEntityDBPBImpl;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DatabaseReferencePBImpl;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallExecutionRequestProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallExecutionRequestProtoOrBuilder;
 
-/**
- * Created by ane on 8/1/16.
- */
 public class DatabaseCallExecutionRequestPBImpl extends DatabaseCallExecutionRequest implements PayloadPB {
     private DatabaseCallExecutionRequestProto proto = DatabaseCallExecutionRequestProto.getDefaultInstance();
     private DatabaseCallExecutionRequestProto.Builder builder = null;
@@ -90,21 +87,21 @@ public class DatabaseCallExecutionRequestPBImpl extends DatabaseCallExecutionReq
 
 
     @Override
-    public DataEntityDB getEntityDB() {
+    public DatabaseReference getDatabase() {
         DatabaseCallExecutionRequestProtoOrBuilder p = viaProto ? proto : builder;
-        if(!p.hasEntityDB())
+        if(!p.hasDb())
             return null;
-        return new DataEntityDBPBImpl(p.getEntityDB());
+        return new DatabaseReferencePBImpl(p.getDb());
     }
 
     @Override
-    public void setEntityDB(DataEntityDB db) {
+    public void setDatabase(DatabaseReference db) {
         maybeInitBuilder();
         if (db == null) {
-            builder.clearEntityDB();
+            builder.clearDb();
             return;
         }
-        builder.setEntityDB(((DataEntityDBPBImpl) db).getProto());
+        builder.setDb(((DatabaseReferencePBImpl) db).getProto());
     }
 
     @Override

@@ -4,9 +4,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 8/14/16.
- */
 public class CallUtils {
 
     public static <T extends Payload> StoreLogCall storeStatReportCall(LogEntry.Type type, T payload) {

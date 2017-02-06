@@ -13,9 +13,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Random;
 
-/**
- * Created by ane on 1/22/16.
- */
 public class EDLSPriorityPolicy extends EDLSPolicy<EDLSPriorityPolicy> {
 
     private static Log logger = LogFactory.getLog(EDLSPriorityPolicy.class);

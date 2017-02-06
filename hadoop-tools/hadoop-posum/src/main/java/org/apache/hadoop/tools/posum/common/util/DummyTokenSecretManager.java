@@ -5,9 +5,6 @@ import org.apache.hadoop.yarn.server.security.MasterKeyData;
 
 import java.security.SecureRandom;
 
-/**
- * Created by ane on 3/19/16.
- */
 public class DummyTokenSecretManager extends SecretManager<DummyTokenIdentifier> {
 
     private int serialNo = new SecureRandom().nextInt();

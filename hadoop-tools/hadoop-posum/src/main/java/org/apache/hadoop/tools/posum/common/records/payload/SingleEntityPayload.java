@@ -4,9 +4,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.yarn.util.Records;
 
-/**
- * Created by ane on 3/20/16.
- */
 public abstract class SingleEntityPayload implements Payload{
 
     public static SingleEntityPayload newInstance(DataEntityCollection collection, GeneralDataEntity object) {

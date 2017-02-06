@@ -7,9 +7,6 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
 
-/**
- * Created by ane on 3/19/16.
- */
 public interface DataMasterProtocol extends StandardProtocol {
     SimpleResponse executeDatabaseCall(DatabaseCallExecutionRequest call) throws IOException, YarnException;
 }
