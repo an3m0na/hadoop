@@ -35,8 +35,12 @@ class JobInfoCollector {
     private Database db;
     private HdfsReader hdfsReader;
 
-    JobInfoCollector(Configuration conf, HadoopAPIClient api, Database db) {
-        this.api = api;
+    JobInfoCollector(){
+
+    }
+
+    JobInfoCollector(Configuration conf, Database db) {
+        this.api = new HadoopAPIClient();
         this.db = db;
         try {
             this.hdfsReader = new HdfsReader(conf);
