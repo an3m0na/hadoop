@@ -60,7 +60,7 @@ class Simulation implements Callable<SimulationResultPayload> {
         dbReference = DatabaseReference.get(DatabaseReference.Type.SIMULATION, policy);
         dataStore.clearDatabase(dbReference);
         dataStore.copyDatabase(DatabaseReference.getSimulation(), dbReference);
-        db = Database.extractFrom(dataStore, dbReference);
+        db = Database.from(dataStore, dbReference);
         predictor.initialize(db);
         stats.setStartTimeCluster(getLastUpdated());
         stats.setStartTimePhysical(System.currentTimeMillis());

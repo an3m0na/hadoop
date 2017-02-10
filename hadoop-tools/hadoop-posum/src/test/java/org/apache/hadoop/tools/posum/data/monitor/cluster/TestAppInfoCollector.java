@@ -52,7 +52,7 @@ public class TestAppInfoCollector {
     @Mock
     private TaskInfoCollector taskInfoCollector;
     @Spy
-    private Database dbMock = Database.extractFrom(new MockDataStoreImpl(), DatabaseReference.getMain());
+    private Database dbMock = Database.from(new MockDataStoreImpl(), DatabaseReference.getMain());
 
     @InjectMocks
     private AppInfoCollector testSubject = new AppInfoCollector();

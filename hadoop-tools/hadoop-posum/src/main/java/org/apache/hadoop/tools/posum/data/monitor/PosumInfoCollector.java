@@ -62,7 +62,7 @@ public class PosumInfoCollector {
         for (String policy : policies) {
             policyMap.put(policy, PolicyInfoPayload.newInstance());
         }
-        Database db = Database.extractFrom(dataStore, DatabaseReference.getMain());
+        Database db = Database.from(dataStore, DatabaseReference.getMain());
 //        predictor = JobBehaviorPredictor.newInstance(conf);
         basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
         basicPredictor.initialize(db);
