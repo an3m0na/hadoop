@@ -20,8 +20,10 @@ import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.apache.hadoop.tools.posum.simulation.core.SimulationEvent.Type.TASK_FINISHED;
 
@@ -51,7 +53,7 @@ class Simulation implements Callable<SimulationResultPayload> {
         this.policy = policy;
         this.dataStore = dataStore;
         this.stats = new SimulationStatistics();
-        this.eventQueue = new ConcurrentLinkedQueue<>();
+        this.eventQueue = new LinkedBlockingQueue<>();
     }
 
     private void setUp() {
@@ -121,7 +123,7 @@ class Simulation implements Callable<SimulationResultPayload> {
     private void processQueue() {
         FindByIdCall getTask = FindByIdCall.newInstance(DataEntityCollection.TASK, null);
         FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
-        while (!exit) {
+        while (pendingJobs > 0 && !exit) {
             SimulationEvent event = eventQueue.poll();
             clusterTime = event.getTimestamp();
             switch (event.getType()) {
@@ -140,9 +142,6 @@ class Simulation implements Callable<SimulationResultPayload> {
                         runtime = Math.random() * 10;
                         penalty++;
                         cost++;
-                        if (pendingJobs == 0) {
-                            exit = true;
-                        }
                     }
                     // TODO update daemon simulators about task + job (job event is necessary?)
                     break;
