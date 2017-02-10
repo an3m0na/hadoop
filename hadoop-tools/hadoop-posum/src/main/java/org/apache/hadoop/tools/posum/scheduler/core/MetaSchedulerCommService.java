@@ -106,7 +106,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
     public Database getDatabase() {
         if (dataClient == null)
             return null;
-        return Database.extractFrom(dataClient, DatabaseReference.getMain());
+        return Database.from(dataClient, DatabaseReference.getMain());
     }
 
     public Orchestrator getMaster() {

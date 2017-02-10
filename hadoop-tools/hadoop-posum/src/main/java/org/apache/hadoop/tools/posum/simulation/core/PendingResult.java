@@ -4,11 +4,11 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayl
 
 import java.util.concurrent.Future;
 
-public class PendingResult {
+class PendingResult {
     private Simulation simulation;
     private Future<SimulationResultPayload> result;
 
-    public PendingResult(Simulation simulation, Future<SimulationResultPayload> result) {
+    PendingResult(Simulation simulation, Future<SimulationResultPayload> result) {
         this.simulation = simulation;
         this.result = result;
     }

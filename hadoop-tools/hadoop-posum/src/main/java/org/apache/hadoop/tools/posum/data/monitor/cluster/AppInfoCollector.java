@@ -41,17 +41,21 @@ public class AppInfoCollector {
 
     private Set<String> running = new HashSet<>();
     private Set<String> finished = new HashSet<>();
-    private final Database db;
-    private final HadoopAPIClient api;
-    private final boolean auditEnabled;
-    private final JobInfoCollector jobInfoCollector;
-    private final TaskInfoCollector taskInfoCollector;
+    private Database db;
+    private HadoopAPIClient api;
+    private boolean auditEnabled = true;
+    private JobInfoCollector jobInfoCollector;
+    private TaskInfoCollector taskInfoCollector;
+
+    AppInfoCollector(){
+
+    }
 
     public AppInfoCollector(Configuration conf, Database db) {
         this.db = db;
         this.api = new HadoopAPIClient();
-            this.jobInfoCollector = new JobInfoCollector(conf, api, db);
-        this.taskInfoCollector = new TaskInfoCollector(api);
+        this.jobInfoCollector = new JobInfoCollector(conf, db);
+        this.taskInfoCollector = new TaskInfoCollector();
         this.auditEnabled = conf.getBoolean(PosumConfiguration.MONITOR_KEEP_HISTORY,
                 PosumConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
     }
