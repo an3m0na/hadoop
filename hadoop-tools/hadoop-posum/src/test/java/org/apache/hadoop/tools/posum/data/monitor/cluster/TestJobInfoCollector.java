@@ -1,6 +1,5 @@
 package org.apache.hadoop.tools.posum.data.monitor.cluster;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.split.JobSplit;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.tools.posum.client.data.Database;
@@ -11,24 +10,22 @@ import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.apache.hadoop.fs.FileSystem.DEFAULT_FS;
-import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
+@RunWith(MockitoJUnitRunner.class)
 public class TestJobInfoCollector {
 
     private final String[] LOCATIONS = new String[]{"someLocation"};
@@ -36,25 +33,18 @@ public class TestJobInfoCollector {
 
     @Mock
     private Database dbMock;
-
-    private Configuration confMock;
     @Mock
     private HadoopAPIClient apiMock;
     @Mock
     private HdfsReader hdfsReaderMock;
+
     @InjectMocks
-    private JobInfoCollector testSubject;
+    private JobInfoCollector testSubject = new JobInfoCollector();
 
     private ClusterMonitorEntities entities;
 
     @Before
     public void init() {
-        confMock = mock(Configuration.class);
-        when(confMock.get(FS_DEFAULT_NAME_KEY, DEFAULT_FS)).thenReturn(DEFAULT_FS);
-
-        testSubject = new JobInfoCollector(confMock, apiMock, dbMock);
-        MockitoAnnotations.initMocks(this);
-
         entities = new ClusterMonitorEntities();
     }
 
