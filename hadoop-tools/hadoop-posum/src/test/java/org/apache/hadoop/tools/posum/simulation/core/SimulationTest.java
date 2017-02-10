@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.simulation.master;
+package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.client.data.DataStore;

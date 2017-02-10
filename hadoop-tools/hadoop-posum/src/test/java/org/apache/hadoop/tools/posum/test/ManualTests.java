@@ -3,15 +3,11 @@ package org.apache.hadoop.tools.posum.test;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.data.core.DataStoreImpl;
 import org.apache.hadoop.tools.posum.data.master.DataMasterContext;
 import org.apache.hadoop.tools.posum.data.monitor.cluster.ClusterMonitor;
-import org.apache.hadoop.tools.posum.data.core.DataStoreImpl;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 
 public class ManualTests {
     @Test
@@ -19,63 +15,6 @@ public class ManualTests {
     public void checkRegistration() {
         System.out.println(NetUtils.createSocketAddr("0.0.0.0", 7000));
     }
-
-    @Test
-    @Ignore
-    public void testMongoRunner() throws IOException, InterruptedException {
-        String scriptLocation = getClass().getClassLoader().getResource("run-mongo.sh").getFile();
-        Process process = Runtime.getRuntime().exec("/bin/bash " + scriptLocation);
-        process.waitFor();
-        if (process.exitValue() != 0) {
-            System.out.println("Error running Mongo database:");
-            String s;
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            while ((s = reader.readLine()) != null)
-                System.out.println(s);
-            reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            while ((s = reader.readLine()) != null)
-                System.out.println(s);
-            throw new RuntimeException("Could not run MongoDB");
-        }
-    }
-
-    @Test
-    @Ignore
-    public void testMongoStopper() throws IOException, InterruptedException {
-        String scriptLocation = getClass().getClassLoader().getResource("run-mongo.sh").getFile();
-        Process process = Runtime.getRuntime().exec("/bin/bash " + scriptLocation + " --stop");
-        process.waitFor();
-        if (process.exitValue() != 0) {
-            System.out.println("Error stopping Mongo database:");
-            String s;
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            while ((s = reader.readLine()) != null)
-                System.out.println(s);
-            reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            while ((s = reader.readLine()) != null)
-                System.out.println(s);
-            throw new RuntimeException("Could not stop MongoDB");
-        }
-    }
-
-//    @Test
-//    @Ignore
-//    public void testHadoopAPIClient() {
-//        HadoopAPIClient apiClient = new HadoopAPIClient();
-//        List<AppProfile> apps = apiClient.getAppsInfo();
-//        System.out.println(apps);
-//        for (AppProfile app : apps) {
-//            if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-//                System.out.println("For job: " + app.getId());
-//                Map<String, String> requested = new HashMap<>(2);
-//                requested.put("mapreduce.input.fileinputformat.inputdir", "inputdir");
-//                requested.put("mapreduce.input.fileinputformat.numinputfiles", "numinputfiles");
-//                Map<String, String> properties = apiClient.getJobConfProperties(app.getId(), app.getId(), requested);
-//                System.out.println("Input dir is: " + properties.get("inputdir"));
-//                System.out.println("Input files are: " + properties.get("numinputfiles"));
-//            }
-//        }
-//    }
 
     @Test
     @Ignore

@@ -26,7 +26,7 @@ public class Database {
         return selectedDatabase;
     }
 
-    public static Database extractFrom(DataStore dataStore, DatabaseReference db){
+    public static Database from(DataStore dataStore, DatabaseReference db){
         return new Database(dataStore, db);
     }
 }

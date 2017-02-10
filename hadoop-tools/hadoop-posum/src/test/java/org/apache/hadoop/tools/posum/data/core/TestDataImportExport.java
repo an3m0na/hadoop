@@ -27,7 +27,7 @@ public class TestDataImportExport {
     @Before
     public void setUp() throws Exception {
         dataStore = new MockDataStoreImpl();
-        db = Database.extractFrom(dataStore, DatabaseReference.getMain());
+        db = Database.from(dataStore, DatabaseReference.getMain());
         Utils.loadThreeDefaultAppsAndJobs(clusterTimestamp, db);
     }
 

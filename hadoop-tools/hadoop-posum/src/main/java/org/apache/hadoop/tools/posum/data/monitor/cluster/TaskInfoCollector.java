@@ -12,8 +12,8 @@ class TaskInfoCollector {
 
     private HadoopAPIClient api;
 
-    TaskInfoCollector(HadoopAPIClient api) {
-        this.api = api;
+    TaskInfoCollector() {
+        this.api = new HadoopAPIClient();
     }
 
     TaskInfo getFinishedTaskInfo(JobProfile job) {
