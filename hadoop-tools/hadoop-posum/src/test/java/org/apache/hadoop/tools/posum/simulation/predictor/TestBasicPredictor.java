@@ -2,19 +2,19 @@ package org.apache.hadoop.tools.posum.simulation.predictor;
 
 import org.junit.Test;
 
-public class TestBasicPredictor extends TestPredictor<BasicPredictor>{
-    public TestBasicPredictor() {
-        super(BasicPredictor.class);
-    }
+public class TestBasicPredictor extends TestPredictor<BasicPredictor> {
+  public TestBasicPredictor() {
+    super(BasicPredictor.class);
+  }
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+  }
 
-    @Test
-    public void testGetComparableProfiles() throws Exception {
+  @Test
+  public void testGetComparableProfiles() throws Exception {
 
 
-    }
+  }
 }

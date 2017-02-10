@@ -64,257 +64,257 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public abstract class TestDataStore {
-    protected DataStore dataStore;
-    protected Database db;
+  protected DataStore dataStore;
+  protected Database db;
 
-    @Before
-    public void setUp() throws Exception {
-        setUpDataStore();
-        db = Database.from(dataStore,DatabaseReference.get(MAIN, "unitTest"));
-        Utils.loadThreeDefaultAppsAndJobs(db);
+  @Before
+  public void setUp() throws Exception {
+    setUpDataStore();
+    db = Database.from(dataStore, DatabaseReference.get(MAIN, "unitTest"));
+    Utils.loadThreeDefaultAppsAndJobs(db);
+  }
+
+  protected abstract void setUpDataStore() throws Exception;
+
+  @After
+  public void tearDown() throws Exception {
+    dataStore.clearDatabase(db.getTarget());
+  }
+
+  @Test
+  public void testFindById() throws Exception {
+    FindByIdCall findApp = FindByIdCall.newInstance(APP, APP1_ID.toString());
+    AppProfile app = db.executeDatabaseCall(findApp).getEntity();
+    assertThat(app, is(APP1));
+  }
+
+  @Test
+  public void testListIds() throws Exception {
+    IdsByQueryCall listIds = IdsByQueryCall.newInstance(APP,
+      QueryUtils.is("user", USER2));
+    List<String> returnedAppIds = db.executeDatabaseCall(listIds).getEntries();
+    Collections.sort(returnedAppIds);
+    assertThat(returnedAppIds, containsInAnyOrder(APP2_ID.toString(), APP3_ID.toString()));
+  }
+
+  @Test
+  public void testFindAll() throws Exception {
+    FindByQueryCall findAll = FindByQueryCall.newInstance(JOB, null);
+    List<JobProfile> jobs = db.executeDatabaseCall(findAll).getEntities();
+    assertThat(jobs, containsInAnyOrder(JOB1, JOB2, JOB3));
+  }
+
+  @Test
+  public void testFindSelected() throws Exception {
+    DatabaseQuery query = QueryUtils.and(
+      QueryUtils.is("finishTime", JOB1.getFinishTime()),
+      QueryUtils.is("totalMapTasks", 1)
+    );
+    FindByQueryCall findByProperties = FindByQueryCall.newInstance(JOB, query);
+    List<JobProfile> jobs = db.executeDatabaseCall(findByProperties).getEntities();
+    assertThat(jobs.get(0), is(JOB1));
+  }
+
+  @Test
+  public void testSortByString() throws Exception {
+    IdsByQueryCall sortedIds = IdsByQueryCall.newInstance(APP, null, ID_FIELD, true);
+    List<String> ids = db.executeDatabaseCall(sortedIds).getEntries();
+    assertThat(ids, contains(APP3_ID.toString(), APP2_ID.toString(), APP1_ID.toString()));
+  }
+
+  @Test
+  public void testSortByNumber() throws Exception {
+    FindByQueryCall findAll = FindByQueryCall.newInstance(JOB, null);
+    List<JobProfile> jobs = db.executeDatabaseCall(findAll).getEntities();
+
+    IdsByQueryCall sortedIds = IdsByQueryCall.newInstance(JOB, null, "totalReduceTasks", false);
+    List<String> ids = db.executeDatabaseCall(sortedIds).getEntries();
+    assertThat(ids, contains(JOB2_ID.toString(), JOB1_ID.toString(), JOB3_ID.toString()));
+  }
+
+  @Test
+  public void testFindLimit() throws Exception {
+    FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(APP,
+      QueryUtils.is("finishTime", APP2.getFinishTime()),
+      ID_FIELD,
+      false
+    );
+    List<AppProfile> apps = db.executeDatabaseCall(findByFinishTime).getEntities();
+    assertThat(apps, contains(APP2, APP3));
+    findByFinishTime.setLimitOrZero(1);
+    apps = db.executeDatabaseCall(findByFinishTime).getEntities();
+    assertThat(apps, contains(APP2));
+  }
+
+  @Test
+  public void testFindOffset() throws Exception {
+    FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(
+      APP,
+      QueryUtils.is("finishTime", APP2.getFinishTime()),
+      ID_FIELD,
+      false
+    );
+    List<AppProfile> apps = db.executeDatabaseCall(findByFinishTime).getEntities();
+    assertThat(apps, contains(APP2, APP3));
+    findByFinishTime.setOffsetOrZero(1);
+    apps = db.executeDatabaseCall(findByFinishTime).getEntities();
+    assertThat(apps, contains(APP3));
+  }
+
+  @Test
+  public void testFindOffsetAndLimit() throws Exception {
+    FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(
+      APP,
+      QueryUtils.is("finishTime", APP2.getFinishTime()),
+      ID_FIELD,
+      false
+    );
+    List<AppProfile> apps = db.executeDatabaseCall(findByFinishTime).getEntities();
+    assertThat(apps, contains(APP2, APP3));
+    findByFinishTime.setOffsetOrZero(-1);
+    findByFinishTime.setLimitOrZero(2);
+    apps = db.executeDatabaseCall(findByFinishTime).getEntities();
+    assertThat(apps, contains(APP3));
+  }
+
+  @Test
+  public void testInStringsQuery() throws Exception {
+    IdsByQueryCall findTwoAndThree = IdsByQueryCall.newInstance(
+      APP,
+      QueryUtils.in(ID_FIELD, Arrays.<Object>asList(APP2_ID.toString(), APP3_ID.toString())),
+      ID_FIELD,
+      false
+    );
+    List<String> appIds = db.executeDatabaseCall(findTwoAndThree).getEntries();
+    assertThat(appIds, contains(APP2_ID.toString(), APP3_ID.toString()));
+  }
+
+  @Test
+  public void testInNumbersQuery() throws Exception {
+    IdsByQueryCall findTwoAndThree = IdsByQueryCall.newInstance(
+      APP,
+      QueryUtils.in("finishTime", Collections.<Object>singletonList(APP2.getFinishTime())),
+      ID_FIELD,
+      false
+    );
+    List<String> appIds = db.executeDatabaseCall(findTwoAndThree).getEntries();
+    assertThat(appIds, contains(APP2_ID.toString(), APP3_ID.toString()));
+  }
+
+  @Test
+  public void testStoreFailsForDuplicate() throws Exception {
+    try {
+      AppProfile app3 = APP3.copy();
+      app3.setName("Modified Name");
+      StoreCall storeApp = StoreCall.newInstance(APP, app3);
+      db.executeDatabaseCall(storeApp);
+      fail();
+    } catch (RuntimeException e) {
+      assertTrue(e.getMessage().contains("duplicate key"));
     }
+  }
 
-    protected abstract void setUpDataStore() throws Exception;
+  @Test
+  public void testUpdateOrStore() throws Exception {
+    AppProfile app3 = APP3.copy();
+    String modifiedName = "Modified Name";
+    YarnApplicationState state = YarnApplicationState.ACCEPTED;
+    app3.setName(modifiedName);
+    app3.setState(state);
+    UpdateOrStoreCall updateApp = UpdateOrStoreCall.newInstance(APP, app3);
+    String upsertedId = (String) db.executeDatabaseCall(updateApp).getValue();
+    assertNull(upsertedId);
+    FindByQueryCall findAppsByName = FindByQueryCall.newInstance(APP,
+      QueryUtils.is("name", modifiedName));
+    List<AppProfile> returnedApps = db.executeDatabaseCall(findAppsByName).getEntities();
+    assertThat(returnedApps, contains(app3));
 
-    @After
-    public void tearDown() throws Exception{
-        dataStore.clearDatabase(db.getTarget());
-    }
+    AppProfile app4 = Records.newRecord(AppProfile.class);
+    ApplicationId app4Id = ApplicationId.newInstance(CLUSTER_TIMESTAMP, 4);
+    String app4IdString = app4Id.toString();
+    app4.setId(app4IdString);
+    app4.setName(modifiedName);
+    updateApp.setEntity(app4);
+    upsertedId = (String) db.executeDatabaseCall(updateApp).getValue();
+    assertThat(app4.getId(), is(upsertedId));
+    returnedApps = db.executeDatabaseCall(findAppsByName).getEntities();
+    assertThat(returnedApps, containsInAnyOrder(app3, app4));
+  }
 
-    @Test
-    public void testFindById() throws Exception {
-        FindByIdCall findApp = FindByIdCall.newInstance(APP, APP1_ID.toString());
-        AppProfile app = db.executeDatabaseCall(findApp).getEntity();
-        assertThat(app, is(APP1));
-    }
+  @Test
+  public void testDeleteById() throws Exception {
+    DeleteByIdCall deleteApp = DeleteByIdCall.newInstance(APP, APP2_ID.toString());
+    db.executeDatabaseCall(deleteApp);
+    IdsByQueryCall listIds = IdsByQueryCall.newInstance(APP,
+      QueryUtils.is("user", USER2));
+    List<String> returnedAppIds = db.executeDatabaseCall(listIds).getEntries();
+    assertThat(returnedAppIds, contains(APP3_ID.toString()));
+  }
 
-    @Test
-    public void testListIds() throws Exception {
-        IdsByQueryCall listIds = IdsByQueryCall.newInstance(APP,
-                QueryUtils.is("user", USER2));
-        List<String> returnedAppIds = db.executeDatabaseCall(listIds).getEntries();
-        Collections.sort(returnedAppIds);
-        assertThat(returnedAppIds, containsInAnyOrder(APP2_ID.toString(), APP3_ID.toString()));
-    }
+  @Test
+  public void testDeleteByParams() throws Exception {
+    IdsByQueryCall listIds = IdsByQueryCall.newInstance(JOB, null);
+    List<String> returnedJobIds = db.executeDatabaseCall(listIds).getEntries();
+    assertThat(returnedJobIds, containsInAnyOrder(JOB1_ID.toString(), JOB2_ID.toString(), JOB3_ID.toString()));
+    DeleteByQueryCall deleteJob = DeleteByQueryCall.newInstance(JOB,
+      QueryUtils.is("appId", APP2_ID.toString()));
+    db.executeDatabaseCall(deleteJob);
+    listIds.setQuery(null);
+    returnedJobIds = db.executeDatabaseCall(listIds).getEntries();
+    assertThat(returnedJobIds, containsInAnyOrder(JOB1_ID.toString(), JOB3_ID.toString()));
+  }
 
-    @Test
-    public void testFindAll() throws Exception {
-        FindByQueryCall findAll = FindByQueryCall.newInstance(JOB, null);
-        List<JobProfile> jobs = db.executeDatabaseCall(findAll).getEntities();
-        assertThat(jobs, containsInAnyOrder(JOB1, JOB2, JOB3));
-    }
+  @Test
+  public void testJobByAppId() throws Exception {
+    JobForAppCall getJob = JobForAppCall.newInstance(APP2_ID.toString(), USER2);
+    JobProfile job = db.executeDatabaseCall(getJob).getEntity();
+    assertThat(job, is(JOB2));
+  }
 
-    @Test
-    public void testFindSelected() throws Exception {
-        DatabaseQuery query = QueryUtils.and(
-                QueryUtils.is("finishTime", JOB1.getFinishTime()),
-                QueryUtils.is("totalMapTasks", 1)
-        );
-        FindByQueryCall findByProperties = FindByQueryCall.newInstance(JOB, query);
-        List<JobProfile> jobs = db.executeDatabaseCall(findByProperties).getEntities();
-        assertThat(jobs.get(0), is(JOB1));
-    }
+  @Test
+  public void testSaveFlexFields() throws Exception {
+    FindByIdCall findJob = FindByIdCall.newInstance(JOB, JOB2_ID.toString());
+    JobProfile job = db.executeDatabaseCall(findJob).getEntity();
+    assertThat(job.getFlexFields().entrySet(), hasSize(0));
+    String key = "SOME_FLEX_KEY", value = "6";
+    SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(JOB2_ID.toString(),
+      Collections.singletonMap(key, value), false);
+    db.executeDatabaseCall(saveFlexFields);
+    job = db.executeDatabaseCall(findJob).getEntity();
+    assertThat(job.getFlexFields().entrySet(), hasSize(1));
+    assertThat(job.getFlexField(key), is(value));
+  }
 
-    @Test
-    public void testSortByString() throws Exception {
-        IdsByQueryCall sortedIds = IdsByQueryCall.newInstance(APP, null, ID_FIELD, true);
-        List<String> ids = db.executeDatabaseCall(sortedIds).getEntries();
-        assertThat(ids, contains(APP3_ID.toString(), APP2_ID.toString(), APP1_ID.toString()));
-    }
+  @Test
+  public void testTransaction() throws Exception {
+    TransactionCall transaction = TransactionCall.newInstance();
+    AppProfile app3 = APP3.copy();
+    String modifiedName = "Modified Name";
+    YarnApplicationState state = YarnApplicationState.ACCEPTED;
+    app3.setName(modifiedName);
+    app3.setState(state);
+    transaction.addCall(UpdateOrStoreCall.newInstance(APP, app3));
 
-    @Test
-    public void testSortByNumber() throws Exception {
-        FindByQueryCall findAll = FindByQueryCall.newInstance(JOB, null);
-        List<JobProfile> jobs = db.executeDatabaseCall(findAll).getEntities();
+    AppProfile app4 = Records.newRecord(AppProfile.class);
+    ApplicationId app4Id = ApplicationId.newInstance(CLUSTER_TIMESTAMP, 4);
+    String app4IdString = app4Id.toString();
+    app4.setId(app4IdString);
+    app4.setName(modifiedName);
+    transaction.addCall(StoreCall.newInstance(APP, app4));
 
-        IdsByQueryCall sortedIds = IdsByQueryCall.newInstance(JOB, null, "totalReduceTasks", false);
-        List<String> ids = db.executeDatabaseCall(sortedIds).getEntries();
-        assertThat(ids, contains(JOB2_ID.toString(), JOB1_ID.toString(), JOB3_ID.toString()));
-    }
+    transaction.addCall(DeleteByIdCall.newInstance(APP, APP1_ID.toString()));
+    db.executeDatabaseCall(transaction);
 
-    @Test
-    public void testFindLimit() throws Exception {
-        FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(APP,
-                QueryUtils.is("finishTime", APP2.getFinishTime()),
-                ID_FIELD,
-                false
-        );
-        List<AppProfile> apps = db.executeDatabaseCall(findByFinishTime).getEntities();
-        assertThat(apps, contains(APP2, APP3));
-        findByFinishTime.setLimitOrZero(1);
-        apps = db.executeDatabaseCall(findByFinishTime).getEntities();
-        assertThat(apps, contains(APP2));
-    }
+    FindByQueryCall listAll = FindByQueryCall.newInstance(APP, null);
+    List<AppProfile> allApps = db.executeDatabaseCall(listAll).getEntities();
+    assertThat(allApps, containsInAnyOrder(APP2, app3, app4));
 
-    @Test
-    public void testFindOffset() throws Exception {
-        FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(
-                APP,
-                QueryUtils.is("finishTime", APP2.getFinishTime()),
-                ID_FIELD,
-                false
-        );
-        List<AppProfile> apps = db.executeDatabaseCall(findByFinishTime).getEntities();
-        assertThat(apps, contains(APP2, APP3));
-        findByFinishTime.setOffsetOrZero(1);
-        apps = db.executeDatabaseCall(findByFinishTime).getEntities();
-        assertThat(apps, contains(APP3));
-    }
+    transaction.setCallList(Collections.singletonList(DeleteByIdCall.newInstance(APP, app4.getId())));
+    db.executeDatabaseCall(transaction);
 
-    @Test
-    public void testFindOffsetAndLimit() throws Exception {
-        FindByQueryCall findByFinishTime = FindByQueryCall.newInstance(
-                APP,
-                QueryUtils.is("finishTime", APP2.getFinishTime()),
-                ID_FIELD,
-                false
-        );
-        List<AppProfile> apps = db.executeDatabaseCall(findByFinishTime).getEntities();
-        assertThat(apps, contains(APP2, APP3));
-        findByFinishTime.setOffsetOrZero(-1);
-        findByFinishTime.setLimitOrZero(2);
-        apps = db.executeDatabaseCall(findByFinishTime).getEntities();
-        assertThat(apps, contains(APP3));
-    }
-
-    @Test
-    public void testInStringsQuery() throws Exception {
-        IdsByQueryCall findTwoAndThree = IdsByQueryCall.newInstance(
-                APP,
-                QueryUtils.in(ID_FIELD, Arrays.<Object>asList(APP2_ID.toString(), APP3_ID.toString())),
-                ID_FIELD,
-                false
-        );
-        List<String> appIds = db.executeDatabaseCall(findTwoAndThree).getEntries();
-        assertThat(appIds, contains(APP2_ID.toString(), APP3_ID.toString()));
-    }
-
-    @Test
-    public void testInNumbersQuery() throws Exception {
-        IdsByQueryCall findTwoAndThree = IdsByQueryCall.newInstance(
-                APP,
-                QueryUtils.in("finishTime", Collections.<Object>singletonList(APP2.getFinishTime())),
-                ID_FIELD,
-                false
-        );
-        List<String> appIds = db.executeDatabaseCall(findTwoAndThree).getEntries();
-        assertThat(appIds, contains(APP2_ID.toString(), APP3_ID.toString()));
-    }
-
-    @Test
-    public void testStoreFailsForDuplicate() throws Exception {
-        try {
-            AppProfile app3 = APP3.copy();
-            app3.setName("Modified Name");
-            StoreCall storeApp = StoreCall.newInstance(APP, app3);
-            db.executeDatabaseCall(storeApp);
-            fail();
-        } catch (RuntimeException e) {
-            assertTrue(e.getMessage().contains("duplicate key"));
-        }
-    }
-
-    @Test
-    public void testUpdateOrStore() throws Exception {
-        AppProfile app3 = APP3.copy();
-        String modifiedName = "Modified Name";
-        YarnApplicationState state = YarnApplicationState.ACCEPTED;
-        app3.setName(modifiedName);
-        app3.setState(state);
-        UpdateOrStoreCall updateApp = UpdateOrStoreCall.newInstance(APP, app3);
-        String upsertedId = (String) db.executeDatabaseCall(updateApp).getValue();
-        assertNull(upsertedId);
-        FindByQueryCall findAppsByName = FindByQueryCall.newInstance(APP,
-                QueryUtils.is("name", modifiedName));
-        List<AppProfile> returnedApps = db.executeDatabaseCall(findAppsByName).getEntities();
-        assertThat(returnedApps, contains(app3));
-
-        AppProfile app4 = Records.newRecord(AppProfile.class);
-        ApplicationId app4Id = ApplicationId.newInstance(CLUSTER_TIMESTAMP, 4);
-        String app4IdString = app4Id.toString();
-        app4.setId(app4IdString);
-        app4.setName(modifiedName);
-        updateApp.setEntity(app4);
-        upsertedId = (String) db.executeDatabaseCall(updateApp).getValue();
-        assertThat(app4.getId(), is(upsertedId));
-        returnedApps = db.executeDatabaseCall(findAppsByName).getEntities();
-        assertThat(returnedApps, containsInAnyOrder(app3, app4));
-    }
-
-    @Test
-    public void testDeleteById() throws Exception {
-        DeleteByIdCall deleteApp = DeleteByIdCall.newInstance(APP, APP2_ID.toString());
-        db.executeDatabaseCall(deleteApp);
-        IdsByQueryCall listIds = IdsByQueryCall.newInstance(APP,
-                QueryUtils.is("user", USER2));
-        List<String> returnedAppIds = db.executeDatabaseCall(listIds).getEntries();
-        assertThat(returnedAppIds, contains(APP3_ID.toString()));
-    }
-
-    @Test
-    public void testDeleteByParams() throws Exception {
-        IdsByQueryCall listIds = IdsByQueryCall.newInstance(JOB, null);
-        List<String> returnedJobIds = db.executeDatabaseCall(listIds).getEntries();
-        assertThat(returnedJobIds, containsInAnyOrder(JOB1_ID.toString(), JOB2_ID.toString(), JOB3_ID.toString()));
-        DeleteByQueryCall deleteJob = DeleteByQueryCall.newInstance(JOB,
-                QueryUtils.is("appId", APP2_ID.toString()));
-        db.executeDatabaseCall(deleteJob);
-        listIds.setQuery(null);
-        returnedJobIds = db.executeDatabaseCall(listIds).getEntries();
-        assertThat(returnedJobIds, containsInAnyOrder(JOB1_ID.toString(), JOB3_ID.toString()));
-    }
-
-    @Test
-    public void testJobByAppId() throws Exception {
-        JobForAppCall getJob = JobForAppCall.newInstance(APP2_ID.toString(), USER2);
-        JobProfile job = db.executeDatabaseCall(getJob).getEntity();
-        assertThat(job, is(JOB2));
-    }
-
-    @Test
-    public void testSaveFlexFields() throws Exception {
-        FindByIdCall findJob = FindByIdCall.newInstance(JOB, JOB2_ID.toString());
-        JobProfile job = db.executeDatabaseCall(findJob).getEntity();
-        assertThat(job.getFlexFields().entrySet(), hasSize(0));
-        String key = "SOME_FLEX_KEY", value = "6";
-        SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(JOB2_ID.toString(),
-                Collections.singletonMap(key, value), false);
-        db.executeDatabaseCall(saveFlexFields);
-        job = db.executeDatabaseCall(findJob).getEntity();
-        assertThat(job.getFlexFields().entrySet(), hasSize(1));
-        assertThat(job.getFlexField(key), is(value));
-    }
-
-    @Test
-    public void testTransaction() throws Exception {
-        TransactionCall transaction = TransactionCall.newInstance();
-        AppProfile app3 = APP3.copy();
-        String modifiedName = "Modified Name";
-        YarnApplicationState state = YarnApplicationState.ACCEPTED;
-        app3.setName(modifiedName);
-        app3.setState(state);
-        transaction.addCall(UpdateOrStoreCall.newInstance(APP, app3));
-
-        AppProfile app4 = Records.newRecord(AppProfile.class);
-        ApplicationId app4Id = ApplicationId.newInstance(CLUSTER_TIMESTAMP, 4);
-        String app4IdString = app4Id.toString();
-        app4.setId(app4IdString);
-        app4.setName(modifiedName);
-        transaction.addCall(StoreCall.newInstance(APP, app4));
-
-        transaction.addCall(DeleteByIdCall.newInstance(APP, APP1_ID.toString()));
-        db.executeDatabaseCall(transaction);
-
-        FindByQueryCall listAll = FindByQueryCall.newInstance(APP, null);
-        List<AppProfile> allApps = db.executeDatabaseCall(listAll).getEntities();
-        assertThat(allApps, containsInAnyOrder(APP2, app3, app4));
-
-        transaction.setCallList(Collections.singletonList(DeleteByIdCall.newInstance(APP, app4.getId())));
-        db.executeDatabaseCall(transaction);
-
-        allApps = db.executeDatabaseCall(listAll).getEntities();
-        assertThat(allApps, containsInAnyOrder(APP2, app3));
-    }
+    allApps = db.executeDatabaseCall(listAll).getEntities();
+    assertThat(allApps, containsInAnyOrder(APP2, app3));
+  }
 
   @Test
   public void testListCollections() throws Exception {
@@ -325,94 +325,94 @@ public abstract class TestDataStore {
     assertTrue(collections.contains(APP));
   }
 
-    @Test
-    public void testClear() throws Exception {
-        dataStore.clear();
-        assertThat(dataStore.listCollections().entrySet(), hasSize(0));
-        FindByQueryCall allEntities = FindByQueryCall.newInstance(APP, null);
-        assertThat(db.executeDatabaseCall(allEntities).getEntities(), hasSize(0));
-        allEntities.setEntityCollection(JOB);
-        assertThat(db.executeDatabaseCall(allEntities).getEntities(), hasSize(0));
-    }
+  @Test
+  public void testClear() throws Exception {
+    dataStore.clear();
+    assertThat(dataStore.listCollections().entrySet(), hasSize(0));
+    FindByQueryCall allEntities = FindByQueryCall.newInstance(APP, null);
+    assertThat(db.executeDatabaseCall(allEntities).getEntities(), hasSize(0));
+    allEntities.setEntityCollection(JOB);
+    assertThat(db.executeDatabaseCall(allEntities).getEntities(), hasSize(0));
+  }
 
-    @Test
-    public void testMove() throws Exception {
-        int collectionNo = dataStore.listCollections().get(db.getTarget()).size();
-        IdsByQueryCall allIds = IdsByQueryCall.newInstance(APP, null);
-        int appNo = db.executeDatabaseCall(allIds).getEntries().size();
-        allIds.setEntityCollection(JOB);
-        int jobNo = db.executeDatabaseCall(allIds).getEntries().size();
-        DatabaseReference otherDB = DatabaseReference.get(DatabaseReference.Type.MAIN, "testCopy");
-        dataStore.copyDatabase(db.getTarget(), otherDB);
-        dataStore.clearDatabase(db.getTarget());
-        Map<DatabaseReference, List<DataEntityCollection>> collectionMap = dataStore.listCollections();
-        assertNull(collectionMap.get(db.getTarget()));
-        assertThat(collectionMap.get(otherDB), hasSize(collectionNo));
-        assertThat(dataStore.executeDatabaseCall(allIds, otherDB).getEntries(), hasSize(jobNo));
-        allIds.setEntityCollection(APP);
-        assertThat(dataStore.executeDatabaseCall(allIds, otherDB).getEntries(), hasSize(appNo));
-    }
+  @Test
+  public void testMove() throws Exception {
+    int collectionNo = dataStore.listCollections().get(db.getTarget()).size();
+    IdsByQueryCall allIds = IdsByQueryCall.newInstance(APP, null);
+    int appNo = db.executeDatabaseCall(allIds).getEntries().size();
+    allIds.setEntityCollection(JOB);
+    int jobNo = db.executeDatabaseCall(allIds).getEntries().size();
+    DatabaseReference otherDB = DatabaseReference.get(DatabaseReference.Type.MAIN, "testCopy");
+    dataStore.copyDatabase(db.getTarget(), otherDB);
+    dataStore.clearDatabase(db.getTarget());
+    Map<DatabaseReference, List<DataEntityCollection>> collectionMap = dataStore.listCollections();
+    assertNull(collectionMap.get(db.getTarget()));
+    assertThat(collectionMap.get(otherDB), hasSize(collectionNo));
+    assertThat(dataStore.executeDatabaseCall(allIds, otherDB).getEntries(), hasSize(jobNo));
+    allIds.setEntityCollection(APP);
+    assertThat(dataStore.executeDatabaseCall(allIds, otherDB).getEntries(), hasSize(appNo));
+  }
 
-    @Test
-    public void testLogging() throws Exception {
-        String message = "Some message";
-        StoreLogCall storeLog = StoreLogCall.newInstance(message);
-        Long timestamp = storeLog.getLogEntry().getLastUpdated();
-        String logId = (String) dataStore.executeDatabaseCall(storeLog, null).getValue();
-        assertNotNull(logId);
-        FindByIdCall getLog = FindByIdCall.newInstance(
-                DataEntityCollection.AUDIT_LOG,
-                logId
-        );
-        LogEntry<SimplePropertyPayload> log = dataStore.executeDatabaseCall(getLog, DatabaseReference.getLogs()).getEntity();
-        assertThat(log.getId(), is(logId));
-        assertThat(log.getLastUpdated(), is(timestamp));
-        assertThat(log.getDetails().getValue(), is((Object) message));
-    }
+  @Test
+  public void testLogging() throws Exception {
+    String message = "Some message";
+    StoreLogCall storeLog = StoreLogCall.newInstance(message);
+    Long timestamp = storeLog.getLogEntry().getLastUpdated();
+    String logId = (String) dataStore.executeDatabaseCall(storeLog, null).getValue();
+    assertNotNull(logId);
+    FindByIdCall getLog = FindByIdCall.newInstance(
+      DataEntityCollection.AUDIT_LOG,
+      logId
+    );
+    LogEntry<SimplePropertyPayload> log = dataStore.executeDatabaseCall(getLog, DatabaseReference.getLogs()).getEntity();
+    assertThat(log.getId(), is(logId));
+    assertThat(log.getLastUpdated(), is(timestamp));
+    assertThat(log.getDetails().getValue(), is((Object) message));
+  }
 
-    @Test
-    public void testLogChronology() throws Exception {
-        StoreLogCall storeLog = StoreLogCall.newInstance("First");
-        LogEntry first = storeLog.getLogEntry();
-        dataStore.executeDatabaseCall(storeLog, null);
+  @Test
+  public void testLogChronology() throws Exception {
+    StoreLogCall storeLog = StoreLogCall.newInstance("First");
+    LogEntry first = storeLog.getLogEntry();
+    dataStore.executeDatabaseCall(storeLog, null);
 
-        storeLog = StoreLogCall.newInstance("Second");
-        LogEntry second = storeLog.getLogEntry();
-        Long secondTimestamp = first.getLastUpdated() + 1000;
-        storeLog.getLogEntry().setLastUpdated(secondTimestamp);
-        dataStore.executeDatabaseCall(storeLog, null);
+    storeLog = StoreLogCall.newInstance("Second");
+    LogEntry second = storeLog.getLogEntry();
+    Long secondTimestamp = first.getLastUpdated() + 1000;
+    storeLog.getLogEntry().setLastUpdated(secondTimestamp);
+    dataStore.executeDatabaseCall(storeLog, null);
 
-        FindByQueryCall getLog = FindByQueryCall.newInstance(
-                DataEntityCollection.AUDIT_LOG,
-                QueryUtils.and(
-                        QueryUtils.is("type", LogEntry.Type.GENERAL),
-                        QueryUtils.greaterThan("lastUpdated", first.getLastUpdated())
-                )
-        );
-        List<LogEntry> logs = dataStore.executeDatabaseCall(getLog, DatabaseReference.getLogs()).getEntities();
-        assertThat(logs, contains(second));
+    FindByQueryCall getLog = FindByQueryCall.newInstance(
+      DataEntityCollection.AUDIT_LOG,
+      QueryUtils.and(
+        QueryUtils.is("type", LogEntry.Type.GENERAL),
+        QueryUtils.greaterThan("lastUpdated", first.getLastUpdated())
+      )
+    );
+    List<LogEntry> logs = dataStore.executeDatabaseCall(getLog, DatabaseReference.getLogs()).getEntities();
+    assertThat(logs, contains(second));
 
-        getLog = FindByQueryCall.newInstance(
-                DataEntityCollection.AUDIT_LOG,
-                QueryUtils.and(
-                        QueryUtils.is("type", LogEntry.Type.GENERAL),
-                        QueryUtils.greaterThanOrEqual("lastUpdated", first.getLastUpdated()),
-                        QueryUtils.lessThan("lastUpdated", secondTimestamp)
-                )
-        );
-        logs = dataStore.executeDatabaseCall(getLog, DatabaseReference.getLogs()).getEntities();
-        assertThat(logs, contains(first));
-    }
+    getLog = FindByQueryCall.newInstance(
+      DataEntityCollection.AUDIT_LOG,
+      QueryUtils.and(
+        QueryUtils.is("type", LogEntry.Type.GENERAL),
+        QueryUtils.greaterThanOrEqual("lastUpdated", first.getLastUpdated()),
+        QueryUtils.lessThan("lastUpdated", secondTimestamp)
+      )
+    );
+    logs = dataStore.executeDatabaseCall(getLog, DatabaseReference.getLogs()).getEntities();
+    assertThat(logs, contains(first));
+  }
 
-    @Test
-    public void testHistoryProfileManipulation() {
-        HistoryProfile appHistory = new HistoryProfilePBImpl<>(DataEntityCollection.APP, APP1);
-        db.executeDatabaseCall(StoreCall.newInstance(HISTORY, appHistory)).getValue();
+  @Test
+  public void testHistoryProfileManipulation() {
+    HistoryProfile appHistory = new HistoryProfilePBImpl<>(DataEntityCollection.APP, APP1);
+    db.executeDatabaseCall(StoreCall.newInstance(HISTORY, appHistory)).getValue();
 
-        String appId = APP1_ID.toString();
-        FindByQueryCall findHistory = FindByQueryCall.newInstance(HISTORY, QueryUtils.is("originalId", appId));
-        List<HistoryProfile> profilesById = db.executeDatabaseCall(findHistory).getEntities();
-        assertThat(profilesById, hasSize(1));
-        assertThat((AppProfile) profilesById.get(0).getOriginal(), is(APP1));
-    }
+    String appId = APP1_ID.toString();
+    FindByQueryCall findHistory = FindByQueryCall.newInstance(HISTORY, QueryUtils.is("originalId", appId));
+    List<HistoryProfile> profilesById = db.executeDatabaseCall(findHistory).getEntities();
+    assertThat(profilesById, hasSize(1));
+    assertThat((AppProfile) profilesById.get(0).getOriginal(), is(APP1));
+  }
 }

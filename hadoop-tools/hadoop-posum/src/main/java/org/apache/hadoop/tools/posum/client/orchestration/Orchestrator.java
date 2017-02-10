@@ -4,8 +4,8 @@ import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultReque
 import org.apache.hadoop.tools.posum.common.util.Utils;
 
 public interface Orchestrator {
-    void handleSimulationResult(HandleSimResultRequest resultRequest);
+  void handleSimulationResult(HandleSimResultRequest resultRequest);
 
-    String register(Utils.PosumProcess process, String address);    // returns DM address
+  String register(Utils.PosumProcess process, String address);    // returns DM address
 
 }

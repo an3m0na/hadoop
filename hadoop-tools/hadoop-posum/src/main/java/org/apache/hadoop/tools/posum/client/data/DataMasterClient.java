@@ -6,14 +6,17 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.*;
-import org.apache.hadoop.tools.posum.common.records.payload.*;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
+import org.apache.hadoop.tools.posum.common.records.payload.CollectionMapPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.DatabaseAlterationPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.Payload;
+import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
-import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
@@ -23,80 +26,80 @@ import java.util.Map;
 
 public class DataMasterClient extends AbstractService implements DataStore {
 
-    private static Log logger = LogFactory.getLog(DataMasterClient.class);
+  private static Log logger = LogFactory.getLog(DataMasterClient.class);
 
-    private DataMasterProtocol dmClient;
-    private String connectAddress;
+  private DataMasterProtocol dmClient;
+  private String connectAddress;
 
-    public DataMasterClient(String connectAddress) {
-        super(DataMasterClient.class.getName());
-        this.connectAddress = connectAddress;
+  public DataMasterClient(String connectAddress) {
+    super(DataMasterClient.class.getName());
+    this.connectAddress = connectAddress;
+  }
+
+  public String getConnectAddress() {
+    return connectAddress;
+  }
+
+  @Override
+  protected void serviceStart() throws Exception {
+    final Configuration conf = getConfig();
+    try {
+      dmClient = new StandardClientProxyFactory<>(conf,
+        connectAddress,
+        PosumConfiguration.DM_ADDRESS_DEFAULT,
+        PosumConfiguration.DM_PORT_DEFAULT,
+        DataMasterProtocol.class).createProxy();
+      Utils.checkPing(dmClient);
+      logger.info("Successfully connected to Data Master");
+    } catch (IOException e) {
+      throw new PosumException("Could not init DataMaster client", e);
     }
+    super.serviceStart();
+  }
 
-    public String getConnectAddress() {
-        return connectAddress;
+  @Override
+  protected void serviceStop() throws Exception {
+    if (this.dmClient != null) {
+      RPC.stopProxy(this.dmClient);
     }
+    super.serviceStop();
+  }
 
-    @Override
-    protected void serviceStart() throws Exception {
-        final Configuration conf = getConfig();
-        try {
-            dmClient = new StandardClientProxyFactory<>(conf,
-                    connectAddress,
-                    PosumConfiguration.DM_ADDRESS_DEFAULT,
-                    PosumConfiguration.DM_PORT_DEFAULT,
-                    DataMasterProtocol.class).createProxy();
-            Utils.checkPing(dmClient);
-            logger.info("Successfully connected to Data Master");
-        } catch (IOException e) {
-            throw new PosumException("Could not init DataMaster client", e);
-        }
-        super.serviceStart();
+  public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DatabaseReference db) {
+    try {
+      return (T) Utils.handleError("executeDatabaseCall",
+        dmClient.executeDatabaseCall(DatabaseCallExecutionRequest.newInstance(call, db))).getPayload();
+    } catch (IOException | YarnException e) {
+      throw new PosumException("Error during RPC call", e);
     }
+  }
 
-    @Override
-    protected void serviceStop() throws Exception {
-        if (this.dmClient != null) {
-            RPC.stopProxy(this.dmClient);
-        }
-        super.serviceStop();
-    }
+  @Override
+  public Map<DatabaseReference, List<DataEntityCollection>> listCollections() {
+    return Utils.<CollectionMapPayload>sendSimpleRequest(SimpleRequest.Type.LIST_COLLECTIONS, dmClient).getEntries();
+  }
 
-    public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DatabaseReference db) {
-        try {
-            return (T) Utils.handleError("executeDatabaseCall",
-                    dmClient.executeDatabaseCall(DatabaseCallExecutionRequest.newInstance(call, db))).getPayload();
-        } catch (IOException | YarnException e) {
-            throw new PosumException("Error during RPC call", e);
-        }
-    }
+  @Override
+  public void clear() {
+    Utils.sendSimpleRequest(SimpleRequest.Type.CLEAR_DATA, dmClient);
+  }
 
-    @Override
-    public Map<DatabaseReference, List<DataEntityCollection>> listCollections() {
-        return Utils.<CollectionMapPayload>sendSimpleRequest(SimpleRequest.Type.LIST_COLLECTIONS, dmClient).getEntries();
-    }
+  @Override
+  public void clearDatabase(DatabaseReference db) {
+    Utils.sendSimpleRequest(
+      "clearDatabase",
+      SimpleRequest.newInstance(SimpleRequest.Type.CLEAR_DB, DatabaseAlterationPayload.newInstance(db)),
+      dmClient
+    );
+  }
 
-    @Override
-    public void clear() {
-        Utils.sendSimpleRequest(SimpleRequest.Type.CLEAR_DATA, dmClient);
-    }
-
-    @Override
-    public void clearDatabase(DatabaseReference db) {
-        Utils.sendSimpleRequest(
-                "clearDatabase",
-                SimpleRequest.newInstance(SimpleRequest.Type.CLEAR_DB, DatabaseAlterationPayload.newInstance(db)),
-                dmClient
-        );
-    }
-
-    @Override
-    public void copyDatabase(DatabaseReference sourceDB, DatabaseReference destinationDB) {
-        Utils.sendSimpleRequest(
-                "clearDatabase",
-                SimpleRequest.newInstance(SimpleRequest.Type.COPY_DB,
-                        DatabaseAlterationPayload.newInstance(sourceDB, destinationDB)),
-                dmClient
-        );
-    }
+  @Override
+  public void copyDatabase(DatabaseReference sourceDB, DatabaseReference destinationDB) {
+    Utils.sendSimpleRequest(
+      "clearDatabase",
+      SimpleRequest.newInstance(SimpleRequest.Type.COPY_DB,
+        DatabaseAlterationPayload.newInstance(sourceDB, destinationDB)),
+      dmClient
+    );
+  }
 }

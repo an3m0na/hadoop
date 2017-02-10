@@ -28,91 +28,91 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class TestJobInfoCollector {
 
-    private final String[] LOCATIONS = new String[]{"someLocation"};
-    private final long INPUT_LENGTH = 1L;
+  private final String[] LOCATIONS = new String[]{"someLocation"};
+  private final long INPUT_LENGTH = 1L;
 
-    @Mock
-    private Database dbMock;
-    @Mock
-    private HadoopAPIClient apiMock;
-    @Mock
-    private HdfsReader hdfsReaderMock;
+  @Mock
+  private Database dbMock;
+  @Mock
+  private HadoopAPIClient apiMock;
+  @Mock
+  private HdfsReader hdfsReaderMock;
 
-    @InjectMocks
-    private JobInfoCollector testSubject = new JobInfoCollector();
+  @InjectMocks
+  private JobInfoCollector testSubject = new JobInfoCollector();
 
-    private ClusterMonitorEntities entities;
+  private ClusterMonitorEntities entities;
 
-    @Before
-    public void init() {
-        entities = new ClusterMonitorEntities();
-    }
+  @Before
+  public void init() {
+    entities = new ClusterMonitorEntities();
+  }
 
-    @Test
-    public void getExistingRunningJobInfoTest() {
-        when(dbMock.executeDatabaseCall(any(JobForAppCall.class)))
-                .thenReturn(SingleEntityPayload.newInstance(DataEntityCollection.JOB, entities.RUNNING_JOB));
-        when(apiMock.getRunningJobInfo(entities.APP_ID, entities.RUNNING_APP.getQueue(), entities.RUNNING_JOB)).thenReturn(entities.RUNNING_JOB);
-        when(apiMock.getRunningJobCounters(entities.APP_ID, entities.JOB_ID)).thenReturn(entities.JOB_COUNTERS);
+  @Test
+  public void getExistingRunningJobInfoTest() {
+    when(dbMock.executeDatabaseCall(any(JobForAppCall.class)))
+      .thenReturn(SingleEntityPayload.newInstance(DataEntityCollection.JOB, entities.RUNNING_JOB));
+    when(apiMock.getRunningJobInfo(entities.APP_ID, entities.RUNNING_APP.getQueue(), entities.RUNNING_JOB)).thenReturn(entities.RUNNING_JOB);
+    when(apiMock.getRunningJobCounters(entities.APP_ID, entities.JOB_ID)).thenReturn(entities.JOB_COUNTERS);
 
-        JobInfo ret = testSubject.getRunningJobInfo(entities.RUNNING_APP);
+    JobInfo ret = testSubject.getRunningJobInfo(entities.RUNNING_APP);
 
-        assertThat(ret, is(new JobInfo(entities.RUNNING_JOB, null, entities.JOB_COUNTERS)));
-    }
+    assertThat(ret, is(new JobInfo(entities.RUNNING_JOB, null, entities.JOB_COUNTERS)));
+  }
 
-    @Test
-    public void getNewRunningJobInfoTest() throws IOException {
-        JobId jobId = Utils.parseJobId(entities.JOB_ID);
-        when(hdfsReaderMock.getSubmittedConf(jobId, entities.RUNNING_APP.getUser())).thenReturn(entities.JOB_CONF);
-        when(hdfsReaderMock.getSplitMetaInfo(jobId, entities.JOB_CONF))
-                .thenReturn(new JobSplit.TaskSplitMetaInfo[]{new JobSplit.TaskSplitMetaInfo(null, LOCATIONS, INPUT_LENGTH)});
-        when(dbMock.executeDatabaseCall(any(JobForAppCall.class))).thenReturn(null);
-        when(apiMock.getRunningJobInfo(eq(entities.APP_ID), eq(entities.RUNNING_APP.getQueue()), any(JobProfile.class)))
-                .thenReturn(entities.RUNNING_JOB);
-        when(apiMock.getRunningJobCounters(entities.APP_ID, entities.JOB_ID)).thenReturn(entities.JOB_COUNTERS);
+  @Test
+  public void getNewRunningJobInfoTest() throws IOException {
+    JobId jobId = Utils.parseJobId(entities.JOB_ID);
+    when(hdfsReaderMock.getSubmittedConf(jobId, entities.RUNNING_APP.getUser())).thenReturn(entities.JOB_CONF);
+    when(hdfsReaderMock.getSplitMetaInfo(jobId, entities.JOB_CONF))
+      .thenReturn(new JobSplit.TaskSplitMetaInfo[]{new JobSplit.TaskSplitMetaInfo(null, LOCATIONS, INPUT_LENGTH)});
+    when(dbMock.executeDatabaseCall(any(JobForAppCall.class))).thenReturn(null);
+    when(apiMock.getRunningJobInfo(eq(entities.APP_ID), eq(entities.RUNNING_APP.getQueue()), any(JobProfile.class)))
+      .thenReturn(entities.RUNNING_JOB);
+    when(apiMock.getRunningJobCounters(entities.APP_ID, entities.JOB_ID)).thenReturn(entities.JOB_COUNTERS);
 
-        JobInfo ret = testSubject.getRunningJobInfo(entities.RUNNING_APP);
+    JobInfo ret = testSubject.getRunningJobInfo(entities.RUNNING_APP);
 
-        assertThat(ret, is(new JobInfo(entities.RUNNING_JOB, entities.JOB_CONF, entities.JOB_COUNTERS)));
-    }
+    assertThat(ret, is(new JobInfo(entities.RUNNING_JOB, entities.JOB_CONF, entities.JOB_COUNTERS)));
+  }
 
-    @Test
-    public void getFinishedJobInfoTest() {
-        when(dbMock.executeDatabaseCall(any(JobForAppCall.class))).thenReturn(SingleEntityPayload.newInstance(JOB, entities.RUNNING_JOB));
-        when(apiMock.getFinishedJobInfo(entities.APP_ID)).thenReturn(entities.FINISHED_JOB);
-        when(apiMock.getFinishedJobInfo(entities.APP_ID, entities.JOB_ID, entities.RUNNING_JOB)).thenReturn(entities.FINISHED_JOB);
-        when(apiMock.getFinishedJobConf(entities.JOB_ID)).thenReturn(entities.JOB_CONF);
-        when(apiMock.getFinishedJobCounters(entities.JOB_ID)).thenReturn(entities.JOB_COUNTERS);
+  @Test
+  public void getFinishedJobInfoTest() {
+    when(dbMock.executeDatabaseCall(any(JobForAppCall.class))).thenReturn(SingleEntityPayload.newInstance(JOB, entities.RUNNING_JOB));
+    when(apiMock.getFinishedJobInfo(entities.APP_ID)).thenReturn(entities.FINISHED_JOB);
+    when(apiMock.getFinishedJobInfo(entities.APP_ID, entities.JOB_ID, entities.RUNNING_JOB)).thenReturn(entities.FINISHED_JOB);
+    when(apiMock.getFinishedJobConf(entities.JOB_ID)).thenReturn(entities.JOB_CONF);
+    when(apiMock.getFinishedJobCounters(entities.JOB_ID)).thenReturn(entities.JOB_COUNTERS);
 
-        JobInfo ret = testSubject.getFinishedJobInfo(entities.FINISHED_APP);
+    JobInfo ret = testSubject.getFinishedJobInfo(entities.FINISHED_APP);
 
-        assertThat(ret, is(new JobInfo(entities.FINISHED_JOB, entities.JOB_CONF, entities.JOB_COUNTERS)));
-    }
+    assertThat(ret, is(new JobInfo(entities.FINISHED_JOB, entities.JOB_CONF, entities.JOB_COUNTERS)));
+  }
 
-    @Test
-    public void getSubmittedJobInfoTest() throws IOException {
-        JobId jobId = Utils.parseJobId(entities.JOB_ID);
-        when(hdfsReaderMock.getSubmittedConf(jobId, entities.RUNNING_APP.getUser())).thenReturn(entities.JOB_CONF);
-        when(hdfsReaderMock.getSplitMetaInfo(jobId, entities.JOB_CONF))
-                .thenReturn(new JobSplit.TaskSplitMetaInfo[]{new JobSplit.TaskSplitMetaInfo(null, LOCATIONS, INPUT_LENGTH)});
-        JobInfo ret = testSubject.getSubmittedJobInfo(entities.APP_ID, entities.RUNNING_APP.getUser());
+  @Test
+  public void getSubmittedJobInfoTest() throws IOException {
+    JobId jobId = Utils.parseJobId(entities.JOB_ID);
+    when(hdfsReaderMock.getSubmittedConf(jobId, entities.RUNNING_APP.getUser())).thenReturn(entities.JOB_CONF);
+    when(hdfsReaderMock.getSplitMetaInfo(jobId, entities.JOB_CONF))
+      .thenReturn(new JobSplit.TaskSplitMetaInfo[]{new JobSplit.TaskSplitMetaInfo(null, LOCATIONS, INPUT_LENGTH)});
+    JobInfo ret = testSubject.getSubmittedJobInfo(entities.APP_ID, entities.RUNNING_APP.getUser());
 
-        ret.getProfile().setLastUpdated(entities.RUNNING_JOB.getLastUpdated());
+    ret.getProfile().setLastUpdated(entities.RUNNING_JOB.getLastUpdated());
 
-        JobProfile expectedJob = entities.RUNNING_JOB.copy();
-        expectedJob.setStartTime(null);
-        expectedJob.setFinishTime(null);
-        expectedJob.setState(null);
-        expectedJob.setMapProgress(null);
-        expectedJob.setReduceProgress(null);
-        expectedJob.setCompletedMaps(null);
-        expectedJob.setCompletedReduces(null);
-        expectedJob.setUberized(null);
-        expectedJob.setInputSplits(LOCATIONS.length);
-        expectedJob.setTotalInputBytes(INPUT_LENGTH);
-        expectedJob.setSplitLocations(Arrays.asList(LOCATIONS));
-        assertThat(ret, is(new JobInfo(expectedJob, entities.JOB_CONF, null)));
-    }
+    JobProfile expectedJob = entities.RUNNING_JOB.copy();
+    expectedJob.setStartTime(null);
+    expectedJob.setFinishTime(null);
+    expectedJob.setState(null);
+    expectedJob.setMapProgress(null);
+    expectedJob.setReduceProgress(null);
+    expectedJob.setCompletedMaps(null);
+    expectedJob.setCompletedReduces(null);
+    expectedJob.setUberized(null);
+    expectedJob.setInputSplits(LOCATIONS.length);
+    expectedJob.setTotalInputBytes(INPUT_LENGTH);
+    expectedJob.setSplitLocations(Arrays.asList(LOCATIONS));
+    assertThat(ret, is(new JobInfo(expectedJob, entities.JOB_CONF, null)));
+  }
 
 
 } 

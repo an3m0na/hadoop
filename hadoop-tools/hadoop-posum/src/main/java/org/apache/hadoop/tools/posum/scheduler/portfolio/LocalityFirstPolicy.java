@@ -10,17 +10,17 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.Capacity
 
 public class LocalityFirstPolicy extends ExtensibleCapacityScheduler<ExtCaAppAttempt, ExtCaSchedulerNode> {
 
-    private static Log logger = LogFactory.getLog(LocalityFirstPolicy.class);
+  private static Log logger = LogFactory.getLog(LocalityFirstPolicy.class);
 
-    public LocalityFirstPolicy() {
-        super(ExtCaAppAttempt.class, ExtCaSchedulerNode.class, LocalityFirstPolicy.class.getName(), true);
-    }
+  public LocalityFirstPolicy() {
+    super(ExtCaAppAttempt.class, ExtCaSchedulerNode.class, LocalityFirstPolicy.class.getName(), true);
+  }
 
-    @Override
-    protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf){
-        CapacitySchedulerConfiguration capacityConf = new CapacitySchedulerConfiguration(conf);
-        capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, Integer.MAX_VALUE);
-        return  capacityConf;
-    }
+  @Override
+  protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf) {
+    CapacitySchedulerConfiguration capacityConf = new CapacitySchedulerConfiguration(conf);
+    capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, Integer.MAX_VALUE);
+    return capacityConf;
+  }
 }
 

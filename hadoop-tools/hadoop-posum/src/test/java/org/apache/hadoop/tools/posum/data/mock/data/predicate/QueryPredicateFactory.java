@@ -8,15 +8,15 @@ import org.apache.hadoop.tools.posum.common.util.PosumException;
 
 public class QueryPredicateFactory {
 
-    public static QueryPredicate<? extends DatabaseQuery> fromQuery(DatabaseQuery query) {
-        if (query == null)
-            return new TautologyPredicate(null);
-        if (query instanceof PropertyValueQuery)
-            return new PropertyValueQueryPredicate((PropertyValueQuery) query);
-        if (query instanceof CompositionQuery)
-            return new CompositionQueryPredicate((CompositionQuery) query);
-        if (query instanceof PropertyRangeQuery)
-            return new PropertyRangeQueryPredicate((PropertyRangeQuery) query);
-        throw new PosumException("Query type not recognized: " + query.getClass());
-    }
+  public static QueryPredicate<? extends DatabaseQuery> fromQuery(DatabaseQuery query) {
+    if (query == null)
+      return new TautologyPredicate(null);
+    if (query instanceof PropertyValueQuery)
+      return new PropertyValueQueryPredicate((PropertyValueQuery) query);
+    if (query instanceof CompositionQuery)
+      return new CompositionQueryPredicate((CompositionQuery) query);
+    if (query instanceof PropertyRangeQuery)
+      return new PropertyRangeQueryPredicate((PropertyRangeQuery) query);
+    throw new PosumException("Query type not recognized: " + query.getClass());
+  }
 }

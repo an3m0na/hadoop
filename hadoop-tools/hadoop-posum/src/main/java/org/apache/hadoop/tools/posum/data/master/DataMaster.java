@@ -10,91 +10,91 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumMasterProcess;
 import org.apache.hadoop.tools.posum.data.core.DataStoreImpl;
 import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
-import org.apache.hadoop.tools.posum.data.monitor.cluster.AppInfoCollector;
-import org.apache.hadoop.tools.posum.data.monitor.cluster.ClusterMonitor;
 import org.apache.hadoop.tools.posum.data.monitor.PosumInfoCollector;
 import org.apache.hadoop.tools.posum.data.monitor.PosumMonitor;
+import org.apache.hadoop.tools.posum.data.monitor.cluster.AppInfoCollector;
+import org.apache.hadoop.tools.posum.data.monitor.cluster.ClusterMonitor;
 import org.apache.hadoop.tools.posum.web.DataMasterWebApp;
 
-public class DataMaster extends CompositeService  implements PosumMasterProcess {
-    private static final Log logger = LogFactory.getLog(DataMaster.class);
+public class DataMaster extends CompositeService implements PosumMasterProcess {
+  private static final Log logger = LogFactory.getLog(DataMaster.class);
 
-    private DataMasterWebApp webApp;
+  private DataMasterWebApp webApp;
 
-    public DataMaster() {
-        super(DataMaster.class.getName());
+  public DataMaster() {
+    super(DataMaster.class.getName());
+  }
+
+  private DataMasterContext dmContext;
+  private DataMasterCommService commService;
+  private LockBasedDataStore dataStore;
+  private ClusterMonitor clusterMonitor;
+  private PosumMonitor posumMonitor;
+
+  @Override
+  protected void serviceInit(Configuration conf) throws Exception {
+    dmContext = new DataMasterContext();
+
+    dataStore = new DataStoreImpl(conf);
+    dmContext.setDataStore(dataStore);
+
+    //service to give database access to other POSUM processes
+    commService = new DataMasterCommService(dmContext);
+    commService.init(conf);
+    addIfService(commService);
+    dmContext.setCommService(commService);
+
+    dmContext.setClusterInfo(new AppInfoCollector(conf, Database.from(dataStore, DatabaseReference.getMain())));
+    clusterMonitor = new ClusterMonitor(dmContext);
+    clusterMonitor.init(conf);
+    addIfService(clusterMonitor);
+
+    dmContext.setPosumInfo(new PosumInfoCollector(conf, dmContext.getDataStore()));
+    posumMonitor = new PosumMonitor(dmContext);
+    posumMonitor.init(conf);
+    addIfService(posumMonitor);
+
+    try {
+      webApp = new DataMasterWebApp(dmContext,
+        conf.getInt(PosumConfiguration.DM_WEBAPP_PORT,
+          PosumConfiguration.DM_WEBAPP_PORT_DEFAULT));
+    } catch (Exception e) {
+      logger.error("Could not initialize web app", e);
     }
 
-    private DataMasterContext dmContext;
-    private DataMasterCommService commService;
-    private LockBasedDataStore dataStore;
-    private ClusterMonitor clusterMonitor;
-    private PosumMonitor posumMonitor;
+    super.serviceInit(conf);
+  }
 
-    @Override
-    protected void serviceInit(Configuration conf) throws Exception {
-        dmContext = new DataMasterContext();
+  @Override
+  protected void serviceStart() throws Exception {
+    super.serviceStart();
+    if (webApp != null)
+      webApp.start();
+  }
 
-        dataStore = new DataStoreImpl(conf);
-        dmContext.setDataStore(dataStore);
+  @Override
+  protected void serviceStop() throws Exception {
+    if (webApp != null)
+      webApp.stop();
+    super.serviceStop();
+  }
 
-        //service to give database access to other POSUM processes
-        commService = new DataMasterCommService(dmContext);
-        commService.init(conf);
-        addIfService(commService);
-        dmContext.setCommService(commService);
+  public String getConnectAddress() {
+    if (commService != null)
+      return commService.getConnectAddress();
+    return null;
+  }
 
-        dmContext.setClusterInfo(new AppInfoCollector(conf, Database.from(dataStore, DatabaseReference.getMain())));
-        clusterMonitor = new ClusterMonitor(dmContext);
-        clusterMonitor.init(conf);
-        addIfService(clusterMonitor);
-
-        dmContext.setPosumInfo(new PosumInfoCollector(conf, dmContext.getDataStore()));
-        posumMonitor = new PosumMonitor(dmContext);
-        posumMonitor.init(conf);
-        addIfService(posumMonitor);
-
-        try {
-            webApp = new DataMasterWebApp(dmContext,
-                    conf.getInt(PosumConfiguration.DM_WEBAPP_PORT,
-                            PosumConfiguration.DM_WEBAPP_PORT_DEFAULT));
-        } catch (Exception e) {
-            logger.error("Could not initialize web app", e);
-        }
-
-        super.serviceInit(conf);
+  public static void main(String[] args) {
+    try {
+      Configuration conf = PosumConfiguration.newInstance();
+      DataMaster master = new DataMaster();
+      master.init(conf);
+      master.start();
+    } catch (Exception e) {
+      logger.fatal("Could not start Data Master", e);
     }
-
-    @Override
-    protected void serviceStart() throws Exception {
-        super.serviceStart();
-        if (webApp != null)
-            webApp.start();
-    }
-
-    @Override
-    protected void serviceStop() throws Exception {
-        if (webApp != null)
-            webApp.stop();
-        super.serviceStop();
-    }
-
-    public String getConnectAddress() {
-        if (commService != null)
-            return commService.getConnectAddress();
-        return null;
-    }
-
-    public static void main(String[] args) {
-        try {
-            Configuration conf = PosumConfiguration.newInstance();
-            DataMaster master = new DataMaster();
-            master.init(conf);
-            master.start();
-        } catch (Exception e) {
-            logger.fatal("Could not start Data Master", e);
-        }
-    }
+  }
 
 
 }

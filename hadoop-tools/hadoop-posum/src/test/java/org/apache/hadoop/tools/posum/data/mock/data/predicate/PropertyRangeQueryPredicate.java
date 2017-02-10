@@ -11,21 +11,21 @@ import java.util.Map;
 
 class PropertyRangeQueryPredicate extends QueryPredicate<PropertyRangeQuery> {
 
-    PropertyRangeQueryPredicate(PropertyRangeQuery query) {
-        super(query);
-        checkedProperties = Collections.singleton(query.getPropertyName());
-    }
+  PropertyRangeQueryPredicate(PropertyRangeQuery query) {
+    super(query);
+    checkedProperties = Collections.singleton(query.getPropertyName());
+  }
 
-    @Override
-    public boolean check(GeneralDataEntity entity, Map<String, Method> propertyReaders) throws InvocationTargetException, IllegalAccessException {
-        Object value = propertyReaders.get(query.getPropertyName()).invoke(entity);
-        switch (query.getType()) {
-            case IN:
-                return query.getValues().contains(value);
-            case NOT_IN:
-                return !query.getValues().contains(value);
-            default:
-                throw new PosumException("PropertyRange query type not recognized: " + query.getType());
-        }
+  @Override
+  public boolean check(GeneralDataEntity entity, Map<String, Method> propertyReaders) throws InvocationTargetException, IllegalAccessException {
+    Object value = propertyReaders.get(query.getPropertyName()).invoke(entity);
+    switch (query.getType()) {
+      case IN:
+        return query.getValues().contains(value);
+      case NOT_IN:
+        return !query.getValues().contains(value);
+      default:
+        throw new PosumException("PropertyRange query type not recognized: " + query.getType());
     }
+  }
 }

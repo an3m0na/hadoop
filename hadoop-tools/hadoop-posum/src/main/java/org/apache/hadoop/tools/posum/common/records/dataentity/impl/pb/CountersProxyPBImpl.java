@@ -14,123 +14,123 @@ import java.util.Iterator;
 import java.util.List;
 
 public class CountersProxyPBImpl extends GeneralDataEntityPBImpl<CountersProxy, CountersProxyProto, CountersProxyProto.Builder>
-        implements CountersProxy {
+  implements CountersProxy {
 
-    @Override
-    void initBuilder() {
-        builder = viaProto ? CountersProxyProto.newBuilder(proto) : CountersProxyProto.newBuilder();
+  @Override
+  void initBuilder() {
+    builder = viaProto ? CountersProxyProto.newBuilder(proto) : CountersProxyProto.newBuilder();
+  }
+
+  private List<CounterGroupInfoPayload> counterGroup;
+
+  public CountersProxyPBImpl() {
+  }
+
+  public CountersProxyPBImpl(CountersProxyProto proto) {
+    super(proto);
+  }
+
+  @Override
+  void buildProto() {
+    maybeInitBuilder();
+    if (counterGroup != null) {
+      Iterable<CounterGroupInfoPayloadProto> iterable =
+        new Iterable<CounterGroupInfoPayloadProto>() {
+          @Override
+          public Iterator<CounterGroupInfoPayloadProto> iterator() {
+            return new Iterator<CounterGroupInfoPayloadProto>() {
+
+              Iterator<CounterGroupInfoPayload> entryIterator = counterGroup.iterator();
+
+              @Override
+              public void remove() {
+                throw new UnsupportedOperationException();
+              }
+
+              @Override
+              public CounterGroupInfoPayloadProto next() {
+                return ((CounterGroupInfoPayloadPBImpl) entryIterator.next()).getProto();
+              }
+
+              @Override
+              public boolean hasNext() {
+                return entryIterator.hasNext();
+              }
+            };
+          }
+        };
+      builder.addAllGroups(iterable);
     }
+    proto = builder.build();
+  }
 
-    private List<CounterGroupInfoPayload> counterGroup;
+  @Override
+  public CountersProxy parseToEntity(ByteString data) throws InvalidProtocolBufferException {
+    this.proto = CountersProxyProto.parseFrom(data);
+    viaProto = true;
+    return this;
+  }
 
-    public CountersProxyPBImpl() {
+  @Override
+  public String getId() {
+    CountersProxyProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasId())
+      return null;
+    return p.getId();
+  }
+
+  @Override
+  public void setId(String id) {
+    maybeInitBuilder();
+    if (id == null) {
+      builder.clearId();
+      return;
     }
+    builder.setId(id);
+  }
 
-    public CountersProxyPBImpl(CountersProxyProto proto) {
-        super(proto);
+  @Override
+  public Long getLastUpdated() {
+    CountersProxyProtoOrBuilder p = viaProto ? proto : builder;
+    if (p.hasLastUpdated())
+      return p.getLastUpdated();
+    return null;
+  }
+
+  @Override
+  public void setLastUpdated(Long timestamp) {
+    maybeInitBuilder();
+    if (timestamp == null) {
+      builder.clearLastUpdated();
+      return;
     }
+    builder.setLastUpdated(timestamp);
+  }
 
-    @Override
-    void buildProto() {
-        maybeInitBuilder();
-        if(counterGroup != null) {
-            Iterable<CounterGroupInfoPayloadProto> iterable =
-                    new Iterable<CounterGroupInfoPayloadProto>() {
-                        @Override
-                        public Iterator<CounterGroupInfoPayloadProto> iterator() {
-                            return new Iterator<CounterGroupInfoPayloadProto>() {
+  @Override
+  public CountersProxy copy() {
+    return new CountersProxyPBImpl(getProto());
+  }
 
-                                Iterator<CounterGroupInfoPayload> entryIterator = counterGroup.iterator();
-
-                                @Override
-                                public void remove() {
-                                    throw new UnsupportedOperationException();
-                                }
-
-                                @Override
-                                public CounterGroupInfoPayloadProto next() {
-                                    return ((CounterGroupInfoPayloadPBImpl) entryIterator.next()).getProto();
-                                }
-
-                                @Override
-                                public boolean hasNext() {
-                                    return entryIterator.hasNext();
-                                }
-                            };
-                        }
-                    };
-            builder.addAllGroups(iterable);
-        }
-        proto = builder.build();
+  @Override
+  public List<CounterGroupInfoPayload> getCounterGroup() {
+    if (counterGroup == null) {
+      CountersProxyProtoOrBuilder p = viaProto ? proto : builder;
+      counterGroup = new ArrayList<>(p.getGroupsCount());
+      for (CounterGroupInfoPayloadProto counterProto : p.getGroupsList()) {
+        counterGroup.add(new CounterGroupInfoPayloadPBImpl(counterProto));
+      }
     }
+    return counterGroup;
+  }
 
-    @Override
-    public CountersProxy parseToEntity(ByteString data) throws InvalidProtocolBufferException {
-        this.proto = CountersProxyProto.parseFrom(data);
-        viaProto = true;
-        return this;
-    }
+  @Override
+  public void setCounterGroup(List<CounterGroupInfoPayload> counterGroups) {
+    this.counterGroup = counterGroups;
+  }
 
-    @Override
-    public String getId() {
-        CountersProxyProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasId())
-            return null;
-        return p.getId();
-    }
-
-    @Override
-    public void setId(String id) {
-        maybeInitBuilder();
-        if (id == null) {
-            builder.clearId();
-            return;
-        }
-        builder.setId(id);
-    }
-
-    @Override
-    public Long getLastUpdated() {
-        CountersProxyProtoOrBuilder p = viaProto ? proto : builder;
-        if (p.hasLastUpdated())
-            return p.getLastUpdated();
-        return null;
-    }
-
-    @Override
-    public void setLastUpdated(Long timestamp) {
-        maybeInitBuilder();
-        if (timestamp == null) {
-            builder.clearLastUpdated();
-            return;
-        }
-        builder.setLastUpdated(timestamp);
-    }
-
-    @Override
-    public CountersProxy copy() {
-        return new CountersProxyPBImpl(getProto());
-    }
-
-    @Override
-    public List<CounterGroupInfoPayload> getCounterGroup() {
-        if (counterGroup == null) {
-            CountersProxyProtoOrBuilder p = viaProto ? proto : builder;
-            counterGroup = new ArrayList<>(p.getGroupsCount());
-            for (CounterGroupInfoPayloadProto counterProto : p.getGroupsList()) {
-                counterGroup.add(new CounterGroupInfoPayloadPBImpl(counterProto));
-            }
-        }
-        return counterGroup;
-    }
-
-    @Override
-    public void setCounterGroup(List<CounterGroupInfoPayload> counterGroups) {
-        this.counterGroup = counterGroups;
-    }
-
-    @Override
-    public void setTaskCounterGroup(List<CounterGroupInfoPayload> counterGroups) {
-        this.counterGroup = counterGroups;
-    }
+  @Override
+  public void setTaskCounterGroup(List<CounterGroupInfoPayload> counterGroups) {
+    this.counterGroup = counterGroups;
+  }
 }

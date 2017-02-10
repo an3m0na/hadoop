@@ -12,15 +12,15 @@ import java.util.Map;
 
 class TautologyPredicate extends QueryPredicate<DatabaseQuery> {
 
-    TautologyPredicate(PropertyValueQuery query) {
-        super(query);
-        checkedProperties = Collections.emptySet();
-    }
+  TautologyPredicate(PropertyValueQuery query) {
+    super(query);
+    checkedProperties = Collections.emptySet();
+  }
 
-    @Override
-    public boolean check(GeneralDataEntity entity, Map<String, Method> propertyReaders) throws InvocationTargetException, IllegalAccessException {
-        return true;
+  @Override
+  public boolean check(GeneralDataEntity entity, Map<String, Method> propertyReaders) throws InvocationTargetException, IllegalAccessException {
+    return true;
 
-    }
+  }
 
 }
