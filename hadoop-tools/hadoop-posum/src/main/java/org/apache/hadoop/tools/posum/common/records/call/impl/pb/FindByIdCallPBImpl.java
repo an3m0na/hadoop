@@ -92,6 +92,8 @@ public class FindByIdCallPBImpl extends FindByIdCall implements PayloadPB {
 
     @Override
     public void setId(String id) {
+        if(id == null)
+            return;
         maybeInitBuilder();
         builder.setId(id);
     }
