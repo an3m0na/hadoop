@@ -5,22 +5,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JsonElement {
 
-    protected JsonNode innerElement;
-    protected static final ObjectMapper mapper = new ObjectMapper();
+  protected JsonNode innerElement;
+  protected static final ObjectMapper mapper = new ObjectMapper();
 
-    public JsonElement() {
+  public JsonElement() {
 
-    }
+  }
 
-    private JsonElement(JsonNode node) {
-        innerElement = node;
-    }
+  private JsonElement(JsonNode node) {
+    innerElement = node;
+  }
 
-    public JsonNode getNode() {
-        return innerElement;
-    }
+  public JsonNode getNode() {
+    return innerElement;
+  }
 
-    public static JsonElement wrapObject(Object object) {
-        return new JsonElement(mapper.valueToTree(object));
-    }
+  public static JsonElement wrapObject(Object object) {
+    return new JsonElement(mapper.valueToTree(object));
+  }
 }

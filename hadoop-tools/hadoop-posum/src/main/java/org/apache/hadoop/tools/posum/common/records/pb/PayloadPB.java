@@ -5,7 +5,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 
 public interface PayloadPB extends Payload {
-    ByteString getProtoBytes();
+  ByteString getProtoBytes();
 
-    void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException;
+  void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException;
 }

@@ -7,21 +7,21 @@ import org.apache.hadoop.yarn.proto.PosumProtos;
 
 public class VoidRequestPBImpl extends SimpleRequestPBImpl<VoidPayload> {
 
-    public VoidRequestPBImpl() {
-        super();
-    }
+  public VoidRequestPBImpl() {
+    super();
+  }
 
-    public VoidRequestPBImpl(PosumProtos.SimpleRequestProto proto) {
-        super(proto);
-    }
+  public VoidRequestPBImpl(PosumProtos.SimpleRequestProto proto) {
+    super(proto);
+  }
 
-    @Override
-    public ByteString payloadToBytes(VoidPayload payload) {
-        return ByteString.EMPTY;
-    }
+  @Override
+  public ByteString payloadToBytes(VoidPayload payload) {
+    return ByteString.EMPTY;
+  }
 
-    @Override
-    public VoidPayload bytesToPayload(ByteString data) throws InvalidProtocolBufferException {
-        return null;
-    }
+  @Override
+  public VoidPayload bytesToPayload(ByteString data) throws InvalidProtocolBufferException {
+    return null;
+  }
 }

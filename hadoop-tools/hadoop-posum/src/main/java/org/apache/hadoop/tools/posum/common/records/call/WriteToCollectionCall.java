@@ -7,17 +7,17 @@ import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
 
 public abstract class WriteToCollectionCall<T extends Payload> extends LockBasedDatabaseCallImpl<T> {
 
-    public abstract DataEntityCollection getEntityCollection();
+  public abstract DataEntityCollection getEntityCollection();
 
-    public abstract void setEntityCollection(DataEntityCollection collection);
+  public abstract void setEntityCollection(DataEntityCollection collection);
 
-    @Override
-    public void lockDatabase(LockBasedDataStore dataStore, DatabaseReference db) {
-        dataStore.lockForWrite(db);
-    }
+  @Override
+  public void lockDatabase(LockBasedDataStore dataStore, DatabaseReference db) {
+    dataStore.lockForWrite(db);
+  }
 
-    @Override
-    public void unlockDatabase(LockBasedDataStore dataStore, DatabaseReference db) {
-        dataStore.unlockForWrite(db);
-    }
+  @Override
+  public void unlockDatabase(LockBasedDataStore dataStore, DatabaseReference db) {
+    dataStore.unlockForWrite(db);
+  }
 }

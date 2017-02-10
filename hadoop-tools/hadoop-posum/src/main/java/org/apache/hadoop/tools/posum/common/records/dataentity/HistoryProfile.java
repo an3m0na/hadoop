@@ -5,15 +5,15 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonDeserialize(using = HistoryProfileDeserializer.class)
 public interface HistoryProfile<T extends GeneralDataEntity> extends GeneralDataEntity<HistoryProfile> {
 
-     T getOriginal();
+  T getOriginal();
 
-     void setOriginal(T original);
+  void setOriginal(T original);
 
-     DataEntityCollection getType();
+  DataEntityCollection getType();
 
-     void setType(DataEntityCollection type);
+  void setType(DataEntityCollection type);
 
-     String getOriginalId();
+  String getOriginalId();
 
-     void setOriginalId(String originalId);
+  void setOriginalId(String originalId);
 }

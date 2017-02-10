@@ -13,120 +13,120 @@ import org.apache.hadoop.yarn.proto.PosumProtos.CounterInfoPayloadProtoOrBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public class CounterInfoPayloadPBImpl extends CounterInfoPayload implements PayloadPB {
-    private CounterInfoPayloadProto proto = CounterInfoPayloadProto.getDefaultInstance();
-    private CounterInfoPayloadProto.Builder builder = null;
-    private boolean viaProto = false;
+  private CounterInfoPayloadProto proto = CounterInfoPayloadProto.getDefaultInstance();
+  private CounterInfoPayloadProto.Builder builder = null;
+  private boolean viaProto = false;
 
-    public CounterInfoPayloadPBImpl() {
-        builder = CounterInfoPayloadProto.newBuilder();
+  public CounterInfoPayloadPBImpl() {
+    builder = CounterInfoPayloadProto.newBuilder();
+  }
+
+  public CounterInfoPayloadPBImpl(CounterInfoPayloadProto proto) {
+    this.proto = proto;
+    viaProto = true;
+  }
+
+  @JsonIgnore
+  @org.codehaus.jackson.annotate.JsonIgnore
+  public CounterInfoPayloadProto getProto() {
+    mergeLocalToProto();
+    proto = viaProto ? proto : builder.build();
+    viaProto = true;
+    return proto;
+  }
+
+  @Override
+  public int hashCode() {
+    return getProto().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other == null)
+      return false;
+    if (other.getClass().isAssignableFrom(this.getClass())) {
+      return this.getProto().equals(this.getClass().cast(other).getProto());
     }
+    return false;
+  }
 
-    public CounterInfoPayloadPBImpl(CounterInfoPayloadProto proto) {
-        this.proto = proto;
-        viaProto = true;
+  @Override
+  public String toString() {
+    return TextFormat.shortDebugString(getProto());
+  }
+
+  private void mergeLocalToBuilder() {
+
+  }
+
+  private void mergeLocalToProto() {
+    if (viaProto)
+      maybeInitBuilder();
+    mergeLocalToBuilder();
+    proto = builder.build();
+    viaProto = true;
+  }
+
+  private void maybeInitBuilder() {
+    if (viaProto || builder == null) {
+      builder = CounterInfoPayloadProto.newBuilder(proto);
     }
+    viaProto = false;
+  }
 
-    @JsonIgnore
-    @org.codehaus.jackson.annotate.JsonIgnore
-    public CounterInfoPayloadProto getProto() {
-        mergeLocalToProto();
-        proto = viaProto ? proto : builder.build();
-        viaProto = true;
-        return proto;
-    }
+  public void setName(String name) {
+    maybeInitBuilder();
+    builder.setName(name);
+  }
 
-    @Override
-    public int hashCode() {
-        return getProto().hashCode();
-    }
+  public String getName() {
+    CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getName();
+  }
 
-    @Override
-    public boolean equals(Object other) {
-        if (other == null)
-            return false;
-        if (other.getClass().isAssignableFrom(this.getClass())) {
-            return this.getProto().equals(this.getClass().cast(other).getProto());
-        }
-        return false;
-    }
+  public void setTotalCounterValue(long value) {
+    maybeInitBuilder();
+    builder.setTotal(value);
+  }
 
-    @Override
-    public String toString() {
-        return TextFormat.shortDebugString(getProto());
-    }
+  public long getTotalCounterValue() {
+    CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getTotal();
+  }
 
-    private void mergeLocalToBuilder() {
+  public void setMapCounterValue(long value) {
+    maybeInitBuilder();
+    builder.setMap(value);
+  }
 
-    }
+  public long getMapCounterValue() {
+    CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getMap();
+  }
 
-    private void mergeLocalToProto() {
-        if (viaProto)
-            maybeInitBuilder();
-        mergeLocalToBuilder();
-        proto = builder.build();
-        viaProto = true;
-    }
+  public void setReduceCounterValue(long value) {
+    maybeInitBuilder();
+    builder.setReduce(value);
+  }
 
-    private void maybeInitBuilder() {
-        if (viaProto || builder == null) {
-            builder = CounterInfoPayloadProto.newBuilder(proto);
-        }
-        viaProto = false;
-    }
+  public long getReduceCounterValue() {
+    CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getReduce();
+  }
 
-    public void setName(String name) {
-        maybeInitBuilder();
-        builder.setName(name);
-    }
+  public void setValue(long value) {
+    maybeInitBuilder();
+    builder.setTotal(value);
+  }
 
-    public String getName() {
-        CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getName();
-    }
+  @Override
+  public ByteString getProtoBytes() {
+    return getProto().toByteString();
+  }
 
-    public void setTotalCounterValue(long value) {
-        maybeInitBuilder();
-        builder.setTotal(value);
-    }
-
-    public long getTotalCounterValue() {
-        CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getTotal();
-    }
-
-    public void setMapCounterValue(long value) {
-        maybeInitBuilder();
-        builder.setMap(value);
-    }
-
-    public long getMapCounterValue() {
-        CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getMap();
-    }
-
-    public void setReduceCounterValue(long value) {
-        maybeInitBuilder();
-        builder.setReduce(value);
-    }
-
-    public long getReduceCounterValue() {
-        CounterInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getReduce();
-    }
-
-    public void setValue(long value) {
-        maybeInitBuilder();
-        builder.setTotal(value);
-    }
-
-    @Override
-    public ByteString getProtoBytes() {
-        return getProto().toByteString();
-    }
-
-    @Override
-    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        proto = CounterInfoPayloadProto.parseFrom(data);
-        viaProto = true;
-    }
+  @Override
+  public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+    proto = CounterInfoPayloadProto.parseFrom(data);
+    viaProto = true;
+  }
 }

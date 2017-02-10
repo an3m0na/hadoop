@@ -20,33 +20,33 @@ import java.net.InetSocketAddress;
 
 public class SimulatorMasterProtocolPBClientImpl implements SimulatorMasterProtocol, Closeable {
 
-    private SimulatorMasterProtocolPB proxy;
+  private SimulatorMasterProtocolPB proxy;
 
-    public SimulatorMasterProtocolPBClientImpl(long clientVersion, InetSocketAddress addr,
-                                               Configuration conf) throws IOException {
-        RPC.setProtocolEngine(conf, SimulatorMasterProtocolPB.class, ProtobufRpcEngine.class);
-        proxy =
-                (SimulatorMasterProtocolPB) RPC.getProxy(SimulatorMasterProtocolPB.class, clientVersion,
-                        addr, conf);
-    }
+  public SimulatorMasterProtocolPBClientImpl(long clientVersion, InetSocketAddress addr,
+                                             Configuration conf) throws IOException {
+    RPC.setProtocolEngine(conf, SimulatorMasterProtocolPB.class, ProtobufRpcEngine.class);
+    proxy =
+      (SimulatorMasterProtocolPB) RPC.getProxy(SimulatorMasterProtocolPB.class, clientVersion,
+        addr, conf);
+  }
 
-    @Override
-    public void close() {
-        if (this.proxy != null) {
-            RPC.stopProxy(this.proxy);
-        }
+  @Override
+  public void close() {
+    if (this.proxy != null) {
+      RPC.stopProxy(this.proxy);
     }
+  }
 
-    @Override
-    public SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException {
-        SimpleRequestProto requestProto =
-                ((SimpleRequestPBImpl) request).getProto();
-        try {
-            return Utils.wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
-        } catch (ServiceException e) {
-            RPCUtil.unwrapAndThrowException(e);
-            return null;
-        }
+  @Override
+  public SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException {
+    SimpleRequestProto requestProto =
+      ((SimpleRequestPBImpl) request).getProto();
+    try {
+      return Utils.wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
+    } catch (ServiceException e) {
+      RPCUtil.unwrapAndThrowException(e);
+      return null;
     }
+  }
 
 }

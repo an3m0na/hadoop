@@ -7,22 +7,22 @@ import java.util.List;
 
 public abstract class CompositionQuery implements DatabaseQuery {
 
-    public enum Type {
-        AND, OR
-    }
+  public enum Type {
+    AND, OR
+  }
 
-    protected static CompositionQuery newInstance(Type type, DatabaseQuery... queries) {
-        CompositionQuery query = Records.newRecord(CompositionQuery.class);
-        query.setType(type);
-        query.setQueries(Arrays.asList(queries));
-        return query;
-    }
+  protected static CompositionQuery newInstance(Type type, DatabaseQuery... queries) {
+    CompositionQuery query = Records.newRecord(CompositionQuery.class);
+    query.setType(type);
+    query.setQueries(Arrays.asList(queries));
+    return query;
+  }
 
-    public abstract Type getType();
+  public abstract Type getType();
 
-    public abstract void setType(Type type);
+  public abstract void setType(Type type);
 
-    public abstract List<DatabaseQuery> getQueries();
+  public abstract List<DatabaseQuery> getQueries();
 
-    public abstract void setQueries(List<DatabaseQuery> queries);
+  public abstract void setQueries(List<DatabaseQuery> queries);
 }

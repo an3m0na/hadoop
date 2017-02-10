@@ -13,67 +13,67 @@ import org.apache.hadoop.yarn.proto.PosumProtos.MultiEntityPayloadProto;
 import java.util.List;
 
 public class StoreAllCallPBImpl extends StoreAllCall implements PayloadPB {
-    private MultiEntityPayloadPBImpl multiEntityPayloadPB;
+  private MultiEntityPayloadPBImpl multiEntityPayloadPB;
 
-    public StoreAllCallPBImpl() {
-        multiEntityPayloadPB = new MultiEntityPayloadPBImpl();
-    }
+  public StoreAllCallPBImpl() {
+    multiEntityPayloadPB = new MultiEntityPayloadPBImpl();
+  }
 
-    public StoreAllCallPBImpl(MultiEntityPayloadProto proto) {
-        multiEntityPayloadPB = new MultiEntityPayloadPBImpl(proto);
-    }
+  public StoreAllCallPBImpl(MultiEntityPayloadProto proto) {
+    multiEntityPayloadPB = new MultiEntityPayloadPBImpl(proto);
+  }
 
-    public MultiEntityPayloadProto getProto() {
-        return multiEntityPayloadPB.getProto();
-    }
+  public MultiEntityPayloadProto getProto() {
+    return multiEntityPayloadPB.getProto();
+  }
 
-    @Override
-    public int hashCode() {
-        return getProto().hashCode();
-    }
+  @Override
+  public int hashCode() {
+    return getProto().hashCode();
+  }
 
-    @Override
-    public boolean equals(Object other) {
-        if (other == null)
-            return false;
-        if (other.getClass().isAssignableFrom(this.getClass())) {
-            return this.getProto().equals(this.getClass().cast(other).getProto());
-        }
-        return false;
+  @Override
+  public boolean equals(Object other) {
+    if (other == null)
+      return false;
+    if (other.getClass().isAssignableFrom(this.getClass())) {
+      return this.getProto().equals(this.getClass().cast(other).getProto());
     }
+    return false;
+  }
 
-    @Override
-    public String toString() {
-        return TextFormat.shortDebugString(getProto());
-    }
+  @Override
+  public String toString() {
+    return TextFormat.shortDebugString(getProto());
+  }
 
-    @Override
-    public DataEntityCollection getEntityCollection() {
-        return multiEntityPayloadPB.getEntityCollection();
-    }
+  @Override
+  public DataEntityCollection getEntityCollection() {
+    return multiEntityPayloadPB.getEntityCollection();
+  }
 
-    @Override
-    public void setEntityCollection(DataEntityCollection type) {
-        multiEntityPayloadPB.setEntityCollection(type);
-    }
+  @Override
+  public void setEntityCollection(DataEntityCollection type) {
+    multiEntityPayloadPB.setEntityCollection(type);
+  }
 
-    @Override
-    public List<? extends GeneralDataEntity> getEntities() {
-        return multiEntityPayloadPB.getEntities();
-    }
+  @Override
+  public List<? extends GeneralDataEntity> getEntities() {
+    return multiEntityPayloadPB.getEntities();
+  }
 
-    @Override
-    public void setEntities(List<? extends GeneralDataEntity> entities) {
-        multiEntityPayloadPB.setEntities(entities);
-    }
+  @Override
+  public void setEntities(List<? extends GeneralDataEntity> entities) {
+    multiEntityPayloadPB.setEntities(entities);
+  }
 
-    @Override
-    public ByteString getProtoBytes() {
-        return getProto().toByteString();
-    }
+  @Override
+  public ByteString getProtoBytes() {
+    return getProto().toByteString();
+  }
 
-    @Override
-    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        multiEntityPayloadPB.populateFromProtoBytes(data);
-    }
+  @Override
+  public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+    multiEntityPayloadPB.populateFromProtoBytes(data);
+  }
 }

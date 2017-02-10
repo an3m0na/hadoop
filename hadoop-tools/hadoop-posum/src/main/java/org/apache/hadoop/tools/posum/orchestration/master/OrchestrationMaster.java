@@ -13,77 +13,77 @@ import org.apache.hadoop.yarn.event.AsyncDispatcher;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
 public class OrchestrationMaster extends CompositeService implements PosumMasterProcess {
-    private static Log logger = LogFactory.getLog(OrchestrationMaster.class);
+  private static Log logger = LogFactory.getLog(OrchestrationMaster.class);
 
-    private Dispatcher dispatcher;
+  private Dispatcher dispatcher;
 
-    public OrchestrationMaster() {
-        super(OrchestrationMaster.class.getName());
+  public OrchestrationMaster() {
+    super(OrchestrationMaster.class.getName());
+  }
+
+  private OrchestrationMasterContext pmContext;
+  private OrchestrationCommService commService;
+  private Orchestrator orchestrator;
+  private OrchestratorWebApp webApp;
+
+  @Override
+  protected void serviceInit(Configuration conf) throws Exception {
+    pmContext = new OrchestrationMasterContext();
+    dispatcher = new AsyncDispatcher();
+    addIfService(dispatcher);
+    pmContext.setDispatcher(dispatcher);
+
+    //service to communicate with other processes
+    commService = new OrchestrationCommService(pmContext);
+    commService.init(conf);
+    addIfService(commService);
+    pmContext.setCommService(commService);
+
+    // service that handles events and applies master logic
+    orchestrator = new Orchestrator(pmContext);
+    orchestrator.init(conf);
+    addIfService(orchestrator);
+    dispatcher.register(PosumEventType.class, orchestrator);
+
+    try {
+      webApp = new OrchestratorWebApp(pmContext,
+        conf.getInt(PosumConfiguration.MASTER_WEBAPP_PORT,
+          PosumConfiguration.MASTER_WEBAPP_PORT_DEFAULT));
+    } catch (Exception e) {
+      logger.error("Could not initialize web app", e);
     }
 
-    private OrchestrationMasterContext pmContext;
-    private OrchestrationCommService commService;
-    private Orchestrator orchestrator;
-    private OrchestratorWebApp webApp;
+    super.serviceInit(conf);
+  }
 
-    @Override
-    protected void serviceInit(Configuration conf) throws Exception {
-        pmContext = new OrchestrationMasterContext();
-        dispatcher = new AsyncDispatcher();
-        addIfService(dispatcher);
-        pmContext.setDispatcher(dispatcher);
+  @Override
+  protected void serviceStart() throws Exception {
+    super.serviceStart();
+    if (webApp != null)
+      webApp.start();
+  }
 
-        //service to communicate with other processes
-        commService = new OrchestrationCommService(pmContext);
-        commService.init(conf);
-        addIfService(commService);
-        pmContext.setCommService(commService);
+  @Override
+  protected void serviceStop() throws Exception {
+    if (webApp != null)
+      webApp.stop();
+    super.serviceStop();
+  }
 
-        // service that handles events and applies master logic
-        orchestrator = new Orchestrator(pmContext);
-        orchestrator.init(conf);
-        addIfService(orchestrator);
-        dispatcher.register(PosumEventType.class, orchestrator);
+  public String getConnectAddress() {
+    if (commService != null)
+      return commService.getConnectAddress();
+    return null;
+  }
 
-        try {
-            webApp = new OrchestratorWebApp(pmContext,
-                    conf.getInt(PosumConfiguration.MASTER_WEBAPP_PORT,
-                            PosumConfiguration.MASTER_WEBAPP_PORT_DEFAULT));
-        } catch (Exception e) {
-            logger.error("Could not initialize web app", e);
-        }
-
-        super.serviceInit(conf);
+  public static void main(String[] args) {
+    try {
+      Configuration conf = PosumConfiguration.newInstance();
+      OrchestrationMaster master = new OrchestrationMaster();
+      master.init(conf);
+      master.start();
+    } catch (Exception e) {
+      logger.fatal("Could not start POSUM Master", e);
     }
-
-    @Override
-    protected void serviceStart() throws Exception {
-        super.serviceStart();
-        if (webApp != null)
-            webApp.start();
-    }
-
-    @Override
-    protected void serviceStop() throws Exception {
-        if (webApp != null)
-            webApp.stop();
-        super.serviceStop();
-    }
-
-    public String getConnectAddress() {
-        if (commService != null)
-            return commService.getConnectAddress();
-        return null;
-    }
-
-    public static void main(String[] args) {
-        try {
-            Configuration conf = PosumConfiguration.newInstance();
-            OrchestrationMaster master = new OrchestrationMaster();
-            master.init(conf);
-            master.start();
-        } catch (Exception e) {
-            logger.fatal("Could not start POSUM Master", e);
-        }
-    }
+  }
 }

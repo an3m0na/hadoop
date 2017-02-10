@@ -5,16 +5,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
-public interface GeneralDataEntity<T extends GeneralDataEntity>{
+public interface GeneralDataEntity<T extends GeneralDataEntity> {
 
-    String getId();
+  String getId();
 
-    void setId(String id);
+  void setId(String id);
 
-    Long getLastUpdated();
+  Long getLastUpdated();
 
-    void setLastUpdated(Long timestamp);
+  void setLastUpdated(Long timestamp);
 
-    T copy();
+  T copy();
 
 }

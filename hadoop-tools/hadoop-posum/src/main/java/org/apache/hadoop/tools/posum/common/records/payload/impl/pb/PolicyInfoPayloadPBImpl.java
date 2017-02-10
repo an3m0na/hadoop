@@ -10,142 +10,142 @@ import org.apache.hadoop.yarn.proto.PosumProtos.PolicyInfoPayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.PolicyInfoPayloadProtoOrBuilder;
 
 public class PolicyInfoPayloadPBImpl extends PolicyInfoPayload implements PayloadPB {
-    private PolicyInfoPayloadProto proto = PolicyInfoPayloadProto.getDefaultInstance();
-    private PolicyInfoPayloadProto.Builder builder = null;
-    private boolean viaProto = false;
+  private PolicyInfoPayloadProto proto = PolicyInfoPayloadProto.getDefaultInstance();
+  private PolicyInfoPayloadProto.Builder builder = null;
+  private boolean viaProto = false;
 
-    public PolicyInfoPayloadPBImpl() {
-        builder = PolicyInfoPayloadProto.newBuilder();
+  public PolicyInfoPayloadPBImpl() {
+    builder = PolicyInfoPayloadProto.newBuilder();
+  }
+
+  public PolicyInfoPayloadPBImpl(PolicyInfoPayloadProto proto) {
+    this.proto = proto;
+    viaProto = true;
+  }
+
+  @JsonIgnore
+  public PolicyInfoPayloadProto getProto() {
+    mergeLocalToProto();
+    proto = viaProto ? proto : builder.build();
+    viaProto = true;
+    return proto;
+  }
+
+  @Override
+  public int hashCode() {
+    return getProto().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other == null)
+      return false;
+    if (other.getClass().isAssignableFrom(this.getClass())) {
+      return this.getProto().equals(this.getClass().cast(other).getProto());
     }
+    return false;
+  }
 
-    public PolicyInfoPayloadPBImpl(PolicyInfoPayloadProto proto) {
-        this.proto = proto;
-        viaProto = true;
+  @Override
+  public String toString() {
+    return TextFormat.shortDebugString(getProto());
+  }
+
+  private void mergeLocalToBuilder() {
+
+  }
+
+  private void mergeLocalToProto() {
+    if (viaProto)
+      maybeInitBuilder();
+    mergeLocalToBuilder();
+    proto = builder.build();
+    viaProto = true;
+  }
+
+  private void maybeInitBuilder() {
+    if (viaProto || builder == null) {
+      builder = PolicyInfoPayloadProto.newBuilder(proto);
     }
+    viaProto = false;
+  }
 
-    @JsonIgnore
-    public PolicyInfoPayloadProto getProto() {
-        mergeLocalToProto();
-        proto = viaProto ? proto : builder.build();
-        viaProto = true;
-        return proto;
+  public Integer getUsageNumber() {
+    PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasUsageNumber())
+      return 0;
+    return p.getUsageNumber();
+
+  }
+
+  public void setUsageNumber(Integer usageNumber) {
+    maybeInitBuilder();
+    if (usageNumber == null) {
+      builder.clearUsageNumber();
+      return;
     }
+    builder.setUsageNumber(usageNumber);
+  }
 
-    @Override
-    public int hashCode() {
-        return getProto().hashCode();
+  public Long getUsageTime() {
+    PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasUsageTime())
+      return 0L;
+    return p.getUsageTime();
+  }
+
+  public void setUsageTime(Long usageTime) {
+    maybeInitBuilder();
+    if (usageTime == null) {
+      builder.clearUsageTime();
+      return;
     }
+    builder.setUsageTime(usageTime);
+  }
 
-    @Override
-    public boolean equals(Object other) {
-        if (other == null)
-            return false;
-        if (other.getClass().isAssignableFrom(this.getClass())) {
-            return this.getProto().equals(this.getClass().cast(other).getProto());
-        }
-        return false;
+  public Long getLastStarted() {
+    PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasLastStarted())
+      return 0L;
+    return p.getLastStarted();
+  }
+
+  public void setLastStarted(Long lastStarted) {
+    maybeInitBuilder();
+    if (lastStarted == null) {
+      builder.clearLastStarted();
+      return;
     }
+    builder.setLastStarted(lastStarted);
+  }
 
-    @Override
-    public String toString() {
-        return TextFormat.shortDebugString(getProto());
+
+  public String getPolicyName() {
+    PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasPolicyName())
+      return null;
+    return p.getPolicyName();
+  }
+
+  public void setPolicyName(String policyName) {
+    maybeInitBuilder();
+    if (policyName == null) {
+      builder.clearPolicyName();
+      return;
     }
+    builder.setPolicyName(policyName);
+  }
 
-    private void mergeLocalToBuilder() {
+  @Override
+  @JsonIgnore
+  public ByteString getProtoBytes() {
+    return getProto().toByteString();
+  }
 
-    }
-
-    private void mergeLocalToProto() {
-        if (viaProto)
-            maybeInitBuilder();
-        mergeLocalToBuilder();
-        proto = builder.build();
-        viaProto = true;
-    }
-
-    private void maybeInitBuilder() {
-        if (viaProto || builder == null) {
-            builder = PolicyInfoPayloadProto.newBuilder(proto);
-        }
-        viaProto = false;
-    }
-
-    public Integer getUsageNumber() {
-        PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasUsageNumber())
-            return 0;
-        return p.getUsageNumber();
-
-    }
-
-    public void setUsageNumber(Integer usageNumber) {
-        maybeInitBuilder();
-        if (usageNumber == null) {
-            builder.clearUsageNumber();
-            return;
-        }
-        builder.setUsageNumber(usageNumber);
-    }
-
-    public Long getUsageTime() {
-        PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasUsageTime())
-            return 0L;
-        return p.getUsageTime();
-    }
-
-    public void setUsageTime(Long usageTime) {
-        maybeInitBuilder();
-        if (usageTime == null) {
-            builder.clearUsageTime();
-            return;
-        }
-        builder.setUsageTime(usageTime);
-    }
-
-    public Long getLastStarted() {
-        PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasLastStarted())
-            return 0L;
-        return p.getLastStarted();
-    }
-
-    public void setLastStarted(Long lastStarted) {
-        maybeInitBuilder();
-        if (lastStarted == null) {
-            builder.clearLastStarted();
-            return;
-        }
-        builder.setLastStarted(lastStarted);
-    }
-
-
-    public String getPolicyName(){
-        PolicyInfoPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasPolicyName())
-            return null;
-        return p.getPolicyName();
-    }
-
-    public void setPolicyName(String policyName){
-        maybeInitBuilder();
-        if (policyName == null) {
-            builder.clearPolicyName();
-            return;
-        }
-        builder.setPolicyName(policyName);
-    }
-
-    @Override
-    @JsonIgnore
-    public ByteString getProtoBytes() {
-        return getProto().toByteString();
-    }
-
-    @Override
-    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        proto = PolicyInfoPayloadProto.parseFrom(data);
-        viaProto = true;
-    }
+  @Override
+  public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+    proto = PolicyInfoPayloadProto.parseFrom(data);
+    viaProto = true;
+  }
 
 }

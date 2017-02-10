@@ -2,30 +2,30 @@ package org.apache.hadoop.tools.posum.common.records.payload;
 
 import org.apache.hadoop.yarn.util.Records;
 
-public abstract class TaskPredictionPayload implements Payload{
+public abstract class TaskPredictionPayload implements Payload {
 
-    public static TaskPredictionPayload newInstance(String predictor, String taskId, Long duration) {
-        TaskPredictionPayload result = Records.newRecord(TaskPredictionPayload.class);
-        result.setPredictor(predictor);
-        result.setId(taskId);
-        result.setDuration(duration);
-        return result;
-    }
+  public static TaskPredictionPayload newInstance(String predictor, String taskId, Long duration) {
+    TaskPredictionPayload result = Records.newRecord(TaskPredictionPayload.class);
+    result.setPredictor(predictor);
+    result.setId(taskId);
+    result.setDuration(duration);
+    return result;
+  }
 
-    public abstract void setPredictor(String predictor);
+  public abstract void setPredictor(String predictor);
 
-    public abstract String getPredictor();
+  public abstract String getPredictor();
 
-    public abstract void setId(String id);
+  public abstract void setId(String id);
 
-    public abstract String getId();
+  public abstract String getId();
 
-    public abstract void setDuration(Long duration);
+  public abstract void setDuration(Long duration);
 
-    public abstract Long getDuration();
+  public abstract Long getDuration();
 
-    @Override
-    public String toString() {
-        return "TaskPrediction{" + getPredictor() + ": " + getId() + "=" + getDuration() + "}";
-    }
+  @Override
+  public String toString() {
+    return "TaskPrediction{" + getPredictor() + ": " + getId() + "=" + getDuration() + "}";
+  }
 }
