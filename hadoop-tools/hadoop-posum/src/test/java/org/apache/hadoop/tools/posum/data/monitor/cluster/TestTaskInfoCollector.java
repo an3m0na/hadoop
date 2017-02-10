@@ -4,8 +4,10 @@ import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.List;
@@ -17,8 +19,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 public class TestTaskInfoCollector {
-    private TaskInfoCollector testSubject;
     @Mock
     private List tasksMock;
     @Mock
@@ -28,13 +30,13 @@ public class TestTaskInfoCollector {
     @Mock
     private HadoopAPIClient apiMock;
 
-    private ClusterMonitorEntities entities;
+    @InjectMocks
+    private TaskInfoCollector testSubject;
 
+    private ClusterMonitorEntities entities;
 
     @Before
     public void init() {
-        MockitoAnnotations.initMocks(this);
-        testSubject = new TaskInfoCollector(apiMock);
         entities = new ClusterMonitorEntities();
     }
 

@@ -26,6 +26,7 @@ public class Utils {
     public static final String TEST_TMP_DIR = "testTmpDir";
     public static final String WORKLOAD_DIR = "test_workload";
     public static final String API_RESPONSES_DIR = "test_api_responses";
+    private static final String MONGO_DATA_PATH = "~/mongodata";
 
     public static void loadThreeDefaultAppsAndJobs(Long clusterTimestamp, Database db) {
         AppProfile app1 = Records.newRecord(AppProfile.class);
@@ -111,7 +112,7 @@ public class Utils {
 
     private static String getMongoScriptCall() {
         String scriptLocation = Utils.class.getClassLoader().getResource("run-mongo.sh").getFile();
-        return "/bin/bash " + scriptLocation;
+        return "/bin/bash " + scriptLocation + " --db-path=" + MONGO_DATA_PATH;
     }
 
     public static void runMongoDB() throws IOException, InterruptedException {
