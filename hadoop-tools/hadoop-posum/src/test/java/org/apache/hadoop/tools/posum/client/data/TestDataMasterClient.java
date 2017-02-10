@@ -35,6 +35,7 @@ public class TestDataMasterClient extends TestDataStore {
 
     @After
     public void tearDown() throws Exception {
+        super.tearDown();
         System.out.println("Stopping POSUM processes...");
         posumMaster.shutDown();
         dataMaster.shutDown();
