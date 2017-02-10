@@ -301,7 +301,7 @@ public class Utils {
     }
 
     public static void updateJobStatisticsFromCounters(JobProfile job, CountersProxy counters) {
-        if(counters == null)
+        if (counters == null)
             return;
         for (CounterGroupInfoPayload group : counters.getCounterGroup()) {
             if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
@@ -341,6 +341,18 @@ public class Utils {
         }
     }
 
+    public static Long getDuration(JobProfile job) {
+        if (job.getStartTime() == null || job.getFinishTime() == null || job.getFinishTime() == 0)
+            return 0L;
+        return job.getFinishTime() - job.getStartTime();
+    }
+
+    public static Long getDuration(TaskProfile task) {
+        if (task.getStartTime() == null || task.getFinishTime() == null || task.getFinishTime() == 0)
+            return 0L;
+        return task.getFinishTime() - task.getStartTime();
+    }
+
     public static void updateJobStatisticsFromTasks(JobProfile job, List<TaskProfile> tasks) {
         if (tasks == null)
             return;
@@ -349,11 +361,11 @@ public class Utils {
         long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
 
         for (TaskProfile task : tasks) {
-            if (task.getDuration() <= 0)
+            if (getDuration(task) <= 0)
                 // skip unfinished tasks
                 continue;
             if (TaskType.MAP.equals(task.getType())) {
-                mapDuration += task.getDuration();
+                mapDuration += getDuration(task);
                 mapNo++;
                 mapInputSize += task.getInputBytes();
                 mapOutputSize += task.getOutputBytes();
@@ -364,7 +376,7 @@ public class Utils {
                 }
             }
             if (TaskType.REDUCE.equals(task.getType())) {
-                reduceDuration += task.getDuration();
+                reduceDuration += getDuration(task);
                 reduceTime += task.getReduceTime();
                 shuffleTime += task.getShuffleTime();
                 mergeTime += task.getMergeTime();
@@ -372,12 +384,11 @@ public class Utils {
                 reduceInputSize += task.getInputBytes();
                 reduceOutputSize += task.getOutputBytes();
             }
-            avgDuration += task.getDuration();
+            avgDuration += getDuration(task);
             avgNo++;
         }
 
         if (avgNo > 0) {
-            job.setAvgTaskDuration(avgDuration / avgNo);
             if (mapNo > 0) {
                 job.setAvgMapDuration(mapDuration / mapNo);
             }

@@ -153,11 +153,6 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
 
     @Override
-    public Long getDuration() {
-        return Math.max(0, getFinishTime() - getStartTime());
-    }
-
-    @Override
     public void setTotalMapTasks(Integer totalMapTasks) {
         maybeInitBuilder();
         if (totalMapTasks == null) {
@@ -447,23 +442,6 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
             return;
         }
         builder.setAvgReduceDuration(duration);
-    }
-
-
-    @Override
-    public Long getAvgTaskDuration() {
-        JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getAvgTaskDuration();
-    }
-
-    @Override
-    public void setAvgTaskDuration(Long avgTaskDuration) {
-        maybeInitBuilder();
-        if (avgTaskDuration == null) {
-            builder.clearAvgTaskDuration();
-            return;
-        }
-        builder.setAvgTaskDuration(avgTaskDuration);
     }
 
     @Override
