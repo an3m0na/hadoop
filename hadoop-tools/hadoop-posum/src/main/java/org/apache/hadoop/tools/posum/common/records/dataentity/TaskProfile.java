@@ -5,17 +5,17 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 
 public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
 
-    Long getInputBytes();
+    String getAppId();
 
-    void setInputBytes(Long inputBytes);
+    void setAppId(String appId);
 
-    Long getOutputBytes();
+    String getJobId();
 
-    void setOutputBytes(Long outputBytes);
-
-    Long getDuration();
+    void setJobId(String jobId);
 
     TaskType getType();
+
+    void setType(TaskType type);
 
     Long getStartTime();
 
@@ -25,9 +25,25 @@ public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
 
     void setFinishTime(Long finishTime);
 
-    void setType(TaskType type);
+    TaskState getState();
+
+    void setState(TaskState state);
+
+    Float getReportedProgress();
 
     void setReportedProgress(Float reportedProgress);
+
+    String getSuccessfulAttempt();
+
+    void setSuccessfulAttempt(String successfulAttempt);
+
+    Long getInputBytes();
+
+    void setInputBytes(Long inputBytes);
+
+    Long getOutputBytes();
+
+    void setOutputBytes(Long outputBytes);
 
     Long getInputRecords();
 
@@ -36,20 +52,6 @@ public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
     Long getOutputRecords();
 
     void setOutputRecords(Long outputRecords);
-
-    String getAppId();
-
-    void setAppId(String appId);
-
-    String getJobId();
-
-    void setJobId(String jobId);
-
-    Float getReportedProgress();
-
-    void setSuccessfulAttempt(String successfulAttempt);
-
-    String getSuccessfulAttempt();
 
     Long getShuffleTime();
 
@@ -67,11 +69,7 @@ public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
 
     void setLocal(Boolean local);
 
-    void setHttpAddress(String address);
-
     String getHttpAddress();
 
-    TaskState getState();
-
-    void setState(TaskState state);
+    void setHttpAddress(String address);
 }
