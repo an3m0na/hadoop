@@ -1,6 +1,5 @@
 package org.apache.hadoop.tools.posum.data.monitor.cluster;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.StoreAllCall;
@@ -14,20 +13,19 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.HistoryProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.data.mock.data.MockDataStoreImpl;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.apache.hadoop.fs.FileSystem.DEFAULT_FS;
-import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP_HISTORY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.COUNTER;
@@ -42,10 +40,9 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
+@RunWith(MockitoJUnitRunner.class)
 public class TestAppInfoCollector {
 
     @Mock
@@ -54,23 +51,17 @@ public class TestAppInfoCollector {
     private JobInfoCollector jobInfoCollector;
     @Mock
     private TaskInfoCollector taskInfoCollector;
+    @Spy
+    private Database dbMock = Database.extractFrom(new MockDataStoreImpl(), DatabaseReference.getMain());
 
     @InjectMocks
-    private AppInfoCollector testSubject;
+    private AppInfoCollector testSubject = new AppInfoCollector();
 
-    private Database dbMock;
     private ClusterMonitorEntities entities;
     private GeneralDataEntity[] expectedHistoryEntities;
 
     @Before
     public void init() {
-        Configuration confMock = mock(Configuration.class);
-        when(confMock.getBoolean(PosumConfiguration.MONITOR_KEEP_HISTORY, PosumConfiguration.MONITOR_KEEP_HISTORY_DEFAULT))
-                .thenReturn(true);
-        when(confMock.get(FS_DEFAULT_NAME_KEY, DEFAULT_FS)).thenReturn(DEFAULT_FS);
-        dbMock = Database.extractFrom(new MockDataStoreImpl(), DatabaseReference.getMain());
-        testSubject = new AppInfoCollector(confMock, dbMock);
-        MockitoAnnotations.initMocks(this);
         entities = new ClusterMonitorEntities();
         expectedHistoryEntities = new GeneralDataEntity[]{
                 entities.RUNNING_APP,
@@ -117,15 +108,15 @@ public class TestAppInfoCollector {
         testSubject.refresh();
 
         apps = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(APP, null)).getEntities();
-        assertThat(apps, containsInAnyOrder(entities.RUNNING_APPS));
+        assertThat(apps, containsInAnyOrder(this.entities.RUNNING_APPS));
         jobs = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(JOB, null)).getEntities();
-        assertThat(jobs, containsInAnyOrder(entities.RUNNING_JOBS));
+        assertThat(jobs, containsInAnyOrder(this.entities.RUNNING_JOBS));
         confs = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(JOB_CONF, null)).getEntities();
-        assertThat(confs, containsInAnyOrder(entities.JOB_CONF));
+        assertThat(confs, containsInAnyOrder(this.entities.JOB_CONF));
         tasks = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(TASK, null)).getEntities();
-        assertThat(tasks, containsInAnyOrder(entities.RUNNING_TASKS));
+        assertThat(tasks, containsInAnyOrder(this.entities.RUNNING_TASKS));
         counters = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(COUNTER, null)).getEntities();
-        assertThat(counters, containsInAnyOrder(entities.JOB_COUNTERS, entities.TASK_COUNTERS));
+        assertThat(counters, containsInAnyOrder(this.entities.JOB_COUNTERS, this.entities.TASK_COUNTERS));
 
         historyRecords = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(HISTORY, null)).getEntities();
         historyEntities = new ArrayList<>(historyRecords.size());
