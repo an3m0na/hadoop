@@ -21,7 +21,7 @@ public class StandardPredictor extends JobBehaviorPredictor {
   @Override
   public JobPredictionOutput predictJobDuration(JobPredictionInput input) {
     FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, input.getJobId());
-    JobProfile job = getDatabase().executeDatabaseCall(getJob).getEntity();
+    JobProfile job = getDatabase().execute(getJob).getEntity();
     return new JobPredictionOutput(predictMapTaskDuration(job).getDuration() * job.getTotalMapTasks() +
       predictReduceTaskDuration(job).getDuration() * job.getTotalReduceTasks());
   }

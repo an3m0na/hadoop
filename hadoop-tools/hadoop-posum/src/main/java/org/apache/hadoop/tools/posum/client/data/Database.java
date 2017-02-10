@@ -14,8 +14,8 @@ public class Database {
     this.selectedDatabase = selectedDatabase;
   }
 
-  public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call) {
-    return dataStore.executeDatabaseCall(call, selectedDatabase);
+  public <T extends Payload> T execute(DatabaseCall<T> call) {
+    return dataStore.execute(call, selectedDatabase);
   }
 
   public void clear() {

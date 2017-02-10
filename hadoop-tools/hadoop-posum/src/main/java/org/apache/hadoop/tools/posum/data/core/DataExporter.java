@@ -32,7 +32,7 @@ public class DataExporter {
       for (DataEntityCollection collection : dbMapEntry.getValue()) {
         findAll.setEntityCollection(collection);
         List<GeneralDataEntity> entities =
-          dataStore.executeDatabaseCall(findAll, dbMapEntry.getKey()).getEntities();
+          dataStore.execute(findAll, dbMapEntry.getKey()).getEntities();
         File outFile = new File(dumpDir,
           "[" + dbMapEntry.getKey().getName() + "]" + collection.getLabel() + ".json");
 

@@ -86,18 +86,18 @@ public class TestAppInfoCollector {
     // first refresh on running job
     testSubject.refresh();
 
-    List<AppProfile> apps = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(APP, null)).getEntities();
+    List<AppProfile> apps = dbMock.execute(FindByQueryCall.newInstance(APP, null)).getEntities();
     assertThat(apps, containsInAnyOrder(entities.RUNNING_APPS));
-    List<JobProfile> jobs = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(JOB, null)).getEntities();
+    List<JobProfile> jobs = dbMock.execute(FindByQueryCall.newInstance(JOB, null)).getEntities();
     assertThat(jobs, containsInAnyOrder(entities.RUNNING_JOBS));
-    List<JobConfProxy> confs = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(JOB_CONF, null)).getEntities();
+    List<JobConfProxy> confs = dbMock.execute(FindByQueryCall.newInstance(JOB_CONF, null)).getEntities();
     assertThat(confs, containsInAnyOrder(entities.JOB_CONF));
-    List<TaskProfile> tasks = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(TASK, null)).getEntities();
+    List<TaskProfile> tasks = dbMock.execute(FindByQueryCall.newInstance(TASK, null)).getEntities();
     assertThat(tasks, containsInAnyOrder(entities.RUNNING_TASKS));
-    List<CountersProxy> counters = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(COUNTER, null)).getEntities();
+    List<CountersProxy> counters = dbMock.execute(FindByQueryCall.newInstance(COUNTER, null)).getEntities();
     assertThat(counters, containsInAnyOrder(entities.JOB_COUNTERS, entities.TASK_COUNTERS));
 
-    List<HistoryProfile> historyRecords = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(HISTORY, null)).getEntities();
+    List<HistoryProfile> historyRecords = dbMock.execute(FindByQueryCall.newInstance(HISTORY, null)).getEntities();
     List<GeneralDataEntity> historyEntities = new ArrayList<>(historyRecords.size());
     for (HistoryProfile historyRecord : historyRecords) {
       historyEntities.add(historyRecord.getOriginal());
@@ -107,18 +107,18 @@ public class TestAppInfoCollector {
     // second refresh on running job
     testSubject.refresh();
 
-    apps = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(APP, null)).getEntities();
+    apps = dbMock.execute(FindByQueryCall.newInstance(APP, null)).getEntities();
     assertThat(apps, containsInAnyOrder(this.entities.RUNNING_APPS));
-    jobs = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(JOB, null)).getEntities();
+    jobs = dbMock.execute(FindByQueryCall.newInstance(JOB, null)).getEntities();
     assertThat(jobs, containsInAnyOrder(this.entities.RUNNING_JOBS));
-    confs = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(JOB_CONF, null)).getEntities();
+    confs = dbMock.execute(FindByQueryCall.newInstance(JOB_CONF, null)).getEntities();
     assertThat(confs, containsInAnyOrder(this.entities.JOB_CONF));
-    tasks = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(TASK, null)).getEntities();
+    tasks = dbMock.execute(FindByQueryCall.newInstance(TASK, null)).getEntities();
     assertThat(tasks, containsInAnyOrder(this.entities.RUNNING_TASKS));
-    counters = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(COUNTER, null)).getEntities();
+    counters = dbMock.execute(FindByQueryCall.newInstance(COUNTER, null)).getEntities();
     assertThat(counters, containsInAnyOrder(this.entities.JOB_COUNTERS, this.entities.TASK_COUNTERS));
 
-    historyRecords = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(HISTORY, null)).getEntities();
+    historyRecords = dbMock.execute(FindByQueryCall.newInstance(HISTORY, null)).getEntities();
     historyEntities = new ArrayList<>(historyRecords.size());
     for (HistoryProfile historyRecord : historyRecords) {
       historyEntities.add(historyRecord.getOriginal());
@@ -143,7 +143,7 @@ public class TestAppInfoCollector {
       .addCall(StoreCall.newInstance(JOB_CONF, entities.JOB_CONF))
       .addCall(StoreCall.newInstance(COUNTER, entities.JOB_COUNTERS))
       .addCall(StoreCall.newInstance(COUNTER, entities.TASK_COUNTERS));
-    dbMock.executeDatabaseCall(transaction);
+    dbMock.execute(transaction);
   }
 
   @Test
@@ -156,29 +156,29 @@ public class TestAppInfoCollector {
 
     testSubject.refresh();
 
-    List<AppProfile> apps = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(APP, null)).getEntities();
+    List<AppProfile> apps = dbMock.execute(FindByQueryCall.newInstance(APP, null)).getEntities();
     assertThat(apps, empty());
-    List<JobProfile> jobs = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(JOB, null)).getEntities();
+    List<JobProfile> jobs = dbMock.execute(FindByQueryCall.newInstance(JOB, null)).getEntities();
     assertThat(jobs, empty());
-    List<JobConfProxy> confs = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(JOB_CONF, null)).getEntities();
+    List<JobConfProxy> confs = dbMock.execute(FindByQueryCall.newInstance(JOB_CONF, null)).getEntities();
     assertThat(confs, empty());
-    List<TaskProfile> tasks = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(TASK, null)).getEntities();
+    List<TaskProfile> tasks = dbMock.execute(FindByQueryCall.newInstance(TASK, null)).getEntities();
     assertThat(tasks, empty());
-    List<CountersProxy> counters = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(COUNTER, null)).getEntities();
+    List<CountersProxy> counters = dbMock.execute(FindByQueryCall.newInstance(COUNTER, null)).getEntities();
     assertThat(counters, empty());
 
-    apps = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(APP_HISTORY, null)).getEntities();
+    apps = dbMock.execute(FindByQueryCall.newInstance(APP_HISTORY, null)).getEntities();
     assertThat(apps, containsInAnyOrder(entities.FINISHED_APPS));
-    jobs = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(JOB_HISTORY, null)).getEntities();
+    jobs = dbMock.execute(FindByQueryCall.newInstance(JOB_HISTORY, null)).getEntities();
     assertThat(jobs, containsInAnyOrder(entities.FINISHED_JOB));
-    confs = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(JOB_CONF_HISTORY, null)).getEntities();
+    confs = dbMock.execute(FindByQueryCall.newInstance(JOB_CONF_HISTORY, null)).getEntities();
     assertThat(confs, containsInAnyOrder(entities.JOB_CONF));
-    tasks = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(TASK_HISTORY, null)).getEntities();
+    tasks = dbMock.execute(FindByQueryCall.newInstance(TASK_HISTORY, null)).getEntities();
     assertThat(tasks, containsInAnyOrder(entities.FINISHED_TASKS));
-    counters = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(COUNTER_HISTORY, null)).getEntities();
+    counters = dbMock.execute(FindByQueryCall.newInstance(COUNTER_HISTORY, null)).getEntities();
     assertThat(counters, containsInAnyOrder(entities.TASK_COUNTERS, entities.JOB_COUNTERS));
 
-    List<HistoryProfile> historyRecords = dbMock.executeDatabaseCall(FindByQueryCall.newInstance(HISTORY, null)).getEntities();
+    List<HistoryProfile> historyRecords = dbMock.execute(FindByQueryCall.newInstance(HISTORY, null)).getEntities();
     assertThat(historyRecords, empty());
   }
 } 

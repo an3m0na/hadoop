@@ -60,7 +60,7 @@ public class DataImporter {
           }
           reader.close();
           storeEntity.setEntities(allEntities);
-          dataStore.executeDatabaseCall(storeEntity, dbMapEntry.getKey());
+          dataStore.execute(storeEntity, dbMapEntry.getKey());
         } catch (IOException e) {
           throw new PosumException("Did not successfully parse file contents for " + fileEntry.getValue(), e);
         }

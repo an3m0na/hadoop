@@ -75,7 +75,7 @@ public class DataMasterWebApp extends PosumWebApp {
                       db = path.substring(0, index);
                       collection = path.substring(index);
                     }
-                    ret = wrapResult(context.getDataStore().executeDatabaseCall(
+                    ret = wrapResult(context.getDataStore().execute(
                       RawDocumentsByQueryCall.newInstance(
                         DataEntityCollection.fromLabel(collection),
                         QueryUtils.withParams(request.getParameterMap())
@@ -112,7 +112,7 @@ public class DataMasterWebApp extends PosumWebApp {
 
   private JsonObject composePolicyMap() {
     JsonObject ret = new JsonObject();
-    LogEntry<PolicyInfoMapPayload> policyReport = context.getDataStore().executeDatabaseCall(
+    LogEntry<PolicyInfoMapPayload> policyReport = context.getDataStore().execute(
       CallUtils.findStatReportCall(LogEntry.Type.POLICY_MAP), DatabaseReference.getLogs()).getEntity();
     if (policyReport != null) {
       for (Map.Entry<String, PolicyInfoPayload> policyInfo : policyReport.getDetails().getEntries().entrySet()) {
@@ -133,7 +133,7 @@ public class DataMasterWebApp extends PosumWebApp {
         QueryUtils.greaterThan("lastUpdated", since)
       ));
     List<LogEntry<SimplePropertyPayload>> choiceLogs =
-      context.getDataStore().executeDatabaseCall(findChoices, DatabaseReference.getLogs()).getEntities();
+      context.getDataStore().execute(findChoices, DatabaseReference.getLogs()).getEntities();
     for (LogEntry<SimplePropertyPayload> choiceEntry : choiceLogs) {
       times.add(choiceEntry.getLastUpdated());
       choices.add((String) choiceEntry.getDetails().getValue());

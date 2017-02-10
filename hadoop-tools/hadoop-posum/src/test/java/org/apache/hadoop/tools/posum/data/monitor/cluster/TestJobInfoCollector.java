@@ -50,7 +50,7 @@ public class TestJobInfoCollector {
 
   @Test
   public void getExistingRunningJobInfoTest() {
-    when(dbMock.executeDatabaseCall(any(JobForAppCall.class)))
+    when(dbMock.execute(any(JobForAppCall.class)))
       .thenReturn(SingleEntityPayload.newInstance(DataEntityCollection.JOB, entities.RUNNING_JOB));
     when(apiMock.getRunningJobInfo(entities.APP_ID, entities.RUNNING_APP.getQueue(), entities.RUNNING_JOB)).thenReturn(entities.RUNNING_JOB);
     when(apiMock.getRunningJobCounters(entities.APP_ID, entities.JOB_ID)).thenReturn(entities.JOB_COUNTERS);
@@ -66,7 +66,7 @@ public class TestJobInfoCollector {
     when(hdfsReaderMock.getSubmittedConf(jobId, entities.RUNNING_APP.getUser())).thenReturn(entities.JOB_CONF);
     when(hdfsReaderMock.getSplitMetaInfo(jobId, entities.JOB_CONF))
       .thenReturn(new JobSplit.TaskSplitMetaInfo[]{new JobSplit.TaskSplitMetaInfo(null, LOCATIONS, INPUT_LENGTH)});
-    when(dbMock.executeDatabaseCall(any(JobForAppCall.class))).thenReturn(null);
+    when(dbMock.execute(any(JobForAppCall.class))).thenReturn(null);
     when(apiMock.getRunningJobInfo(eq(entities.APP_ID), eq(entities.RUNNING_APP.getQueue()), any(JobProfile.class)))
       .thenReturn(entities.RUNNING_JOB);
     when(apiMock.getRunningJobCounters(entities.APP_ID, entities.JOB_ID)).thenReturn(entities.JOB_COUNTERS);
@@ -78,7 +78,7 @@ public class TestJobInfoCollector {
 
   @Test
   public void getFinishedJobInfoTest() {
-    when(dbMock.executeDatabaseCall(any(JobForAppCall.class))).thenReturn(SingleEntityPayload.newInstance(JOB, entities.RUNNING_JOB));
+    when(dbMock.execute(any(JobForAppCall.class))).thenReturn(SingleEntityPayload.newInstance(JOB, entities.RUNNING_JOB));
     when(apiMock.getFinishedJobInfo(entities.APP_ID)).thenReturn(entities.FINISHED_JOB);
     when(apiMock.getFinishedJobInfo(entities.APP_ID, entities.JOB_ID, entities.RUNNING_JOB)).thenReturn(entities.FINISHED_JOB);
     when(apiMock.getFinishedJobConf(entities.JOB_ID)).thenReturn(entities.JOB_CONF);

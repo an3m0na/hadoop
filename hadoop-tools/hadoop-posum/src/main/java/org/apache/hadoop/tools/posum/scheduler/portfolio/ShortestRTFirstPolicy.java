@@ -64,7 +64,7 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
       // DataMaster is not connected; do nothing
       return null;
     JobForAppCall getJobProfileForApp = JobForAppCall.newInstance(appId, user);
-    JobProfile job = db.executeDatabaseCall(getJobProfileForApp).getEntity();
+    JobProfile job = db.execute(getJobProfileForApp).getEntity();
     if (job == null) {
       logger.error("Could not retrieve job info for " + appId);
       return null;

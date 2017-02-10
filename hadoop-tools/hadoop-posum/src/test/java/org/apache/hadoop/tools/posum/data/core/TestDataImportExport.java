@@ -46,10 +46,10 @@ public class TestDataImportExport {
     assertTrue(tmpDir.exists() && tmpDir.isDirectory());
     dataStore.clear();
     IdsByQueryCall listIds = IdsByQueryCall.newInstance(DataEntityCollection.APP, null, ID_FIELD, false);
-    List<String> ids = db.executeDatabaseCall(listIds).getEntries();
+    List<String> ids = db.execute(listIds).getEntries();
     assertEquals(0, ids.size());
     new DataImporter(dataDumpPath).importTo(dataStore);
-    ids = db.executeDatabaseCall(listIds).getEntries();
+    ids = db.execute(listIds).getEntries();
     assertEquals(3, ids.size());
     assertArrayEquals(new String[]{
       ApplicationId.newInstance(CLUSTER_TIMESTAMP, 1).toString(),

@@ -131,27 +131,27 @@ public class Utils {
 
   public static void loadThreeDefaultAppsAndJobs(Database db) {
     StoreCall storeCall = StoreCall.newInstance(DataEntityCollection.APP, APP1);
-    db.executeDatabaseCall(storeCall);
+    db.execute(storeCall);
 
     storeCall.setEntityCollection(DataEntityCollection.JOB);
     storeCall.setEntity(JOB1);
-    db.executeDatabaseCall(storeCall);
+    db.execute(storeCall);
 
     storeCall.setEntityCollection(DataEntityCollection.APP);
     storeCall.setEntity(APP2);
-    db.executeDatabaseCall(storeCall);
+    db.execute(storeCall);
 
     storeCall.setEntityCollection(DataEntityCollection.JOB);
     storeCall.setEntity(JOB2);
-    db.executeDatabaseCall(storeCall);
+    db.execute(storeCall);
 
     storeCall.setEntityCollection(DataEntityCollection.APP);
     storeCall.setEntity(APP3);
-    db.executeDatabaseCall(storeCall);
+    db.execute(storeCall);
 
     storeCall.setEntityCollection(DataEntityCollection.JOB);
     storeCall.setEntity(JOB3);
-    db.executeDatabaseCall(storeCall);
+    db.execute(storeCall);
   }
 
   private static String getMongoScriptCall() {

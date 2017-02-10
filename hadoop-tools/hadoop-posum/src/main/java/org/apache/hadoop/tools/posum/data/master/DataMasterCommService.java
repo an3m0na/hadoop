@@ -98,7 +98,7 @@ public class DataMasterCommService extends CompositeService implements DataMaste
     }
     try {
       return SimpleResponse.newInstance(callType.getPayloadType(),
-        dmContext.getDataStore().executeDatabaseCall(request.getCall(), request.getDatabase()));
+        dmContext.getDataStore().execute(request.getCall(), request.getDatabase()));
     } catch (Exception e) {
       String message = "Exception executing call " + callType;
       logger.error(message, e);

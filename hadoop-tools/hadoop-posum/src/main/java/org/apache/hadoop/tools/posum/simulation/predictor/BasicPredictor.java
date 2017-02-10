@@ -23,7 +23,7 @@ public class BasicPredictor extends JobBehaviorPredictor {
   @Override
   public JobPredictionOutput predictJobDuration(JobPredictionInput input) {
     FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, input.getJobId());
-    JobProfile job = getDatabase().executeDatabaseCall(getJob).getEntity();
+    JobProfile job = getDatabase().execute(getJob).getEntity();
     List<JobProfile> comparable = getComparableProfilesByName(job);
     if (comparable.size() < 1)
       return new JobPredictionOutput(DEFAULT_JOB_DURATION);
