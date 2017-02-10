@@ -65,9 +65,9 @@ public class DataMasterClient extends AbstractService implements DataStore {
     super.serviceStop();
   }
 
-  public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DatabaseReference db) {
+  public <T extends Payload> T execute(DatabaseCall<T> call, DatabaseReference db) {
     try {
-      return (T) Utils.handleError("executeDatabaseCall",
+      return (T) Utils.handleError("execute",
         dmClient.executeDatabaseCall(DatabaseCallExecutionRequest.newInstance(call, db))).getPayload();
     } catch (IOException | YarnException e) {
       throw new PosumException("Error during RPC call", e);

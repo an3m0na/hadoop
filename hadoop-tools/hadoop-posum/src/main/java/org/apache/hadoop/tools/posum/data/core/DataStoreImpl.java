@@ -292,7 +292,7 @@ public class DataStoreImpl implements LockBasedDataStore {
   }
 
   @Override
-  public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DatabaseReference db) {
+  public <T extends Payload> T execute(DatabaseCall<T> call, DatabaseReference db) {
     return call.executeCall(this, db);
   }
 

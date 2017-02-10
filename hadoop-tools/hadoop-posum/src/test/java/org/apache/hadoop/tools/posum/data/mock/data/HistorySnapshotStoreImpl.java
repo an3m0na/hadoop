@@ -312,11 +312,11 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
   }
 
   private <T extends Payload> T runOnMain(DatabaseCall<T> call) {
-    return broker.executeDatabaseCall(call, mainDB);
+    return broker.execute(call, mainDB);
   }
 
   private <T extends Payload> T runOnShadow(DatabaseCall<T> call) {
-    return broker.executeDatabaseCall(call, shadowDB);
+    return broker.execute(call, shadowDB);
   }
 
 
@@ -355,8 +355,8 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
   }
 
   @Override
-  public <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DatabaseReference db) {
-    return broker.executeDatabaseCall(call, db);
+  public <T extends Payload> T execute(DatabaseCall<T> call, DatabaseReference db) {
+    return broker.execute(call, db);
   }
 
   @Override

@@ -111,7 +111,7 @@ public class AppInfoCollector {
     }
 
     try {
-      db.executeDatabaseCall(updateCalls);
+      db.execute(updateCalls);
     } catch (Exception e) {
       logger.error("Could not move app data to history", e);
     }
@@ -182,10 +182,10 @@ public class AppInfoCollector {
       }
     }
 
-    db.executeDatabaseCall(updateCalls);
+    db.execute(updateCalls);
 
     if (auditEnabled) {
-      db.executeDatabaseCall(auditCalls);
+      db.execute(auditCalls);
     }
   }
 

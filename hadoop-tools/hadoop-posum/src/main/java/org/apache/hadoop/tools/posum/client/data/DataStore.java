@@ -11,7 +11,7 @@ import java.util.Map;
 
 public interface DataStore {
 
-  <T extends Payload> T executeDatabaseCall(DatabaseCall<T> call, DatabaseReference db);
+  <T extends Payload> T execute(DatabaseCall<T> call, DatabaseReference db);
 
   Map<DatabaseReference, List<DataEntityCollection>> listCollections();
 

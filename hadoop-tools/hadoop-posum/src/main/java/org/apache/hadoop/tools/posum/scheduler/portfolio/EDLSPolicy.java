@@ -81,7 +81,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
     if (db == null)
       // DataMaster is not connected; do nothing
       return null;
-    JobProfile job = db.executeDatabaseCall(JobForAppCall.newInstance(appId, user)).getEntity();
+    JobProfile job = db.execute(JobForAppCall.newInstance(appId, user)).getEntity();
     if (job == null) {
       logger.error("Could not retrieve job info for " + appId);
       return null;
@@ -91,7 +91,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
     if (typeString == null) {
       // first initialization
       FindByIdCall getJobConf = FindByIdCall.newInstance(DataEntityCollection.JOB_CONF, job.getId());
-      JobConfProxy confProxy = db.executeDatabaseCall(getJobConf).getEntity();
+      JobConfProxy confProxy = db.execute(getJobConf).getEntity();
       String deadlineString = confProxy.getEntry(PosumConfiguration.APP_DEADLINE);
       Map<String, String> newFields = new HashMap<>(2);
       if (deadlineString != null && deadlineString.length() > 0) {
@@ -101,7 +101,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         newFields.put(TYPE_FLEX_KEY, EDLSAppAttempt.Type.BC.name());
       }
       SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), newFields, false);
-      db.executeDatabaseCall(saveFlexFields);
+      db.execute(saveFlexFields);
     }
     return job;
   }

@@ -40,10 +40,10 @@ public class DetailedPredictor extends JobBehaviorPredictor {
 
     // populate flex-fields for jobs in history
     IdsByQueryCall getFinishedJobIds = IdsByQueryCall.newInstance(DataEntityCollection.JOB_HISTORY, null);
-    List<String> historyJobIds = db.executeDatabaseCall(getFinishedJobIds).getEntries();
+    List<String> historyJobIds = db.execute(getFinishedJobIds).getEntries();
     for (String jobId : historyJobIds) {
       FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB_HISTORY, jobId);
-      JobProfile job = getDatabase().executeDatabaseCall(getJob).getEntity();
+      JobProfile job = getDatabase().execute(getJob).getEntity();
       if (job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.PROFILED) == null)
         completeProfile(job);
     }
@@ -52,11 +52,11 @@ public class DetailedPredictor extends JobBehaviorPredictor {
   private void completeProfile(JobProfile job) {
     FindByQueryCall getTasks = FindByQueryCall.newInstance(DataEntityCollection.TASK_HISTORY,
       QueryUtils.is("jobId", job.getId()));
-    List<TaskProfile> tasks = getDatabase().executeDatabaseCall(getTasks).getEntities();
+    List<TaskProfile> tasks = getDatabase().execute(getTasks).getEntities();
     Map<String, String> fields = calculateCurrentProfile(job, tasks);
     fields.put(FLEX_KEY_PREFIX + FlexKeys.PROFILED, "true");
     SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), fields, true);
-    getDatabase().executeDatabaseCall(saveFlexFields);
+    getDatabase().execute(saveFlexFields);
   }
 
   private Map<String, String> calculateCurrentProfile(JobProfile job, List<TaskProfile> tasks) {

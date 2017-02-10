@@ -66,7 +66,7 @@ public abstract class JobBehaviorPredictor {
     FindByIdCall getJobById = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
     if (input.getJobId() != null && input.getTaskType() != null) {
       getJobById.setId(input.getJobId());
-      JobProfile job = getDatabase().executeDatabaseCall(getJobById).getEntity();
+      JobProfile job = getDatabase().execute(getJobById).getEntity();
       if (job == null)
         throw new PosumException("Job not found or finished for id " + input.getJobId());
       input.setJob(job);
@@ -75,13 +75,13 @@ public abstract class JobBehaviorPredictor {
     if (input.getJobId() == null)
       throw new PosumException("Too little information for prediction! Input: " + input);
     FindByIdCall getById = FindByIdCall.newInstance(DataEntityCollection.TASK, input.getTaskId());
-    TaskProfile task = getDatabase().executeDatabaseCall(getById).getEntity();
+    TaskProfile task = getDatabase().execute(getById).getEntity();
     if (task == null)
       throw new PosumException("Task not found or finished for id " + input.getTaskId());
 
     input.setTaskType(task.getType());
     getJobById.setId(input.getJobId());
-    JobProfile job = getDatabase().executeDatabaseCall(getJobById).getEntity();
+    JobProfile job = getDatabase().execute(getJobById).getEntity();
     input.setJob(job);
 
     return input;
@@ -110,11 +110,11 @@ public abstract class JobBehaviorPredictor {
       -historyBuffer,
       historyBuffer
     );
-    List<JobProfile> comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
+    List<JobProfile> comparable = getDatabase().execute(getComparableJobs).getEntities();
     if (comparable.size() < 1) {
       // get past jobs at least by the same user
       getComparableJobs.setQuery(QueryUtils.is("user", user));
-      comparable = getDatabase().executeDatabaseCall(getComparableJobs).getEntities();
+      comparable = getDatabase().execute(getComparableJobs).getEntities();
     }
     return comparable;
   }

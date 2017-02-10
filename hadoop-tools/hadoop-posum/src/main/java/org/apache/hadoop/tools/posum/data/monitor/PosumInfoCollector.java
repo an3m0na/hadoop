@@ -82,7 +82,7 @@ public class PosumInfoCollector {
       if (now - lastPrediction > predictionTimeout) {
         // make new predictions
         IdsByQueryCall getAllTasks = IdsByQueryCall.newInstance(DataEntityCollection.TASK, null);
-        List<String> taskIds = dataStore.executeDatabaseCall(getAllTasks, DatabaseReference.getMain()).getEntries();
+        List<String> taskIds = dataStore.execute(getAllTasks, DatabaseReference.getMain()).getEntries();
         for (String taskId : taskIds) {
           // prediction can throw exception if data model changes state during calculation
 //                    storePredictionForTask(predictor, taskId);
@@ -102,7 +102,7 @@ public class PosumInfoCollector {
         QueryUtils.lessThanOrEqual("lastUpdated", now)
       ));
     List<LogEntry<SimplePropertyPayload>> policyChanges =
-      dataStore.executeDatabaseCall(findChoices, DatabaseReference.getLogs()).getEntities();
+      dataStore.execute(findChoices, DatabaseReference.getLogs()).getEntities();
     if (policyChanges.size() > 0) {
       if (schedulingStart == 0)
         schedulingStart = policyChanges.get(0).getLastUpdated();
@@ -117,7 +117,7 @@ public class PosumInfoCollector {
         }
         info.start(change.getLastUpdated());
       }
-      dataStore.executeDatabaseCall(CallUtils.storeStatReportCall(LogEntry.Type.POLICY_MAP,
+      dataStore.execute(CallUtils.storeStatReportCall(LogEntry.Type.POLICY_MAP,
         PolicyInfoMapPayload.newInstance(policyMap)), null);
     }
     lastCollectTime = now;
@@ -131,7 +131,7 @@ public class PosumInfoCollector {
         predictor.predictTaskDuration(new TaskPredictionInput(taskId)).getDuration()
       );
       StoreLogCall storePrediction = CallUtils.storeStatReportCall(LogEntry.Type.TASK_PREDICTION, prediction);
-      dataStore.executeDatabaseCall(storePrediction, null);
+      dataStore.execute(storePrediction, null);
     } catch (Exception e) {
       if (!(e instanceof PosumException))
         logger.error("Could not predict task duration for " + taskId + " due to: ", e);

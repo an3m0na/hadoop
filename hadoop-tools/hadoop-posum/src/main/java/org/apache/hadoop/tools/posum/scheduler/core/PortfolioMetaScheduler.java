@@ -112,7 +112,7 @@ public class PortfolioMetaScheduler extends
     Class<? extends PluginPolicy> newClass = policies.get(policyName);
     if (newClass == null)
       throw new PosumException("Target policy does not exist: " + policyName);
-    commService.getDatabase().executeDatabaseCall(StoreLogCall.newInstance(LogEntry.Type.POLICY_CHANGE, policyName));
+    commService.getDatabase().execute(StoreLogCall.newInstance(LogEntry.Type.POLICY_CHANGE, policyName));
     if (!currentPolicyClass.equals(newClass)) {
       Timer.Context context = null;
       if (metricsON)
@@ -205,7 +205,7 @@ public class PortfolioMetaScheduler extends
   public void serviceStart() throws Exception {
     logger.debug("Starting meta");
     commService.start();
-    commService.getDatabase().executeDatabaseCall(StoreLogCall.newInstance(LogEntry.Type.POLICY_CHANGE,
+    commService.getDatabase().execute(StoreLogCall.newInstance(LogEntry.Type.POLICY_CHANGE,
       policies.getDefaultPolicyName()));
     readLock.lock();
     try {

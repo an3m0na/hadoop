@@ -65,7 +65,7 @@ class Simulation implements Callable<SimulationResultPayload> {
     stats.setStartTimePhysical(System.currentTimeMillis());
     IdsByQueryCall getPendingJobs =
       IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("finishTime", 0L));
-    pendingJobs = db.executeDatabaseCall(getPendingJobs).getEntries().size();
+    pendingJobs = db.execute(getPendingJobs).getEntries().size();
   }
 
   private void tearDown() {
@@ -76,7 +76,7 @@ class Simulation implements Callable<SimulationResultPayload> {
   }
 
   private Long getLastUpdated() {
-    List<JobProfile> latest = dataStore.executeDatabaseCall(GET_LATEST, dbReference).getEntities();
+    List<JobProfile> latest = dataStore.execute(GET_LATEST, dbReference).getEntities();
     if (latest != null && latest.size() > 0)
       return latest.get(0).getLastUpdated();
     return null;
@@ -106,7 +106,7 @@ class Simulation implements Callable<SimulationResultPayload> {
     FindByQueryCall findAllocatedTasks =
       FindByQueryCall.newInstance(DataEntityCollection.TASK, QueryUtils.isNot("httpAddress", null));
 
-    List<TaskProfile> allocatedTasks = db.executeDatabaseCall(findAllocatedTasks).getEntities();
+    List<TaskProfile> allocatedTasks = db.execute(findAllocatedTasks).getEntities();
     for (TaskProfile allocatedTask : allocatedTasks) {
       Long duration = predictor.predictTaskDuration(new TaskPredictionInput(allocatedTask.getId())).getDuration();
       Float progress = allocatedTask.getReportedProgress();
@@ -128,11 +128,11 @@ class Simulation implements Callable<SimulationResultPayload> {
       switch (event.getType()) {
         case TASK_FINISHED:
           getTask.setId(((TaskFinishedDetails) event.getDetails()).getTaskId());
-          TaskProfile task = db.executeDatabaseCall(getTask).getEntity();
+          TaskProfile task = db.execute(getTask).getEntity();
           task.setFinishTime(clusterTime);
           // update other task details
 
-          JobProfile job = db.executeDatabaseCall(getJob).getEntity();
+          JobProfile job = db.execute(getJob).getEntity();
           if (checkLastTask(task, job)) {
             pendingJobs--;
             job.setFinishTime(clusterTime);
