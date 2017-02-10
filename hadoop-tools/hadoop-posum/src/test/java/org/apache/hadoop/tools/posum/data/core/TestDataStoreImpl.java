@@ -18,6 +18,7 @@ public class TestDataStoreImpl extends TestDataStore {
 
     @After
     public void tearDown() throws Exception {
+        super.tearDown();
         Utils.stopMongoDB();
     }
 }

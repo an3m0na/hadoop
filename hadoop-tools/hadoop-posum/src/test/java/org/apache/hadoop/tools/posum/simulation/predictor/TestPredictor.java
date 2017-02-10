@@ -25,7 +25,7 @@ public abstract class TestPredictor<T extends JobBehaviorPredictor> {
 
         try {
             predictor = predictorClass.getConstructor(Configuration.class, Database.class)
-                    .newInstance(conf, Database.extractFrom(dataStore, DatabaseReference.getMain()));
+                    .newInstance(conf, Database.from(dataStore, DatabaseReference.getMain()));
         } catch (NoSuchMethodException |
                 InvocationTargetException |
                 InstantiationException |

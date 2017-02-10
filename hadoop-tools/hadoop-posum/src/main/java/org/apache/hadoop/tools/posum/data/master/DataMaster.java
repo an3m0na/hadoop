@@ -44,7 +44,7 @@ public class DataMaster extends CompositeService  implements PosumMasterProcess 
         addIfService(commService);
         dmContext.setCommService(commService);
 
-        dmContext.setClusterInfo(new AppInfoCollector(conf, Database.extractFrom(dataStore, DatabaseReference.getMain())));
+        dmContext.setClusterInfo(new AppInfoCollector(conf, Database.from(dataStore, DatabaseReference.getMain())));
         clusterMonitor = new ClusterMonitor(dmContext);
         clusterMonitor.init(conf);
         addIfService(clusterMonitor);
