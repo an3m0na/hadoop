@@ -8,6 +8,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.StringString
 import org.apache.hadoop.yarn.proto.PosumProtos.JobProfileProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.JobProfileProtoOrBuilder;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -68,9 +69,9 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getLastUpdated() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-    if (p.hasLastUpdated())
-      return p.getLastUpdated();
-    return null;
+    if (!p.hasLastUpdated())
+      return null;
+    return p.getLastUpdated();
   }
 
   @Override
@@ -91,6 +92,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getStartTime() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasStartTime())
+      return null;
     return p.getStartTime();
   }
 
@@ -107,6 +110,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public String getUser() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasUser())
+      return null;
     return p.getUser();
   }
 
@@ -123,6 +128,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public String getName() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasName())
+      return null;
     return p.getName();
   }
 
@@ -139,6 +146,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getFinishTime() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasFinishTime())
+      return null;
     return p.getFinishTime();
   }
 
@@ -175,9 +184,9 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getTotalInputBytes() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-    if (p.hasTotalInputBytes())
-      return p.getTotalInputBytes();
-    else return null;
+    if (!p.hasTotalInputBytes())
+      return null;
+    return p.getTotalInputBytes();
   }
 
   @Override
@@ -193,6 +202,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getInputBytes() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasInputBytes())
+      return null;
     return p.getInputBytes();
   }
 
@@ -209,6 +220,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getMapOutputBytes() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasMapOutputBytes())
+      return null;
     return p.getMapOutputBytes();
   }
 
@@ -225,6 +238,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getReduceInputBytes() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasReduceInputBytes())
+      return null;
     return p.getReduceInputBytes();
   }
 
@@ -241,6 +256,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getOutputBytes() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasOutputBytes())
+      return null;
     return p.getOutputBytes();
   }
 
@@ -257,6 +274,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getSubmitTime() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasSubmitTime())
+      return null;
     return p.getSubmitTime();
   }
 
@@ -273,18 +292,24 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Integer getTotalMapTasks() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasTotalMapTasks())
+      return null;
     return p.getTotalMapTasks();
   }
 
   @Override
   public Integer getTotalReduceTasks() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasTotalReduceTasks())
+      return null;
     return p.getTotalReduceTasks();
   }
 
   @Override
   public String getAppId() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasAppId())
+      return null;
     return p.getAppId();
   }
 
@@ -319,6 +344,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Float getMapProgress() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasMapProgress())
+      return null;
     return p.getMapProgress();
   }
 
@@ -335,6 +362,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Float getReduceProgress() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasReduceProgress())
+      return null;
     return p.getReduceProgress();
   }
 
@@ -351,6 +380,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Integer getCompletedMaps() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasCompletedMaps())
+      return null;
     return p.getCompletedMaps();
   }
 
@@ -367,6 +398,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Integer getCompletedReduces() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasCompletedReduces())
+      return null;
     return p.getCompletedReduces();
   }
 
@@ -383,6 +416,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Boolean isUberized() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasUberized())
+      return null;
     return p.getUberized();
   }
 
@@ -399,6 +434,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Integer getInputSplits() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasInputSplits())
+      return null;
     return p.getInputSplits();
   }
 
@@ -415,6 +452,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getAvgMapDuration() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasAvgMapDuration())
+      return null;
     return p.getAvgMapDuration();
   }
 
@@ -431,6 +470,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getAvgReduceDuration() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasAvgReduceDuration())
+      return null;
     return p.getAvgReduceDuration();
   }
 
@@ -457,6 +498,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getAvgShuffleTime() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasAvgShuffleTime())
+      return null;
     return p.getAvgShuffleTime();
   }
 
@@ -473,6 +516,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getAvgMergeTime() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasAvgMergeTime())
+      return null;
     return p.getAvgMergeTime();
   }
 
@@ -489,6 +534,8 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public Long getAvgReduceTime() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasAvgReduceTime())
+      return null;
     return p.getAvgReduceTime();
   }
 
@@ -512,21 +559,35 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   @Override
   public void addAll(Map<String, String> other) {
     maybeInitBuilder();
-    getFlexFields().putAll(other);
+    // initialize flex fields
+    getFlexFields();
+    if (flexMap == null)
+      flexMap = new HashMap<>();
+    flexMap.putAll(other);
   }
 
   @Override
   public String getFlexField(String name) {
-    return getFlexFields().get(name);
+    // initialize flex fields
+    getFlexFields();
+    if (flexMap == null)
+      flexMap = new HashMap<>();
+    return flexMap.get(name);
   }
 
   @Override
   public Map<String, String> getFlexFields() {
     if (flexMap == null) {
       JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+      if (!p.hasFlexFields())
+        return null;
       flexMap = new StringStringMapPayloadPBImpl(p.getFlexFields()).getEntries();
     }
     return flexMap;
+  }
+
+  public void setFlexFields(Map<String, String> flexFields) {
+    flexMap = flexFields;
   }
 
   @Override

@@ -24,6 +24,7 @@ import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 import static org.apache.hadoop.tools.posum.simulation.core.SimulationEvent.Type.TASK_FINISHED;
 
 
@@ -78,7 +79,7 @@ class Simulation implements Callable<SimulationResultPayload> {
   private Long getLastUpdated() {
     List<JobProfile> latest = dataStore.execute(GET_LATEST, dbReference).getEntities();
     if (latest != null && latest.size() > 0)
-      return latest.get(0).getLastUpdated();
+      return orZero(latest.get(0).getLastUpdated());
     return null;
   }
 
@@ -150,7 +151,7 @@ class Simulation implements Callable<SimulationResultPayload> {
 
   private boolean checkLastTask(TaskProfile task, JobProfile job) {
     if (task.getType() == TaskType.REDUCE)
-      return job.getTotalReduceTasks() - job.getCompletedReduces() == 1;
-    return job.getTotalMapTasks() - job.getCompletedMaps() == 1;
+      return orZero(job.getTotalReduceTasks()) - orZero(job.getCompletedReduces()) == 1;
+    return orZero(job.getTotalMapTasks()) - orZero(job.getCompletedMaps()) == 1;
   }
 }

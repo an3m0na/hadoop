@@ -11,6 +11,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManage
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+
 public class SRTFAppAttempt extends ExtCaAppAttempt {
   private static final Log logger = LogFactory.getLog(SRTFAppAttempt.class);
 
@@ -101,7 +103,7 @@ public class SRTFAppAttempt extends ExtCaAppAttempt {
       // calculate resource share according to remaining time
       desired = 1.0 / remainingTime / normalizer * maxResource.getMemory();
       // adjust for starvation
-      long elapsedTime = System.currentTimeMillis() - submitTime;
+      long elapsedTime = System.currentTimeMillis() - orZero(submitTime);
       Integer totalSlots = maxResource.getMemory() / minAllocation.getMemory();
       long timeIfAlone = totalWork / totalSlots;
       desired *= (elapsedTime + remainingTime) / timeIfAlone;

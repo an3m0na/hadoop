@@ -80,6 +80,8 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
   @Override
   public Long getStartTime() {
     AppProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasStartTime())
+      return null;
     return p.getStartTime();
   }
 
@@ -168,6 +170,8 @@ public class AppProfilePBImpl extends GeneralDataEntityPBImpl<AppProfile, AppPro
   @Override
   public Long getFinishTime() {
     AppProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasFinishTime())
+      return null;
     return p.getFinishTime();
   }
 

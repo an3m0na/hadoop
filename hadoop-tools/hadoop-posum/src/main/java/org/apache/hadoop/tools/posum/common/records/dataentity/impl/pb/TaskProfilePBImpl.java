@@ -56,9 +56,9 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Long getLastUpdated() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-    if (p.hasLastUpdated())
-      return p.getLastUpdated();
-    return null;
+    if (!p.hasLastUpdated())
+      return null;
+    return p.getLastUpdated();
   }
 
   @Override
@@ -79,6 +79,8 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Long getStartTime() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasStartTime())
+      return null;
     return p.getStartTime();
   }
 
@@ -95,6 +97,8 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Long getFinishTime() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasFinishTime())
+      return null;
     return p.getFinishTime();
   }
 
@@ -122,6 +126,8 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Long getOutputBytes() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasOutputBytes())
+      return null;
     return p.getOutputBytes();
   }
 
@@ -156,6 +162,8 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Long getInputBytes() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasInputBytes())
+      return null;
     return p.getInputBytes();
   }
 
@@ -190,6 +198,8 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Long getInputRecords() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasInputRecords())
+      return null;
     return p.getInputRecords();
   }
 
@@ -206,6 +216,8 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Long getOutputRecords() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasOutputRecords())
+      return null;
     return p.getOutputRecords();
   }
 
@@ -240,6 +252,8 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Float getReportedProgress() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasReportedProgress())
+      return null;
     return p.getReportedProgress();
   }
 
@@ -264,6 +278,8 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Long getShuffleTime() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasShuffleTime())
+      return null;
     return p.getShuffleTime();
   }
 
@@ -280,6 +296,8 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Long getMergeTime() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasMergeTime())
+      return null;
     return p.getMergeTime();
   }
 
@@ -296,6 +314,8 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Long getReduceTime() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasReduceTime())
+      return null;
     return p.getReduceTime();
   }
 
@@ -312,7 +332,9 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   @Override
   public Boolean isLocal() {
     TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-    return p.hasLocal() && p.getLocal();
+    if(!p.hasLocal())
+      return null;
+    return p.getLocal();
   }
 
   @Override

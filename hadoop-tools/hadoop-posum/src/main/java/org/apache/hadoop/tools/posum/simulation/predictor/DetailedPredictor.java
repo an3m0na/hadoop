@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.getDuration;
+import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
 public class DetailedPredictor extends JobBehaviorPredictor {
 
@@ -69,20 +70,20 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     Integer mapRemoteNo = 0, mapLocalNo = 0, typicalShuffleNo = 0, firstShuffleNo = 0, reduceNo = 0;
     Long shuffleFirstTime = 0L;
 
-    if (job.getCompletedMaps() > 0) {
-      Long inputPerMap = Math.max(job.getTotalInputBytes() / job.getTotalMapTasks(), 1);
-      Long parsedInputBytes = job.getCompletedMaps() * inputPerMap;
+    if (orZero(job.getCompletedMaps()) > 0) {
+      Long inputPerMap = Math.max(orZero(job.getTotalInputBytes()) / orZero(job.getTotalMapTasks()), 1);
+      Long parsedInputBytes = orZero(job.getCompletedMaps()) * inputPerMap;
       fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY,
         // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-        Double.toString(1.0 * job.getMapOutputBytes() / parsedInputBytes));
+        Double.toString(1.0 * orZero(job.getMapOutputBytes()) / parsedInputBytes));
 
       for (TaskProfile task : tasks) {
         if (getDuration(task) <= 0)
           continue;
         if (task.getType().equals(TaskType.MAP)) {
           // this is a finished map task; split stats into remote and local
-          if (mapFinish < task.getFinishTime())
-            mapFinish = task.getFinishTime();
+          if (mapFinish < orZero(task.getFinishTime()))
+            mapFinish = orZero(task.getFinishTime());
           // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
           Double newRate = 1.0 * inputPerMap / getDuration(task);
           if (task.isLocal()) {
@@ -102,31 +103,31 @@ public class DetailedPredictor extends JobBehaviorPredictor {
         fieldMap.put(FLEX_KEY_PREFIX + FlexKeys.MAP_REMOTE,
           Double.toString(mapRemoteRate / mapRemoteNo));
       }
-      if (mapLocalNo + mapRemoteNo != job.getTotalMapTasks()) {
+      if (mapLocalNo + mapRemoteNo != orZero(job.getTotalMapTasks())) {
         // map phase has not finished yet
         mapFinish = Long.MAX_VALUE;
       }
     }
 
-    if (job.getCompletedReduces() > 0 && job.getTotalReduceTasks() > 0) {
+    if (orZero(job.getCompletedReduces()) > 0 && orZero(job.getTotalReduceTasks()) > 0) {
       for (TaskProfile task : tasks) {
         if (getDuration(task) <= 0)
           continue;
         if (task.getType().equals(TaskType.REDUCE)) {
           reduceNo++;
           // this is a finished reduce task; split stats into shuffle, merge and reduce
-          Long taskInputBytes = Math.max(task.getInputBytes(), 1);
-          if (task.getReduceTime() > 0)
-            reduceRate += 1.0 * taskInputBytes / task.getReduceTime();
-          if (task.getMergeTime() > 0)
-            mergeRate += 1.0 * taskInputBytes / task.getMergeTime();
-          if (task.getStartTime() > mapFinish) {
+          Long taskInputBytes = Math.max(orZero(task.getInputBytes()), 1);
+          if (orZero(task.getReduceTime()) > 0)
+            reduceRate += 1.0 * taskInputBytes / orZero(task.getReduceTime());
+          if (orZero(task.getMergeTime()) > 0)
+            mergeRate += 1.0 * taskInputBytes / orZero(task.getMergeTime());
+          if (orZero(task.getStartTime()) > mapFinish) {
             // the task was not in the first reduce wave; store shuffle time under typical
-            shuffleTypicalRate += 1.0 * taskInputBytes / task.getShuffleTime();
+            shuffleTypicalRate += 1.0 * taskInputBytes / orZero(task.getShuffleTime());
             typicalShuffleNo++;
           } else {
             logger.debug("When this happens, mapFinish is " + mapFinish);
-            shuffleFirstTime += task.getShuffleTime() - (mapFinish - task.getStartTime());
+            shuffleFirstTime += orZero(task.getShuffleTime()) - (mapFinish - orZero(task.getStartTime()));
             firstShuffleNo++;
           }
         }
@@ -168,9 +169,9 @@ public class DetailedPredictor extends JobBehaviorPredictor {
   }
 
   private TaskPredictionOutput handleNoMapHistory(JobProfile job) {
-    if (job.getAvgMapDuration() != 0)
+    if (orZero(job.getAvgMapDuration()) != 0)
       // if we do have at least the current average duration, return that, regardless of location
-      return new TaskPredictionOutput(job.getAvgMapDuration());
+      return new TaskPredictionOutput(orZero(job.getAvgMapDuration()));
     logger.debug("No map history data for " + job.getId() + ". Using default");
     // return the default; there is nothing we can do
     return new TaskPredictionOutput(DEFAULT_TASK_DURATION);
@@ -185,9 +186,9 @@ public class DetailedPredictor extends JobBehaviorPredictor {
 
     if (input.getNodeAddress() == null) {
       // we don't know the task locality
-      if (job.getAvgMapDuration() != 0)
+      if (orZero(job.getAvgMapDuration()) != 0)
         // we have the current average duration, so return it
-        return new TaskPredictionOutput(job.getAvgMapDuration());
+        return new TaskPredictionOutput(orZero(job.getAvgMapDuration()));
     } else {
       // we know the locality, so consider the rate of that type
       Map<String, String> flexFields = job.getFlexFields();
@@ -202,9 +203,9 @@ public class DetailedPredictor extends JobBehaviorPredictor {
       List<JobProfile> comparable = getComparableProfilesByType(job, TaskType.MAP);
       if (comparable.size() < 1)
         return handleNoMapHistory(job);
-      if (!comparable.get(0).getMapperClass().equals(job.getMapperClass()) && job.getAvgMapDuration() != 0)
+      if (!comparable.get(0).getMapperClass().equals(job.getMapperClass()) && orZero(job.getAvgMapDuration()) != 0)
         // if history is not relevant and we have the current average duration, return it
-        return new TaskPredictionOutput(job.getAvgMapDuration());
+        return new TaskPredictionOutput(orZero(job.getAvgMapDuration()));
       Integer numRates = 0;
       for (JobProfile profile : comparable) {
         logger.debug("Comparing map of " + job.getId() + " with " + profile.getId());
@@ -231,7 +232,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     }
     // multiply by how much input each task has
     // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-    Long splitSize = Math.max(job.getTotalInputBytes() / job.getTotalMapTasks(), 1);
+    Long splitSize = Math.max(orZero(job.getTotalInputBytes()) / orZero(job.getTotalMapTasks()), 1);
     Double duration = splitSize / rate;
     logger.debug("Map duration for " + job.getId() + " should be " + splitSize + " / " + rate + "=" + duration);
     return new TaskPredictionOutput(duration.longValue());
@@ -242,7 +243,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     List<JobProfile> comparable = getComparableProfilesByType(job, TaskType.MAP);
     if (comparable.size() < 1 || !comparable.get(0).getMapperClass().equals(job.getMapperClass())) {
       // there is no history, or it is not relevant for selectivity
-      if (job.getCompletedMaps() > 0) {
+      if (orZero(job.getCompletedMaps()) > 0) {
         String selectivityString = job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_SELECTIVITY);
         if (selectivityString != null) {
           // we know the current selectivity
@@ -265,7 +266,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
   }
 
   private TaskPredictionOutput handleNoReduceHistory(JobProfile job, Double avgSelectivity) {
-    if (avgSelectivity == 0 || job.getCompletedMaps() == 0) {
+    if (avgSelectivity == 0 || orZero(job.getCompletedMaps()) == 0) {
       // our selectivity or map rate data is unreliable
       // just return default duration
       logger.debug("No data to compute reduce for " + job.getName() + ". Using default");
@@ -278,10 +279,10 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     String durationString = job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_REMOTE);
     if (durationString == null)
       durationString = job.getFlexField(FLEX_KEY_PREFIX + FlexKeys.MAP_LOCAL);
-    Double mapRate = durationString == null ? job.getAvgMapDuration() : Double.valueOf(durationString);
+    Double mapRate = durationString == null ? orZero(job.getAvgMapDuration()) : Double.valueOf(durationString);
     // calculate how much input the task has
     // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-    Double inputPerTask = Math.max(job.getTotalInputBytes() * avgSelectivity / job.getTotalReduceTasks(), 1);
+    Double inputPerTask = Math.max(orZero(job.getTotalInputBytes()) * avgSelectivity / orZero(job.getTotalReduceTasks()), 1);
     Double duration = inputPerTask / mapRate;
     logger.debug("Reduce duration computed based on map data for " + job.getId() + " as " + duration + "from (remote) mapRate=" + mapRate + " and selectivity=" + avgSelectivity);
     return new TaskPredictionOutput(duration.longValue());
@@ -371,12 +372,12 @@ public class DetailedPredictor extends JobBehaviorPredictor {
 
     // our selectivity and reduce rate data is reliable
     if (mergeRate != null && reduceRate != null) {
-      boolean isFirstShuffle = job.getCompletedMaps().equals(job.getTotalMapTasks());
+      boolean isFirstShuffle = orZero(job.getCompletedMaps()) == orZero(job.getTotalMapTasks());
       if ((isFirstShuffle && shuffleFirst != null) || (!isFirstShuffle && typicalShuffleRate != null)) {
         // calculate how much input the task should have based on how much is left and how many reduces remain
         // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-        Double inputLeft = job.getTotalInputBytes() * avgSelectivity - job.getReduceInputBytes();
-        Double inputPerTask = Math.max(inputLeft / (job.getTotalReduceTasks() - job.getCompletedReduces()), 1);
+        Double inputLeft = orZero(job.getTotalInputBytes()) * avgSelectivity - orZero(job.getReduceInputBytes());
+        Double inputPerTask = Math.max(inputLeft / (orZero(job.getTotalReduceTasks()) - orZero(job.getCompletedReduces())), 1);
         // shuffle time depends on whether it is the first shuffle and the size of the input
         Long shuffleTime = isFirstShuffle ? shuffleFirst :
           Double.valueOf(inputPerTask / typicalShuffleRate).longValue();
