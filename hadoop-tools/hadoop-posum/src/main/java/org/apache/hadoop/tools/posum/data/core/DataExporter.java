@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.data.core;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
@@ -22,11 +23,9 @@ public class DataExporter {
     collections = dataStore.listCollections();
   }
 
-  public void exportTo(String dumpPath) {
+  public void exportTo(String dumpPath) throws IOException {
     File dumpDir = new File(dumpPath);
-    if (!dumpDir.exists())
-      if (!dumpDir.mkdirs())
-        throw new PosumException("Could not create data dump directory: " + dumpPath);
+    FileUtils.forceMkdir(dumpDir);
     FindByQueryCall findAll = FindByQueryCall.newInstance(null, null);
     for (Map.Entry<DatabaseReference, List<DataEntityCollection>> dbMapEntry : collections.entrySet()) {
       for (DataEntityCollection collection : dbMapEntry.getValue()) {
