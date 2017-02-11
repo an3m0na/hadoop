@@ -53,6 +53,7 @@ import static org.apache.hadoop.tools.posum.test.Utils.JOB2_ID;
 import static org.apache.hadoop.tools.posum.test.Utils.JOB3;
 import static org.apache.hadoop.tools.posum.test.Utils.JOB3_ID;
 import static org.apache.hadoop.tools.posum.test.Utils.USER2;
+import static org.apache.hadoop.tools.posum.test.Utils.newView;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -70,7 +71,7 @@ public abstract class TestDataStore {
   @Before
   public void setUp() throws Exception {
     setUpDataStore();
-    db = Database.from(dataStore, DatabaseReference.get(MAIN, "unitTest"));
+    db = Database.from(dataStore, DatabaseReference.get(MAIN, newView()));
     Utils.loadThreeDefaultAppsAndJobs(db);
   }
 

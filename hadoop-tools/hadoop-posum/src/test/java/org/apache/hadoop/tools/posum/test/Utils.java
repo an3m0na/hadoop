@@ -27,10 +27,13 @@ public class Utils {
   public static final String QUEUE = "default";
   public static final String USER1 = "dummy";
   public static final String USER2 = "geek";
-  public static final String TEST_TMP_DIR = "testTmpDir";
+  public static final String TEST_TMP_DIR = "/tmp/posum_tests";
   public static final String WORKLOAD_DIR = "test_workload";
   public static final String API_RESPONSES_DIR = "test_api_responses";
-  private static final String MONGO_DATA_PATH = "~/mongodata";
+  private static final String VIEW_ROOT = "testview_";
+  private static int viewCount = 0;
+  private static boolean mongoStarted = false;
+  private static int mongoTestsRunning = 0;
 
   public static final Long CLUSTER_TIMESTAMP = 1483890116284L;
   public static final ApplicationId APP1_ID = ApplicationId.newInstance(CLUSTER_TIMESTAMP, 1);
@@ -156,31 +159,37 @@ public class Utils {
 
   private static String getMongoScriptCall() {
     String scriptLocation = Utils.class.getClassLoader().getResource("run-mongo.sh").getFile();
-    return "/bin/bash " + scriptLocation + " --db-path=" + MONGO_DATA_PATH;
+    return "/bin/bash " + scriptLocation + " --db-path=" + TEST_TMP_DIR;
   }
 
-  public static void runMongoDB() throws IOException, InterruptedException {
-    runProcess(getMongoScriptCall());
+  public static synchronized void runMongoDB() throws IOException, InterruptedException {
+    String output = runProcess(getMongoScriptCall());
+    mongoTestsRunning++;
+    if (output.contains("Starting mongod"))
+      mongoStarted = true;
   }
 
-  public static void stopMongoDB() throws IOException, InterruptedException {
-    runProcess(getMongoScriptCall() + " --stop");
+  public static synchronized void stopMongoDB() throws IOException, InterruptedException {
+    if (--mongoTestsRunning == 0 && mongoStarted) {
+      runProcess(getMongoScriptCall() + " --stop");
+    }
   }
 
-  public static void runProcess(String command) throws IOException, InterruptedException {
+  public static String runProcess(String command) throws IOException, InterruptedException {
     Process process = Runtime.getRuntime().exec(command);
+    String s, output = "";
+    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
     process.waitFor();
+    while ((s = reader.readLine()) != null)
+      output += s + "\n";
     if (process.exitValue() != 0) {
       System.out.println("Error stopping Mongo database:");
-      String s;
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      while ((s = reader.readLine()) != null)
-        System.out.println(s);
       reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
       while ((s = reader.readLine()) != null)
         System.out.println(s);
       throw new RuntimeException("Could not stop MongoDB");
     }
+    return output;
   }
 
   public static HistorySnapshotStoreImpl mockDefaultWorkload() {
@@ -195,5 +204,9 @@ public class Utils {
     if (apiUrl == null)
       throw new RuntimeException("Default test api folder was not found");
     return FileUtils.readFileToString(new File(apiUrl.getPath()));
+  }
+
+  public static synchronized String newView() {
+    return VIEW_ROOT + (viewCount++);
   }
 }

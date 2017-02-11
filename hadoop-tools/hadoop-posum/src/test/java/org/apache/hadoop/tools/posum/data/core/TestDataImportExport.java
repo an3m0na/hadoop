@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.data.core;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
@@ -18,32 +19,32 @@ import java.util.List;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference.Type.MAIN;
 import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
 import static org.apache.hadoop.tools.posum.test.Utils.CLUSTER_TIMESTAMP;
+import static org.apache.hadoop.tools.posum.test.Utils.newView;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class TestDataImportExport {
   private Database db;
   private DataStore dataStore;
+  private final String dataDumpPath = Utils.TEST_TMP_DIR + File.separator + "importexport";
+
 
   @Before
   public void setUp() throws Exception {
     dataStore = new MockDataStoreImpl();
-    db = Database.from(dataStore, DatabaseReference.get(MAIN, "unitTest"));
+    db = Database.from(dataStore, DatabaseReference.get(MAIN, newView()));
     Utils.loadThreeDefaultAppsAndJobs(db);
   }
 
   @After
   public void tearDown() throws Exception {
     dataStore.clearDatabase(db.getTarget());
+    FileUtils.forceDelete(new File(dataDumpPath));
   }
 
   @Test
   public void test() throws Exception {
-    String dataDumpPath = Utils.TEST_TMP_DIR + File.separator + "importexport";
     new DataExporter(dataStore).exportTo(dataDumpPath);
-    File tmpDir = new File(dataDumpPath);
-    assertTrue(tmpDir.exists() && tmpDir.isDirectory());
     dataStore.clear();
     IdsByQueryCall listIds = IdsByQueryCall.newInstance(DataEntityCollection.APP, null, ID_FIELD, false);
     List<String> ids = db.execute(listIds).getEntries();
@@ -55,9 +56,5 @@ public class TestDataImportExport {
       ApplicationId.newInstance(CLUSTER_TIMESTAMP, 1).toString(),
       ApplicationId.newInstance(CLUSTER_TIMESTAMP, 2).toString(),
       ApplicationId.newInstance(CLUSTER_TIMESTAMP, 3).toString()}, ids.toArray());
-    for (File file : tmpDir.listFiles()) {
-      assertTrue(file.delete());
-    }
-    assertTrue(tmpDir.delete());
   }
 }
