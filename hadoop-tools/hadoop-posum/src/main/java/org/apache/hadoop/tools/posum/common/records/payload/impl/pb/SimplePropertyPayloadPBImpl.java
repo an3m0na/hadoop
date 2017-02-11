@@ -80,6 +80,8 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implement
   @Override
   public PropertyType getType() {
     SimplePropertyPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasType())
+      return null;
     return PropertyType.valueOf(p.getType().name().substring("PROP_".length()));
   }
 
@@ -118,6 +120,8 @@ public class SimplePropertyPayloadPBImpl extends SimplePropertyPayload implement
   @Override
   public String getName() {
     SimplePropertyPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasName())
+      return null;
     return p.getName();
   }
 

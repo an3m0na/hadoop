@@ -23,6 +23,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+
 
 public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacityScheduler<EDLSAppAttempt, ExtCaSchedulerNode> {
 
@@ -131,8 +133,8 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
           app.setDeadline(Long.valueOf(job.getFlexField(DEADLINE_FLEX_KEY)));
         }
       }
-      app.setExecutionTime(job.getAvgMapDuration() * job.getCompletedMaps() +
-        job.getAvgReduceDuration() * job.getCompletedReduces());
+      app.setExecutionTime(orZero(job.getAvgMapDuration()) * orZero(job.getCompletedMaps()) +
+        orZero(job.getAvgReduceDuration()) * orZero(job.getCompletedReduces()));
       // this is a batch job; update its slowdown
     } catch (Exception e) {
       logger.debug("Could not update app priority for : " + app.getApplicationId(), e);

@@ -316,7 +316,7 @@ public class Utils {
             // make sure to record map materialized (compressed) bytes if compression is enabled
             // this is because reduce_shuffle_bytes are also in compressed form
             case "MAP_OUTPUT_BYTES":
-              Long previous = job.getMapOutputBytes();
+              Long previous = orZero(job.getMapOutputBytes());
               if (previous == null || previous == 0)
                 job.setMapOutputBytes(counter.getTotalCounterValue());
               break;
@@ -334,13 +334,13 @@ public class Utils {
         for (CounterInfoPayload counter : group.getCounter()) {
           switch (counter.getName()) {
             case "FILE_BYTES_READ":
-              job.setInputBytes(job.getInputBytes() + counter.getMapCounterValue());
+              job.setInputBytes(orZero(job.getInputBytes()) + counter.getMapCounterValue());
               break;
             case "HDFS_BYTES_READ":
-              job.setInputBytes(job.getInputBytes() + counter.getMapCounterValue());
+              job.setInputBytes(orZero(job.getInputBytes()) + counter.getMapCounterValue());
               break;
             case "HDFS_BYTES_WRITTEN":
-              job.setOutputBytes(job.getOutputBytes() + counter.getReduceCounterValue());
+              job.setOutputBytes(orZero(job.getOutputBytes()) + counter.getReduceCounterValue());
               break;
           }
         }
@@ -373,8 +373,8 @@ public class Utils {
       if (TaskType.MAP.equals(task.getType())) {
         mapDuration += getDuration(task);
         mapNo++;
-        mapInputSize += task.getInputBytes();
-        mapOutputSize += task.getOutputBytes();
+        mapInputSize += orZero(task.getInputBytes());
+        mapOutputSize += orZero(task.getOutputBytes());
         if (job.getSplitLocations() != null && task.getHttpAddress() != null) {
           int splitIndex = Utils.parseTaskId(task.getId()).getId();
           if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
@@ -383,12 +383,12 @@ public class Utils {
       }
       if (TaskType.REDUCE.equals(task.getType())) {
         reduceDuration += getDuration(task);
-        reduceTime += task.getReduceTime();
-        shuffleTime += task.getShuffleTime();
-        mergeTime += task.getMergeTime();
+        reduceTime += orZero(task.getReduceTime());
+        shuffleTime += orZero(task.getShuffleTime());
+        mergeTime += orZero(task.getMergeTime());
         reduceNo++;
-        reduceInputSize += task.getInputBytes();
-        reduceOutputSize += task.getOutputBytes();
+        reduceInputSize += orZero(task.getInputBytes());
+        reduceOutputSize += orZero(task.getOutputBytes());
       }
       avgDuration += getDuration(task);
       avgNo++;
@@ -426,7 +426,7 @@ public class Utils {
             // this is because reduce_shuffle_bytes are also in compressed form
             case "MAP_OUTPUT_BYTES":
               if (task.getType().equals(TaskType.MAP)) {
-                Long previous = task.getOutputBytes();
+                Long previous = orZero(task.getOutputBytes());
                 if (previous == null || previous == 0)
                   task.setOutputBytes(counter.getTotalCounterValue());
               }
@@ -449,17 +449,29 @@ public class Utils {
           switch (counter.getName()) {
             case "HDFS_BYTES_READ":
               if (task.getType().equals(TaskType.MAP)) {
-                task.setInputBytes(task.getInputBytes() +
+                task.setInputBytes(orZero(task.getInputBytes()) +
                   counter.getTotalCounterValue());
               }
               break;
             case "HDFS_BYTES_WRITTEN":
               if (task.getType().equals(TaskType.REDUCE))
-                task.setOutputBytes(task.getOutputBytes() +
+                task.setOutputBytes(orZero(task.getOutputBytes()) +
                   counter.getTotalCounterValue());
               break;
           }
         }
     }
+  }
+  
+  public static long orZero(Long unsafeLong){
+    return unsafeLong == null? 0 : unsafeLong;
+  }
+
+  public static float orZero(Float unsafeFloat){
+    return unsafeFloat == null? 0 : unsafeFloat;
+  }
+
+  public static int orZero(Integer unsafeInt){
+    return unsafeInt == null? 0 : unsafeInt;
   }
 }

@@ -38,6 +38,7 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
 import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
+import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
 public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
 
@@ -85,7 +86,7 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
     List<JobProfile> jobSingletonList = runOnShadow(
       FindByQueryCall.newInstance(JOB_HISTORY, null, "startTime", false, 0, 1)
     ).getEntities();
-    return jobSingletonList.isEmpty() ? 0L : jobSingletonList.get(0).getStartTime();
+    return jobSingletonList.isEmpty() ? 0L : orZero(jobSingletonList.get(0).getStartTime());
   }
 
   private Long findLatestTime() {
@@ -94,7 +95,7 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
       FindByQueryCall.newInstance(JOB_HISTORY, null, "finishTime", true, 0, 1);
     List<JobProfile> jobSingletonList = runOnShadow(findLastEntity).getEntities();
     if (!jobSingletonList.isEmpty())
-      latestTime = jobSingletonList.get(0).getFinishTime();
+      latestTime = orZero(jobSingletonList.get(0).getFinishTime());
     // check if there are any tasks that finished later
     findLastEntity.setEntityCollection(DataEntityCollection.TASK_HISTORY);
     List<TaskProfile> taskSingletonList = runOnShadow(findLastEntity).getEntities();
@@ -300,7 +301,7 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
 
   private List<? extends ThreePhaseDatabaseCall> addTaskInfo(TaskProfile task) {
     List<ThreePhaseDatabaseCall> ret = new LinkedList<>();
-    if (task.getFinishTime() > currentTime)
+    if (orZero(task.getFinishTime()) > currentTime)
       task.setFinishTime(0L);
     else {
       // add counters only for finished tasks
