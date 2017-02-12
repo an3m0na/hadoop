@@ -7,19 +7,19 @@ import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 
 public class VoidPayloadPBImpl extends VoidPayload implements PayloadPB {
 
-    public VoidPayloadPBImpl() {
+  public VoidPayloadPBImpl() {
 
-    }
+  }
 
-    @Override
-    public ByteString getProtoBytes() {
-        return ByteString.EMPTY;
-    }
+  @Override
+  public ByteString getProtoBytes() {
+    return ByteString.EMPTY;
+  }
 
-    @Override
-    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+  @Override
+  public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
 
-    }
+  }
 
 
 }

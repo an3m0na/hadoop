@@ -14,32 +14,32 @@ import static org.apache.hadoop.tools.posum.common.util.Utils.safeEquals;
 
 class PropertyValueQueryPredicate extends QueryPredicate<PropertyValueQuery> {
 
-    PropertyValueQueryPredicate(PropertyValueQuery query) {
-        super(query);
-        checkedProperties = Collections.singleton(query.getProperty().getName());
-    }
+  PropertyValueQueryPredicate(PropertyValueQuery query) {
+    super(query);
+    checkedProperties = Collections.singleton(query.getProperty().getName());
+  }
 
-    @Override
-    public boolean check(GeneralDataEntity entity, Map<String, Method> propertyReaders) throws InvocationTargetException, IllegalAccessException {
-        SimplePropertyPayload property = query.getProperty();
-        Object value = propertyReaders.get(property.getName()).invoke(entity);
-        switch (query.getType()) {
-            case IS:
-                return safeEquals(value, property.getValue());
-            case IS_NOT:
-                return !safeEquals(value, property.getValue());
-            case LESS:
-                return property.getValue() != null && ((Comparable) property.getValue()).compareTo(value) > 0;
-            case LESS_OR_EQUAL:
-                return property.getValue() != null && ((Comparable) property.getValue()).compareTo(value) >= 0;
-            case GREATER:
-                return property.getValue() != null && ((Comparable) property.getValue()).compareTo(value) < 0;
-            case GREATER_OR_EQUAL:
-                return property.getValue() != null && ((Comparable) property.getValue()).compareTo(value) <= 0;
-            default:
-                throw new PosumException("PropertyValue query type not recognized: " + query.getType());
-
-        }
+  @Override
+  public boolean check(GeneralDataEntity entity, Map<String, Method> propertyReaders) throws InvocationTargetException, IllegalAccessException {
+    SimplePropertyPayload property = query.getProperty();
+    Object value = propertyReaders.get(property.getName()).invoke(entity);
+    switch (query.getType()) {
+      case IS:
+        return safeEquals(value, property.getValue());
+      case IS_NOT:
+        return !safeEquals(value, property.getValue());
+      case LESS:
+        return property.getValue() != null && ((Comparable) property.getValue()).compareTo(value) > 0;
+      case LESS_OR_EQUAL:
+        return property.getValue() != null && ((Comparable) property.getValue()).compareTo(value) >= 0;
+      case GREATER:
+        return property.getValue() != null && ((Comparable) property.getValue()).compareTo(value) < 0;
+      case GREATER_OR_EQUAL:
+        return property.getValue() != null && ((Comparable) property.getValue()).compareTo(value) <= 0;
+      default:
+        throw new PosumException("PropertyValue query type not recognized: " + query.getType());
 
     }
+
+  }
 }

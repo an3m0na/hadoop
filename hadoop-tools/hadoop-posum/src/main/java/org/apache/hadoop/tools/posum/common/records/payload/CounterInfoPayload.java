@@ -8,38 +8,38 @@ import org.apache.hadoop.yarn.util.Records;
 @org.codehaus.jackson.map.annotate.JsonDeserialize(as = CounterInfoPayloadPBImpl.class)
 public abstract class CounterInfoPayload implements Payload {
 
-    public static CounterInfoPayload newInstance(String name, long total, long map, long reduce) {
-        CounterInfoPayload payload = Records.newRecord(CounterInfoPayload.class);
-        payload.setName(name);
-        payload.setTotalCounterValue(total);
-        payload.setMapCounterValue(map);
-        payload.setReduceCounterValue(reduce);
-        return payload;
-    }
+  public static CounterInfoPayload newInstance(String name, long total, long map, long reduce) {
+    CounterInfoPayload payload = Records.newRecord(CounterInfoPayload.class);
+    payload.setName(name);
+    payload.setTotalCounterValue(total);
+    payload.setMapCounterValue(map);
+    payload.setReduceCounterValue(reduce);
+    return payload;
+  }
 
-    public static CounterInfoPayload newInstance(String name, long value) {
-        CounterInfoPayload payload = Records.newRecord(CounterInfoPayload.class);
-        payload.setName(name);
-        payload.setTotalCounterValue(value);
-        return payload;
-    }
+  public static CounterInfoPayload newInstance(String name, long value) {
+    CounterInfoPayload payload = Records.newRecord(CounterInfoPayload.class);
+    payload.setName(name);
+    payload.setTotalCounterValue(value);
+    return payload;
+  }
 
-    public abstract long getReduceCounterValue();
+  public abstract long getReduceCounterValue();
 
-    public abstract void setReduceCounterValue(long reduce);
+  public abstract void setReduceCounterValue(long reduce);
 
-    public abstract long getMapCounterValue();
+  public abstract long getMapCounterValue();
 
-    public abstract void setMapCounterValue(long map);
+  public abstract void setMapCounterValue(long map);
 
-    public abstract long getTotalCounterValue();
+  public abstract long getTotalCounterValue();
 
-    public abstract void setTotalCounterValue(long total);
+  public abstract void setTotalCounterValue(long total);
 
-    public abstract String getName();
+  public abstract String getName();
 
-    public abstract void setName(String name);
+  public abstract void setName(String name);
 
-    public abstract void setValue(long total);
+  public abstract void setValue(long total);
 
 }

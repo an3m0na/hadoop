@@ -8,20 +8,20 @@ import org.apache.hadoop.yarn.util.Records;
 
 public abstract class DeleteByIdCall extends DeleteCall {
 
-    public static DeleteByIdCall newInstance(DataEntityCollection type, String id) {
-        DeleteByIdCall call = Records.newRecord(DeleteByIdCall.class);
-        call.setEntityCollection(type);
-        call.setId(id);
-        return call;
-    }
+  public static DeleteByIdCall newInstance(DataEntityCollection type, String id) {
+    DeleteByIdCall call = Records.newRecord(DeleteByIdCall.class);
+    call.setEntityCollection(type);
+    call.setId(id);
+    return call;
+  }
 
-    public abstract String getId();
+  public abstract String getId();
 
-    public abstract void setId(String id);
+  public abstract void setId(String id);
 
-    @Override
-    public VoidPayload execute(LockBasedDataStore dataStore, DatabaseReference db) {
-        dataStore.delete(db, getEntityCollection(), getId());
-        return VoidPayload.newInstance();
-    }
+  @Override
+  public VoidPayload execute(LockBasedDataStore dataStore, DatabaseReference db) {
+    dataStore.delete(db, getEntityCollection(), getId());
+    return VoidPayload.newInstance();
+  }
 }

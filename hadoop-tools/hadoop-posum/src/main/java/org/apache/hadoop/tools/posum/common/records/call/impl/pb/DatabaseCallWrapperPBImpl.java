@@ -11,108 +11,108 @@ import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseCallProtoOrBuilder;
 
 public class DatabaseCallWrapperPBImpl implements PayloadPB {
-    private DatabaseCallProto proto = DatabaseCallProto.getDefaultInstance();
-    private DatabaseCallProto.Builder builder = null;
-    private boolean viaProto = false;
+  private DatabaseCallProto proto = DatabaseCallProto.getDefaultInstance();
+  private DatabaseCallProto.Builder builder = null;
+  private boolean viaProto = false;
 
-    public DatabaseCallWrapperPBImpl() {
-        builder = DatabaseCallProto.newBuilder();
+  public DatabaseCallWrapperPBImpl() {
+    builder = DatabaseCallProto.newBuilder();
+  }
+
+  private DatabaseCall call;
+
+  public DatabaseCallWrapperPBImpl(DatabaseCall call) {
+    this();
+    setCall(call);
+  }
+
+  public DatabaseCallWrapperPBImpl(DatabaseCallProto proto) {
+    this.proto = proto;
+    viaProto = true;
+  }
+
+  public DatabaseCallProto getProto() {
+    mergeLocalToProto();
+    proto = viaProto ? proto : builder.build();
+    viaProto = true;
+    return proto;
+  }
+
+  @Override
+  public int hashCode() {
+    return getProto().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other == null)
+      return false;
+    if (other.getClass().isAssignableFrom(this.getClass())) {
+      return this.getProto().equals(this.getClass().cast(other).getProto());
     }
+    return false;
+  }
 
-    private DatabaseCall call;
+  @Override
+  public String toString() {
+    return TextFormat.shortDebugString(getProto());
+  }
 
-    public DatabaseCallWrapperPBImpl(DatabaseCall call) {
-        this();
-        setCall(call);
+  private void mergeLocalToBuilder() {
+    maybeInitBuilder();
+    if (call != null) {
+      DatabaseCallType type = DatabaseCallType.fromMappedClass(call.getClass());
+      if (type == null)
+        throw new PosumException("DatabaseCall class not recognized " + call.getClass());
+      builder.setType(DatabaseCallProto.CallTypeProto.valueOf("CALL_" + type.name()));
+      PayloadPB serializableCall = (PayloadPB) call;
+      builder.setCall(serializableCall.getProtoBytes());
     }
+  }
 
-    public DatabaseCallWrapperPBImpl(DatabaseCallProto proto) {
-        this.proto = proto;
-        viaProto = true;
-    }
+  private void mergeLocalToProto() {
+    if (viaProto)
+      maybeInitBuilder();
+    mergeLocalToBuilder();
+    proto = builder.build();
+    viaProto = true;
+  }
 
-    public DatabaseCallProto getProto() {
-        mergeLocalToProto();
-        proto = viaProto ? proto : builder.build();
-        viaProto = true;
-        return proto;
+  private void maybeInitBuilder() {
+    if (viaProto || builder == null) {
+      builder = DatabaseCallProto.newBuilder(proto);
     }
+    viaProto = false;
+  }
 
-    @Override
-    public int hashCode() {
-        return getProto().hashCode();
-    }
+  public void setCall(DatabaseCall call) {
+    maybeInitBuilder();
+    this.call = call;
+  }
 
-    @Override
-    public boolean equals(Object other) {
-        if (other == null)
-            return false;
-        if (other.getClass().isAssignableFrom(this.getClass())) {
-            return this.getProto().equals(this.getClass().cast(other).getProto());
-        }
-        return false;
+  public DatabaseCall getCall() {
+    if (this.call == null) {
+      DatabaseCallProtoOrBuilder p = viaProto ? proto : builder;
+      DatabaseCallType type = DatabaseCallType.valueOf(p.getType().name().substring("CALL_".length()));
+      Class<? extends DatabaseCall> callClass = type.getMappedClass();
+      try {
+        this.call = callClass.newInstance();
+        ((PayloadPB) call).populateFromProtoBytes(p.getCall());
+      } catch (Exception e) {
+        throw new PosumException("Could not read call from byte string " + p.getCall() + " as " + callClass, e);
+      }
     }
+    return this.call;
+  }
 
-    @Override
-    public String toString() {
-        return TextFormat.shortDebugString(getProto());
-    }
+  @Override
+  public ByteString getProtoBytes() {
+    return getProto().toByteString();
+  }
 
-    private void mergeLocalToBuilder() {
-        maybeInitBuilder();
-        if (call != null) {
-            DatabaseCallType type = DatabaseCallType.fromMappedClass(call.getClass());
-            if (type == null)
-                throw new PosumException("DatabaseCall class not recognized " + call.getClass());
-            builder.setType(DatabaseCallProto.CallTypeProto.valueOf("CALL_" + type.name()));
-            PayloadPB serializableCall = (PayloadPB) call;
-            builder.setCall(serializableCall.getProtoBytes());
-        }
-    }
-
-    private void mergeLocalToProto() {
-        if (viaProto)
-            maybeInitBuilder();
-        mergeLocalToBuilder();
-        proto = builder.build();
-        viaProto = true;
-    }
-
-    private void maybeInitBuilder() {
-        if (viaProto || builder == null) {
-            builder = DatabaseCallProto.newBuilder(proto);
-        }
-        viaProto = false;
-    }
-
-    public void setCall(DatabaseCall call) {
-        maybeInitBuilder();
-        this.call = call;
-    }
-
-    public DatabaseCall getCall() {
-        if (this.call == null) {
-            DatabaseCallProtoOrBuilder p = viaProto ? proto : builder;
-            DatabaseCallType type = DatabaseCallType.valueOf(p.getType().name().substring("CALL_".length()));
-            Class<? extends DatabaseCall> callClass = type.getMappedClass();
-            try {
-                this.call = callClass.newInstance();
-                ((PayloadPB) call).populateFromProtoBytes(p.getCall());
-            } catch (Exception e) {
-                throw new PosumException("Could not read call from byte string " + p.getCall() + " as " + callClass, e);
-            }
-        }
-        return this.call;
-    }
-
-    @Override
-    public ByteString getProtoBytes() {
-        return getProto().toByteString();
-    }
-
-    @Override
-    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        proto = DatabaseCallProto.parseFrom(data);
-        viaProto = true;
-    }
+  @Override
+  public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+    proto = DatabaseCallProto.parseFrom(data);
+    viaProto = true;
+  }
 }

@@ -4,19 +4,19 @@ import org.apache.hadoop.yarn.event.AbstractEvent;
 
 public class PosumEvent extends AbstractEvent<PosumEventType> {
 
-    Object content;
+  Object content;
 
-    public PosumEvent(PosumEventType eventType, Object content) {
-        super(eventType);
-        this.content = content;
-    }
+  public PosumEvent(PosumEventType eventType, Object content) {
+    super(eventType);
+    this.content = content;
+  }
 
-    public PosumEvent(PosumEventType eventType) {
-        super(eventType);
-    }
+  public PosumEvent(PosumEventType eventType) {
+    super(eventType);
+  }
 
-    public <T> T getCastContent() {
-        return (T) content;
-    }
+  public <T> T getCastContent() {
+    return (T) content;
+  }
 
 }

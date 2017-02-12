@@ -8,23 +8,23 @@ import org.apache.hadoop.yarn.proto.PosumProtos;
 
 public class SimplePropertyRequestPBImpl extends SimpleRequestPBImpl<SimplePropertyPayload> {
 
-    public SimplePropertyRequestPBImpl(){
-        super();
-    }
+  public SimplePropertyRequestPBImpl() {
+    super();
+  }
 
-    public SimplePropertyRequestPBImpl(PosumProtos.SimpleRequestProto proto) {
-        super(proto);
-    }
+  public SimplePropertyRequestPBImpl(PosumProtos.SimpleRequestProto proto) {
+    super(proto);
+  }
 
-    @Override
-    public ByteString payloadToBytes(SimplePropertyPayload payload) {
-        return ((SimplePropertyPayloadPBImpl)payload).getProto().toByteString();
-    }
+  @Override
+  public ByteString payloadToBytes(SimplePropertyPayload payload) {
+    return ((SimplePropertyPayloadPBImpl) payload).getProto().toByteString();
+  }
 
-    @Override
-    public SimplePropertyPayload bytesToPayload(ByteString data) throws InvalidProtocolBufferException {
-        SimplePropertyPayloadPBImpl ret = new SimplePropertyPayloadPBImpl();
-        ret.populateFromProtoBytes(data);
-        return ret;
-    }
+  @Override
+  public SimplePropertyPayload bytesToPayload(ByteString data) throws InvalidProtocolBufferException {
+    SimplePropertyPayloadPBImpl ret = new SimplePropertyPayloadPBImpl();
+    ret.populateFromProtoBytes(data);
+    return ret;
+  }
 }

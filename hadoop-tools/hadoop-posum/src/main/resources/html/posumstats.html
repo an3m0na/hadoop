@@ -1,106 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="vendor/bootstrap-3.3.4-dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/posum.css">
-    <script src="vendor/jquery-2.1.3.min.js"></script>
-    <script src="vendor/bootstrap-3.3.4-dist/js/bootstrap.min.js"></script>
-    <script src="vendor/plotly-latest.min.js"></script>
-    <script src="js/Communicator.js"></script>
-    <script src="js/TabManager.js"></script>
-    <script src="js/posum.js"></script>
-    <title>POSUM Stats</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="vendor/bootstrap-3.3.4-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/posum.css">
+  <script src="vendor/jquery-2.1.3.min.js"></script>
+  <script src="vendor/bootstrap-3.3.4-dist/js/bootstrap.min.js"></script>
+  <script src="vendor/plotly-latest.min.js"></script>
+  <script src="js/Communicator.js"></script>
+  <script src="js/TabManager.js"></script>
+  <script src="js/posum.js"></script>
+  <title>POSUM Stats</title>
 </head>
 <body>
 
 <div id="div_title" class="an3-clickable">POSUM Stats</div>
 <nav class="navbar navbar-default navbar-static-top an3-navbar">
-    <div id="navbar" class="navbar-collapse collapse">
-        <ul class="nav navbar-nav">
-            <li><a class="an3-nav-link" href="#cluster">Cluster</a></li>
-            <li><a class="an3-nav-link" href="#scheduler">Scheduler</a></li>
-            <li><a class="an3-nav-link" href="#system">System</a></li>
-        </ul>
-    </div>
-    <!--/.nav-collapse -->
+  <div id="navbar" class="navbar-collapse collapse">
+    <ul class="nav navbar-nav">
+      <li><a class="an3-nav-link" href="#cluster">Cluster</a></li>
+      <li><a class="an3-nav-link" href="#scheduler">Scheduler</a></li>
+      <li><a class="an3-nav-link" href="#system">System</a></li>
+    </ul>
+  </div>
+  <!--/.nav-collapse -->
 </nav>
 
 <div class="container-fluid" id="content_container">
-    <div id="home" class="jumbotron an3-tab an3-startup">
-        <h2>Welcome to POSUM!</h2>
+  <div id="home" class="jumbotron an3-tab an3-startup">
+    <h2>Welcome to POSUM!</h2>
 
-        <p> This is the statistics page of the POrtfolio SchedUler for Mapreduce.
-        </p>
+    <p> This is the statistics page of the POrtfolio SchedUler for Mapreduce.
+    </p>
 
-        <p>Just click on the tabs to monitor the system.</p>
+    <p>Just click on the tabs to monitor the system.</p>
 
-        <p>
-            <a id="btn_start" class="btn btn-lg an3-nav-link" href="#scheduler" role="button">Scheduler Stats »</a>
-        </p>
-    </div>
-    <div id="cluster" class="row an3-tab an3-dual">
-        <div id="plot_apps"></div>
-        <div id="plot_containers"></div>
-    </div>
-    <div id="scheduler" class="row an3-tab an3-dual">
-        <div id="plot_policies_map"></div>
-        <div id="plot_policies_list"></div>
-        <div id="plot_timecost"></div>
-    </div>
-    <div id="system" class="row an3-tab an3-dual">
-        <div id="plot_ps_jvm"></div>
-        <div id="plot_pm_jvm"></div>
-        <div id="plot_dm_jvm"></div>
-        <div id="plot_sm_jvm"></div>
-    </div>
-    <div id="none" class="an3-tab">
-        <div class="an3-info-container">
-            <div class="an3-info panel panel-default an3-no-header">
+    <p>
+      <a id="btn_start" class="btn btn-lg an3-nav-link" href="#scheduler" role="button">Scheduler Stats »</a>
+    </p>
+  </div>
+  <div id="cluster" class="row an3-tab an3-dual">
+    <div id="plot_apps"></div>
+    <div id="plot_containers"></div>
+  </div>
+  <div id="scheduler" class="row an3-tab an3-dual">
+    <div id="plot_policies_map"></div>
+    <div id="plot_policies_list"></div>
+    <div id="plot_timecost"></div>
+  </div>
+  <div id="system" class="row an3-tab an3-dual">
+    <div id="plot_ps_jvm"></div>
+    <div id="plot_pm_jvm"></div>
+    <div id="plot_dm_jvm"></div>
+    <div id="plot_sm_jvm"></div>
+  </div>
+  <div id="none" class="an3-tab">
+    <div class="an3-info-container">
+      <div class="an3-info panel panel-default an3-no-header">
 
-                <div class="panel-body an3-panel-body">
-                    Area under construction
-                </div>
-
-            </div>
+        <div class="panel-body an3-panel-body">
+          Area under construction
         </div>
+
+      </div>
     </div>
+  </div>
 </div>
 
 <div class="modal fade" id="general_dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title an3-modal-title"></h4>
-            </div>
-            <div class="modal-body">
-                <p class="an3-modal-text"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary an3-modal-save">OK</button>
-                <button type="button" class="btn btn-default an3-modal-close" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-        <!-- /.modal-content -->
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+          aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title an3-modal-title"></h4>
+      </div>
+      <div class="modal-body">
+        <p class="an3-modal-text"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary an3-modal-save">OK</button>
+        <button type="button" class="btn btn-default an3-modal-close" data-dismiss="modal">Close</button>
+      </div>
     </div>
-    <!-- /.modal-dialog -->
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
 </div>
 
 <div class="modal fade" id="loading_modal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                Loading...
-            </div>
-            <div class="modal-body">
-                <img src="img/loadcat.gif"/>
-            </div>
-        </div>
-        <!-- /.modal-content -->
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        Loading...
+      </div>
+      <div class="modal-body">
+        <img src="img/loadcat.gif"/>
+      </div>
     </div>
-    <!-- /.modal-dialog -->
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
 </div>
 
 

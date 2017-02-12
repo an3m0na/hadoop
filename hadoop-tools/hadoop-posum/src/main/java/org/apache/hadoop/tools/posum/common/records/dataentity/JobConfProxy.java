@@ -7,19 +7,19 @@ import java.util.Map;
 
 public interface JobConfProxy extends GeneralDataEntity<JobConfProxy> {
 
-    @JsonIgnore
-    String getEntry(String name);
+  @JsonIgnore
+  String getEntry(String name);
 
-    @JsonIgnore
-    Configuration getConf();
+  @JsonIgnore
+  Configuration getConf();
 
-    void setConf(Configuration conf);
+  void setConf(Configuration conf);
 
-    String getConfPath();
+  String getConfPath();
 
-    void setConfPath(String confPath);
+  void setConfPath(String confPath);
 
-    Map<String, String> getPropertyMap();
+  Map<String, String> getPropertyMap();
 
-    void setPropertyMap(Map<String, String> propertyMap);
+  void setPropertyMap(Map<String, String> propertyMap);
 }

@@ -24,86 +24,86 @@ teals	blues	purples	pinks	oranges	yellows	greens	tealy greys
 */
 
 .test {
-    /*color: #00B88A;*/
-    color: #ADEBFF;
-    /*#00A37A	#29A3CC	#5252CC	#CC297A	#CC7A52	#CCCC00	#52CC29	#527A7A;*/
+  /*color: #00B88A;*/
+  color: #ADEBFF;
+  /*#00A37A	#29A3CC	#5252CC	#CC297A	#CC7A52	#CCCC00	#52CC29	#527A7A;*/
 }
 
 #btn_start, #div_title {
-    color: #fff;
-    background-color: #277BA8;
-    border-color: #005078;
+  color: #fff;
+  background-color: #277BA8;
+  border-color: #005078;
 }
 
 #div_title {
-    padding: 0.25em 2em;
-    font-size: 2.5em;
+  padding: 0.25em 2em;
+  font-size: 2.5em;
 }
 
 .an3-info-container {
-    padding: 0;
+  padding: 0;
 }
 
 .an3-info {
-    border-radius: 0.5em;
-    border: 1em solid #ddd;
-    border-top-width: 0;
-    margin: 1em 0 1em 0;
+  border-radius: 0.5em;
+  border: 1em solid #ddd;
+  border-top-width: 0;
+  margin: 1em 0 1em 0;
 }
 
 .an3-dual .an3-info {
-    margin-left: 1em;
+  margin-left: 1em;
 }
 
 .an3-info.an3-no-header {
-    border-top-width: 1em;
+  border-top-width: 1em;
 }
 
 .an3-network {
-    padding: 0;
+  padding: 0;
 }
 
 .an3-navbar {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 ul.nav {
-    margin: 0;
+  margin: 0;
 }
 
 .an3-startup {
-    margin-top: 1em;
+  margin-top: 1em;
 }
 
 .an3-info .panel-heading {
-    margin: 0;
-    background-color: #ddd;
-    border-radius: 0;
-    padding-right: 0;
-    padding-left: 0;
-    text-align: center;
+  margin: 0;
+  background-color: #ddd;
+  border-radius: 0;
+  padding-right: 0;
+  padding-left: 0;
+  text-align: center;
 }
 
 .an3-panel-toolbar {
-    padding: 0;
+  padding: 0;
 }
 
 .an3-btn-danger:not(.active), .an3-btn-danger:not(.active):focus {
-    color: #fff;
-    background-color: #CC7A52;
-    border-color: #B26B47;
+  color: #fff;
+  background-color: #CC7A52;
+  border-color: #B26B47;
 }
 
 .an3-btn-success:not(.active), .an3-btn-success:not(.active):focus {
-    color: #fff;
-    background-color: #00B88A;
-    border-color: #00A37A;
+  color: #fff;
+  background-color: #00B88A;
+  border-color: #00A37A;
 }
 
 .an3-btn-info:not(.active), .an3-btn-info:not(.active):focus {
-    color: #fff;
-    background-color: #3D5C5C;
-    border-color: #293D3D;
+  color: #fff;
+  background-color: #3D5C5C;
+  border-color: #293D3D;
 }
 
 .an3-entity-info .p:focus {
@@ -111,427 +111,427 @@ ul.nav {
 }
 
 .an3-sub-tab-panel {
-    margin-top: 2em;
+  margin-top: 2em;
 }
 
 .an3-sub-tab-panel a {
-    color: #007A5C;
+  color: #007A5C;
 }
 
 .an3-label {
-    color: #007A5C;
-    margin: 0.75em 0;
+  color: #007A5C;
+  margin: 0.75em 0;
 }
 
 .an3-entity-info .an3-input:focus {
-    outline: #CC7A52 dashed 1px;
+  outline: #CC7A52 dashed 1px;
 }
 
 .an3-sub-tab-panel .tab-pane {
-    padding-top: 0.5em;
+  padding-top: 0.5em;
 }
 
 .btn-toolbar .btn-group {
-    margin: 0;
+  margin: 0;
 }
 
 .btn-toolbar {
-    margin: 0;
+  margin: 0;
 }
 
 .an3-btn-link {
-    color: #007A5C;
+  color: #007A5C;
 }
 
 .an3-btn-link.active {
-    color: #fff;
-    background-color: #00B88A;
-    border-color: #00A37A;
-    padding: 2px;
+  color: #fff;
+  background-color: #00B88A;
+  border-color: #00A37A;
+  padding: 2px;
 }
 
 .an3-btn-link:hover {
-    color: #fff;
-    background-color: #00B88A;
-    border-color: #00A37A;
-    padding: 2px;
+  color: #fff;
+  background-color: #00B88A;
+  border-color: #00A37A;
+  padding: 2px;
 }
 
 .an3-entity-info > .an3-input, .an3-entity-info > .an3-input-ignore, .an3-entity-info .an3-type-dropdown {
-    margin-left: 1em;
+  margin-left: 1em;
 }
 
 .an3-entity-choice .col-xs-4 {
-    text-align: center;
+  text-align: center;
 }
 
 #link_dialog .an3-upfile {
-    padding-left: 1em;
+  padding-left: 1em;
 }
 
 .an3-search-results a {
-    color: #777;
-    cursor: pointer;
-    border-radius: 0;
-    padding: 5px 10px;
+  color: #777;
+  cursor: pointer;
+  border-radius: 0;
+  padding: 5px 10px;
 }
 
 #link_dialog .an3-search-results, #tag_dialog .an3-search-results {
-    margin: 0.5em 0;
-    height: 100px;
-    overflow-y: scroll;
-    border: 1px solid #ddd;
-    border-radius: 0.5em;
+  margin: 0.5em 0;
+  height: 100px;
+  overflow-y: scroll;
+  border: 1px solid #ddd;
+  border-radius: 0.5em;
 }
 
 .an3-search-results {
-    margin: 1em 0 0 0;
+  margin: 1em 0 0 0;
 }
 
 .btn-file {
-    position: relative;
-    overflow: hidden;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-file input[type=file] {
-    position: absolute;
-    top: 0;
-    right: 0;
-    min-width: 100%;
-    min-height: 100%;
-    font-size: 100px;
-    text-align: right;
-    filter: alpha(opacity=0);
-    opacity: 0;
-    outline: none;
-    background: white;
-    cursor: inherit;
-    display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 100%;
+  min-height: 100%;
+  font-size: 100px;
+  text-align: right;
+  filter: alpha(opacity=0);
+  opacity: 0;
+  outline: none;
+  background: white;
+  cursor: inherit;
+  display: block;
 }
 
 .an3-tag {
-    margin: 0.25em;
-    display: inline-block;
+  margin: 0.25em;
+  display: inline-block;
 }
 
 .an3-tag span:first-child {
-    padding: 1px 5px;
-    font-size: 12px;
-    line-height: 1.5;
-    color: #333;
-    background-color: #fff;
-    display: inline-block;
-    margin-bottom: 0;
-    font-weight: 400;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    border: 1px solid #ccc;
-    border-radius: 0.25em 0 0 0.25em;
+  padding: 1px 5px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #333;
+  background-color: #fff;
+  display: inline-block;
+  margin-bottom: 0;
+  font-weight: 400;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  border: 1px solid #ccc;
+  border-radius: 0.25em 0 0 0.25em;
 }
 
 .an3-tag span:last-child {
-    top: 0;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    background-color: #ccc
+  top: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  background-color: #ccc
 }
 
 .an3-xs-link {
-    position: relative;
-    top: -1px;
-    padding: 0 4px;
-    font-size: 10px;
-    line-height: 1.5;
-    border-radius: 3px;
-    color: #333;
-    background-color: #fff;
-    display: inline-block;
-    margin-bottom: 0;
-    font-weight: 400;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    border: 1px solid #ccc;
+  position: relative;
+  top: -1px;
+  padding: 0 4px;
+  font-size: 10px;
+  line-height: 1.5;
+  border-radius: 3px;
+  color: #333;
+  background-color: #fff;
+  display: inline-block;
+  margin-bottom: 0;
+  font-weight: 400;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  border: 1px solid #ccc;
 }
 
 .an3-xs-link:hover {
-    background-color: #ccc;
-    color: #fff;
+  background-color: #ccc;
+  color: #fff;
 }
 
 .an3-xs-link.active {
-    color: #fff;
-    background-color: #00B88A;
-    border-color: #00A37A;
+  color: #fff;
+  background-color: #00B88A;
+  border-color: #00A37A;
 }
 
 .an3-toggle-visible {
-    display: none;
+  display: none;
 }
 
 .an3-tag-add {
-    margin-top: 0.5em;
+  margin-top: 0.5em;
 }
 
 #tag_dialog .an3-search-string {
-    margin-bottom: 0.5em;
+  margin-bottom: 0.5em;
 }
 
 #resource .an3-entity-info .an3-dropzone-row {
-    margin-right: 0;
-    margin-left: 0;
-    margin-bottom: 10px;
+  margin-right: 0;
+  margin-left: 0;
+  margin-bottom: 10px;
 }
 
 #resource .an3-entity-info .an3-dropzone-container {
-    padding-left: 1em;
+  padding-left: 1em;
 }
 
 .dropzone {
-    text-align: center;
+  text-align: center;
 }
 
 .dz-filename {
-    position: relative;
-    top: 10px;
+  position: relative;
+  top: 10px;
 }
 
 .an3-dz-remove {
-    /*margin-top: 10px;*/
-    border-radius: 50%;
-    /*float: right;*/
-    z-index: 30;
-    position: absolute;
-    top: -.5em;
-    right: -.5em;
+  /*margin-top: 10px;*/
+  border-radius: 50%;
+  /*float: right;*/
+  z-index: 30;
+  position: absolute;
+  top: -.5em;
+  right: -.5em;
 }
 
 .dz-filename span.an3-clickable, .an3-dz-remove.an3-clickable, .an3-dz-remove.an3-clickable * {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .an3-clickable, .an3-clickable * {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .dropzone.small-dropzone {
-    min-height: 2em;
-    max-height: 3em;
-    padding: 5px;
+  min-height: 2em;
+  max-height: 3em;
+  padding: 5px;
 }
 
 .dropzone.small-dropzone .dz-message {
-    margin: 0;
+  margin: 0;
 }
 
 #filter_bar {
-    width: 100%;
-    padding: 0.25em;
-    display: none;
+  width: 100%;
+  padding: 0.25em;
+  display: none;
 }
 
 #filter_footer {
-    width: 100%;
-    height: 0.25em;
+  width: 100%;
+  height: 0.25em;
 }
 
 #content_container {
-    position: relative;
+  position: relative;
 }
 
 #filter_toggle {
-    background-color: #535a5c;
-    color: #fff;
-    border-top-right-radius: 0;
-    border-top-left-radius: 0;
-    position: absolute;
-    right: 3em;
-    z-index: 100;
+  background-color: #535a5c;
+  color: #fff;
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+  position: absolute;
+  right: 3em;
+  z-index: 100;
 }
 
 #filter_wrapper {
-    background-color: #535a5c;
+  background-color: #535a5c;
 }
 
 .an3-network-container {
-    position: relative;
+  position: relative;
 }
 
 .an3-network-toolbar {
-    position: absolute;
-    left: 0;
-    top: 0;
-    margin: 1em;
-    z-index: 100;
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 1em;
+  z-index: 100;
 }
 
 .an3-network-toolbar .btn {
-    background-color: #ddd;
-    color: #00B88A;
-    border-color: #fff;
+  background-color: #ddd;
+  color: #00B88A;
+  border-color: #fff;
 }
 
 .an3-network-toolbar .btn.active {
-    background-color: #aaa;
-    color: #fff;
-    border-color: #fff;
+  background-color: #aaa;
+  color: #fff;
+  border-color: #fff;
 }
 
 .twitter-typeahead {
-    float: left;
-    width: 100%
+  float: left;
+  width: 100%
 }
 
 .input-group .twitter-typeahead .an3-search-string.form-control {
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
 }
 
 .twitter-typeahead .tt-query, .twitter-typeahead .tt-hint {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .twitter-typeahead .tt-hint {
-    display: block;
-    height: 34px;
-    padding: 6px 12px;
-    font-size: 14px;
-    line-height: 1.428571429;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    color: #aaa;
+  display: block;
+  height: 34px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.428571429;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #aaa;
 }
 
 .twitter-typeahead .hint-small {
-    height: 30px;
-    padding: 5px 10px;
-    font-size: 12px;
-    border-radius: 3px;
-    line-height: 1.5;
+  height: 30px;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 3px;
+  line-height: 1.5;
 }
 
 .twitter-typeahead .hint-large {
-    height: 45px;
-    padding: 10px 16px;
-    font-size: 18px;
-    border-radius: 6px;
-    line-height: 1.33;
+  height: 45px;
+  padding: 10px 16px;
+  font-size: 18px;
+  border-radius: 6px;
+  line-height: 1.33;
 }
 
 .tt-dropdown-menu {
-    min-width: 160px;
-    margin-top: 2px;
-    padding: 5px 0;
-    background-color: #fff;
-    border: 1px solid rgba(0, 0, 0, .2);
-    *border-right-width: 2px;
-    *border-bottom-width: 2px;
-    -webkit-border-radius: 6px;
-    -moz-border-radius: 6px;
-    border-radius: 6px;
-    -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
-    -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
-    box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
-    -webkit-background-clip: padding-box;
-    -moz-background-clip: padding;
-    background-clip: padding-box;
+  min-width: 160px;
+  margin-top: 2px;
+  padding: 5px 0;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, .2);
+  *border-right-width: 2px;
+  *border-bottom-width: 2px;
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
+  -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
+  -webkit-background-clip: padding-box;
+  -moz-background-clip: padding;
+  background-clip: padding-box;
 }
 
 .tt-suggestion {
-    display: block;
-    padding: 3px 20px;
+  display: block;
+  padding: 3px 20px;
 }
 
 .tt-suggestion.tt-cursor {
-    background-color: #f5f5f5;
-    cursor: pointer;
+  background-color: #f5f5f5;
+  cursor: pointer;
 }
 
 .tt-suggestion p {
-    margin: 0;
+  margin: 0;
 }
 
 #navbar li.active {
-    background-color: #ddd;
+  background-color: #ddd;
 }
 
 .tooltip-inner {
-    white-space: nowrap;
+  white-space: nowrap;
 }
 
 #help h1, #help h2, #help h3, #help h4, #help a {
-    color: #007A5C;
+  color: #007A5C;
 }
 
 #help a {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 #help h1 {
-    font-size: 2em;
+  font-size: 2em;
 }
 
 #help h2 {
-    font-size: 1.75em;
+  font-size: 1.75em;
 }
 
 #help h3 {
-    font-size: 1.5em;
+  font-size: 1.5em;
 }
 
 #help h4 {
-    font-size: 1.25em;
+  font-size: 1.25em;
 }
 
 .an3-concept-style {
-    background-color: #00C799;
-    border-color: #999999;
-    color: #000000;
-    font-weight: normal;
+  background-color: #00C799;
+  border-color: #999999;
+  color: #000000;
+  font-weight: normal;
 }
 
 .an3-collection-style {
-    background-color: #DF8D52;
-    border-color: #999999;
-    color: #000000;
-    font-weight: normal;
+  background-color: #DF8D52;
+  border-color: #999999;
+  color: #000000;
+  font-weight: normal;
 }
 
 .an3-resource-style {
-    background-color: #5CE62E;
-    border-color: #999999;
-    color: #000000;
-    font-weight: normal;
+  background-color: #5CE62E;
+  border-color: #999999;
+  color: #000000;
+  font-weight: normal;
 }
 
 .an3-tag-style {
-    background-color: #FFFF4D;
-    border-color: #999999;
-    color: #000000;
-    font-weight: normal;
+  background-color: #FFFF4D;
+  border-color: #999999;
+  color: #000000;
+  font-weight: normal;
 }
 
 .an3-type-style {
-    background-color: #ADADAD;
-    border-color: #999999;
-    color: #000000;
-    font-weight: normal;
+  background-color: #ADADAD;
+  border-color: #999999;
+  color: #000000;
+  font-weight: normal;
 }
 
-.an3-help-diagram{
-    max-width: 100%;
-    max-height:30em;
+.an3-help-diagram {
+  max-width: 100%;
+  max-height: 30em;
 }
 
 /*#help .badge{*/
 /*color: #000000;*/
 /*}*/
 
-#loading_modal .modal-body{
-    text-align: center;
+#loading_modal .modal-body {
+  text-align: center;
 }
 
-.jumbotron{
-    background: url("../img/emblemonly.png") right no-repeat #D0FDFD;
+.jumbotron {
+  background: url("../img/emblemonly.png") right no-repeat #D0FDFD;
 }

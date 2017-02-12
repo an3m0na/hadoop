@@ -14,20 +14,20 @@ import java.io.IOException;
 
 public class SimulatorMasterProtocolPBServiceImpl implements SimulatorMasterProtocolPB {
 
-    private SimulatorMasterProtocol real;
+  private SimulatorMasterProtocol real;
 
-    public SimulatorMasterProtocolPBServiceImpl(SimulatorMasterProtocol impl) {
-        this.real = impl;
-    }
+  public SimulatorMasterProtocolPBServiceImpl(SimulatorMasterProtocol impl) {
+    this.real = impl;
+  }
 
-    @Override
-    public SimpleResponseProto handleSimpleRequest(RpcController controller, SimpleRequestProto request) throws ServiceException {
-        try {
-            SimpleResponse response = real.handleSimpleRequest(Utils.wrapSimpleRequest(request));
-            return ((SimpleResponsePBImpl) response).getProto();
-        } catch (YarnException | IOException e) {
-            throw new ServiceException(e);
-        }
+  @Override
+  public SimpleResponseProto handleSimpleRequest(RpcController controller, SimpleRequestProto request) throws ServiceException {
+    try {
+      SimpleResponse response = real.handleSimpleRequest(Utils.wrapSimpleRequest(request));
+      return ((SimpleResponsePBImpl) response).getProto();
+    } catch (YarnException | IOException e) {
+      throw new ServiceException(e);
     }
+  }
 
 }

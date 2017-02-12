@@ -4,8 +4,8 @@ import org.apache.hadoop.ipc.ProtocolInfo;
 
 
 @ProtocolInfo(protocolName = "org.apache.hadoop.tools.posum.MetaSchedulerProtocolPB",
-        protocolVersion = 1)
+  protocolVersion = 1)
 public interface MetaSchedulerProtocolPB extends
-        org.apache.hadoop.yarn.proto.MetaSchedulerProtocol.MetaSchedulerProtocolService.BlockingInterface {
+  org.apache.hadoop.yarn.proto.MetaSchedulerProtocol.MetaSchedulerProtocolService.BlockingInterface {
 
 }

@@ -11,17 +11,17 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.Capacity
 public class FifoPolicy extends ExtensibleCapacityScheduler<ExtCaAppAttempt, ExtCaSchedulerNode> {
 
 
-    private static Log logger = LogFactory.getLog(FifoPolicy.class);
+  private static Log logger = LogFactory.getLog(FifoPolicy.class);
 
-    public FifoPolicy() {
-        super(ExtCaAppAttempt.class, ExtCaSchedulerNode.class, FifoPolicy.class.getName(), true);
-    }
+  public FifoPolicy() {
+    super(ExtCaAppAttempt.class, ExtCaSchedulerNode.class, FifoPolicy.class.getName(), true);
+  }
 
-    @Override
-    protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf){
-        CapacitySchedulerConfiguration capacityConf = new CapacitySchedulerConfiguration(conf);
-        capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, 0);
-        return  capacityConf;
-    }
+  @Override
+  protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf) {
+    CapacitySchedulerConfiguration capacityConf = new CapacitySchedulerConfiguration(conf);
+    capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, 0);
+    return capacityConf;
+  }
 }
 

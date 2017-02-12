@@ -6,9 +6,9 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        TestBasicPredictor.class,
-        TestStandardPredictor.class,
-        TestDetailedPredictor.class
+  TestBasicPredictor.class,
+  TestStandardPredictor.class,
+  TestDetailedPredictor.class
 })
 
 public class PredictorTestSuite {

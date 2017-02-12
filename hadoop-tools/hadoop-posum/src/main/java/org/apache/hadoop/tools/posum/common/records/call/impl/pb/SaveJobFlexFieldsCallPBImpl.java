@@ -12,119 +12,119 @@ import org.apache.hadoop.yarn.proto.PosumProtos.SaveJobFlexFieldsCallProtoOrBuil
 import java.util.Map;
 
 public class SaveJobFlexFieldsCallPBImpl extends SaveJobFlexFieldsCall implements PayloadPB {
-    private SaveJobFlexFieldsCallProto proto = SaveJobFlexFieldsCallProto.getDefaultInstance();
-    private SaveJobFlexFieldsCallProto.Builder builder = null;
-    private boolean viaProto = false;
+  private SaveJobFlexFieldsCallProto proto = SaveJobFlexFieldsCallProto.getDefaultInstance();
+  private SaveJobFlexFieldsCallProto.Builder builder = null;
+  private boolean viaProto = false;
 
-    private Map<String, String> newFields;
+  private Map<String, String> newFields;
 
-    public SaveJobFlexFieldsCallPBImpl() {
-        builder = SaveJobFlexFieldsCallProto.newBuilder();
+  public SaveJobFlexFieldsCallPBImpl() {
+    builder = SaveJobFlexFieldsCallProto.newBuilder();
+  }
+
+  public SaveJobFlexFieldsCallPBImpl(SaveJobFlexFieldsCallProto proto) {
+    this.proto = proto;
+    viaProto = true;
+  }
+
+  public SaveJobFlexFieldsCallProto getProto() {
+    mergeLocalToProto();
+    proto = viaProto ? proto : builder.build();
+    viaProto = true;
+    return proto;
+  }
+
+  @Override
+  public int hashCode() {
+    return getProto().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other == null)
+      return false;
+    if (other.getClass().isAssignableFrom(this.getClass())) {
+      return this.getProto().equals(this.getClass().cast(other).getProto());
     }
+    return false;
+  }
 
-    public SaveJobFlexFieldsCallPBImpl(SaveJobFlexFieldsCallProto proto) {
-        this.proto = proto;
-        viaProto = true;
-    }
+  @Override
+  public String toString() {
+    return TextFormat.shortDebugString(getProto());
+  }
 
-    public SaveJobFlexFieldsCallProto getProto() {
-        mergeLocalToProto();
-        proto = viaProto ? proto : builder.build();
-        viaProto = true;
-        return proto;
+  private void mergeLocalToBuilder() {
+    maybeInitBuilder();
+    if (newFields != null) {
+      StringStringMapPayloadPBImpl mapPayloadPB = new StringStringMapPayloadPBImpl();
+      mapPayloadPB.setEntries(newFields);
+      builder.setNewFields(mapPayloadPB.getProto());
     }
+  }
 
-    @Override
-    public int hashCode() {
-        return getProto().hashCode();
-    }
+  private void mergeLocalToProto() {
+    if (viaProto)
+      maybeInitBuilder();
+    mergeLocalToBuilder();
+    proto = builder.build();
+    viaProto = true;
+  }
 
-    @Override
-    public boolean equals(Object other) {
-        if (other == null)
-            return false;
-        if (other.getClass().isAssignableFrom(this.getClass())) {
-            return this.getProto().equals(this.getClass().cast(other).getProto());
-        }
-        return false;
+  private void maybeInitBuilder() {
+    if (viaProto || builder == null) {
+      builder = SaveJobFlexFieldsCallProto.newBuilder(proto);
     }
+    viaProto = false;
+  }
 
-    @Override
-    public String toString() {
-        return TextFormat.shortDebugString(getProto());
-    }
+  @Override
+  public String getJobId() {
+    SaveJobFlexFieldsCallProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getJobId();
+  }
 
-    private void mergeLocalToBuilder() {
-        maybeInitBuilder();
-        if (newFields != null) {
-            StringStringMapPayloadPBImpl mapPayloadPB = new StringStringMapPayloadPBImpl();
-            mapPayloadPB.setEntries(newFields);
-            builder.setNewFields(mapPayloadPB.getProto());
-        }
-    }
+  @Override
+  public void setJobId(String jobId) {
+    maybeInitBuilder();
+    builder.setJobId(jobId);
+  }
 
-    private void mergeLocalToProto() {
-        if (viaProto)
-            maybeInitBuilder();
-        mergeLocalToBuilder();
-        proto = builder.build();
-        viaProto = true;
+  @Override
+  public Map<String, String> getNewFields() {
+    if (newFields == null) {
+      SaveJobFlexFieldsCallProtoOrBuilder p = viaProto ? proto : builder;
+      newFields = new StringStringMapPayloadPBImpl(p.getNewFields()).getEntries();
     }
+    return newFields;
+  }
 
-    private void maybeInitBuilder() {
-        if (viaProto || builder == null) {
-            builder = SaveJobFlexFieldsCallProto.newBuilder(proto);
-        }
-        viaProto = false;
-    }
+  @Override
+  public void setNewFields(Map<String, String> newFields) {
+    this.newFields = newFields;
+  }
 
-    @Override
-    public String getJobId() {
-        SaveJobFlexFieldsCallProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getJobId();
-    }
+  @Override
+  public boolean getForHistory() {
+    SaveJobFlexFieldsCallProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getForHistory();
+  }
 
-    @Override
-    public void setJobId(String jobId) {
-        maybeInitBuilder();
-        builder.setJobId(jobId);
-    }
+  @Override
+  public void setForHistory(boolean forHistory) {
+    maybeInitBuilder();
+    builder.setForHistory(forHistory);
+  }
 
-    @Override
-    public Map<String, String> getNewFields() {
-        if (newFields == null) {
-            SaveJobFlexFieldsCallProtoOrBuilder p = viaProto ? proto : builder;
-            newFields = new StringStringMapPayloadPBImpl(p.getNewFields()).getEntries();
-        }
-        return newFields;
-    }
+  @Override
+  public ByteString getProtoBytes() {
+    return getProto().toByteString();
+  }
 
-    @Override
-    public void setNewFields(Map<String, String> newFields) {
-        this.newFields = newFields;
-    }
-
-    @Override
-    public boolean getForHistory() {
-        SaveJobFlexFieldsCallProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getForHistory();
-    }
-
-    @Override
-    public void setForHistory(boolean forHistory) {
-        maybeInitBuilder();
-        builder.setForHistory(forHistory);
-    }
-
-    @Override
-    public ByteString getProtoBytes() {
-        return getProto().toByteString();
-    }
-
-    @Override
-    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        this.proto = SaveJobFlexFieldsCallProto.parseFrom(data);
-        viaProto = true;
-    }
+  @Override
+  public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+    this.proto = SaveJobFlexFieldsCallProto.parseFrom(data);
+    viaProto = true;
+  }
 
 }

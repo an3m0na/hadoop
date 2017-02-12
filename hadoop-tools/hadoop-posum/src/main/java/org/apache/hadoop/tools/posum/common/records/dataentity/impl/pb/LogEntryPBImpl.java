@@ -12,120 +12,120 @@ import org.apache.hadoop.yarn.proto.PosumProtos.LogEntryProtoOrBuilder;
 import org.bson.types.ObjectId;
 
 public class LogEntryPBImpl<T extends Payload> extends GeneralDataEntityPBImpl<LogEntry<T>, LogEntryProto, LogEntryProto.Builder>
-        implements LogEntry<T> {
+  implements LogEntry<T> {
 
-    private T details;
+  private T details;
 
-    public LogEntryPBImpl(LogEntryProto proto) {
-        super(proto);
+  public LogEntryPBImpl(LogEntryProto proto) {
+    super(proto);
+  }
+
+  public LogEntryPBImpl() {
+    setId(ObjectId.get().toHexString());
+  }
+
+  public LogEntryPBImpl(Type type, T details) {
+    setType(type);
+    setDetails(details);
+  }
+
+  @Override
+  void initBuilder() {
+    builder = viaProto ? LogEntryProto.newBuilder(proto) : LogEntryProto.newBuilder();
+  }
+
+  @Override
+  void buildProto() {
+    if (details != null)
+      builder.setDetails(((PayloadPB) details).getProtoBytes());
+    proto = builder.build();
+  }
+
+  @Override
+  public LogEntry parseToEntity(ByteString data) throws InvalidProtocolBufferException {
+    this.proto = LogEntryProto.parseFrom(data);
+    viaProto = true;
+    return this;
+  }
+
+  @Override
+  public String getId() {
+    LogEntryProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasId())
+      return null;
+    return p.getId();
+  }
+
+  @Override
+  public void setId(String id) {
+    maybeInitBuilder();
+    if (id == null) {
+      builder.clearId();
+      return;
     }
+    builder.setId(id);
+  }
 
-    public LogEntryPBImpl() {
-        setId(ObjectId.get().toHexString());
+  @Override
+  public Long getLastUpdated() {
+    LogEntryProtoOrBuilder p = viaProto ? proto : builder;
+    if (p.hasLastUpdated())
+      return p.getLastUpdated();
+    return null;
+  }
+
+  @Override
+  public void setLastUpdated(Long timestamp) {
+    maybeInitBuilder();
+    if (timestamp == null) {
+      builder.clearLastUpdated();
+      return;
     }
+    builder.setLastUpdated(timestamp);
+  }
 
-    public LogEntryPBImpl(Type type, T details) {
-        setType(type);
-        setDetails(details);
+  @Override
+  public LogEntry<T> copy() {
+    return new LogEntryPBImpl<>(getProto());
+  }
+
+  @Override
+  public LogEntry.Type getType() {
+    LogEntryProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasType())
+      return null;
+    return LogEntry.Type.valueOf(p.getType().name().substring("LG_".length()));
+  }
+
+  @Override
+  public void setType(LogEntry.Type type) {
+    maybeInitBuilder();
+    if (type == null) {
+      builder.clearType();
+      return;
     }
+    builder.setType(PosumProtos.LogEntryProto.LogTypeProto.valueOf("LG_" + type.name()));
+  }
 
-    @Override
-    void initBuilder() {
-        builder = viaProto ? LogEntryProto.newBuilder(proto) : LogEntryProto.newBuilder();
-    }
-
-    @Override
-    void buildProto() {
-        if (details != null)
-            builder.setDetails(((PayloadPB) details).getProtoBytes());
-        proto = builder.build();
-    }
-
-    @Override
-    public LogEntry parseToEntity(ByteString data) throws InvalidProtocolBufferException {
-        this.proto = LogEntryProto.parseFrom(data);
-        viaProto = true;
-        return this;
-    }
-
-    @Override
-    public String getId() {
-        LogEntryProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasId())
-            return null;
-        return p.getId();
-    }
-
-    @Override
-    public void setId(String id) {
-        maybeInitBuilder();
-        if (id == null) {
-            builder.clearId();
-            return;
+  @Override
+  public T getDetails() {
+    if (details == null) {
+      LogEntryProtoOrBuilder p = viaProto ? proto : builder;
+      if (p.hasDetails())
+        try {
+          details = (T) getType().getDetailsType().getImplClass().newInstance();
+          ((PayloadPB) details).populateFromProtoBytes(p.getDetails());
+        } catch (InstantiationException | IllegalAccessException | InvalidProtocolBufferException e) {
+          throw new PosumException("Could not read message payload", e);
         }
-        builder.setId(id);
     }
+    return details;
+  }
 
-    @Override
-    public Long getLastUpdated() {
-        LogEntryProtoOrBuilder p = viaProto ? proto : builder;
-        if (p.hasLastUpdated())
-            return p.getLastUpdated();
-        return null;
-    }
-
-    @Override
-    public void setLastUpdated(Long timestamp) {
-        maybeInitBuilder();
-        if (timestamp == null) {
-            builder.clearLastUpdated();
-            return;
-        }
-        builder.setLastUpdated(timestamp);
-    }
-
-    @Override
-    public LogEntry<T> copy() {
-        return new LogEntryPBImpl<>(getProto());
-    }
-
-    @Override
-    public LogEntry.Type getType() {
-        LogEntryProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasType())
-            return null;
-        return LogEntry.Type.valueOf(p.getType().name().substring("LG_".length()));
-    }
-
-    @Override
-    public void setType(LogEntry.Type type) {
-        maybeInitBuilder();
-        if (type == null) {
-            builder.clearType();
-            return;
-        }
-        builder.setType(PosumProtos.LogEntryProto.LogTypeProto.valueOf("LG_" + type.name()));
-    }
-
-    @Override
-    public T getDetails() {
-        if (details == null) {
-            LogEntryProtoOrBuilder p = viaProto ? proto : builder;
-            if (p.hasDetails())
-                try {
-                    details = (T) getType().getDetailsType().getImplClass().newInstance();
-                    ((PayloadPB) details).populateFromProtoBytes(p.getDetails());
-                } catch (InstantiationException | IllegalAccessException | InvalidProtocolBufferException e) {
-                    throw new PosumException("Could not read message payload", e);
-                }
-        }
-        return details;
-    }
-
-    @Override
-    public void setDetails(T details) {
-        maybeInitBuilder();
-        this.details = details;
-    }
+  @Override
+  public void setDetails(T details) {
+    maybeInitBuilder();
+    this.details = details;
+  }
 
 }

@@ -10,19 +10,19 @@ import java.util.List;
 @org.codehaus.jackson.map.annotate.JsonDeserialize(as = CounterGroupInfoPayloadPBImpl.class)
 public abstract class CounterGroupInfoPayload implements Payload {
 
-    public static CounterGroupInfoPayload newInstance(String name, List<CounterInfoPayload> counter) {
-        CounterGroupInfoPayload payload = Records.newRecord(CounterGroupInfoPayload.class);
-        payload.setCounterGroupName(name);
-        payload.setCounter(counter);
-        return payload;
-    }
+  public static CounterGroupInfoPayload newInstance(String name, List<CounterInfoPayload> counter) {
+    CounterGroupInfoPayload payload = Records.newRecord(CounterGroupInfoPayload.class);
+    payload.setCounterGroupName(name);
+    payload.setCounter(counter);
+    return payload;
+  }
 
-    public abstract List<CounterInfoPayload> getCounter();
+  public abstract List<CounterInfoPayload> getCounter();
 
-    public abstract void setCounter(List<CounterInfoPayload> counter);
+  public abstract void setCounter(List<CounterInfoPayload> counter);
 
-    public abstract String getCounterGroupName();
+  public abstract String getCounterGroupName();
 
-    public abstract void setCounterGroupName(String name);
+  public abstract void setCounterGroupName(String name);
 
 }

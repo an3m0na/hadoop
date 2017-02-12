@@ -10,27 +10,27 @@ import org.junit.Before;
 import java.lang.reflect.InvocationTargetException;
 
 public abstract class TestPredictor<T extends JobBehaviorPredictor> {
-    protected Configuration conf = PosumConfiguration.newInstance();
-    protected T predictor;
-    protected Class<T> predictorClass;
+  protected Configuration conf = PosumConfiguration.newInstance();
+  protected T predictor;
+  protected Class<T> predictorClass;
 
 
-    public TestPredictor(Class<T> predictorClass) {
-        this.predictorClass = predictorClass;
+  public TestPredictor(Class<T> predictorClass) {
+    this.predictorClass = predictorClass;
+  }
+
+  @Before
+  public void setUp() throws Exception {
+    MockDataStoreImpl dataStore = new MockDataStoreImpl();
+
+    try {
+      predictor = predictorClass.getConstructor(Configuration.class, Database.class)
+        .newInstance(conf, Database.from(dataStore, DatabaseReference.getMain()));
+    } catch (NoSuchMethodException |
+      InvocationTargetException |
+      InstantiationException |
+      IllegalAccessException e) {
+      e.printStackTrace();
     }
-
-    @Before
-    public void setUp() throws Exception {
-        MockDataStoreImpl dataStore = new MockDataStoreImpl();
-
-        try {
-            predictor = predictorClass.getConstructor(Configuration.class, Database.class)
-                    .newInstance(conf, Database.from(dataStore, DatabaseReference.getMain()));
-        } catch (NoSuchMethodException |
-                InvocationTargetException |
-                InstantiationException |
-                IllegalAccessException e) {
-            e.printStackTrace();
-        }
-    }
+  }
 }

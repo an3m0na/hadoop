@@ -7,29 +7,29 @@ import java.security.SecureRandom;
 
 public class DummyTokenSecretManager extends SecretManager<DummyTokenIdentifier> {
 
-    private int serialNo = new SecureRandom().nextInt();
+  private int serialNo = new SecureRandom().nextInt();
 
-    private MasterKeyData masterKey;
+  private MasterKeyData masterKey;
 
-    public DummyTokenSecretManager() {
-        // there should be a continuously updating key actually
-        this.masterKey = new MasterKeyData(serialNo++, generateSecret());
-    }
+  public DummyTokenSecretManager() {
+    // there should be a continuously updating key actually
+    this.masterKey = new MasterKeyData(serialNo++, generateSecret());
+  }
 
-    @Override
-    protected byte[] createPassword(DummyTokenIdentifier identifier) {
-        return createPassword(identifier.getBytes(), masterKey.getSecretKey());
-    }
+  @Override
+  protected byte[] createPassword(DummyTokenIdentifier identifier) {
+    return createPassword(identifier.getBytes(), masterKey.getSecretKey());
+  }
 
-    @Override
-    public byte[] retrievePassword(DummyTokenIdentifier identifier) throws InvalidToken {
-        return createPassword(identifier.getBytes(), masterKey.getSecretKey());
-    }
+  @Override
+  public byte[] retrievePassword(DummyTokenIdentifier identifier) throws InvalidToken {
+    return createPassword(identifier.getBytes(), masterKey.getSecretKey());
+  }
 
-    @Override
-    public DummyTokenIdentifier createIdentifier() {
-        return new DummyTokenIdentifier();
-    }
+  @Override
+  public DummyTokenIdentifier createIdentifier() {
+    return new DummyTokenIdentifier();
+  }
 
 
 }

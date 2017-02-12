@@ -16,30 +16,30 @@ import java.io.IOException;
 
 public class DataMasterProtocolPBServiceImpl implements DataMasterProtocolPB {
 
-    private DataMasterProtocol real;
+  private DataMasterProtocol real;
 
-    public DataMasterProtocolPBServiceImpl(DataMasterProtocol impl) {
-        this.real = impl;
-    }
+  public DataMasterProtocolPBServiceImpl(DataMasterProtocol impl) {
+    this.real = impl;
+  }
 
-    @Override
-    public SimpleResponseProto executeDatabaseCall(RpcController controller,
-                                                   DatabaseCallExecutionRequestProto proto) throws ServiceException {
-        try {
-            SimpleResponse response = real.executeDatabaseCall(new DatabaseCallExecutionRequestPBImpl(proto));
-            return ((SimpleResponsePBImpl) response).getProto();
-        } catch (YarnException | IOException e) {
-            throw new ServiceException(e);
-        }
+  @Override
+  public SimpleResponseProto executeDatabaseCall(RpcController controller,
+                                                 DatabaseCallExecutionRequestProto proto) throws ServiceException {
+    try {
+      SimpleResponse response = real.executeDatabaseCall(new DatabaseCallExecutionRequestPBImpl(proto));
+      return ((SimpleResponsePBImpl) response).getProto();
+    } catch (YarnException | IOException e) {
+      throw new ServiceException(e);
     }
+  }
 
-    @Override
-    public SimpleResponseProto handleSimpleRequest(RpcController controller, SimpleRequestProto request) throws ServiceException {
-        try {
-            SimpleResponse response = real.handleSimpleRequest(Utils.wrapSimpleRequest(request));
-            return ((SimpleResponsePBImpl) response).getProto();
-        } catch (YarnException | IOException e) {
-            throw new ServiceException(e);
-        }
+  @Override
+  public SimpleResponseProto handleSimpleRequest(RpcController controller, SimpleRequestProto request) throws ServiceException {
+    try {
+      SimpleResponse response = real.handleSimpleRequest(Utils.wrapSimpleRequest(request));
+      return ((SimpleResponsePBImpl) response).getProto();
+    } catch (YarnException | IOException e) {
+      throw new ServiceException(e);
     }
+  }
 }

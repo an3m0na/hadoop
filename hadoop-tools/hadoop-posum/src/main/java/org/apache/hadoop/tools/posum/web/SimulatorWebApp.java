@@ -13,52 +13,52 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class SimulatorWebApp extends PosumWebApp {
-    private static final long serialVersionUID = 1905162041950251407L;
-    private static Log logger = LogFactory.getLog(SimulatorWebApp.class);
+  private static final long serialVersionUID = 1905162041950251407L;
+  private static Log logger = LogFactory.getLog(SimulatorWebApp.class);
 
-    private SimulationMasterContext context;
+  private SimulationMasterContext context;
 
-    public SimulatorWebApp(SimulationMasterContext context, int metricsAddressPort) {
-        super(metricsAddressPort);
-        this.context = context;
-    }
+  public SimulatorWebApp(SimulationMasterContext context, int metricsAddressPort) {
+    super(metricsAddressPort);
+    this.context = context;
+  }
 
-    @Override
-    protected Handler constructHandler() {
-        return new AbstractHandler() {
-            @Override
-            public void handle(String target, HttpServletRequest request,
-                               HttpServletResponse response, int dispatch) {
-                try {
-                    if (target.startsWith("/ajax")) {
-                        // json request
-                        String call = target.substring("/ajax".length());
-                        JsonNode ret;
-                        try {
-                            switch (call) {
-                                case "/system":
-                                    ret = getSystemMetrics();
-                                    break;
-                                default:
-                                    ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
-                            }
-                        } catch (Exception e) {
-                            ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), Utils.getErrorTrace(e));
-                        }
-                        sendResult(request, response, ret);
-                    } else {
-                        response.setStatus(HttpServletResponse.SC_OK);
-                        response.setCharacterEncoding("utf-8");
-                        response.setContentType("text");
-
-                        response.getWriter().println("Server is online!");
-                        ((Request) request).setHandled(true);
-                    }
-                } catch (Exception e) {
-                    logger.error("Error resolving request: ", e);
-                }
+  @Override
+  protected Handler constructHandler() {
+    return new AbstractHandler() {
+      @Override
+      public void handle(String target, HttpServletRequest request,
+                         HttpServletResponse response, int dispatch) {
+        try {
+          if (target.startsWith("/ajax")) {
+            // json request
+            String call = target.substring("/ajax".length());
+            JsonNode ret;
+            try {
+              switch (call) {
+                case "/system":
+                  ret = getSystemMetrics();
+                  break;
+                default:
+                  ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
+              }
+            } catch (Exception e) {
+              ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), Utils.getErrorTrace(e));
             }
-        };
-    }
+            sendResult(request, response, ret);
+          } else {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setCharacterEncoding("utf-8");
+            response.setContentType("text");
+
+            response.getWriter().println("Server is online!");
+            ((Request) request).setHandled(true);
+          }
+        } catch (Exception e) {
+          logger.error("Error resolving request: ", e);
+        }
+      }
+    };
+  }
 
 }

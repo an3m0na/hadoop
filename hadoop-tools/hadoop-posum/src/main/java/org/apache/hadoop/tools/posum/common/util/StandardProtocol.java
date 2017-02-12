@@ -7,7 +7,7 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import java.io.IOException;
 
 public interface StandardProtocol {
-    long versionID = 1L;
+  long versionID = 1L;
 
-    SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException;
+  SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException;
 }
