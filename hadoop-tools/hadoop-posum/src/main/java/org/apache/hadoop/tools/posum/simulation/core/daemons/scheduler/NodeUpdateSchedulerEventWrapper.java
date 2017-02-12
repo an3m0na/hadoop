@@ -8,8 +8,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeUpdateS
 @Unstable
 public class NodeUpdateSchedulerEventWrapper extends NodeUpdateSchedulerEvent {
 
-    public NodeUpdateSchedulerEventWrapper(NodeUpdateSchedulerEvent event) {
-        super(new RMNodeWrapper(event.getRMNode()));
-    }
+  public NodeUpdateSchedulerEventWrapper(NodeUpdateSchedulerEvent event) {
+    super(new RMNodeWrapper(event.getRMNode()));
+  }
 
 }

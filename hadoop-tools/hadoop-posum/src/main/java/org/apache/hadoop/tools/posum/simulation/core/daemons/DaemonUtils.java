@@ -7,8 +7,8 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 @Unstable
 public class DaemonUtils {
 
-    public static String[] getRackHostName(String hostname) {
-        hostname = hostname.substring(1);
-        return hostname.split("/");
-    }
+  public static String[] getRackHostName(String hostname) {
+    hostname = hostname.substring(1);
+    return hostname.split("/");
+  }
 }

@@ -23,7 +23,6 @@ import static org.apache.hadoop.tools.posum.test.Utils.JOB2_ID;
 import static org.apache.hadoop.tools.posum.test.Utils.NODE1;
 import static org.apache.hadoop.tools.posum.test.Utils.NODE2;
 import static org.apache.hadoop.tools.posum.test.Utils.RACK1;
-import static org.apache.hadoop.tools.posum.test.Utils.RACK2;
 import static org.apache.hadoop.tools.posum.test.Utils.TASK11;
 import static org.apache.hadoop.tools.posum.test.Utils.TASK12;
 import static org.apache.hadoop.tools.posum.test.Utils.TASK21;
@@ -31,19 +30,19 @@ import static org.apache.hadoop.tools.posum.test.Utils.TASK22;
 
 @Category(IntegrationTest.class)
 public class DaemonRunnerTest {
-    @Test
-    public void testDaemons() throws Exception {
-        Configuration conf = PosumConfiguration.newInstance();
-        String schedulerClass = FifoScheduler.class.getName();
-        Set<String> nodeSet = new HashSet<>(Arrays.asList(NODE1, NODE2));
-        Map<String, String> racks = new HashMap<>(2);
-        racks.put(NODE1, RACK1);
-        racks.put(NODE2, RACK1);
-        List<JobProfile> jobs = Arrays.asList(JOB1, JOB2);
-        Map<String, List<TaskProfile>> tasks = new HashMap<>(1);
-        tasks.put(JOB1_ID.toString(), Arrays.asList(TASK11, TASK12));
-        tasks.put(JOB2_ID.toString(), Arrays.asList(TASK21, TASK22));
+  @Test
+  public void testDaemons() throws Exception {
+    Configuration conf = PosumConfiguration.newInstance();
+    String schedulerClass = FifoScheduler.class.getName();
+    Set<String> nodeSet = new HashSet<>(Arrays.asList(NODE1, NODE2));
+    Map<String, String> racks = new HashMap<>(2);
+    racks.put(NODE1, RACK1);
+    racks.put(NODE2, RACK1);
+    List<JobProfile> jobs = Arrays.asList(JOB1, JOB2);
+    Map<String, List<TaskProfile>> tasks = new HashMap<>(1);
+    tasks.put(JOB1_ID.toString(), Arrays.asList(TASK11, TASK12));
+    tasks.put(JOB2_ID.toString(), Arrays.asList(TASK21, TASK22));
 
-        new DaemonRunner(conf, schedulerClass, nodeSet, racks, jobs, tasks).start();
-    }
+    new DaemonRunner(conf, schedulerClass, nodeSet, racks, jobs, tasks).start();
+  }
 }

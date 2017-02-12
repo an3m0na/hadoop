@@ -37,7 +37,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNodeRepo
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppRemovedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;
-import org.apache.hadoop.yarn.sls.SLSRunner;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.log4j.Logger;
 
@@ -50,208 +49,192 @@ import java.util.Map;
 @Private
 @Unstable
 public class ResourceSchedulerWrapper
-        extends AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>
-        implements ResourceScheduler, Configurable {
+  extends AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>
+  implements ResourceScheduler, Configurable {
 
-    private final Logger LOG = Logger.getLogger(ResourceSchedulerWrapper.class);
+  private final Logger LOG = Logger.getLogger(ResourceSchedulerWrapper.class);
 
-    private Configuration conf;
-    private ResourceScheduler scheduler;
+  private Configuration conf;
+  private ResourceScheduler scheduler;
 
-    public ResourceSchedulerWrapper() {
-        super(ResourceSchedulerWrapper.class.getName());
+  public ResourceSchedulerWrapper() {
+    super(ResourceSchedulerWrapper.class.getName());
+  }
+
+  @Override
+  public void setConf(Configuration conf) {
+    this.conf = conf;
+    // set scheduler
+    Class<? extends ResourceScheduler> klass =
+      conf.getClass(DaemonRunner.SimulationConfiguration.RM_SCHEDULER, null,
+        ResourceScheduler.class);
+
+    scheduler = ReflectionUtils.newInstance(klass, conf);
+  }
+
+  @Override
+  public Allocation allocate(ApplicationAttemptId attemptId,
+                             List<ResourceRequest> resourceRequests,
+                             List<ContainerId> containerIds,
+                             List<String> strings, List<String> strings2) {
+
+    return scheduler.allocate(attemptId,
+      resourceRequests, containerIds, strings, strings2);
+  }
+
+  @Override
+  public void handle(SchedulerEvent schedulerEvent) {
+    scheduler.handle(schedulerEvent);
+
+    if (schedulerEvent.getType() == SchedulerEventType.APP_REMOVED
+      && schedulerEvent instanceof AppRemovedSchedulerEvent) {
+      DaemonRunner.decreaseRemainingApps();
     }
+  }
 
-    @Override
-    public void setConf(Configuration conf) {
-        this.conf = conf;
-        // set scheduler
-        Class<? extends ResourceScheduler> klass =
-                conf.getClass(DaemonRunner.SimulationConfiguration.RM_SCHEDULER, null,
-                        ResourceScheduler.class);
+  @Override
+  public Configuration getConf() {
+    return conf;
+  }
 
-        scheduler = ReflectionUtils.newInstance(klass, conf);
-    }
+  @SuppressWarnings("unchecked")
+  @Override
+  public void serviceInit(Configuration conf) throws Exception {
+    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>)
+      scheduler).init(conf);
+    super.serviceInit(conf);
+  }
 
-    @Override
-    public Allocation allocate(ApplicationAttemptId attemptId,
-                               List<ResourceRequest> resourceRequests,
-                               List<ContainerId> containerIds,
-                               List<String> strings, List<String> strings2) {
+  @SuppressWarnings("unchecked")
+  @Override
+  public void serviceStart() throws Exception {
+    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>)
+      scheduler).start();
+    super.serviceStart();
+  }
 
-        return scheduler.allocate(attemptId,
-                resourceRequests, containerIds, strings, strings2);
-    }
+  @SuppressWarnings("unchecked")
+  @Override
+  public void serviceStop() throws Exception {
+    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>)
+      scheduler).stop();
+    super.serviceStop();
+  }
 
-    @Override
-    public void handle(SchedulerEvent schedulerEvent) {
-        scheduler.handle(schedulerEvent);
+  @Override
+  public void setRMContext(RMContext rmContext) {
+    scheduler.setRMContext(rmContext);
+  }
 
-        if (schedulerEvent.getType() == SchedulerEventType.APP_REMOVED
-                && schedulerEvent instanceof AppRemovedSchedulerEvent) {
-            DaemonRunner.decreaseRemainingApps();
-        }
-    }
+  @Override
+  public void reinitialize(Configuration conf, RMContext rmContext)
+    throws IOException {
+    scheduler.reinitialize(conf, rmContext);
+  }
 
-    // the following functions are used by AMSimulator
-    public void addAMRuntime(ApplicationId appId,
-                             long traceStartTimeMS, long traceEndTimeMS,
-                             long simulateStartTimeMS, long simulateEndTimeMS) {
-    }
+  @Override
+  public void recover(RMStateStore.RMState rmState) throws Exception {
+    scheduler.recover(rmState);
+  }
 
-    // API open to out classes
-    public void addTrackedApp(ApplicationAttemptId appAttemptId,
-                              String oldAppId) {
-    }
+  @Override
+  public QueueInfo getQueueInfo(String s, boolean b, boolean b2)
+    throws IOException {
+    return scheduler.getQueueInfo(s, b, b2);
+  }
 
-    public void removeTrackedApp(ApplicationAttemptId appAttemptId,
-                                 String oldAppId) {
-    }
+  @Override
+  public List<QueueUserACLInfo> getQueueUserAclInfo() {
+    return scheduler.getQueueUserAclInfo();
+  }
 
-    @Override
-    public Configuration getConf() {
-        return conf;
-    }
+  @Override
+  public Resource getMinimumResourceCapability() {
+    return scheduler.getMinimumResourceCapability();
+  }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void serviceInit(Configuration conf) throws Exception {
-        ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>)
-                scheduler).init(conf);
-        super.serviceInit(conf);
-    }
+  @Override
+  public Resource getMaximumResourceCapability() {
+    return scheduler.getMaximumResourceCapability();
+  }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void serviceStart() throws Exception {
-        ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>)
-                scheduler).start();
-        super.serviceStart();
-    }
+  @Override
+  public ResourceCalculator getResourceCalculator() {
+    return scheduler.getResourceCalculator();
+  }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void serviceStop() throws Exception {
-        ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>)
-                scheduler).stop();
-        super.serviceStop();
-    }
+  @Override
+  public int getNumClusterNodes() {
+    return scheduler.getNumClusterNodes();
+  }
 
-    @Override
-    public void setRMContext(RMContext rmContext) {
-        scheduler.setRMContext(rmContext);
-    }
+  @Override
+  public SchedulerNodeReport getNodeReport(NodeId nodeId) {
+    return scheduler.getNodeReport(nodeId);
+  }
 
-    @Override
-    public void reinitialize(Configuration conf, RMContext rmContext)
-            throws IOException {
-        scheduler.reinitialize(conf, rmContext);
-    }
+  @Override
+  public SchedulerAppReport getSchedulerAppInfo(
+    ApplicationAttemptId attemptId) {
+    return scheduler.getSchedulerAppInfo(attemptId);
+  }
 
-    @Override
-    public void recover(RMStateStore.RMState rmState) throws Exception {
-        scheduler.recover(rmState);
-    }
+  @Override
+  public QueueMetrics getRootQueueMetrics() {
+    return scheduler.getRootQueueMetrics();
+  }
 
-    @Override
-    public QueueInfo getQueueInfo(String s, boolean b, boolean b2)
-            throws IOException {
-        return scheduler.getQueueInfo(s, b, b2);
-    }
+  @Override
+  public synchronized boolean checkAccess(UserGroupInformation callerUGI,
+                                          QueueACL acl, String queueName) {
+    return scheduler.checkAccess(callerUGI, acl, queueName);
+  }
 
-    @Override
-    public List<QueueUserACLInfo> getQueueUserAclInfo() {
-        return scheduler.getQueueUserAclInfo();
-    }
+  @Override
+  public ApplicationResourceUsageReport getAppResourceUsageReport(
+    ApplicationAttemptId appAttemptId) {
+    return scheduler.getAppResourceUsageReport(appAttemptId);
+  }
 
-    @Override
-    public Resource getMinimumResourceCapability() {
-        return scheduler.getMinimumResourceCapability();
-    }
+  @Override
+  public List<ApplicationAttemptId> getAppsInQueue(String queue) {
+    return scheduler.getAppsInQueue(queue);
+  }
 
-    @Override
-    public Resource getMaximumResourceCapability() {
-        return scheduler.getMaximumResourceCapability();
-    }
+  @Override
+  public RMContainer getRMContainer(ContainerId containerId) {
+    return null;
+  }
 
-    @Override
-    public ResourceCalculator getResourceCalculator() {
-        return scheduler.getResourceCalculator();
-    }
+  @Override
+  public String moveApplication(ApplicationId appId, String newQueue)
+    throws YarnException {
+    return scheduler.moveApplication(appId, newQueue);
+  }
 
-    @Override
-    public int getNumClusterNodes() {
-        return scheduler.getNumClusterNodes();
-    }
+  @Override
+  @LimitedPrivate("yarn")
+  @Unstable
+  public Resource getClusterResource() {
+    return null;
+  }
 
-    @Override
-    public SchedulerNodeReport getNodeReport(NodeId nodeId) {
-        return scheduler.getNodeReport(nodeId);
-    }
+  @Override
+  public synchronized List<Container> getTransferredContainers(
+    ApplicationAttemptId currentAttempt) {
+    return new ArrayList<>();
+  }
 
-    @Override
-    public SchedulerAppReport getSchedulerAppInfo(
-            ApplicationAttemptId attemptId) {
-        return scheduler.getSchedulerAppInfo(attemptId);
-    }
+  @Override
+  public Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>>
+  getSchedulerApplications() {
+    return new HashMap<>();
+  }
 
-    @Override
-    public QueueMetrics getRootQueueMetrics() {
-        return scheduler.getRootQueueMetrics();
-    }
-
-    @Override
-    public synchronized boolean checkAccess(UserGroupInformation callerUGI,
-                                            QueueACL acl, String queueName) {
-        return scheduler.checkAccess(callerUGI, acl, queueName);
-    }
-
-    @Override
-    public ApplicationResourceUsageReport getAppResourceUsageReport(
-            ApplicationAttemptId appAttemptId) {
-        return scheduler.getAppResourceUsageReport(appAttemptId);
-    }
-
-    @Override
-    public List<ApplicationAttemptId> getAppsInQueue(String queue) {
-        return scheduler.getAppsInQueue(queue);
-    }
-
-    @Override
-    public RMContainer getRMContainer(ContainerId containerId) {
-        return null;
-    }
-
-    @Override
-    public String moveApplication(ApplicationId appId, String newQueue)
-            throws YarnException {
-        return scheduler.moveApplication(appId, newQueue);
-    }
-
-    @Override
-    @LimitedPrivate("yarn")
-    @Unstable
-    public Resource getClusterResource() {
-        return null;
-    }
-
-    @Override
-    public synchronized List<Container> getTransferredContainers(
-            ApplicationAttemptId currentAttempt) {
-        return new ArrayList<Container>();
-    }
-
-    @Override
-    public Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>>
-    getSchedulerApplications() {
-        return new HashMap<ApplicationId,
-                SchedulerApplication<SchedulerApplicationAttempt>>();
-    }
-
-    @Override
-    protected void completedContainer(RMContainer rmContainer,
-                                      ContainerStatus containerStatus, RMContainerEventType event) {
-        // do nothing
-    }
+  @Override
+  protected void completedContainer(RMContainer rmContainer,
+                                    ContainerStatus containerStatus, RMContainerEventType event) {
+    // do nothing
+  }
 }
 
