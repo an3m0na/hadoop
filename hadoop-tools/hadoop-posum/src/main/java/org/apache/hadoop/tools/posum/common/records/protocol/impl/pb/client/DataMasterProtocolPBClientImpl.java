@@ -24,43 +24,43 @@ import java.net.InetSocketAddress;
 
 public class DataMasterProtocolPBClientImpl implements DataMasterProtocol, Closeable {
 
-    private DataMasterProtocolPB proxy;
+  private DataMasterProtocolPB proxy;
 
-    public DataMasterProtocolPBClientImpl(long clientVersion, InetSocketAddress addr,
-                                          Configuration conf) throws IOException {
-        RPC.setProtocolEngine(conf, DataMasterProtocolPB.class, ProtobufRpcEngine.class);
-        proxy =
-                (DataMasterProtocolPB) RPC.getProxy(DataMasterProtocolPB.class, clientVersion,
-                        addr, conf);
-    }
+  public DataMasterProtocolPBClientImpl(long clientVersion, InetSocketAddress addr,
+                                        Configuration conf) throws IOException {
+    RPC.setProtocolEngine(conf, DataMasterProtocolPB.class, ProtobufRpcEngine.class);
+    proxy =
+      (DataMasterProtocolPB) RPC.getProxy(DataMasterProtocolPB.class, clientVersion,
+        addr, conf);
+  }
 
-    @Override
-    public void close() {
-        if (this.proxy != null) {
-            RPC.stopProxy(this.proxy);
-        }
+  @Override
+  public void close() {
+    if (this.proxy != null) {
+      RPC.stopProxy(this.proxy);
     }
+  }
 
-    @Override
-    public SimpleResponse executeDatabaseCall(DatabaseCallExecutionRequest request) throws IOException, YarnException {
-        DatabaseCallExecutionRequestProto callProto = ((DatabaseCallExecutionRequestPBImpl) request).getProto();
-        try {
-            return new SimpleResponsePBImpl(proxy.executeDatabaseCall(null, callProto));
-        } catch (ServiceException e) {
-            RPCUtil.unwrapAndThrowException(e);
-            return null;
-        }
+  @Override
+  public SimpleResponse executeDatabaseCall(DatabaseCallExecutionRequest request) throws IOException, YarnException {
+    DatabaseCallExecutionRequestProto callProto = ((DatabaseCallExecutionRequestPBImpl) request).getProto();
+    try {
+      return new SimpleResponsePBImpl(proxy.executeDatabaseCall(null, callProto));
+    } catch (ServiceException e) {
+      RPCUtil.unwrapAndThrowException(e);
+      return null;
     }
+  }
 
-    @Override
-    public SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException {
-        SimpleRequestProto requestProto =
-                ((SimpleRequestPBImpl) request).getProto();
-        try {
-            return Utils.wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
-        } catch (ServiceException e) {
-            RPCUtil.unwrapAndThrowException(e);
-            return null;
-        }
+  @Override
+  public SimpleResponse handleSimpleRequest(SimpleRequest request) throws IOException, YarnException {
+    SimpleRequestProto requestProto =
+      ((SimpleRequestPBImpl) request).getProto();
+    try {
+      return Utils.wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
+    } catch (ServiceException e) {
+      RPCUtil.unwrapAndThrowException(e);
+      return null;
     }
+  }
 }

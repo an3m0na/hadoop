@@ -7,15 +7,15 @@ import org.apache.hadoop.yarn.util.Records;
 import java.util.List;
 import java.util.Map;
 
-public abstract class CollectionMapPayload implements Payload{
+public abstract class CollectionMapPayload implements Payload {
 
-    public static CollectionMapPayload newInstance(Map<DatabaseReference, List<DataEntityCollection>> collections) {
-        CollectionMapPayload payload = Records.newRecord(CollectionMapPayload.class);
-        payload.setEntries(collections);
-        return payload;
-    }
+  public static CollectionMapPayload newInstance(Map<DatabaseReference, List<DataEntityCollection>> collections) {
+    CollectionMapPayload payload = Records.newRecord(CollectionMapPayload.class);
+    payload.setEntries(collections);
+    return payload;
+  }
 
-    public abstract Map<DatabaseReference, List<DataEntityCollection>> getEntries();
+  public abstract Map<DatabaseReference, List<DataEntityCollection>> getEntries();
 
-    public abstract void setEntries(Map<DatabaseReference, List<DataEntityCollection>> map);
+  public abstract void setEntries(Map<DatabaseReference, List<DataEntityCollection>> map);
 }

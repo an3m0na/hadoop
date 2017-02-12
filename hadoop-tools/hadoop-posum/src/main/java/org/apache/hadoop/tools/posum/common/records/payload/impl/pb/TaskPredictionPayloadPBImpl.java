@@ -13,112 +13,112 @@ import org.apache.hadoop.yarn.proto.PosumProtos.TaskPredictionPayloadProtoOrBuil
 @JsonIgnoreProperties(ignoreUnknown = true)
 @org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload implements PayloadPB {
-    private TaskPredictionPayloadProto proto = TaskPredictionPayloadProto.getDefaultInstance();
-    private TaskPredictionPayloadProto.Builder builder = null;
-    private boolean viaProto = false;
+  private TaskPredictionPayloadProto proto = TaskPredictionPayloadProto.getDefaultInstance();
+  private TaskPredictionPayloadProto.Builder builder = null;
+  private boolean viaProto = false;
 
-    public TaskPredictionPayloadPBImpl() {
-        builder = TaskPredictionPayloadProto.newBuilder();
+  public TaskPredictionPayloadPBImpl() {
+    builder = TaskPredictionPayloadProto.newBuilder();
+  }
+
+  public TaskPredictionPayloadPBImpl(TaskPredictionPayloadProto proto) {
+    this.proto = proto;
+    viaProto = true;
+  }
+
+  @JsonIgnore
+  @org.codehaus.jackson.annotate.JsonIgnore
+  public TaskPredictionPayloadProto getProto() {
+    mergeLocalToProto();
+    proto = viaProto ? proto : builder.build();
+    viaProto = true;
+    return proto;
+  }
+
+  @Override
+  public int hashCode() {
+    return getProto().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other == null)
+      return false;
+    if (other.getClass().isAssignableFrom(this.getClass())) {
+      return this.getProto().equals(this.getClass().cast(other).getProto());
     }
+    return false;
+  }
 
-    public TaskPredictionPayloadPBImpl(TaskPredictionPayloadProto proto) {
-        this.proto = proto;
-        viaProto = true;
+  @Override
+  public String toString() {
+    return TextFormat.shortDebugString(getProto());
+  }
+
+  private void mergeLocalToBuilder() {
+
+  }
+
+  private void mergeLocalToProto() {
+    if (viaProto)
+      maybeInitBuilder();
+    mergeLocalToBuilder();
+    proto = builder.build();
+    viaProto = true;
+  }
+
+  private void maybeInitBuilder() {
+    if (viaProto || builder == null) {
+      builder = TaskPredictionPayloadProto.newBuilder(proto);
     }
-
-    @JsonIgnore
-    @org.codehaus.jackson.annotate.JsonIgnore
-    public TaskPredictionPayloadProto getProto() {
-        mergeLocalToProto();
-        proto = viaProto ? proto : builder.build();
-        viaProto = true;
-        return proto;
-    }
-
-    @Override
-    public int hashCode() {
-        return getProto().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other == null)
-            return false;
-        if (other.getClass().isAssignableFrom(this.getClass())) {
-            return this.getProto().equals(this.getClass().cast(other).getProto());
-        }
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return TextFormat.shortDebugString(getProto());
-    }
-
-    private void mergeLocalToBuilder() {
-
-    }
-
-    private void mergeLocalToProto() {
-        if (viaProto)
-            maybeInitBuilder();
-        mergeLocalToBuilder();
-        proto = builder.build();
-        viaProto = true;
-    }
-
-    private void maybeInitBuilder() {
-        if (viaProto || builder == null) {
-            builder = TaskPredictionPayloadProto.newBuilder(proto);
-        }
-        viaProto = false;
-    }
+    viaProto = false;
+  }
 
 
-    @Override
-    public String getId() {
-        TaskPredictionPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getId();
-    }
+  @Override
+  public String getId() {
+    TaskPredictionPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getId();
+  }
 
-    @Override
-    public void setPredictor(String predictor) {
-        maybeInitBuilder();
-        builder.setPredictor(predictor);
-    }
+  @Override
+  public void setPredictor(String predictor) {
+    maybeInitBuilder();
+    builder.setPredictor(predictor);
+  }
 
-    @Override
-    public String getPredictor() {
-        TaskPredictionPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getPredictor();
-    }
+  @Override
+  public String getPredictor() {
+    TaskPredictionPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getPredictor();
+  }
 
-    @Override
-    public void setId(String name) {
-        maybeInitBuilder();
-        builder.setId(name);
-    }
+  @Override
+  public void setId(String name) {
+    maybeInitBuilder();
+    builder.setId(name);
+  }
 
-    @Override
-    public Long getDuration() {
-        TaskPredictionPayloadProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getDuration();
-    }
+  @Override
+  public Long getDuration() {
+    TaskPredictionPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getDuration();
+  }
 
-    @Override
-    public void setDuration(Long duration) {
-        maybeInitBuilder();
-        builder.setDuration(duration);
-    }
+  @Override
+  public void setDuration(Long duration) {
+    maybeInitBuilder();
+    builder.setDuration(duration);
+  }
 
-    @Override
-    public ByteString getProtoBytes() {
-        return getProto().toByteString();
-    }
+  @Override
+  public ByteString getProtoBytes() {
+    return getProto().toByteString();
+  }
 
-    @Override
-    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        proto = TaskPredictionPayloadProto.parseFrom(data);
-        viaProto = true;
-    }
+  @Override
+  public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+    proto = TaskPredictionPayloadProto.parseFrom(data);
+    viaProto = true;
+  }
 }

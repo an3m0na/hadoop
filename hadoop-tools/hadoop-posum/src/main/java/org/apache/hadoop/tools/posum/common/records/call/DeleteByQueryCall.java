@@ -9,20 +9,20 @@ import org.apache.hadoop.yarn.util.Records;
 
 public abstract class DeleteByQueryCall extends DeleteCall {
 
-    public static DeleteByQueryCall newInstance(DataEntityCollection type, DatabaseQuery queryOrNull) {
-        DeleteByQueryCall call = Records.newRecord(DeleteByQueryCall.class);
-        call.setEntityCollection(type);
-        call.setQuery(queryOrNull);
-        return call;
-    }
+  public static DeleteByQueryCall newInstance(DataEntityCollection type, DatabaseQuery queryOrNull) {
+    DeleteByQueryCall call = Records.newRecord(DeleteByQueryCall.class);
+    call.setEntityCollection(type);
+    call.setQuery(queryOrNull);
+    return call;
+  }
 
-    public abstract DatabaseQuery getQuery();
+  public abstract DatabaseQuery getQuery();
 
-    public abstract void setQuery(DatabaseQuery query);
+  public abstract void setQuery(DatabaseQuery query);
 
-    @Override
-    public VoidPayload execute(LockBasedDataStore dataStore, DatabaseReference db) {
-        dataStore.delete(db, getEntityCollection(), getQuery());
-        return VoidPayload.newInstance();
-    }
+  @Override
+  public VoidPayload execute(LockBasedDataStore dataStore, DatabaseReference db) {
+    dataStore.delete(db, getEntityCollection(), getQuery());
+    return VoidPayload.newInstance();
+  }
 }

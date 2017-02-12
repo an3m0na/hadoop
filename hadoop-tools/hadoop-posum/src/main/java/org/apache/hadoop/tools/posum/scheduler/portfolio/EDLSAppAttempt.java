@@ -12,105 +12,105 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
 public class EDLSAppAttempt extends ExtCaAppAttempt {
-    private static final Log logger = LogFactory.getLog(EDLSAppAttempt.class);
+  private static final Log logger = LogFactory.getLog(EDLSAppAttempt.class);
 
-    public enum Type {
-        DC, //deadline constrained application
-        BC // batch application
+  public enum Type {
+    DC, //deadline constrained application
+    BC // batch application
+  }
+
+  private Long submitTime;
+  private Long deadline;
+  private Long executionTime;
+  private Long minExecTime = 0L;
+  private String jobId;
+  private Type type;
+
+  public EDLSAppAttempt(Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+    super(posumConf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
+    if (posumConf != null)
+      minExecTime = posumConf.getLong(PosumConfiguration.MIN_EXEC_TIME,
+        PosumConfiguration.MIN_EXEC_TIME_DEFAULT);
+  }
+
+  public EDLSAppAttempt(ExtCaAppAttempt inner) {
+    super(inner);
+  }
+
+  @Override
+  public String toString() {
+    return super.toString() +
+      "\n      JobId: " + jobId +
+      "\n      SubmitTime: " + submitTime +
+      "\n      Deadline: " + deadline +
+      "\n      Remaining: " + getRemaining() +
+      "\n      ExectionTime: " + executionTime +
+      "\n      Slowdown: " + getSlowdown();
+  }
+
+  @Override
+  public synchronized void transferStateFromPreviousAttempt(SchedulerApplicationAttempt appAttempt) {
+    logger.debug("Transfering state from previous attempt " + appAttempt.getApplicationAttemptId());
+    super.transferStateFromPreviousAttempt(appAttempt);
+    if (appAttempt instanceof EDLSAppAttempt) {
+      EDLSAppAttempt edlsApp = (EDLSAppAttempt) appAttempt;
+      setJobId(edlsApp.getJobId());
+      setDeadline(edlsApp.getDeadline());
+      setSubmitTime(edlsApp.getSubmitTime());
+      setExecutionTime(edlsApp.getExecutionTime());
     }
+  }
 
-    private Long submitTime;
-    private Long deadline;
-    private Long executionTime;
-    private Long minExecTime = 0L;
-    private String jobId;
-    private Type type;
+  public Long getDeadline() {
+    return deadline;
+  }
 
-    public EDLSAppAttempt(Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
-        super(posumConf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
-        if (posumConf != null)
-            minExecTime = posumConf.getLong(PosumConfiguration.MIN_EXEC_TIME,
-                    PosumConfiguration.MIN_EXEC_TIME_DEFAULT);
-    }
+  public void setDeadline(Long deadline) {
+    this.deadline = deadline;
+  }
 
-    public EDLSAppAttempt(ExtCaAppAttempt inner) {
-        super(inner);
-    }
+  public Double getSlowdown() {
+    if (executionTime == 0)
+      return 0.0;
+    long waitTime = System.currentTimeMillis() - submitTime;
+    return 1.0 * waitTime / Math.max(executionTime, minExecTime);
+  }
 
-    @Override
-    public String toString() {
-        return super.toString() +
-                "\n      JobId: " + jobId +
-                "\n      SubmitTime: " + submitTime +
-                "\n      Deadline: " + deadline +
-                "\n      Remaining: " + getRemaining() +
-                "\n      ExectionTime: " + executionTime +
-                "\n      Slowdown: " + getSlowdown();
-    }
+  public Long getRemaining() {
+    if (deadline == null)
+      return -1L;
+    return deadline - System.currentTimeMillis();
+  }
 
-    @Override
-    public synchronized void transferStateFromPreviousAttempt(SchedulerApplicationAttempt appAttempt) {
-        logger.debug("Transfering state from previous attempt " + appAttempt.getApplicationAttemptId());
-        super.transferStateFromPreviousAttempt(appAttempt);
-        if (appAttempt instanceof EDLSAppAttempt) {
-            EDLSAppAttempt edlsApp = (EDLSAppAttempt) appAttempt;
-            setJobId(edlsApp.getJobId());
-            setDeadline(edlsApp.getDeadline());
-            setSubmitTime(edlsApp.getSubmitTime());
-            setExecutionTime(edlsApp.getExecutionTime());
-        }
-    }
+  public Long getSubmitTime() {
+    return submitTime;
+  }
 
-    public Long getDeadline() {
-        return deadline;
-    }
+  public void setSubmitTime(Long submitTime) {
+    this.submitTime = submitTime;
+  }
 
-    public void setDeadline(Long deadline) {
-        this.deadline = deadline;
-    }
+  public void setExecutionTime(Long executionTime) {
+    this.executionTime = executionTime;
+  }
 
-    public Double getSlowdown() {
-        if (executionTime == 0)
-            return 0.0;
-        long waitTime = System.currentTimeMillis() - submitTime;
-        return 1.0 * waitTime / Math.max(executionTime, minExecTime);
-    }
+  public Long getExecutionTime() {
+    return executionTime;
+  }
 
-    public Long getRemaining() {
-        if (deadline == null)
-            return -1L;
-        return deadline - System.currentTimeMillis();
-    }
+  public String getJobId() {
+    return jobId;
+  }
 
-    public Long getSubmitTime() {
-        return submitTime;
-    }
+  public void setJobId(String jobId) {
+    this.jobId = jobId;
+  }
 
-    public void setSubmitTime(Long submitTime) {
-        this.submitTime = submitTime;
-    }
+  public Type getType() {
+    return type;
+  }
 
-    public void setExecutionTime(Long executionTime) {
-        this.executionTime = executionTime;
-    }
-
-    public Long getExecutionTime() {
-        return executionTime;
-    }
-
-    public String getJobId() {
-        return jobId;
-    }
-
-    public void setJobId(String jobId) {
-        this.jobId = jobId;
-    }
-
-    public Type getType() {
-        return type;
-    }
-
-    public void setType(Type type) {
-        this.type = type;
-    }
+  public void setType(Type type) {
+    this.type = type;
+  }
 }

@@ -6,10 +6,10 @@ import java.util.List;
 
 public interface CountersProxy extends GeneralDataEntity<CountersProxy> {
 
-    List<CounterGroupInfoPayload> getCounterGroup();
+  List<CounterGroupInfoPayload> getCounterGroup();
 
-    void setCounterGroup(List<CounterGroupInfoPayload> counterGroups);
+  void setCounterGroup(List<CounterGroupInfoPayload> counterGroups);
 
-    void setTaskCounterGroup(List<CounterGroupInfoPayload> counterGroups);
+  void setTaskCounterGroup(List<CounterGroupInfoPayload> counterGroups);
 
 }

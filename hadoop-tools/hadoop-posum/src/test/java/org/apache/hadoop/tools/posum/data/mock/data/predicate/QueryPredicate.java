@@ -10,16 +10,16 @@ import java.util.Set;
 
 public abstract class QueryPredicate<T extends DatabaseQuery> {
 
-    final T query;
-    Set<String> checkedProperties;
+  final T query;
+  Set<String> checkedProperties;
 
-    QueryPredicate(T query) {
-        this.query = query;
-    }
+  QueryPredicate(T query) {
+    this.query = query;
+  }
 
-    public abstract boolean check(GeneralDataEntity entity, Map<String, Method> propertyReaders) throws InvocationTargetException, IllegalAccessException;
+  public abstract boolean check(GeneralDataEntity entity, Map<String, Method> propertyReaders) throws InvocationTargetException, IllegalAccessException;
 
-    public Set<String> getCheckedProperties() {
-        return checkedProperties;
-    }
+  public Set<String> getCheckedProperties() {
+    return checkedProperties;
+  }
 }

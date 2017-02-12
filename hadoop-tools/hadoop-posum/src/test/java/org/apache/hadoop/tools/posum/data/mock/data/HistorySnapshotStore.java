@@ -4,15 +4,15 @@ import org.apache.hadoop.tools.posum.client.data.DataStore;
 
 public interface HistorySnapshotStore extends DataStore {
 
-    Long getSnapshotTime();
+  Long getSnapshotTime();
 
-    void setSnapshotTime(Long time);
+  void setSnapshotTime(Long time);
 
-    Long getSnapshotOffset();
+  Long getSnapshotOffset();
 
-    void setSnapshotOffset(Long offset);
+  void setSnapshotOffset(Long offset);
 
-    Long getTraceStartTime();
+  Long getTraceStartTime();
 
-    Long getTraceFinishTime();
+  Long getTraceFinishTime();
 }

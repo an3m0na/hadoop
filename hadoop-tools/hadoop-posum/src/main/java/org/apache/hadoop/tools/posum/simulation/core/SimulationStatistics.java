@@ -1,40 +1,40 @@
 package org.apache.hadoop.tools.posum.simulation.core;
 
 public class SimulationStatistics {
-    private Long startTimeCluster;
-    private Long endTimeCluster;
-    private Long startTimePhysical;
-    private Long endTimePhysical;
+  private Long startTimeCluster;
+  private Long endTimeCluster;
+  private Long startTimePhysical;
+  private Long endTimePhysical;
 
-    public Long getStartTimeCluster() {
-        return startTimeCluster;
-    }
+  public Long getStartTimeCluster() {
+    return startTimeCluster;
+  }
 
-    public void setStartTimeCluster(Long startTimeCluster) {
-        this.startTimeCluster = startTimeCluster;
-    }
+  public void setStartTimeCluster(Long startTimeCluster) {
+    this.startTimeCluster = startTimeCluster;
+  }
 
-    public Long getEndTimeCluster() {
-        return endTimeCluster;
-    }
+  public Long getEndTimeCluster() {
+    return endTimeCluster;
+  }
 
-    public void setEndTimeCluster(Long endTimeCluster) {
-        this.endTimeCluster = endTimeCluster;
-    }
+  public void setEndTimeCluster(Long endTimeCluster) {
+    this.endTimeCluster = endTimeCluster;
+  }
 
-    public Long getStartTimePhysical() {
-        return startTimePhysical;
-    }
+  public Long getStartTimePhysical() {
+    return startTimePhysical;
+  }
 
-    public void setStartTimePhysical(Long startTimePhysical) {
-        this.startTimePhysical = startTimePhysical;
-    }
+  public void setStartTimePhysical(Long startTimePhysical) {
+    this.startTimePhysical = startTimePhysical;
+  }
 
-    public Long getEndTimePhysical() {
-        return endTimePhysical;
-    }
+  public Long getEndTimePhysical() {
+    return endTimePhysical;
+  }
 
-    public void setEndTimePhysical(Long endTimePhysical) {
-        this.endTimePhysical = endTimePhysical;
-    }
+  public void setEndTimePhysical(Long endTimePhysical) {
+    this.endTimePhysical = endTimePhysical;
+  }
 }

@@ -13,22 +13,22 @@ import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
 
 public class HistoryProfileDeserializer extends JsonDeserializer<HistoryProfilePBImpl> {
 
-    @Override
-    public HistoryProfilePBImpl deserialize(JsonParser jp, DeserializationContext ctxt)
-            throws IOException {
-        ObjectNode node = jp.readValueAsTree();
-        DataEntityCollection type = DataEntityCollection.valueOf((node.get("type")).asText());
-        String id = (node.get(ID_FIELD)).asText();
-        Long timestamp = (node.get("lastUpdated")).asLong();
+  @Override
+  public HistoryProfilePBImpl deserialize(JsonParser jp, DeserializationContext ctxt)
+    throws IOException {
+    ObjectNode node = jp.readValueAsTree();
+    DataEntityCollection type = DataEntityCollection.valueOf((node.get("type")).asText());
+    String id = (node.get(ID_FIELD)).asText();
+    Long timestamp = (node.get("lastUpdated")).asLong();
 
-        JsonNode originalNode = node.get("original");
-        JsonParser parser = originalNode.traverse();
-        parser.setCodec(jp.getCodec());
-        GeneralDataEntity original = parser.readValueAs(type.getMappedClass());
-        HistoryProfilePBImpl history = new HistoryProfilePBImpl<>(type, original);
-        history.setId(id);
-        history.setLastUpdated(timestamp);
-        return history;
-    }
+    JsonNode originalNode = node.get("original");
+    JsonParser parser = originalNode.traverse();
+    parser.setCodec(jp.getCodec());
+    GeneralDataEntity original = parser.readValueAs(type.getMappedClass());
+    HistoryProfilePBImpl history = new HistoryProfilePBImpl<>(type, original);
+    history.setId(id);
+    history.setLastUpdated(timestamp);
+    return history;
+  }
 
 }

@@ -13,158 +13,158 @@ import org.apache.hadoop.yarn.proto.PosumProtos.ByQueryCallProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.ByQueryCallProtoOrBuilder;
 
 public class FindByQueryCallPBImpl extends FindByQueryCall implements PayloadPB {
-    private ByQueryCallProto proto = ByQueryCallProto.getDefaultInstance();
-    private ByQueryCallProto.Builder builder = null;
-    private boolean viaProto = false;
+  private ByQueryCallProto proto = ByQueryCallProto.getDefaultInstance();
+  private ByQueryCallProto.Builder builder = null;
+  private boolean viaProto = false;
 
-    public FindByQueryCallPBImpl() {
-        builder = ByQueryCallProto.newBuilder();
-    }
+  public FindByQueryCallPBImpl() {
+    builder = ByQueryCallProto.newBuilder();
+  }
 
-    public FindByQueryCallPBImpl(ByQueryCallProto proto) {
-        this.proto = proto;
-        viaProto = true;
-    }
+  public FindByQueryCallPBImpl(ByQueryCallProto proto) {
+    this.proto = proto;
+    viaProto = true;
+  }
 
-    public ByQueryCallProto getProto() {
-        mergeLocalToProto();
-        proto = viaProto ? proto : builder.build();
-        viaProto = true;
-        return proto;
-    }
+  public ByQueryCallProto getProto() {
+    mergeLocalToProto();
+    proto = viaProto ? proto : builder.build();
+    viaProto = true;
+    return proto;
+  }
 
-    @Override
-    public int hashCode() {
-        return getProto().hashCode();
-    }
+  @Override
+  public int hashCode() {
+    return getProto().hashCode();
+  }
 
-    @Override
-    public boolean equals(Object other) {
-        if (other == null)
-            return false;
-        if (other.getClass().isAssignableFrom(this.getClass())) {
-            return this.getProto().equals(this.getClass().cast(other).getProto());
-        }
-        return false;
+  @Override
+  public boolean equals(Object other) {
+    if (other == null)
+      return false;
+    if (other.getClass().isAssignableFrom(this.getClass())) {
+      return this.getProto().equals(this.getClass().cast(other).getProto());
     }
+    return false;
+  }
 
-    @Override
-    public String toString() {
-        return TextFormat.shortDebugString(getProto());
-    }
+  @Override
+  public String toString() {
+    return TextFormat.shortDebugString(getProto());
+  }
 
-    private void mergeLocalToBuilder() {
-    }
+  private void mergeLocalToBuilder() {
+  }
 
-    private void mergeLocalToProto() {
-        if (viaProto)
-            maybeInitBuilder();
-        mergeLocalToBuilder();
-        proto = builder.build();
-        viaProto = true;
-    }
+  private void mergeLocalToProto() {
+    if (viaProto)
+      maybeInitBuilder();
+    mergeLocalToBuilder();
+    proto = builder.build();
+    viaProto = true;
+  }
 
-    private void maybeInitBuilder() {
-        if (viaProto || builder == null) {
-            builder = ByQueryCallProto.newBuilder(proto);
-        }
-        viaProto = false;
+  private void maybeInitBuilder() {
+    if (viaProto || builder == null) {
+      builder = ByQueryCallProto.newBuilder(proto);
     }
+    viaProto = false;
+  }
 
-    @Override
-    public DataEntityCollection getEntityCollection() {
-        ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
-        return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
-    }
+  @Override
+  public DataEntityCollection getEntityCollection() {
+    ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
+    return DataEntityCollection.valueOf(p.getCollection().name().substring("COLL_".length()));
+  }
 
-    @Override
-    public void setEntityCollection(DataEntityCollection type) {
-        if (type == null)
-            return;
-        maybeInitBuilder();
-        builder.setCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
-    }
+  @Override
+  public void setEntityCollection(DataEntityCollection type) {
+    if (type == null)
+      return;
+    maybeInitBuilder();
+    builder.setCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + type.name()));
+  }
 
-    @Override
-    public DatabaseQuery getQuery() {
-        ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasQuery())
-            return null;
-        return new DatabaseQueryWrapperPBImpl(p.getQuery()).getQuery();
-    }
+  @Override
+  public DatabaseQuery getQuery() {
+    ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasQuery())
+      return null;
+    return new DatabaseQueryWrapperPBImpl(p.getQuery()).getQuery();
+  }
 
-    @Override
-    public void setQuery(DatabaseQuery query) {
-        maybeInitBuilder();
-        if (query == null) {
-            builder.clearQuery();
-            return;
-        }
-        builder.setQuery(new DatabaseQueryWrapperPBImpl(query).getProto());
+  @Override
+  public void setQuery(DatabaseQuery query) {
+    maybeInitBuilder();
+    if (query == null) {
+      builder.clearQuery();
+      return;
     }
+    builder.setQuery(new DatabaseQueryWrapperPBImpl(query).getProto());
+  }
 
-    @Override
-    public Integer getLimitOrZero() {
-        ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getLimit();
-    }
+  @Override
+  public Integer getLimitOrZero() {
+    ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getLimit();
+  }
 
-    @Override
-    public void setLimitOrZero(int limitOrZero) {
-        maybeInitBuilder();
-        builder.setLimit(limitOrZero);
-    }
+  @Override
+  public void setLimitOrZero(int limitOrZero) {
+    maybeInitBuilder();
+    builder.setLimit(limitOrZero);
+  }
 
-    @Override
-    public Integer getOffsetOrZero() {
-        ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getOffset();
-    }
+  @Override
+  public Integer getOffsetOrZero() {
+    ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getOffset();
+  }
 
-    @Override
-    public void setOffsetOrZero(int offsetOrZero) {
-        maybeInitBuilder();
-        builder.setOffset(offsetOrZero);
-    }
+  @Override
+  public void setOffsetOrZero(int offsetOrZero) {
+    maybeInitBuilder();
+    builder.setOffset(offsetOrZero);
+  }
 
-    @Override
-    public String getSortField() {
-        ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
-        if (!p.hasSortField())
-            return null;
-        return p.getSortField();
-    }
+  @Override
+  public String getSortField() {
+    ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasSortField())
+      return null;
+    return p.getSortField();
+  }
 
-    @Override
-    public void setSortField(String field) {
-        maybeInitBuilder();
-        if (field == null) {
-            builder.clearSortField();
-            return;
-        }
-        builder.setSortField(field);
+  @Override
+  public void setSortField(String field) {
+    maybeInitBuilder();
+    if (field == null) {
+      builder.clearSortField();
+      return;
     }
+    builder.setSortField(field);
+  }
 
-    @Override
-    public Boolean getSortDescending() {
-        ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
-        return p.getSortDescending();
-    }
+  @Override
+  public Boolean getSortDescending() {
+    ByQueryCallProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getSortDescending();
+  }
 
-    @Override
-    public void setSortDescending(boolean descending) {
-        maybeInitBuilder();
-        builder.setSortDescending(descending);
-    }
+  @Override
+  public void setSortDescending(boolean descending) {
+    maybeInitBuilder();
+    builder.setSortDescending(descending);
+  }
 
-    @Override
-    public ByteString getProtoBytes() {
-        return getProto().toByteString();
-    }
+  @Override
+  public ByteString getProtoBytes() {
+    return getProto().toByteString();
+  }
 
-    @Override
-    public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
-        this.proto = ByQueryCallProto.parseFrom(data);
-        viaProto = true;
-    }
+  @Override
+  public void populateFromProtoBytes(ByteString data) throws InvalidProtocolBufferException {
+    this.proto = ByQueryCallProto.parseFrom(data);
+    viaProto = true;
+  }
 }

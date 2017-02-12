@@ -6,5 +6,5 @@ import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
 
 public interface DatabaseCall<T extends Payload> {
 
-    T executeCall(LockBasedDataStore dataStore, DatabaseReference db);
+  T executeCall(LockBasedDataStore dataStore, DatabaseReference db);
 }

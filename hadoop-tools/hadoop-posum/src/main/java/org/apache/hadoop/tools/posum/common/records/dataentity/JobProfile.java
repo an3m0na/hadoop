@@ -7,125 +7,125 @@ import java.util.Map;
 
 public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
-    String getName();
+  String getName();
 
-    void setName(String name);
+  void setName(String name);
 
-    Long getStartTime();
+  Long getStartTime();
 
-    void setStartTime(Long startTime);
+  void setStartTime(Long startTime);
 
-    Long getFinishTime();
+  Long getFinishTime();
 
-    void setFinishTime(Long finishTime);
+  void setFinishTime(Long finishTime);
 
-    void setTotalMapTasks(Integer totalMapTasks);
+  void setTotalMapTasks(Integer totalMapTasks);
 
-    void setTotalReduceTasks(Integer totalReduceTasks);
+  void setTotalReduceTasks(Integer totalReduceTasks);
 
-    Long getTotalInputBytes();
+  Long getTotalInputBytes();
 
-    void setTotalInputBytes(Long inputBytes);
+  void setTotalInputBytes(Long inputBytes);
 
-    Long getInputBytes();
+  Long getInputBytes();
 
-    void setInputBytes(Long inputBytes);
+  void setInputBytes(Long inputBytes);
 
-    Long getMapOutputBytes();
+  Long getMapOutputBytes();
 
-    void setMapOutputBytes(Long bytes);
+  void setMapOutputBytes(Long bytes);
 
-    Long getReduceInputBytes();
+  Long getReduceInputBytes();
 
-    void setReduceInputBytes(Long bytes);
+  void setReduceInputBytes(Long bytes);
 
-    Long getOutputBytes();
+  Long getOutputBytes();
 
-    void setOutputBytes(Long outputBytes);
+  void setOutputBytes(Long outputBytes);
 
-    String getUser();
+  String getUser();
 
-    void setUser(String user);
+  void setUser(String user);
 
-    Long getSubmitTime();
+  Long getSubmitTime();
 
-    void setSubmitTime(Long submitTime);
+  void setSubmitTime(Long submitTime);
 
-    Integer getTotalMapTasks();
+  Integer getTotalMapTasks();
 
-    Integer getTotalReduceTasks();
+  Integer getTotalReduceTasks();
 
-    String getAppId();
+  String getAppId();
 
-    void setAppId(String appId);
+  void setAppId(String appId);
 
-    JobState getState();
+  JobState getState();
 
-    void setState(JobState state);
+  void setState(JobState state);
 
-    Float getMapProgress();
+  Float getMapProgress();
 
-    void setMapProgress(Float mapProgress);
+  void setMapProgress(Float mapProgress);
 
-    Float getReduceProgress();
+  Float getReduceProgress();
 
-    void setReduceProgress(Float reduceProgress);
+  void setReduceProgress(Float reduceProgress);
 
-    Integer getCompletedMaps();
+  Integer getCompletedMaps();
 
-    void setCompletedMaps(Integer completedMaps);
+  void setCompletedMaps(Integer completedMaps);
 
-    Integer getCompletedReduces();
+  Integer getCompletedReduces();
 
-    void setCompletedReduces(Integer completedReduces);
+  void setCompletedReduces(Integer completedReduces);
 
-    Boolean isUberized();
+  Boolean isUberized();
 
-    void setUberized(Boolean uberized);
+  void setUberized(Boolean uberized);
 
-    Integer getInputSplits();
+  Integer getInputSplits();
 
-    void setInputSplits(Integer inputSplits);
+  void setInputSplits(Integer inputSplits);
 
-    Long getAvgMapDuration();
+  Long getAvgMapDuration();
 
-    void setAvgMapDuration(Long avgMapDuration);
+  void setAvgMapDuration(Long avgMapDuration);
 
-    Long getAvgReduceDuration();
+  Long getAvgReduceDuration();
 
-    void setAvgReduceDuration(Long avgReduceDuration);
+  void setAvgReduceDuration(Long avgReduceDuration);
 
-    void setAvgShuffleTime(Long time);
+  void setAvgShuffleTime(Long time);
 
-    Long getAvgShuffleTime();
+  Long getAvgShuffleTime();
 
-    void setAvgMergeTime(Long time);
+  void setAvgMergeTime(Long time);
 
-    Long getAvgMergeTime();
+  Long getAvgMergeTime();
 
-    void setAvgReduceTime(Long time);
+  void setAvgReduceTime(Long time);
 
-    Long getAvgReduceTime();
+  Long getAvgReduceTime();
 
-    void setQueue(String queue);
+  void setQueue(String queue);
 
-    String getQueue();
+  String getQueue();
 
-    void addAll(Map<String, String> other);
+  void addAll(Map<String, String> other);
 
-    String getFlexField(String name);
+  String getFlexField(String name);
 
-    Map<String, String> getFlexFields();
+  Map<String, String> getFlexFields();
 
-    String getMapperClass();
+  String getMapperClass();
 
-    void setMapperClass(String name);
+  void setMapperClass(String name);
 
-    String getReducerClass();
+  String getReducerClass();
 
-    void setReducerClass(String name);
+  void setReducerClass(String name);
 
-    List<String> getSplitLocations();
+  List<String> getSplitLocations();
 
-    void setSplitLocations(List<String> locations);
+  void setSplitLocations(List<String> locations);
 }

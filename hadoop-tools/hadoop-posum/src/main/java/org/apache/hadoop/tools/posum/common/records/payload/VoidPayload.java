@@ -4,7 +4,7 @@ import org.apache.hadoop.yarn.util.Records;
 
 public abstract class VoidPayload implements Payload {
 
-    public static VoidPayload newInstance() {
-        return Records.newRecord(VoidPayload.class);
-    }
+  public static VoidPayload newInstance() {
+    return Records.newRecord(VoidPayload.class);
+  }
 }

@@ -5,71 +5,71 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 
 public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
 
-    String getAppId();
+  String getAppId();
 
-    void setAppId(String appId);
+  void setAppId(String appId);
 
-    String getJobId();
+  String getJobId();
 
-    void setJobId(String jobId);
+  void setJobId(String jobId);
 
-    TaskType getType();
+  TaskType getType();
 
-    void setType(TaskType type);
+  void setType(TaskType type);
 
-    Long getStartTime();
+  Long getStartTime();
 
-    void setStartTime(Long startTime);
+  void setStartTime(Long startTime);
 
-    Long getFinishTime();
+  Long getFinishTime();
 
-    void setFinishTime(Long finishTime);
+  void setFinishTime(Long finishTime);
 
-    TaskState getState();
+  TaskState getState();
 
-    void setState(TaskState state);
+  void setState(TaskState state);
 
-    Float getReportedProgress();
+  Float getReportedProgress();
 
-    void setReportedProgress(Float reportedProgress);
+  void setReportedProgress(Float reportedProgress);
 
-    String getSuccessfulAttempt();
+  String getSuccessfulAttempt();
 
-    void setSuccessfulAttempt(String successfulAttempt);
+  void setSuccessfulAttempt(String successfulAttempt);
 
-    Long getInputBytes();
+  Long getInputBytes();
 
-    void setInputBytes(Long inputBytes);
+  void setInputBytes(Long inputBytes);
 
-    Long getOutputBytes();
+  Long getOutputBytes();
 
-    void setOutputBytes(Long outputBytes);
+  void setOutputBytes(Long outputBytes);
 
-    Long getInputRecords();
+  Long getInputRecords();
 
-    void setInputRecords(Long inputRecords);
+  void setInputRecords(Long inputRecords);
 
-    Long getOutputRecords();
+  Long getOutputRecords();
 
-    void setOutputRecords(Long outputRecords);
+  void setOutputRecords(Long outputRecords);
 
-    Long getShuffleTime();
+  Long getShuffleTime();
 
-    void setShuffleTime(Long time);
+  void setShuffleTime(Long time);
 
-    Long getMergeTime();
+  Long getMergeTime();
 
-    void setMergeTime(Long time);
+  void setMergeTime(Long time);
 
-    Long getReduceTime();
+  Long getReduceTime();
 
-    void setReduceTime(Long time);
+  void setReduceTime(Long time);
 
-    Boolean isLocal();
+  Boolean isLocal();
 
-    void setLocal(Boolean local);
+  void setLocal(Boolean local);
 
-    String getHttpAddress();
+  String getHttpAddress();
 
-    void setHttpAddress(String address);
+  void setHttpAddress(String address);
 }

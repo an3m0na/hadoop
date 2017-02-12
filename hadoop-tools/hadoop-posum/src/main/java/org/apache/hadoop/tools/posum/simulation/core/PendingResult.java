@@ -5,19 +5,19 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayl
 import java.util.concurrent.Future;
 
 class PendingResult {
-    private Simulation simulation;
-    private Future<SimulationResultPayload> result;
+  private Simulation simulation;
+  private Future<SimulationResultPayload> result;
 
-    PendingResult(Simulation simulation, Future<SimulationResultPayload> result) {
-        this.simulation = simulation;
-        this.result = result;
-    }
+  PendingResult(Simulation simulation, Future<SimulationResultPayload> result) {
+    this.simulation = simulation;
+    this.result = result;
+  }
 
-    public Simulation getSimulation() {
-        return simulation;
-    }
+  public Simulation getSimulation() {
+    return simulation;
+  }
 
-    public Future<SimulationResultPayload> getResult() {
-        return result;
-    }
+  public Future<SimulationResultPayload> getResult() {
+    return result;
+  }
 }
