@@ -1,13 +1,13 @@
-package org.apache.hadoop.tools.posum.simulation.core.daemons.appmaster;
+package org.apache.hadoop.tools.posum.simulation.core.daemon.appmaster;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
-import org.apache.hadoop.tools.posum.simulation.core.daemons.DaemonRunner;
-import org.apache.hadoop.tools.posum.simulation.core.daemons.DaemonUtils;
-import org.apache.hadoop.tools.posum.simulation.core.daemons.scheduler.ContainerSimulator;
-import org.apache.hadoop.tools.posum.simulation.core.daemons.scheduler.TaskRunner;
+import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
+import org.apache.hadoop.tools.posum.simulation.core.DaemonInitializer;
+import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonRunner;
+import org.apache.hadoop.tools.posum.simulation.core.daemon.nodemanager.ContainerSimulator;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.FinishApplicationMasterRequest;
@@ -52,15 +52,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Private
 @Unstable
-public abstract class AMSimulator extends TaskRunner.Task {
+public abstract class AMSimulator extends WorkerDaemon {
   // resource manager
   protected ResourceManager rm;
   // main
-  protected DaemonRunner se;
+  protected DaemonInitializer se;
   // application
   protected ApplicationId appId;
   protected ApplicationAttemptId appAttemptId;
   protected String oldAppId;    // jobId from the jobhistory file
+  protected List<ContainerSimulator> initialContainers;
   // record factory
   protected final static RecordFactory recordFactory =
     RecordFactoryProvider.getRecordFactory(null);
@@ -74,8 +75,6 @@ public abstract class AMSimulator extends TaskRunner.Task {
   // am type
   protected String amtype;
   // job start/end time
-  protected long traceStartTimeMS;
-  protected long traceFinishTimeMS;
   protected long simulateStartTimeMS;
   protected long simulateFinishTimeMS;
   // whether tracked in Metrics
@@ -86,16 +85,16 @@ public abstract class AMSimulator extends TaskRunner.Task {
 
   protected final Logger LOG = Logger.getLogger(AMSimulator.class);
 
-  public AMSimulator() {
+  public AMSimulator(DaemonRunner runner) {
+    super(runner);
     this.responseQueue = new LinkedBlockingQueue<>();
   }
 
   public void init(int heartbeatInterval,
-                   List<ContainerSimulator> containerList, ResourceManager rm, DaemonRunner se,
-                   long traceStartTime, long traceFinishTime, String user, String queue,
+                   List<ContainerSimulator> containerList, ResourceManager rm, DaemonInitializer se,
+                   long traceStartTime, String user, String queue,
                    boolean isTracked, String oldAppId) {
-    super.init(traceStartTime, traceStartTime + 1000000L * heartbeatInterval,
-      heartbeatInterval);
+    super.init(traceStartTime, heartbeatInterval);
     this.user = user;
     this.rm = rm;
     this.se = se;
@@ -103,16 +102,15 @@ public abstract class AMSimulator extends TaskRunner.Task {
     this.queue = queue;
     this.oldAppId = oldAppId;
     this.isTracked = isTracked;
-    this.traceStartTimeMS = traceStartTime;
-    this.traceFinishTimeMS = traceFinishTime;
+    this.initialContainers = containerList;
   }
 
   /**
    * register with RM
    */
   @Override
-  public void firstStep() throws Exception {
-    simulateStartTimeMS = DaemonRunner.getCurrentTime();
+  public void doFirstStep() throws Exception {
+    simulateStartTimeMS = runner.getCurrentTime();
 
     // submit application, waiting until ACCEPTED
     submitApp();
@@ -122,19 +120,16 @@ public abstract class AMSimulator extends TaskRunner.Task {
   }
 
   @Override
-  public void middleStep() throws Exception {
+  public void doStep() throws Exception {
     // process responses in the queue
     processResponseQueue();
 
     // send out request
     sendContainerRequest();
-
-    // check whether finish
-    checkStop();
   }
 
   @Override
-  public void lastStep() throws Exception {
+  public void cleanUp() throws Exception {
     LOG.info(MessageFormat.format("Application {0} is shutting down.", appId));
     // unregister application master
     final FinishApplicationMasterRequest finishAMRequest = recordFactory
@@ -155,7 +150,7 @@ public abstract class AMSimulator extends TaskRunner.Task {
       }
     });
 
-    simulateFinishTimeMS = DaemonRunner.getCurrentTime();
+    simulateFinishTimeMS = runner.getCurrentTime();
   }
 
   protected ResourceRequest createResourceRequest(
@@ -188,8 +183,6 @@ public abstract class AMSimulator extends TaskRunner.Task {
   protected abstract void processResponseQueue() throws Exception;
 
   protected abstract void sendContainerRequest() throws Exception;
-
-  protected abstract void checkStop();
 
   private void submitApp()
     throws YarnException, InterruptedException, IOException {
@@ -282,9 +275,8 @@ public abstract class AMSimulator extends TaskRunner.Task {
     Map<String, ResourceRequest> nodeLocalRequestMap = new HashMap<String, ResourceRequest>();
     ResourceRequest anyRequest = null;
     for (ContainerSimulator cs : csList) {
-      String rackHostNames[] = DaemonUtils.getRackHostName(cs.getHostname());
       // check rack local
-      String rackname = rackHostNames[0];
+      String rackname = cs.getRack();
       if (rackLocalRequestMap.containsKey(rackname)) {
         rackLocalRequestMap.get(rackname).setNumContainers(
           rackLocalRequestMap.get(rackname).getNumContainers() + 1);
@@ -294,7 +286,7 @@ public abstract class AMSimulator extends TaskRunner.Task {
         rackLocalRequestMap.put(rackname, request);
       }
       // check node local
-      String hostname = rackHostNames[1];
+      String hostname = cs.getHostname();
       if (nodeLocalRequestMap.containsKey(hostname)) {
         nodeLocalRequestMap.get(hostname).setNumContainers(
           nodeLocalRequestMap.get(hostname).getNumContainers() + 1);

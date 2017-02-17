@@ -22,10 +22,9 @@ import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
-import static org.apache.hadoop.tools.posum.simulation.core.SimulationEvent.Type.TASK_FINISHED;
 
 
 class Simulation implements Callable<SimulationResultPayload> {
@@ -53,7 +52,7 @@ class Simulation implements Callable<SimulationResultPayload> {
     this.policy = policy;
     this.dataStore = dataStore;
     this.stats = new SimulationStatistics();
-    this.eventQueue = new LinkedBlockingQueue<>();
+    this.eventQueue = new PriorityBlockingQueue<>();
   }
 
   private void setUp() {
@@ -115,7 +114,7 @@ class Simulation implements Callable<SimulationResultPayload> {
         Float timeLeft = (1 - progress) * duration;
         duration = timeLeft.longValue();
       }
-      eventQueue.add(new SimulationEvent<>(TASK_FINISHED, clusterTime + duration, new TaskFinishedDetails(allocatedTask.getId())));
+//      eventQueue.add(new SimulationEvent<>(TASK_FINISHED, clusterTime + duration, new TaskFinishedDetails(allocatedTask.getId())));
     }
     // TODO for all other nodes that do not have a task running on them, send NODE_FREE events to the scheduler
   }
@@ -126,26 +125,26 @@ class Simulation implements Callable<SimulationResultPayload> {
     while (pendingJobs > 0 && !exit) {
       SimulationEvent event = eventQueue.poll();
       clusterTime = event.getTimestamp();
-      switch (event.getType()) {
-        case TASK_FINISHED:
-          getTask.setId(((TaskFinishedDetails) event.getDetails()).getTaskId());
-          TaskProfile task = db.execute(getTask).getEntity();
-          task.setFinishTime(clusterTime);
-          // update other task details
-
-          JobProfile job = db.execute(getJob).getEntity();
-          if (checkLastTask(task, job)) {
-            pendingJobs--;
-            job.setFinishTime(clusterTime);
-            // update other job details
-            //TODO correctly update metrics
-            runtime = Math.random() * 10;
-            penalty++;
-            cost++;
-          }
-          // TODO update daemon simulators about task + job (job event is necessary?)
-          break;
-      }
+//      switch (event.getType()) {
+//        case TASK_FINISHED:
+//          getTask.setId(((TaskFinishedDetails) event.getDetails()).getTaskId());
+//          TaskProfile task = db.execute(getTask).getEntity();
+//          task.setFinishTime(clusterTime);
+//          // update other task details
+//
+//          JobProfile job = db.execute(getJob).getEntity();
+//          if (checkLastTask(task, job)) {
+//            pendingJobs--;
+//            job.setFinishTime(clusterTime);
+//            // update other job details
+//            //TODO correctly update metrics
+//            runtime = Math.random() * 10;
+//            penalty++;
+//            cost++;
+//          }
+//          // TODO update daemon simulators about task + job (job event is necessary?)
+//          break;
+//      }
     }
   }
 

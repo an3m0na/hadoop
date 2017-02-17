@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.simulation.core.daemons.scheduler;
+package org.apache.hadoop.tools.posum.simulation.core.daemon.scheduler;
 
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
@@ -6,7 +6,8 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.simulation.core.daemons.DaemonRunner;
+import org.apache.hadoop.tools.posum.simulation.core.DaemonInitializer;
+import org.apache.hadoop.tools.posum.simulation.core.SimulationConfiguration;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -66,7 +67,7 @@ public class ResourceSchedulerWrapper
     this.conf = conf;
     // set scheduler
     Class<? extends ResourceScheduler> klass =
-      conf.getClass(DaemonRunner.SimulationConfiguration.RM_SCHEDULER, null,
+      conf.getClass(SimulationConfiguration.RM_SCHEDULER, null,
         ResourceScheduler.class);
 
     scheduler = ReflectionUtils.newInstance(klass, conf);
@@ -88,7 +89,7 @@ public class ResourceSchedulerWrapper
 
     if (schedulerEvent.getType() == SchedulerEventType.APP_REMOVED
       && schedulerEvent instanceof AppRemovedSchedulerEvent) {
-      DaemonRunner.decreaseRemainingApps();
+      DaemonInitializer.decreaseRemainingApps();
     }
   }
 

@@ -140,7 +140,7 @@ public class TestHistorySnapshotStoreImpl {
     List<String> jobIds = testSubject.execute(getIds, DatabaseReference.getMain()).getEntries();
     assertEquals(16, jobIds.size());
 
-    // check that the finish time of the finished jobs are set
+    // check that the cleanUp time of the finished jobs are set
     IdsByQueryCall getUnfinishedJobs = IdsByQueryCall.newInstance(JOB_HISTORY, QueryUtils.is("finishTime", 0L));
     List<String> unfinishedJobIds = testSubject.execute(getUnfinishedJobs, DatabaseReference.getMain()).getEntries();
     assertEquals(0, unfinishedJobIds.size());
