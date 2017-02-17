@@ -1,41 +1,20 @@
 package org.apache.hadoop.tools.posum.simulation.core;
 
+import org.apache.hadoop.yarn.event.AbstractEvent;
+
 import javax.annotation.Nonnull;
 
-class SimulationEvent<T extends EventDetails> implements Comparable<SimulationEvent<T>> {
+class SimulationEvent<T extends EventDetails> extends AbstractEvent<SimulationEventType> implements Comparable<SimulationEvent<T>> {
 
-  enum Type {
-    TASK_FINISHED
-  }
-
-  private Type type;
-  private Long timestamp;
   private T details;
 
-  SimulationEvent(@Nonnull Type type, @Nonnull Long timestamp, T details) {
+  public SimulationEvent(@Nonnull SimulationEventType type, @Nonnull Long timestamp, T details) {
     this(type, timestamp);
     this.details = details;
   }
 
-  SimulationEvent(Type type, Long timestamp) {
-    this.type = type;
-    this.timestamp = timestamp;
-  }
-
-  public Type getType() {
-    return type;
-  }
-
-  public void setType(Type type) {
-    this.type = type;
-  }
-
-  public Long getTimestamp() {
-    return timestamp;
-  }
-
-  public void setTimestamp(Long timestamp) {
-    this.timestamp = timestamp;
+  public SimulationEvent(SimulationEventType type, Long timestamp) {
+    super(type, timestamp);
   }
 
   public T getDetails() {
@@ -48,7 +27,7 @@ class SimulationEvent<T extends EventDetails> implements Comparable<SimulationEv
 
   @Override
   public int compareTo(@Nonnull SimulationEvent<T> that) {
-    return this.getTimestamp().compareTo(that.getTimestamp());
+    return Float.valueOf(Math.signum(this.getTimestamp() - that.getTimestamp())).intValue();
   }
 
 }

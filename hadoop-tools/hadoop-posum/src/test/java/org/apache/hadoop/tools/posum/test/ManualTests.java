@@ -9,7 +9,7 @@ import org.apache.hadoop.tools.posum.data.monitor.cluster.ClusterMonitor;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class ManualTests {
+public class ManualTests{
   @Test
   @Ignore
   public void checkRegistration() {

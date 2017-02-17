@@ -1,12 +1,7 @@
-package org.apache.hadoop.tools.posum.simulation.core.daemons.nodemanager;
+package org.apache.hadoop.tools.posum.simulation.core.daemon.nodemanager;
 
-import com.google.common.annotations.VisibleForTesting;
-import org.apache.hadoop.classification.InterfaceAudience.Private;
-import org.apache.hadoop.classification.InterfaceStability.Unstable;
-import org.apache.hadoop.tools.posum.simulation.core.daemons.DaemonRunner;
-import org.apache.hadoop.tools.posum.simulation.core.daemons.DaemonUtils;
-import org.apache.hadoop.tools.posum.simulation.core.daemons.scheduler.ContainerSimulator;
-import org.apache.hadoop.tools.posum.simulation.core.daemons.scheduler.TaskRunner;
+import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
+import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonRunner;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerExitStatus;
@@ -37,9 +32,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.DelayQueue;
 
-@Private
-@Unstable
-public class NMSimulator extends TaskRunner.Task {
+public class NMSimulator extends WorkerDaemon {
   // node resource
   private RMNode node;
   // master key
@@ -56,13 +49,15 @@ public class NMSimulator extends TaskRunner.Task {
   private int RESPONSE_ID = 1;
   private final static Logger LOG = Logger.getLogger(NMSimulator.class);
 
-  public void init(String nodeIdStr, int memory, int cores,
+  public NMSimulator(DaemonRunner runner) {
+    super(runner);
+  }
+
+  public void init(String rack, String hostname, int memory, int cores,
                    int dispatchTime, int heartBeatInterval, ResourceManager rm) {
-    super.init(dispatchTime, dispatchTime + 1000000L * heartBeatInterval,
-      heartBeatInterval);
+    super.init(dispatchTime, heartBeatInterval);
     // create resource
-    String rackHostName[] = DaemonUtils.getRackHostName(nodeIdStr);
-    this.node = NodeInfo.newNodeInfo(rackHostName[0], rackHostName[1], BuilderUtils.newResource(memory, cores));
+    this.node = NodeInfo.newNodeInfo(rack, hostname, BuilderUtils.newResource(memory, cores));
     this.rm = rm;
     // init data structures
     completedContainerList =
@@ -78,7 +73,7 @@ public class NMSimulator extends TaskRunner.Task {
   }
 
   @Override
-  public void firstStep() throws IOException, YarnException {
+  public void doFirstStep() throws IOException, YarnException {
     // register NM with RM
     RegisterNodeManagerRequest req =
       Records.newRecord(RegisterNodeManagerRequest.class);
@@ -91,7 +86,7 @@ public class NMSimulator extends TaskRunner.Task {
   }
 
   @Override
-  public void middleStep() throws Exception {
+  public void doStep() throws Exception {
     // we check the lifetime for each running containers
     ContainerSimulator cs = null;
     synchronized (completedContainerList) {
@@ -139,13 +134,18 @@ public class NMSimulator extends TaskRunner.Task {
       }
     }
     if (beatResponse.getNodeAction() == NodeAction.SHUTDOWN) {
-      lastStep();
+      cleanUp();
     }
   }
 
   @Override
-  public void lastStep() {
+  public void cleanUp() {
     // do nothing
+  }
+
+  @Override
+  public boolean isFinished() {
+    return false;
   }
 
   /**
@@ -209,8 +209,8 @@ public class NMSimulator extends TaskRunner.Task {
       "container ({1}).", node.getNodeID(), container.getId()));
     if (lifeTimeMS != -1) {
       // normal container
-      ContainerSimulator cs = new ContainerSimulator(container.getId(),
-        container.getResource(), lifeTimeMS + DaemonRunner.getCurrentTime(),
+      ContainerSimulator cs = new ContainerSimulator(runner, container.getId(),
+        container.getResource(), lifeTimeMS + runner.getCurrentTime(),
         lifeTimeMS);
       containerQueue.add(cs);
       runningContainers.put(cs.getId(), cs);
@@ -235,20 +235,5 @@ public class NMSimulator extends TaskRunner.Task {
     synchronized (completedContainerList) {
       completedContainerList.add(containerId);
     }
-  }
-
-  @VisibleForTesting
-  Map<ContainerId, ContainerSimulator> getRunningContainers() {
-    return runningContainers;
-  }
-
-  @VisibleForTesting
-  List<ContainerId> getAMContainers() {
-    return amContainerList;
-  }
-
-  @VisibleForTesting
-  List<ContainerId> getCompletedContainers() {
-    return completedContainerList;
   }
 }

@@ -1,11 +1,12 @@
-package org.apache.hadoop.tools.posum.simulation.core.daemons.appmaster;
+package org.apache.hadoop.tools.posum.simulation.core.daemon.appmaster;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
-import org.apache.hadoop.tools.posum.simulation.core.daemons.DaemonRunner;
-import org.apache.hadoop.tools.posum.simulation.core.daemons.scheduler.ContainerSimulator;
+import org.apache.hadoop.tools.posum.simulation.core.DaemonInitializer;
+import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonRunner;
+import org.apache.hadoop.tools.posum.simulation.core.daemon.nodemanager.ContainerSimulator;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.records.Container;
@@ -99,17 +100,19 @@ public class MRAMSimulator extends AMSimulator {
 
   public final Logger LOG = Logger.getLogger(MRAMSimulator.class);
 
+  public MRAMSimulator(DaemonRunner runner) {
+    super(runner);
+  }
+
   public void init(int heartbeatInterval,
-                   List<ContainerSimulator> containerList, ResourceManager rm, DaemonRunner runner,
-                   long traceStartTime, long traceFinishTime, String user, String queue,
+                   List<ContainerSimulator> containerList, ResourceManager rm, DaemonInitializer runner,
+                   long traceStartTime, String user, String queue,
                    boolean isTracked, String oldAppId) {
-    super.init(heartbeatInterval, containerList, rm, runner,
-      traceStartTime, traceFinishTime, user, queue,
-      isTracked, oldAppId);
+    super.init(heartbeatInterval, containerList, rm, runner, traceStartTime, user, queue, isTracked, oldAppId);
     amtype = "mapreduce";
 
     // get map/reduce tasks
-    for (ContainerSimulator cs : containerList) {
+    for (ContainerSimulator cs : initialContainers) {
       if (cs.getType().equals("map")) {
         cs.setPriority(PRIORITY_MAP);
         pendingMaps.add(cs);
@@ -126,8 +129,8 @@ public class MRAMSimulator extends AMSimulator {
   }
 
   @Override
-  public void firstStep() throws Exception {
-    super.firstStep();
+  public void doFirstStep() throws Exception {
+    super.doFirstStep();
 
     requestAMContainer();
   }
@@ -213,7 +216,7 @@ public class MRAMSimulator extends AMSimulator {
               // am container released event
               isFinished = true;
               LOG.info(MessageFormat.format("Application {0} goes to " +
-                "finish.", appId));
+                "cleanUp.", appId));
             }
           } else {
             // container to be killed
@@ -366,15 +369,8 @@ public class MRAMSimulator extends AMSimulator {
   }
 
   @Override
-  protected void checkStop() {
-    if (isFinished) {
-      super.setEndTime(DaemonRunner.getCurrentTime());
-    }
-  }
-
-  @Override
-  public void lastStep() throws Exception {
-    super.lastStep();
+  public void cleanUp() throws Exception {
+    super.cleanUp();
 
     // clear data structures
     allMaps.clear();
@@ -388,5 +384,10 @@ public class MRAMSimulator extends AMSimulator {
     scheduledMaps.clear();
     scheduledReduces.clear();
     responseQueue.clear();
+  }
+
+  @Override
+  public boolean isFinished() {
+    return isFinished;
   }
 }

@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.simulation.core.daemons.nodemanager;
+package org.apache.hadoop.tools.posum.simulation.core.daemon.nodemanager;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;

@@ -1,9 +1,10 @@
-package org.apache.hadoop.tools.posum.simulation.core.daemons;
+package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.simulation.core.DaemonInitializer;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler;
 import org.junit.Test;
@@ -29,7 +30,7 @@ import static org.apache.hadoop.tools.posum.test.Utils.TASK21;
 import static org.apache.hadoop.tools.posum.test.Utils.TASK22;
 
 @Category(IntegrationTest.class)
-public class DaemonRunnerTest {
+public class DaemonInitializerTest {
   @Test
   public void testDaemons() throws Exception {
     Configuration conf = PosumConfiguration.newInstance();
@@ -43,6 +44,6 @@ public class DaemonRunnerTest {
     tasks.put(JOB1_ID.toString(), Arrays.asList(TASK11, TASK12));
     tasks.put(JOB2_ID.toString(), Arrays.asList(TASK21, TASK22));
 
-    new DaemonRunner(conf, schedulerClass, nodeSet, racks, jobs, tasks).start();
+    new DaemonInitializer(conf, schedulerClass, nodeSet, racks, jobs, tasks).start();
   }
 }
