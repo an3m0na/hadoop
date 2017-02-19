@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.simulation.core.daemon.scheduler;
+package org.apache.hadoop.tools.posum.simulation.core.resourcemanager;
 
 import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
 import org.apache.hadoop.classification.InterfaceAudience.Private;

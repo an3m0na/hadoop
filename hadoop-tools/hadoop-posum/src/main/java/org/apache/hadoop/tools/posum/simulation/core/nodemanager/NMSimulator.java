@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.simulation.core.daemon.nodemanager;
+package org.apache.hadoop.tools.posum.simulation.core.nodemanager;
 
 import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonRunner;

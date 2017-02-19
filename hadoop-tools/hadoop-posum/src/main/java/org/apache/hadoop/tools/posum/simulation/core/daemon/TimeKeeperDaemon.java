@@ -12,12 +12,12 @@ public class TimeKeeperDaemon implements Daemon {
 
   private static final Log LOG = LogFactory.getLog(AsyncDispatcher.class);
 
-  private final ReentrantQueue queue;
+  private final DaemonQueue queue;
   private long currentTime = 0;
 
   private volatile boolean stopped = false;
 
-  public TimeKeeperDaemon(ReentrantQueue queue) {
+  public TimeKeeperDaemon(DaemonQueue queue) {
     this.queue = queue;
   }
 
