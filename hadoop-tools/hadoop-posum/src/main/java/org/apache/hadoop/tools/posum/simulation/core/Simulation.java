@@ -39,7 +39,7 @@ class Simulation implements Callable<SimulationResultPayload> {
   private SimulationStatistics stats;
   private static final FindByQueryCall GET_LATEST =
     FindByQueryCall.newInstance(DataEntityCollection.JOB, null, "lastUpdated", true, 0, 1);
-  private Queue<SimulationEvent> eventQueue;
+//  private Queue<SimulationEvent> eventQueue;
   private Long clusterTime = 0L;
   private Integer pendingJobs = 0;
   private Double runtime = 0.0;
@@ -52,7 +52,7 @@ class Simulation implements Callable<SimulationResultPayload> {
     this.policy = policy;
     this.dataStore = dataStore;
     this.stats = new SimulationStatistics();
-    this.eventQueue = new PriorityBlockingQueue<>();
+//    this.eventQueue = new PriorityBlockingQueue<>();
   }
 
   private void setUp() {
@@ -122,9 +122,9 @@ class Simulation implements Callable<SimulationResultPayload> {
   private void processQueue() {
     FindByIdCall getTask = FindByIdCall.newInstance(DataEntityCollection.TASK, null);
     FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
-    while (pendingJobs > 0 && !exit) {
-      SimulationEvent event = eventQueue.poll();
-      clusterTime = event.getTimestamp();
+//    while (pendingJobs > 0 && !exit) {
+//      SimulationEvent event = eventQueue.poll();
+//      clusterTime = event.getTimestamp();
 //      switch (event.getType()) {
 //        case TASK_FINISHED:
 //          getTask.setId(((TaskFinishedDetails) event.getDetails()).getTaskId());
@@ -145,7 +145,7 @@ class Simulation implements Callable<SimulationResultPayload> {
 //          // TODO update daemon simulators about task + job (job event is necessary?)
 //          break;
 //      }
-    }
+//    }
   }
 
   private boolean checkLastTask(TaskProfile task, JobProfile job) {

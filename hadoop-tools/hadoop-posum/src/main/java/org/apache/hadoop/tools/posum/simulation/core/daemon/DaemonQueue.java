@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.TimeUnit;
 
-public class ReentrantQueue extends DelayQueue<Daemon> {
+public class DaemonQueue extends DelayQueue<Daemon> {
   private Set<Daemon> running = Collections.newSetFromMap(new ConcurrentHashMap<Daemon, Boolean>());
 
   @Override

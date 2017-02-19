@@ -4,11 +4,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonRunner;
-import org.apache.hadoop.tools.posum.simulation.core.daemon.appmaster.AMSimulator;
-import org.apache.hadoop.tools.posum.simulation.core.daemon.appmaster.MRAMSimulator;
-import org.apache.hadoop.tools.posum.simulation.core.daemon.nodemanager.ContainerSimulator;
-import org.apache.hadoop.tools.posum.simulation.core.daemon.nodemanager.NMSimulator;
-import org.apache.hadoop.tools.posum.simulation.core.daemon.scheduler.ResourceSchedulerWrapper;
+import org.apache.hadoop.tools.posum.simulation.core.appmaster.AMSimulator;
+import org.apache.hadoop.tools.posum.simulation.core.appmaster.MRAMSimulator;
+import org.apache.hadoop.tools.posum.simulation.core.nodemanager.ContainerSimulator;
+import org.apache.hadoop.tools.posum.simulation.core.nodemanager.NMSimulator;
+import org.apache.hadoop.tools.posum.simulation.core.resourcemanager.ResourceManagerWrapper;
+import org.apache.hadoop.tools.posum.simulation.core.resourcemanager.ResourceSchedulerWrapper;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.NodeState;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -120,7 +121,7 @@ public class DaemonInitializer {
     Configuration rmConf = new YarnConfiguration();
     rmConf.set(RM_SCHEDULER, schedulerClass);
     rmConf.set(YarnConfiguration.RM_SCHEDULER, ResourceSchedulerWrapper.class.getName());
-    rm = new ResourceManager();
+    rm = new ResourceManagerWrapper();
     rm.init(rmConf);
     rm.start();
   }

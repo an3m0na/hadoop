@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.simulation.core.daemon.appmaster;
+package org.apache.hadoop.tools.posum.simulation.core.appmaster;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
@@ -6,7 +6,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.tools.posum.simulation.core.DaemonInitializer;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonRunner;
-import org.apache.hadoop.tools.posum.simulation.core.daemon.nodemanager.ContainerSimulator;
+import org.apache.hadoop.tools.posum.simulation.core.nodemanager.ContainerSimulator;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.records.Container;

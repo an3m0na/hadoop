@@ -11,13 +11,13 @@ public class DaemonRunner {
   private final static Logger LOG = Logger.getLogger(DaemonRunner.class);
 
 
-  private final ReentrantQueue queue;
+  private final DaemonQueue queue;
   private ThreadPoolExecutor executor;
   private TimeKeeperDaemon timeKeeper;
 
   @SuppressWarnings("unchecked")
   public DaemonRunner(int threadPoolSize) {
-    queue = new ReentrantQueue();
+    queue = new DaemonQueue();
     timeKeeper = new TimeKeeperDaemon(queue);
     executor = new ThreadPoolExecutor(threadPoolSize, threadPoolSize, 0, TimeUnit.MILLISECONDS, (BlockingQueue) queue);
     executor.prestartAllCoreThreads();
@@ -34,11 +34,11 @@ public class DaemonRunner {
   public void await(CountDownLatch latch) {
     try {
       latch.await();
-      System.out.println("Shutting down");
+      System.out.println("DaemonRunner shutting down");
       executor.shutdown();
       executor.awaitTermination(1, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
-      LOG.error("Could not shut down DaemonRunnerImpl", e);
+      LOG.error("Could not shut down DaemonRunner", e);
     }
   }
 
