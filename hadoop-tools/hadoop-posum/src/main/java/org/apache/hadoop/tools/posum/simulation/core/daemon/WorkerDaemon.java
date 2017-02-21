@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.simulation.core.daemon;
 
+import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
+
 import javax.annotation.Nonnull;
 import java.text.MessageFormat;
 import java.util.concurrent.Delayed;
@@ -10,12 +12,12 @@ public abstract class WorkerDaemon implements Daemon {
   private long nextRun;
   private long startTime;
   private long repeatInterval;
-  protected DaemonRunner runner;
   private static AtomicInteger nextId = new AtomicInteger(0);
   private int id = 0;
+  protected SimulationContext simulationContext;
 
-  public WorkerDaemon(DaemonRunner runner) {
-    this.runner = runner;
+  public WorkerDaemon(SimulationContext simulationContext) {
+    this.simulationContext = simulationContext;
     id = nextId.getAndIncrement();
   }
 
@@ -51,11 +53,11 @@ public abstract class WorkerDaemon implements Daemon {
       }
       if(isFinished()) {
         cleanUp();
-        runner.forget(this);
+        simulationContext.getDaemonQueue().evict(this);
       }
       else {
         nextRun += repeatInterval;
-        runner.schedule(this);
+        simulationContext.getDaemonQueue().enqueue(this);
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -65,7 +67,7 @@ public abstract class WorkerDaemon implements Daemon {
 
   @Override
   public long getDelay(@Nonnull TimeUnit unit) {
-    return unit.convert(nextRun - runner.getCurrentTime(), TimeUnit.MILLISECONDS);
+    return unit.convert(nextRun - simulationContext.getCurrentTime(), TimeUnit.MILLISECONDS);
   }
 
   @Override

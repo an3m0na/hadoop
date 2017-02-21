@@ -2,10 +2,8 @@ package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
-import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
@@ -19,10 +17,10 @@ import org.apache.hadoop.tools.posum.simulation.master.SimulationMaster;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.Queue;
+import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.PriorityBlockingQueue;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
@@ -39,7 +37,6 @@ class Simulation implements Callable<SimulationResultPayload> {
   private SimulationStatistics stats;
   private static final FindByQueryCall GET_LATEST =
     FindByQueryCall.newInstance(DataEntityCollection.JOB, null, "lastUpdated", true, 0, 1);
-//  private Queue<SimulationEvent> eventQueue;
   private Long clusterTime = 0L;
   private Integer pendingJobs = 0;
   private Double runtime = 0.0;
@@ -52,7 +49,6 @@ class Simulation implements Callable<SimulationResultPayload> {
     this.policy = policy;
     this.dataStore = dataStore;
     this.stats = new SimulationStatistics();
-//    this.eventQueue = new PriorityBlockingQueue<>();
   }
 
   private void setUp() {
@@ -66,6 +62,9 @@ class Simulation implements Callable<SimulationResultPayload> {
     IdsByQueryCall getPendingJobs =
       IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("finishTime", 0L));
     pendingJobs = db.execute(getPendingJobs).getEntries().size();
+
+    SimulationContext context = new SimulationContext();
+    //TODO fill it up
   }
 
   private void tearDown() {
@@ -86,9 +85,7 @@ class Simulation implements Callable<SimulationResultPayload> {
   public SimulationResultPayload call() throws Exception {
     setUp();
     try {
-      initializeDaemonSimulators();
       loadInitialEvents();
-      processQueue();
       return SimulationResultPayload.newInstance(policy, CompoundScorePayload.newInstance(runtime, penalty, cost));
     } catch (Exception e) {
       logger.error("Error during simulation. Shutting down simulation...", e);
@@ -96,10 +93,6 @@ class Simulation implements Callable<SimulationResultPayload> {
     } finally {
       tearDown();
     }
-  }
-
-  private void initializeDaemonSimulators() {
-    // TODO initialize the state of the hadoop daemon simulators (ResourceManager, ApplicationMasters and NodeManagers)
   }
 
   private void loadInitialEvents() {
@@ -114,43 +107,7 @@ class Simulation implements Callable<SimulationResultPayload> {
         Float timeLeft = (1 - progress) * duration;
         duration = timeLeft.longValue();
       }
-//      eventQueue.add(new SimulationEvent<>(TASK_FINISHED, clusterTime + duration, new TaskFinishedDetails(allocatedTask.getId())));
     }
     // TODO for all other nodes that do not have a task running on them, send NODE_FREE events to the scheduler
-  }
-
-  private void processQueue() {
-    FindByIdCall getTask = FindByIdCall.newInstance(DataEntityCollection.TASK, null);
-    FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
-//    while (pendingJobs > 0 && !exit) {
-//      SimulationEvent event = eventQueue.poll();
-//      clusterTime = event.getTimestamp();
-//      switch (event.getType()) {
-//        case TASK_FINISHED:
-//          getTask.setId(((TaskFinishedDetails) event.getDetails()).getTaskId());
-//          TaskProfile task = db.execute(getTask).getEntity();
-//          task.setFinishTime(clusterTime);
-//          // update other task details
-//
-//          JobProfile job = db.execute(getJob).getEntity();
-//          if (checkLastTask(task, job)) {
-//            pendingJobs--;
-//            job.setFinishTime(clusterTime);
-//            // update other job details
-//            //TODO correctly update metrics
-//            runtime = Math.random() * 10;
-//            penalty++;
-//            cost++;
-//          }
-//          // TODO update daemon simulators about task + job (job event is necessary?)
-//          break;
-//      }
-//    }
-  }
-
-  private boolean checkLastTask(TaskProfile task, JobProfile job) {
-    if (task.getType() == TaskType.REDUCE)
-      return orZero(job.getTotalReduceTasks()) - orZero(job.getCompletedReduces()) == 1;
-    return orZero(job.getTotalMapTasks()) - orZero(job.getCompletedMaps()) == 1;
   }
 }

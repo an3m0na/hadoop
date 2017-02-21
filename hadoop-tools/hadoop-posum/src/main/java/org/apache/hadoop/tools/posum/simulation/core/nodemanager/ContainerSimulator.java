@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.simulation.core.nodemanager;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
-import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonRunner;
+import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.Resource;
 
@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 public class ContainerSimulator implements Delayed {
   // id
   private ContainerId id;
-  private DaemonRunner runner;
   // resource allocated
   private Resource resource;
   // end time
@@ -29,13 +28,14 @@ public class ContainerSimulator implements Delayed {
   private int priority;
   // type
   private String type;
+  private SimulationContext simulationContext;
 
   /**
    * invoked when AM schedules containers to allocate
    */
-  public ContainerSimulator(DaemonRunner runner, Resource resource, long lifeTime,
+  public ContainerSimulator(SimulationContext simulationContext, Resource resource, long lifeTime,
                             String rack, String hostname, int priority, String type) {
-    this.runner = runner;
+    this.simulationContext = simulationContext;
     this.resource = resource;
     this.lifeTime = lifeTime;
     this.hostname = hostname;
@@ -47,9 +47,9 @@ public class ContainerSimulator implements Delayed {
   /**
    * invoke when NM schedules containers to run
    */
-  public ContainerSimulator(DaemonRunner runner, ContainerId id, Resource resource, long endTime,
+  public ContainerSimulator(SimulationContext simulationContext, ContainerId id, Resource resource, long endTime,
                             long lifeTime) {
-    this.runner = runner;
+    this.simulationContext = simulationContext;
     this.id = id;
     this.resource = resource;
     this.endTime = endTime;
@@ -76,7 +76,7 @@ public class ContainerSimulator implements Delayed {
 
   @Override
   public long getDelay(TimeUnit unit) {
-    return unit.convert(endTime - runner.getCurrentTime(), TimeUnit.MILLISECONDS);
+    return unit.convert(endTime - simulationContext.getCurrentTime(), TimeUnit.MILLISECONDS);
   }
 
   public long getLifeTime() {

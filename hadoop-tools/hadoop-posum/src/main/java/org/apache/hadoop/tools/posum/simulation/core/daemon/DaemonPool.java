@@ -1,24 +1,33 @@
 package org.apache.hadoop.tools.posum.simulation.core.daemon;
 
+import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class DaemonRunner {
-  private final static Logger LOG = Logger.getLogger(DaemonRunner.class);
+import static org.apache.hadoop.tools.posum.simulation.core.SimulationConfiguration.RUNNER_POOL_SIZE;
+import static org.apache.hadoop.tools.posum.simulation.core.SimulationConfiguration.RUNNER_POOL_SIZE_DEFAULT;
+
+public class DaemonPool {
+  private final static Logger LOG = Logger.getLogger(DaemonPool.class);
 
 
   private final DaemonQueue queue;
   private ThreadPoolExecutor executor;
   private TimeKeeperDaemon timeKeeper;
+  private SimulationContext simulationContext;
 
   @SuppressWarnings("unchecked")
-  public DaemonRunner(int threadPoolSize) {
+  public DaemonPool(SimulationContext simulationContext) {
+    this.simulationContext = simulationContext;
     queue = new DaemonQueue();
-    timeKeeper = new TimeKeeperDaemon(queue);
+    simulationContext.setDaemonQueue(queue);
+
+    timeKeeper = new TimeKeeperDaemon(simulationContext);
+
+    int threadPoolSize = simulationContext.getConf().getInt(RUNNER_POOL_SIZE, RUNNER_POOL_SIZE_DEFAULT);
     executor = new ThreadPoolExecutor(threadPoolSize, threadPoolSize, 0, TimeUnit.MILLISECONDS, (BlockingQueue) queue);
     executor.prestartAllCoreThreads();
   }
@@ -27,27 +36,22 @@ public class DaemonRunner {
     queue.enqueue(timeKeeper);
   }
 
-  public void stopNow() {
+  public void forceStop() {
     executor.shutdownNow();
   }
 
-  public void await(CountDownLatch latch) {
+  public void shutDown() {
     try {
-      latch.await();
-      System.out.println("DaemonRunner shutting down");
+      System.out.println("DaemonPool shutting down");
       executor.shutdown();
       executor.awaitTermination(1, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
-      LOG.error("Could not shut down DaemonRunner", e);
+      LOG.error("Could not shut down DaemonPool", e);
     }
   }
 
   public void schedule(WorkerDaemon daemon) {
     queue.enqueue(daemon);
-  }
-
-  public long getCurrentTime() {
-    return timeKeeper.getCurrentTime();
   }
 
   public void forget(WorkerDaemon daemon) {
