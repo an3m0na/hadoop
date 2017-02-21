@@ -4,8 +4,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
+import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
@@ -17,6 +19,7 @@ import org.apache.hadoop.tools.posum.simulation.master.SimulationMaster;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,11 +40,10 @@ class Simulation implements Callable<SimulationResultPayload> {
   private SimulationStatistics stats;
   private static final FindByQueryCall GET_LATEST =
     FindByQueryCall.newInstance(DataEntityCollection.JOB, null, "lastUpdated", true, 0, 1);
-  private Long clusterTime = 0L;
-  private Integer pendingJobs = 0;
   private Double runtime = 0.0;
   private Double penalty = 0.0;
   private Double cost = 0.0;
+  private SimulationContext simulationContext;
 
 
   Simulation(JobBehaviorPredictor predictor, String policy, DataStore dataStore) {
@@ -49,6 +51,7 @@ class Simulation implements Callable<SimulationResultPayload> {
     this.policy = policy;
     this.dataStore = dataStore;
     this.stats = new SimulationStatistics();
+    this.simulationContext = new SimulationContext();
   }
 
   private void setUp() {
@@ -59,16 +62,11 @@ class Simulation implements Callable<SimulationResultPayload> {
     predictor.initialize(db);
     stats.setStartTimeCluster(getLastUpdated());
     stats.setStartTimePhysical(System.currentTimeMillis());
-    IdsByQueryCall getPendingJobs =
-      IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("finishTime", 0L));
-    pendingJobs = db.execute(getPendingJobs).getEntries().size();
-
-    SimulationContext context = new SimulationContext();
-    //TODO fill it up
+    loadJobs();
   }
 
   private void tearDown() {
-    stats.setEndTimeCluster(getLastUpdated());
+    stats.setEndTimeCluster(stats.getStartTimeCluster() + simulationContext.getEndTime());
     stats.setEndTimePhysical(System.currentTimeMillis());
     dataStore.clearDatabase(dbReference);
     //TODO log stats
@@ -78,14 +76,14 @@ class Simulation implements Callable<SimulationResultPayload> {
     List<JobProfile> latest = dataStore.execute(GET_LATEST, dbReference).getEntities();
     if (latest != null && latest.size() > 0)
       return orZero(latest.get(0).getLastUpdated());
-    return null;
+    return 0L;
   }
 
   @Override
   public SimulationResultPayload call() throws Exception {
     setUp();
     try {
-      loadInitialEvents();
+      new SimulationRunner(simulationContext).start();
       return SimulationResultPayload.newInstance(policy, CompoundScorePayload.newInstance(runtime, penalty, cost));
     } catch (Exception e) {
       logger.error("Error during simulation. Shutting down simulation...", e);
@@ -95,19 +93,38 @@ class Simulation implements Callable<SimulationResultPayload> {
     }
   }
 
-  private void loadInitialEvents() {
-    FindByQueryCall findAllocatedTasks =
-      FindByQueryCall.newInstance(DataEntityCollection.TASK, QueryUtils.isNot("httpAddress", null));
+  private void loadJobs() {
+    IdsByQueryCall getPendingJobs = IdsByQueryCall.newInstance(DataEntityCollection.JOB, null);
+    final FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
+    FindByQueryCall getTasks = FindByQueryCall.newInstance(DataEntityCollection.TASK, null);
+    List<String> jobIds = db.execute(getPendingJobs).getEntries();
 
-    List<TaskProfile> allocatedTasks = db.execute(findAllocatedTasks).getEntities();
-    for (TaskProfile allocatedTask : allocatedTasks) {
-      Long duration = predictor.predictTaskDuration(new TaskPredictionInput(allocatedTask.getId())).getDuration();
-      Float progress = allocatedTask.getReportedProgress();
-      if (progress != null && progress > 0) {
-        Float timeLeft = (1 - progress) * duration;
-        duration = timeLeft.longValue();
+    List<JobProfile> jobs = new ArrayList<>(jobIds.size());
+    Map<String, List<TaskProfile>> tasks = new HashMap<>(jobIds.size());
+    for (String jobId : jobIds) {
+      getJob.setId(jobId);
+      JobProfile job = db.execute(getJob).getEntity();
+      jobs.add(job);
+      getTasks.setQuery(QueryUtils.is("jobId", jobId));
+      List<TaskProfile> jobTasks = db.execute(getTasks).getEntities();
+      for (TaskProfile task : jobTasks) {
+        Long duration = predictor.predictTaskDuration(new TaskPredictionInput(task.getId())).getDuration();
+        task.setFinishTime(task.getStartTime() + duration);
       }
+      tasks.put(jobId, jobTasks);
     }
-    // TODO for all other nodes that do not have a task running on them, send NODE_FREE events to the scheduler
+    simulationContext.setJobs(jobs);
+    simulationContext.setTasks(tasks);
+
+    final UpdateOrStoreCall updateJob = UpdateOrStoreCall.newInstance(DataEntityCollection.JOB, null);
+    simulationContext.setJobCompletionHandler(new JobCompletionHandler() {
+      @Override
+      public synchronized void handle(String jobId) {
+        JobProfile job = db.execute(getJob).getEntity();
+        job.setFinishTime(simulationContext.getCurrentTime());
+        updateJob.setEntity(job);
+        db.execute(updateJob);
+      }
+    });
   }
 }

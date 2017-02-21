@@ -245,6 +245,7 @@ public class MRAMSimulator extends AMSimulator {
         LOG.debug(MessageFormat.format("Application {0} sends out event " +
           "to clean up its AM container.", appId));
         isFinished = true;
+        simulationContext.getJobCompletionHandler().handle(oldAppId);
         break;
       }
 
