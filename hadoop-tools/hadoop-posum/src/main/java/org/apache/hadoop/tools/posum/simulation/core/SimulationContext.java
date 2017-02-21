@@ -22,6 +22,8 @@ public class SimulationContext {
   private List<JobProfile> jobs;
   private Map<String, List<TaskProfile>> tasks;
   private Map<NodeId, NMSimulator> nodeManagers;
+  private JobCompletionHandler jobCompletionHandler;
+  private long endTime = 0;
 
   public long getCurrentTime() {
     return currentTime;
@@ -93,5 +95,21 @@ public class SimulationContext {
 
   public void setNodeManagers(Map<NodeId, NMSimulator> nodeManagers) {
     this.nodeManagers = nodeManagers;
+  }
+
+  public JobCompletionHandler getJobCompletionHandler() {
+    return jobCompletionHandler;
+  }
+
+  public void setJobCompletionHandler(JobCompletionHandler jobCompletionHandler) {
+    this.jobCompletionHandler = jobCompletionHandler;
+  }
+
+  public long getEndTime() {
+    return endTime;
+  }
+
+  public void setEndTime(long endTime) {
+    this.endTime = endTime;
   }
 }

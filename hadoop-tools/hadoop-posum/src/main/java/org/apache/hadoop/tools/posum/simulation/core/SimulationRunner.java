@@ -70,6 +70,7 @@ public class SimulationRunner {
 
     daemonPool.start();
     context.getRemainingJobsCounter().await();
+    context.setEndTime(context.getCurrentTime());
     daemonPool.shutDown();
 
     LOG.info("SimulationRunner finished.");
