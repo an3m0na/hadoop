@@ -4,9 +4,9 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
+import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
+import org.apache.hadoop.tools.posum.simulation.core.SimulationRunner;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
-import org.apache.hadoop.tools.posum.simulation.core.DaemonInitializer;
-import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonRunner;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.ContainerSimulator;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
@@ -55,8 +55,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 public abstract class AMSimulator extends WorkerDaemon {
   // resource manager
   protected ResourceManager rm;
-  // main
-  protected DaemonInitializer se;
   // application
   protected ApplicationId appId;
   protected ApplicationAttemptId appAttemptId;
@@ -77,31 +75,25 @@ public abstract class AMSimulator extends WorkerDaemon {
   // job start/end time
   protected long simulateStartTimeMS;
   protected long simulateFinishTimeMS;
-  // whether tracked in Metrics
-  protected boolean isTracked;
   // progress
   protected int totalContainers;
   protected int finishedContainers;
 
   protected final Logger LOG = Logger.getLogger(AMSimulator.class);
 
-  public AMSimulator(DaemonRunner runner) {
-    super(runner);
+  public AMSimulator(SimulationContext simulationContext) {
+    super(simulationContext);
     this.responseQueue = new LinkedBlockingQueue<>();
   }
 
-  public void init(int heartbeatInterval,
-                   List<ContainerSimulator> containerList, ResourceManager rm, DaemonInitializer se,
-                   long traceStartTime, String user, String queue,
-                   boolean isTracked, String oldAppId) {
+  public void init(int heartbeatInterval, List<ContainerSimulator> containerList, ResourceManager rm,
+                   long traceStartTime, String user, String queue, String oldAppId) {
     super.init(traceStartTime, heartbeatInterval);
     this.user = user;
     this.rm = rm;
-    this.se = se;
     this.user = user;
     this.queue = queue;
     this.oldAppId = oldAppId;
-    this.isTracked = isTracked;
     this.initialContainers = containerList;
   }
 
@@ -110,7 +102,7 @@ public abstract class AMSimulator extends WorkerDaemon {
    */
   @Override
   public void doFirstStep() throws Exception {
-    simulateStartTimeMS = runner.getCurrentTime();
+    simulateStartTimeMS = simulationContext.getCurrentTime();
 
     // submit application, waiting until ACCEPTED
     submitApp();
@@ -150,7 +142,7 @@ public abstract class AMSimulator extends WorkerDaemon {
       }
     });
 
-    simulateFinishTimeMS = runner.getCurrentTime();
+    simulateFinishTimeMS = simulationContext.getCurrentTime();
   }
 
   protected ResourceRequest createResourceRequest(

@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.simulation.core.nodemanager;
 
+import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
-import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonRunner;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerExitStatus;
@@ -49,8 +49,8 @@ public class NMSimulator extends WorkerDaemon {
   private int RESPONSE_ID = 1;
   private final static Logger LOG = Logger.getLogger(NMSimulator.class);
 
-  public NMSimulator(DaemonRunner runner) {
-    super(runner);
+  public NMSimulator(SimulationContext simulationContext) {
+    super(simulationContext);
   }
 
   public void init(String rack, String hostname, int memory, int cores,
@@ -209,8 +209,8 @@ public class NMSimulator extends WorkerDaemon {
       "container ({1}).", node.getNodeID(), container.getId()));
     if (lifeTimeMS != -1) {
       // normal container
-      ContainerSimulator cs = new ContainerSimulator(runner, container.getId(),
-        container.getResource(), lifeTimeMS + runner.getCurrentTime(),
+      ContainerSimulator cs = new ContainerSimulator(simulationContext, container.getId(),
+        container.getResource(), lifeTimeMS + simulationContext.getCurrentTime(),
         lifeTimeMS);
       containerQueue.add(cs);
       runningContainers.put(cs.getId(), cs);

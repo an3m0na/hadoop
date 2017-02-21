@@ -4,8 +4,7 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
-import org.apache.hadoop.tools.posum.simulation.core.DaemonInitializer;
-import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonRunner;
+import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.ContainerSimulator;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
@@ -100,15 +99,13 @@ public class MRAMSimulator extends AMSimulator {
 
   public final Logger LOG = Logger.getLogger(MRAMSimulator.class);
 
-  public MRAMSimulator(DaemonRunner runner) {
-    super(runner);
+  public MRAMSimulator(SimulationContext simulationContext) {
+    super(simulationContext);
   }
 
-  public void init(int heartbeatInterval,
-                   List<ContainerSimulator> containerList, ResourceManager rm, DaemonInitializer runner,
-                   long traceStartTime, String user, String queue,
-                   boolean isTracked, String oldAppId) {
-    super.init(heartbeatInterval, containerList, rm, runner, traceStartTime, user, queue, isTracked, oldAppId);
+  public void init(int heartbeatInterval, List<ContainerSimulator> containerList, ResourceManager rm,
+                   long traceStartTime, String user, String queue, String oldAppId) {
+    super.init(heartbeatInterval, containerList, rm, traceStartTime, user, queue, oldAppId);
     amtype = "mapreduce";
 
     // get map/reduce tasks
@@ -180,7 +177,7 @@ public class MRAMSimulator extends AMSimulator {
           && !response.getAllocatedContainers().isEmpty()) {
           // Get AM container
           Container container = response.getAllocatedContainers().get(0);
-          se.getNmMap().get(container.getNodeId())
+          simulationContext.getNodeManagers().get(container.getNodeId())
             .addNewContainer(container, -1L);
           // Start AM container
           amContainer = container;
@@ -242,7 +239,7 @@ public class MRAMSimulator extends AMSimulator {
         (mapFinished == mapTotal) &&
         (reduceFinished == reduceTotal)) {
         // to release the AM container
-        se.getNmMap().get(amContainer.getNodeId())
+        simulationContext.getNodeManagers().get(amContainer.getNodeId())
           .cleanupContainer(amContainer.getId());
         isAMContainerRunning = false;
         LOG.debug(MessageFormat.format("Application {0} sends out event " +
@@ -258,14 +255,14 @@ public class MRAMSimulator extends AMSimulator {
           LOG.debug(MessageFormat.format("Application {0} starts a " +
             "launch a mapper ({1}).", appId, container.getId()));
           assignedMaps.put(container.getId(), cs);
-          se.getNmMap().get(container.getNodeId())
+          simulationContext.getNodeManagers().get(container.getNodeId())
             .addNewContainer(container, cs.getLifeTime());
         } else if (!this.scheduledReduces.isEmpty()) {
           ContainerSimulator cs = scheduledReduces.remove();
           LOG.debug(MessageFormat.format("Application {0} starts a " +
             "launch a reducer ({1}).", appId, container.getId()));
           assignedReduces.put(container.getId(), cs);
-          se.getNmMap().get(container.getNodeId())
+          simulationContext.getNodeManagers().get(container.getNodeId())
             .addNewContainer(container, cs.getLifeTime());
         }
       }

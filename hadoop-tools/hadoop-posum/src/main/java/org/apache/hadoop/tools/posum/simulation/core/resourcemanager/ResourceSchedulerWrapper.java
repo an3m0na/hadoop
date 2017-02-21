@@ -6,8 +6,8 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.simulation.core.DaemonInitializer;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationConfiguration;
+import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -57,9 +57,14 @@ public class ResourceSchedulerWrapper
 
   private Configuration conf;
   private ResourceScheduler scheduler;
+  private SimulationContext simulationContext;
 
   public ResourceSchedulerWrapper() {
     super(ResourceSchedulerWrapper.class.getName());
+  }
+
+  public void setSimulationContext(SimulationContext simulationContext){
+    this.simulationContext = simulationContext;
   }
 
   @Override
@@ -89,7 +94,7 @@ public class ResourceSchedulerWrapper
 
     if (schedulerEvent.getType() == SchedulerEventType.APP_REMOVED
       && schedulerEvent instanceof AppRemovedSchedulerEvent) {
-      DaemonInitializer.decreaseRemainingApps();
+      simulationContext.getRemainingJobsCounter().countDown();
     }
   }
 

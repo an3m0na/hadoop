@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.simulation.core.daemon;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.yarn.event.AsyncDispatcher;
 
 import javax.annotation.Nonnull;
@@ -13,12 +14,14 @@ public class TimeKeeperDaemon implements Daemon {
   private static final Log LOG = LogFactory.getLog(AsyncDispatcher.class);
 
   private final DaemonQueue queue;
-  private long currentTime = 0;
+  private final SimulationContext simulationContext;
+
 
   private volatile boolean stopped = false;
 
-  public TimeKeeperDaemon(DaemonQueue queue) {
-    this.queue = queue;
+  public TimeKeeperDaemon(SimulationContext simulationContext) {
+    this.simulationContext = simulationContext;
+    this.queue = simulationContext.getDaemonQueue();
   }
 
   @Override
@@ -27,7 +30,7 @@ public class TimeKeeperDaemon implements Daemon {
       long nextExpiration = getNextExpiration();
       if (nextExpiration > 0) {
         waitForRunningDaemons();
-        currentTime += nextExpiration;
+        simulationContext.setCurrentTime(simulationContext.getCurrentTime() + nextExpiration);
       }
       if (!stopped) {
         queue.add(this);
@@ -45,7 +48,6 @@ public class TimeKeeperDaemon implements Daemon {
         queue.wait();
       }
     }
-
   }
 
   private long getNextExpiration() {
@@ -55,10 +57,6 @@ public class TimeKeeperDaemon implements Daemon {
 
   public void stop() {
     stopped = true;
-  }
-
-  public long getCurrentTime() {
-    return currentTime;
   }
 
   @Override
