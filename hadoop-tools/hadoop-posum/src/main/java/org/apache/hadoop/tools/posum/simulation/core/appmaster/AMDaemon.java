@@ -5,9 +5,8 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
-import org.apache.hadoop.tools.posum.simulation.core.SimulationRunner;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
-import org.apache.hadoop.tools.posum.simulation.core.nodemanager.ContainerSimulator;
+import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.FinishApplicationMasterRequest;
@@ -52,14 +51,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Private
 @Unstable
-public abstract class AMSimulator extends WorkerDaemon {
+public abstract class AMDaemon extends WorkerDaemon {
   // resource manager
   protected ResourceManager rm;
   // application
   protected ApplicationId appId;
   protected ApplicationAttemptId appAttemptId;
   protected String oldAppId;    // jobId from the jobhistory file
-  protected List<ContainerSimulator> initialContainers;
+  protected List<SimulatedContainer> initialContainers;
   // record factory
   protected final static RecordFactory recordFactory =
     RecordFactoryProvider.getRecordFactory(null);
@@ -79,14 +78,14 @@ public abstract class AMSimulator extends WorkerDaemon {
   protected int totalContainers;
   protected int finishedContainers;
 
-  protected final Logger LOG = Logger.getLogger(AMSimulator.class);
+  protected final Logger LOG = Logger.getLogger(AMDaemon.class);
 
-  public AMSimulator(SimulationContext simulationContext) {
+  public AMDaemon(SimulationContext simulationContext) {
     super(simulationContext);
     this.responseQueue = new LinkedBlockingQueue<>();
   }
 
-  public void init(int heartbeatInterval, List<ContainerSimulator> containerList, ResourceManager rm,
+  public void init(int heartbeatInterval, List<SimulatedContainer> containerList, ResourceManager rm,
                    long traceStartTime, String user, String queue, String oldAppId) {
     super.init(traceStartTime, heartbeatInterval);
     this.user = user;
@@ -261,12 +260,12 @@ public abstract class AMSimulator extends WorkerDaemon {
   }
 
   protected List<ResourceRequest> packageRequests(
-    List<ContainerSimulator> csList, int priority) {
+    List<SimulatedContainer> csList, int priority) {
     // create requests
     Map<String, ResourceRequest> rackLocalRequestMap = new HashMap<String, ResourceRequest>();
     Map<String, ResourceRequest> nodeLocalRequestMap = new HashMap<String, ResourceRequest>();
     ResourceRequest anyRequest = null;
-    for (ContainerSimulator cs : csList) {
+    for (SimulatedContainer cs : csList) {
       // check rack local
       String rackname = cs.getRack();
       if (rackLocalRequestMap.containsKey(rackname)) {

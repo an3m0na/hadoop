@@ -31,7 +31,6 @@ public class SimulationRunnerTest {
   @Test
   public void testDaemons() throws Exception {
     Configuration conf = PosumConfiguration.newInstance();
-    String schedulerClass = FifoScheduler.class.getName();
     Map<String, String> racks = new HashMap<>(2);
     racks.put(NODE1, RACK1);
     racks.put(NODE2, RACK1);
@@ -42,7 +41,7 @@ public class SimulationRunnerTest {
 
     SimulationContext context = new SimulationContext();
     context.setConf(conf);
-    context.setSchedulerClass(schedulerClass);
+    context.setSchedulerClass(FifoScheduler.class);
     context.setTopology(racks);
     context.setJobs(jobs);
     context.setTasks(tasks);

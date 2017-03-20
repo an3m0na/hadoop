@@ -4,9 +4,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonQueue;
-import org.apache.hadoop.tools.posum.simulation.core.nodemanager.NMSimulator;
+import org.apache.hadoop.tools.posum.simulation.core.nodemanager.NMDaemon;
 import org.apache.hadoop.yarn.api.records.NodeId;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -17,11 +19,11 @@ public class SimulationContext {
   private CountDownLatch remainingJobsCounter;
   private DaemonQueue daemonQueue = new DaemonQueue();
   private Configuration conf;
-  private String schedulerClass;
+  private Class<? extends ResourceScheduler> schedulerClass;
   private Map<String, String> topology; // node -> rack
   private List<JobProfile> jobs;
   private Map<String, List<TaskProfile>> tasks;
-  private Map<NodeId, NMSimulator> nodeManagers;
+  private Map<NodeId, NMDaemon> nodeManagers;
   private JobCompletionHandler jobCompletionHandler;
   private long endTime = 0;
 
@@ -65,11 +67,11 @@ public class SimulationContext {
     this.conf = conf;
   }
 
-  public String getSchedulerClass() {
+  public Class<? extends ResourceScheduler> getSchedulerClass() {
     return schedulerClass;
   }
 
-  public void setSchedulerClass(String schedulerClass) {
+  public void setSchedulerClass(Class<? extends ResourceScheduler> schedulerClass) {
     this.schedulerClass = schedulerClass;
   }
 
@@ -89,11 +91,11 @@ public class SimulationContext {
     this.tasks = tasks;
   }
 
-  public Map<NodeId, NMSimulator> getNodeManagers() {
+  public Map<NodeId, NMDaemon> getNodeManagers() {
     return nodeManagers;
   }
 
-  public void setNodeManagers(Map<NodeId, NMSimulator> nodeManagers) {
+  public void setNodeManagers(Map<NodeId, NMDaemon> nodeManagers) {
     this.nodeManagers = nodeManagers;
   }
 
@@ -112,4 +114,5 @@ public class SimulationContext {
   public void setEndTime(long endTime) {
     this.endTime = endTime;
   }
+
 }

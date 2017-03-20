@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 @Private
 @Unstable
-public class ContainerSimulator implements Delayed {
+public class SimulatedContainer implements Delayed {
   // id
   private ContainerId id;
   // resource allocated
@@ -33,7 +33,7 @@ public class ContainerSimulator implements Delayed {
   /**
    * invoked when AM schedules containers to allocate
    */
-  public ContainerSimulator(SimulationContext simulationContext, Resource resource, long lifeTime,
+  public SimulatedContainer(SimulationContext simulationContext, Resource resource, long lifeTime,
                             String rack, String hostname, int priority, String type) {
     this.simulationContext = simulationContext;
     this.resource = resource;
@@ -47,7 +47,7 @@ public class ContainerSimulator implements Delayed {
   /**
    * invoke when NM schedules containers to run
    */
-  public ContainerSimulator(SimulationContext simulationContext, ContainerId id, Resource resource, long endTime,
+  public SimulatedContainer(SimulationContext simulationContext, ContainerId id, Resource resource, long endTime,
                             long lifeTime) {
     this.simulationContext = simulationContext;
     this.id = id;
@@ -66,11 +66,11 @@ public class ContainerSimulator implements Delayed {
 
   @Override
   public int compareTo(Delayed o) {
-    if (!(o instanceof ContainerSimulator)) {
+    if (!(o instanceof SimulatedContainer)) {
       throw new IllegalArgumentException(
-        "Parameter must be a ContainerSimulator instance");
+        "Parameter must be a SimulatedContainer instance");
     }
-    ContainerSimulator other = (ContainerSimulator) o;
+    SimulatedContainer other = (SimulatedContainer) o;
     return (int) Math.signum(endTime - other.endTime);
   }
 
