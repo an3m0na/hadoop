@@ -7,6 +7,7 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.service.Service;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
 import java.lang.reflect.Method;
 
@@ -16,6 +17,12 @@ public class ResourceManagerWrapper extends ResourceManager {
 
   public ResourceManagerWrapper(SimulationContext simulationContext) {
     this.simulationContext = simulationContext;
+  }
+
+  protected ResourceScheduler createScheduler() {
+    ResourceSchedulerWrapper scheduler = new ResourceSchedulerWrapper(simulationContext);
+    scheduler.setConf(getConfig());
+    return scheduler;
   }
 
   @Override
@@ -35,10 +42,8 @@ public class ResourceManagerWrapper extends ResourceManager {
     removeService.invoke(activeServices, rmContext.getClientRMService());
 
     removeService(rmContext.getRMAdminService());
-    ((ResourceSchedulerWrapper)rmContext.getScheduler()).setSimulationContext(simulationContext);
 
   }
-
 
 
 }

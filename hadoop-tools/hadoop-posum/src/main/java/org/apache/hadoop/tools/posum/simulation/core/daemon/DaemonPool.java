@@ -7,8 +7,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.hadoop.tools.posum.simulation.core.SimulationConfiguration.RUNNER_POOL_SIZE;
-import static org.apache.hadoop.tools.posum.simulation.core.SimulationConfiguration.RUNNER_POOL_SIZE_DEFAULT;
+import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE;
+import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE_DEFAULT;
 
 public class DaemonPool {
   private final static Logger LOG = Logger.getLogger(DaemonPool.class);
@@ -27,7 +27,7 @@ public class DaemonPool {
 
     timeKeeper = new TimeKeeperDaemon(simulationContext);
 
-    int threadPoolSize = simulationContext.getConf().getInt(RUNNER_POOL_SIZE, RUNNER_POOL_SIZE_DEFAULT);
+    int threadPoolSize = simulationContext.getConf().getInt(SIMULATION_RUNNER_POOL_SIZE, SIMULATION_RUNNER_POOL_SIZE_DEFAULT);
     executor = new ThreadPoolExecutor(threadPoolSize, threadPoolSize, 0, TimeUnit.MILLISECONDS, (BlockingQueue) queue);
     executor.prestartAllCoreThreads();
   }

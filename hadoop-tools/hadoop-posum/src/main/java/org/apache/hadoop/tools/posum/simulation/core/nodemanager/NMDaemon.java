@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.DelayQueue;
 
-public class NMSimulator extends WorkerDaemon {
+public class NMDaemon extends WorkerDaemon {
   // node resource
   private RMNode node;
   // master key
@@ -40,16 +40,16 @@ public class NMSimulator extends WorkerDaemon {
   // containers with various STATE
   private List<ContainerId> completedContainerList;
   private List<ContainerId> releasedContainerList;
-  private DelayQueue<ContainerSimulator> containerQueue;
-  private Map<ContainerId, ContainerSimulator> runningContainers;
+  private DelayQueue<SimulatedContainer> containerQueue;
+  private Map<ContainerId, SimulatedContainer> runningContainers;
   private List<ContainerId> amContainerList;
   // resource manager
   private ResourceManager rm;
   // heart beat response id
   private int RESPONSE_ID = 1;
-  private final static Logger LOG = Logger.getLogger(NMSimulator.class);
+  private final static Logger LOG = Logger.getLogger(NMDaemon.class);
 
-  public NMSimulator(SimulationContext simulationContext) {
+  public NMDaemon(SimulationContext simulationContext) {
     super(simulationContext);
   }
 
@@ -64,11 +64,11 @@ public class NMSimulator extends WorkerDaemon {
       Collections.synchronizedList(new ArrayList<ContainerId>());
     releasedContainerList =
       Collections.synchronizedList(new ArrayList<ContainerId>());
-    containerQueue = new DelayQueue<ContainerSimulator>();
+    containerQueue = new DelayQueue<SimulatedContainer>();
     amContainerList =
       Collections.synchronizedList(new ArrayList<ContainerId>());
     runningContainers =
-      new ConcurrentHashMap<ContainerId, ContainerSimulator>();
+      new ConcurrentHashMap<ContainerId, SimulatedContainer>();
 
   }
 
@@ -88,7 +88,7 @@ public class NMSimulator extends WorkerDaemon {
   @Override
   public void doStep() throws Exception {
     // we check the lifetime for each running containers
-    ContainerSimulator cs = null;
+    SimulatedContainer cs = null;
     synchronized (completedContainerList) {
       while ((cs = containerQueue.poll()) != null) {
         runningContainers.remove(cs.getId());
@@ -154,7 +154,7 @@ public class NMSimulator extends WorkerDaemon {
   private ArrayList<ContainerStatus> generateContainerStatusList() {
     ArrayList<ContainerStatus> csList = new ArrayList<ContainerStatus>();
     // add running containers
-    for (ContainerSimulator container : runningContainers.values()) {
+    for (SimulatedContainer container : runningContainers.values()) {
       csList.add(newContainerStatus(container.getId(),
         ContainerState.RUNNING, ContainerExitStatus.SUCCESS));
     }
@@ -209,7 +209,7 @@ public class NMSimulator extends WorkerDaemon {
       "container ({1}).", node.getNodeID(), container.getId()));
     if (lifeTimeMS != -1) {
       // normal container
-      ContainerSimulator cs = new ContainerSimulator(simulationContext, container.getId(),
+      SimulatedContainer cs = new SimulatedContainer(simulationContext, container.getId(),
         container.getResource(), lifeTimeMS + simulationContext.getCurrentTime(),
         lifeTimeMS);
       containerQueue.add(cs);

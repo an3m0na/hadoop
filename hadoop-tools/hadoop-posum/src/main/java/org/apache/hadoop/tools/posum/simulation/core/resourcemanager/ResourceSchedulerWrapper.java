@@ -6,7 +6,6 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.simulation.core.SimulationConfiguration;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
@@ -59,23 +58,15 @@ public class ResourceSchedulerWrapper
   private ResourceScheduler scheduler;
   private SimulationContext simulationContext;
 
-  public ResourceSchedulerWrapper() {
+  public ResourceSchedulerWrapper(SimulationContext simulationContext) {
     super(ResourceSchedulerWrapper.class.getName());
-  }
-
-  public void setSimulationContext(SimulationContext simulationContext){
     this.simulationContext = simulationContext;
   }
 
   @Override
   public void setConf(Configuration conf) {
     this.conf = conf;
-    // set scheduler
-    Class<? extends ResourceScheduler> klass =
-      conf.getClass(SimulationConfiguration.RM_SCHEDULER, null,
-        ResourceScheduler.class);
-
-    scheduler = ReflectionUtils.newInstance(klass, conf);
+    this.scheduler = ReflectionUtils.newInstance(simulationContext.getSchedulerClass(), conf);
   }
 
   @Override

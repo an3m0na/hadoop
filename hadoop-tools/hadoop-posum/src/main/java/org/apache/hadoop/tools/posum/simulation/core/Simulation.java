@@ -15,9 +15,10 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
-import org.apache.hadoop.tools.posum.simulation.master.SimulationMaster;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,10 +30,11 @@ import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
 
 class Simulation implements Callable<SimulationResultPayload> {
-  private static final Log logger = LogFactory.getLog(SimulationMaster.class);
+  private static final Log logger = LogFactory.getLog(Simulation.class);
 
   private volatile boolean exit = false;
-  private String policy;
+  private String policyName;
+  private Class<? extends ResourceScheduler> policyClass;
   private JobBehaviorPredictor predictor;
   private DataStore dataStore;
   private DatabaseReference dbReference;
@@ -46,22 +48,26 @@ class Simulation implements Callable<SimulationResultPayload> {
   private SimulationContext simulationContext;
 
 
-  Simulation(JobBehaviorPredictor predictor, String policy, DataStore dataStore) {
+  Simulation(JobBehaviorPredictor predictor, String policyName, Class<? extends ResourceScheduler> policyClass, DataStore dataStore, Map<String, String> topology) {
     this.predictor = predictor;
-    this.policy = policy;
+    this.policyName = policyName;
+    this.policyClass = policyClass;
     this.dataStore = dataStore;
     this.stats = new SimulationStatistics();
     this.simulationContext = new SimulationContext();
+    this.simulationContext.setTopology(topology);
   }
 
   private void setUp() {
-    dbReference = DatabaseReference.get(DatabaseReference.Type.SIMULATION, policy);
+    dbReference = DatabaseReference.get(DatabaseReference.Type.SIMULATION, policyName);
     dataStore.clearDatabase(dbReference);
     dataStore.copyDatabase(DatabaseReference.getSimulation(), dbReference);
     db = Database.from(dataStore, dbReference);
     predictor.initialize(db);
     stats.setStartTimeCluster(getLastUpdated());
     stats.setStartTimePhysical(System.currentTimeMillis());
+    simulationContext.setConf(PosumConfiguration.newInstance());
+    simulationContext.setSchedulerClass(policyClass);
     loadJobs();
   }
 
@@ -84,10 +90,10 @@ class Simulation implements Callable<SimulationResultPayload> {
     setUp();
     try {
       new SimulationRunner(simulationContext).start();
-      return SimulationResultPayload.newInstance(policy, CompoundScorePayload.newInstance(runtime, penalty, cost));
+      return SimulationResultPayload.newInstance(policyName, CompoundScorePayload.newInstance(runtime, penalty, cost));
     } catch (Exception e) {
       logger.error("Error during simulation. Shutting down simulation...", e);
-      return SimulationResultPayload.newInstance(policy, CompoundScorePayload.newInstance(0.0, 0.0, 0.0));
+      return SimulationResultPayload.newInstance(policyName, CompoundScorePayload.newInstance(0.0, 0.0, 0.0));
     } finally {
       tearDown();
     }

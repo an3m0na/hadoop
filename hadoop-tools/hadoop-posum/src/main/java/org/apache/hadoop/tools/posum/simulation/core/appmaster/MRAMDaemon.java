@@ -5,7 +5,7 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
-import org.apache.hadoop.tools.posum.simulation.core.nodemanager.ContainerSimulator;
+import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.records.Container;
@@ -30,7 +30,7 @@ import java.util.Map;
 
 @Private
 @Unstable
-public class MRAMSimulator extends AMSimulator {
+public class MRAMDaemon extends AMDaemon {
   /*
   Vocabulary Used: 
   pending -> requests which are NOT yet sent to RM
@@ -46,42 +46,42 @@ public class MRAMSimulator extends AMSimulator {
   private static final int PRIORITY_MAP = 20;
 
   // pending maps
-  private LinkedList<ContainerSimulator> pendingMaps =
-    new LinkedList<ContainerSimulator>();
+  private LinkedList<SimulatedContainer> pendingMaps =
+    new LinkedList<SimulatedContainer>();
 
   // pending failed maps
-  private LinkedList<ContainerSimulator> pendingFailedMaps =
-    new LinkedList<ContainerSimulator>();
+  private LinkedList<SimulatedContainer> pendingFailedMaps =
+    new LinkedList<SimulatedContainer>();
 
   // scheduled maps
-  private LinkedList<ContainerSimulator> scheduledMaps =
-    new LinkedList<ContainerSimulator>();
+  private LinkedList<SimulatedContainer> scheduledMaps =
+    new LinkedList<SimulatedContainer>();
 
   // assigned maps
-  private Map<ContainerId, ContainerSimulator> assignedMaps =
-    new HashMap<ContainerId, ContainerSimulator>();
+  private Map<ContainerId, SimulatedContainer> assignedMaps =
+    new HashMap<ContainerId, SimulatedContainer>();
 
   // reduces which are not yet scheduled
-  private LinkedList<ContainerSimulator> pendingReduces =
-    new LinkedList<ContainerSimulator>();
+  private LinkedList<SimulatedContainer> pendingReduces =
+    new LinkedList<SimulatedContainer>();
 
   // pending failed reduces
-  private LinkedList<ContainerSimulator> pendingFailedReduces =
-    new LinkedList<ContainerSimulator>();
+  private LinkedList<SimulatedContainer> pendingFailedReduces =
+    new LinkedList<SimulatedContainer>();
 
   // scheduled reduces
-  private LinkedList<ContainerSimulator> scheduledReduces =
-    new LinkedList<ContainerSimulator>();
+  private LinkedList<SimulatedContainer> scheduledReduces =
+    new LinkedList<SimulatedContainer>();
 
   // assigned reduces
-  private Map<ContainerId, ContainerSimulator> assignedReduces =
-    new HashMap<ContainerId, ContainerSimulator>();
+  private Map<ContainerId, SimulatedContainer> assignedReduces =
+    new HashMap<ContainerId, SimulatedContainer>();
 
   // all maps & reduces
-  private LinkedList<ContainerSimulator> allMaps =
-    new LinkedList<ContainerSimulator>();
-  private LinkedList<ContainerSimulator> allReduces =
-    new LinkedList<ContainerSimulator>();
+  private LinkedList<SimulatedContainer> allMaps =
+    new LinkedList<SimulatedContainer>();
+  private LinkedList<SimulatedContainer> allReduces =
+    new LinkedList<SimulatedContainer>();
 
   // counters
   private int mapFinished = 0;
@@ -97,19 +97,19 @@ public class MRAMSimulator extends AMSimulator {
   private final static int MR_AM_CONTAINER_RESOURCE_MEMORY_MB = 1024;
   private final static int MR_AM_CONTAINER_RESOURCE_VCORES = 1;
 
-  public final Logger LOG = Logger.getLogger(MRAMSimulator.class);
+  public final Logger LOG = Logger.getLogger(MRAMDaemon.class);
 
-  public MRAMSimulator(SimulationContext simulationContext) {
+  public MRAMDaemon(SimulationContext simulationContext) {
     super(simulationContext);
   }
 
-  public void init(int heartbeatInterval, List<ContainerSimulator> containerList, ResourceManager rm,
+  public void init(int heartbeatInterval, List<SimulatedContainer> containerList, ResourceManager rm,
                    long traceStartTime, String user, String queue, String oldAppId) {
     super.init(heartbeatInterval, containerList, rm, traceStartTime, user, queue, oldAppId);
     amtype = "mapreduce";
 
     // get map/reduce tasks
-    for (ContainerSimulator cs : initialContainers) {
+    for (SimulatedContainer cs : initialContainers) {
       if (cs.getType().equals("map")) {
         cs.setPriority(PRIORITY_MAP);
         pendingMaps.add(cs);
@@ -252,14 +252,14 @@ public class MRAMSimulator extends AMSimulator {
       // check allocated containers
       for (Container container : response.getAllocatedContainers()) {
         if (!scheduledMaps.isEmpty()) {
-          ContainerSimulator cs = scheduledMaps.remove();
+          SimulatedContainer cs = scheduledMaps.remove();
           LOG.debug(MessageFormat.format("Application {0} starts a " +
             "launch a mapper ({1}).", appId, container.getId()));
           assignedMaps.put(container.getId(), cs);
           simulationContext.getNodeManagers().get(container.getNodeId())
             .addNewContainer(container, cs.getLifeTime());
         } else if (!this.scheduledReduces.isEmpty()) {
-          ContainerSimulator cs = scheduledReduces.remove();
+          SimulatedContainer cs = scheduledReduces.remove();
           LOG.debug(MessageFormat.format("Application {0} starts a " +
             "launch a reducer ({1}).", appId, container.getId()));
           assignedReduces.put(container.getId(), cs);
