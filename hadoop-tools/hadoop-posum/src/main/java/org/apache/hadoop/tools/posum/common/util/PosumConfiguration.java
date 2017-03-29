@@ -16,14 +16,16 @@ public class PosumConfiguration {
   public static int DEFAULT_BUFFER_SIZE = 1024;
 
   public static final String PREFIX = "tools.posum.";
-  public static final String CORE_PREFIX = PREFIX + "core.";
+  public static final String ORCHESTRATOR_PREFIX = PREFIX + "orchestrator.";
   public static final String MONITOR_PREFIX = PREFIX + "monitor.";
   public static final String PREDICTOR_PREFIX = PREFIX + "predictor.";
   public static final String SIMULATOR_PREFIX = PREFIX + "simulator.";
   public static final String DATABASE_PREFIX = PREFIX + "database.";
-  public static final String SCHEDULER_PREFIX = CORE_PREFIX + "scheduler.";
+  public static final String SCHEDULER_PREFIX = PREFIX + "scheduler.";
+  public static final String SIMULTATION_PREFIX = PREFIX + "simulation.";
 
-  public static final String MASTER_HEARTBEAT_MS = CORE_PREFIX + "heartbeat.ms";
+
+  public static final String MASTER_HEARTBEAT_MS = ORCHESTRATOR_PREFIX + "heartbeat.ms";
   public static final int MASTER_HEARTBEAT_MS_DEFAULT = 1000;
 
   public static final String CLUSTER_MONITOR_HEARTBEAT_MS = MONITOR_PREFIX + "cluster.heartbeat.ms";
@@ -56,11 +58,11 @@ public class PosumConfiguration {
   public static final String DM_SERVICE_THREAD_COUNT = DATABASE_PREFIX + "conn.thread-count";
   public static final int DM_SERVICE_THREAD_COUNT_DEFAULT = 50;
 
-  public static final String PM_BIND_ADDRESS = CORE_PREFIX + "bind-host";
-  public static final String PM_ADDRESS = CORE_PREFIX + "address";
+  public static final String PM_BIND_ADDRESS = ORCHESTRATOR_PREFIX + "bind-host";
+  public static final String PM_ADDRESS = ORCHESTRATOR_PREFIX + "address";
   public static final int PM_PORT_DEFAULT = 17010;
   public static final String PM_ADDRESS_DEFAULT = "0.0.0.0:" + PM_PORT_DEFAULT;
-  public static final String PM_SERVICE_THREAD_COUNT = CORE_PREFIX + "conn.thread-count";
+  public static final String PM_SERVICE_THREAD_COUNT = ORCHESTRATOR_PREFIX + "conn.thread-count";
   public static final int PM_SERVICE_THREAD_COUNT_DEFAULT = 50;
 
   public static final String POSUM_CONNECT_MAX_WAIT_MS = PREFIX + "conn.max-wait.ms";
@@ -97,7 +99,7 @@ public class PosumConfiguration {
   public static final String SIMULATOR_SERVICE_THREAD_COUNT = SIMULATOR_PREFIX + "conn.thread-count";
   public static final int SIMULATOR_SERVICE_THREAD_COUNT_DEFAULT = 10;
 
-  public static final String MASTER_WEBAPP_PORT = CORE_PREFIX + "webapp.port";
+  public static final String MASTER_WEBAPP_PORT = ORCHESTRATOR_PREFIX + "webapp.port";
   public static final int MASTER_WEBAPP_PORT_DEFAULT = 18000;
 
   public static final String SCHEDULER_WEBAPP_PORT = SCHEDULER_PREFIX + "webapp.port";
@@ -127,5 +129,22 @@ public class PosumConfiguration {
   public static final String REPRIORITIZE_INTERVAL = SCHEDULER_PREFIX + "reprioritize.ms";
   public static final long REPRIORITIZE_INTERVAL_DEFAULT = 10000;
 
-
+  public static final String SIMULATION_RUNNER_POOL_SIZE = SIMULTATION_PREFIX + "concurrent.daemons";
+  public static final int SIMULATION_RUNNER_POOL_SIZE_DEFAULT = 10;
+  public static final String SIMULATION_SCHEDULER = SCHEDULER_PREFIX + "scheduler.class";
+  public static final String NM_DAEMON_PREFIX = SIMULTATION_PREFIX + "nm.";
+  public static final String NM_DAEMON_MEMORY_MB = NM_DAEMON_PREFIX + "memory.mb";
+  public static final int NM_DAEMON_MEMORY_MB_DEFAULT = 10240;
+  public static final String NM_DAEMON_VCORES = NM_DAEMON_PREFIX + "vcores";
+  public static final int NM_DAEMON_VCORES_DEFAULT = 10;
+  public static final String NM_DAEMON_HEARTBEAT_INTERVAL_MS = NM_DAEMON_PREFIX + "heartbeat.interval.ms";
+  public static final int NM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT = 1000;
+  public static final String AM_DAEMON_PREFIX = SIMULTATION_PREFIX + "am.";
+  public static final String AM_DAEMON_HEARTBEAT_INTERVAL_MS = AM_DAEMON_PREFIX + "heartbeat.interval.ms";
+  public static final int AM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT = 1000;
+  public static final String SIMULATION_CONTAINER_PREFIX = SIMULTATION_PREFIX + "container.";
+  public static final String SIMULATION_CONTAINER_MEMORY_MB = SIMULATION_CONTAINER_PREFIX + "memory.mb";
+  public static final int SIMULATION_CONTAINER_MEMORY_MB_DEFAULT = 1024;
+  public static final String SIMULATION_CONTAINER_VCORES = SIMULATION_CONTAINER_PREFIX + "vcores";
+  public static final int SIMULATION_CONTAINER_VCORES_DEFAULT = 1;
 }
