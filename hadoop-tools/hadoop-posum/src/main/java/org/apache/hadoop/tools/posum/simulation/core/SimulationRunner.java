@@ -9,7 +9,6 @@ import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonPool;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.NMDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
 import org.apache.hadoop.tools.posum.simulation.core.resourcemanager.ResourceManagerWrapper;
-import org.apache.hadoop.tools.posum.simulation.core.resourcemanager.ResourceSchedulerWrapper;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.NodeState;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -41,7 +40,6 @@ import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMUL
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_CONTAINER_MEMORY_MB_DEFAULT;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_CONTAINER_VCORES;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_CONTAINER_VCORES_DEFAULT;
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_SCHEDULER;
 
 public class SimulationRunner {
   private final static Logger LOG = Logger.getLogger(SimulationRunner.class);
@@ -88,13 +86,15 @@ public class SimulationRunner {
     int nmVCores = conf.getInt(NM_DAEMON_VCORES, NM_DAEMON_VCORES_DEFAULT);
     int heartbeatInterval = conf.getInt(NM_DAEMON_HEARTBEAT_INTERVAL_MS, NM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT);
 
-    Map<NodeId, NMDaemon> nmMap = new HashMap<>(context.getTopology().size());
-    simulationHostNames = new HashMap<>(context.getTopology().size());
+    //FIXME: use a dynamic snapshot mechanism
+    Map<String, String> topology = context.getTopologyProvider().getSnapshot(0);
+    Map<NodeId, NMDaemon> nmMap = new HashMap<>(topology.size());
+    simulationHostNames = new HashMap<>(topology.size());
     Random random = new Random();
-    for (String oldHostname : context.getTopology().keySet()) {
+    for (String oldHostname : topology.keySet()) {
       // randomize the start time from -heartbeatInterval to zero, in order to start NMs before AMs
       NMDaemon nm = new NMDaemon(context);
-      nm.init(context.getTopology().get(oldHostname), assignNewHost(oldHostname), nmMemoryMB, nmVCores, -random.nextInt(heartbeatInterval), heartbeatInterval, rm);
+      nm.init(topology.get(oldHostname), assignNewHost(oldHostname), nmMemoryMB, nmVCores, -random.nextInt(heartbeatInterval), heartbeatInterval, rm);
       nmMap.put(nm.getNode().getNodeID(), nm);
       daemonPool.schedule(nm);
     }
@@ -154,7 +154,7 @@ public class SimulationRunner {
       List<SimulatedContainer> containerList = new ArrayList<>();
       for (TaskProfile task : context.getTasks().get(job.getId())) {
         String hostname = simulationHostNames.get(task.getHttpAddress());
-        String rack = context.getTopology().get(task.getHttpAddress());
+        String rack = context.getTopologyProvider().getSnapshot(0).get(task.getHttpAddress());
         long taskStart = task.getStartTime();
         long taskFinish = task.getFinishTime();
         long lifeTime = taskFinish - taskStart;
