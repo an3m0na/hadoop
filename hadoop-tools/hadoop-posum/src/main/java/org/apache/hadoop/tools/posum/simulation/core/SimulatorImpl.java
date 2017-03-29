@@ -8,6 +8,7 @@ import org.apache.hadoop.tools.posum.client.simulation.Simulator;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.master.SimulationMasterContext;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 
@@ -52,10 +53,12 @@ public class SimulatorImpl extends CompositeService implements Simulator {
   @Override
   public synchronized void startSimulation() {
     simulationMap = new HashMap<>(policies.size());
-    for (String policyName : policies.keySet()) {
-      logger.trace("Starting simulation for " + policyName);
-      Simulation simulation = new Simulation(predictor, policyName, context.getDataBroker());
-      simulationMap.put(policyName, new PendingResult(simulation, executor.submit(simulation)));
+    for (Map.Entry<String, Class<? extends PluginPolicy>> policy : policies.entrySet()) {
+      logger.trace("Starting simulation for " + policy.getKey());
+      Class<? extends PluginPolicy> policyClass = policy.getValue();
+      // TODO find out hot topology works in hadoop
+      Simulation simulation = new Simulation(predictor, policyClass.getName(), policyClass, context.getDataBroker(), null);
+      simulationMap.put(policy.getKey(), new PendingResult(simulation, executor.submit(simulation)));
     }
     resultAggregator = new ResultAggregator(simulationMap.values(), this);
     executor.execute(resultAggregator);
