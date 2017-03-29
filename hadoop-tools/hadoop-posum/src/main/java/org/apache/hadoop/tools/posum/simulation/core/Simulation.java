@@ -7,6 +7,7 @@ import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
@@ -16,11 +17,13 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.TopologyProvider;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +58,7 @@ class Simulation implements Callable<SimulationResultPayload> {
     this.dataStore = dataStore;
     this.stats = new SimulationStatistics();
     this.simulationContext = new SimulationContext();
-    this.simulationContext.setTopology(topology);
+    this.simulationContext.setTopologyProvider(new TopologyProvider(Collections.singletonMap(0L, topology)));
   }
 
   private void setUp() {

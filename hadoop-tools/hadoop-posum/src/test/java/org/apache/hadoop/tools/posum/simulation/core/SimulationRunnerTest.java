@@ -4,12 +4,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.TopologyProvider;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +44,7 @@ public class SimulationRunnerTest {
     SimulationContext context = new SimulationContext();
     context.setConf(conf);
     context.setSchedulerClass(FifoScheduler.class);
-    context.setTopology(racks);
+    context.setTopologyProvider(new TopologyProvider(Collections.singletonMap(0L, racks)));
     context.setJobs(jobs);
     context.setTasks(tasks);
     new SimulationRunner(context).start();

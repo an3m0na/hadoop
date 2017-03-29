@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.simulation.core;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
+import org.apache.hadoop.tools.posum.common.util.TopologyProvider;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonQueue;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.NMDaemon;
 import org.apache.hadoop.yarn.api.records.NodeId;
@@ -20,12 +21,12 @@ public class SimulationContext {
   private DaemonQueue daemonQueue = new DaemonQueue();
   private Configuration conf;
   private Class<? extends ResourceScheduler> schedulerClass;
-  private Map<String, String> topology; // node -> rack
   private List<JobProfile> jobs;
   private Map<String, List<TaskProfile>> tasks;
   private Map<NodeId, NMDaemon> nodeManagers;
   private JobCompletionHandler jobCompletionHandler;
   private long endTime = 0;
+  private TopologyProvider topologyProvider;
 
   public long getCurrentTime() {
     return currentTime;
@@ -43,12 +44,12 @@ public class SimulationContext {
     this.remainingJobsCounter = remainingJobsCounter;
   }
 
-  public Map<String, String> getTopology() {
-    return topology;
+  public TopologyProvider getTopologyProvider() {
+    return topologyProvider;
   }
 
-  public void setTopology(Map<String, String> topology) {
-    this.topology = topology;
+  public void setTopologyProvider(TopologyProvider topologyProvider) {
+    this.topologyProvider = topologyProvider;
   }
 
   public DaemonQueue getDaemonQueue() {
