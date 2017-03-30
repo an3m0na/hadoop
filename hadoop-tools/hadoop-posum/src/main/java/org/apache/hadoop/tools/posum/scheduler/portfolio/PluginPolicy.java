@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.scheduler.core.MetaSchedulerCommService;
+import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSAppAttempt;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSQueue;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSchedulerNode;
@@ -29,7 +29,7 @@ public abstract class PluginPolicy<
   protected Class<A> aClass;
   protected Class<N> nClass;
   protected Configuration pluginConf;
-  protected MetaSchedulerCommService commService;
+  protected DatabaseProvider dbProvider;
 
   public PluginPolicy(Class<A> aClass, Class<N> nClass, String policyName) {
     super(policyName);
@@ -62,9 +62,9 @@ public abstract class PluginPolicy<
     }
   }
 
-  public void initializePlugin(Configuration conf, MetaSchedulerCommService commService) {
+  public void initializePlugin(Configuration conf, DatabaseProvider dbProvider) {
     this.pluginConf = conf;
-    this.commService = commService;
+    this.dbProvider = dbProvider;
   }
 
   public void forwardCompletedContainer(RMContainer rmContainer, ContainerStatus containerStatus, RMContainerEventType event) {

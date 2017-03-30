@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.ShortestRTFirstPolicy;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
@@ -16,8 +17,8 @@ import java.util.Map;
 
 
 public class SimulationTest {
-  private static final Class<? extends ResourceScheduler> SCHEDULER_CLASS = FifoScheduler.class;
-  private static final String SCHEDULER_NAME= "FIFO";
+  private static final Class<? extends ResourceScheduler> SCHEDULER_CLASS = ShortestRTFirstPolicy.class;
+  private static final String SCHEDULER_NAME= "SRTF";
   private static final Map<String, String> TOPOLOGY;
   static {
     TOPOLOGY = new HashMap<>(4);
