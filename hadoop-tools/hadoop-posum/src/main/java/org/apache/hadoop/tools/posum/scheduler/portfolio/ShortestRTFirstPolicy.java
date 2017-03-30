@@ -8,7 +8,7 @@ import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.scheduler.core.MetaSchedulerCommService;
+import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -37,8 +37,8 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
   }
 
   @Override
-  public void initializePlugin(Configuration conf, MetaSchedulerCommService commService) {
-    super.initializePlugin(conf, commService);
+  public void initializePlugin(Configuration conf, DatabaseProvider dbProvider) {
+    super.initializePlugin(conf, dbProvider);
     maxCheck = conf.getLong(PosumConfiguration.REPRIORITIZE_INTERVAL,
       PosumConfiguration.REPRIORITIZE_INTERVAL_DEFAULT);
   }
@@ -61,7 +61,7 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
   }
 
   protected JobProfile fetchJobProfile(String appId, String user) {
-    Database db = commService.getDatabase();
+    Database db = dbProvider.getDatabase();
     if (db == null)
       // DataMaster is not connected; do nothing
       return null;

@@ -11,6 +11,7 @@ import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtensibleCapacit
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 
+import javax.xml.crypto.Data;
 import java.util.Comparator;
 
 public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttempt, ExtCaSchedulerNode> {
@@ -56,7 +57,7 @@ public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttemp
       String appId = app.getApplicationId().toString();
       if (app.getTotalInputSize() != null)
         return;
-      Database db = commService.getDatabase();
+      Database db = dbProvider.getDatabase();
       if (db != null) {
         JobForAppCall getJob = JobForAppCall.newInstance(appId, app.getUser());
         JobProfile job = db.execute(getJob).getEntity();

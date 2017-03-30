@@ -6,6 +6,8 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
@@ -67,6 +69,9 @@ public class ResourceSchedulerWrapper
   public void setConf(Configuration conf) {
     this.conf = conf;
     this.scheduler = ReflectionUtils.newInstance(simulationContext.getSchedulerClass(), conf);
+    if(scheduler instanceof PluginPolicy){
+      ((PluginPolicy) scheduler).initializePlugin(PosumConfiguration.newInstance(), simulationContext);
+    }
   }
 
   @Override

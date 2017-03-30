@@ -71,6 +71,7 @@ class Simulation implements Callable<SimulationResultPayload> {
     stats.setStartTimePhysical(System.currentTimeMillis());
     simulationContext.setConf(PosumConfiguration.newInstance());
     simulationContext.setSchedulerClass(policyClass);
+    simulationContext.setDatabase(db);
     loadJobs();
   }
 
