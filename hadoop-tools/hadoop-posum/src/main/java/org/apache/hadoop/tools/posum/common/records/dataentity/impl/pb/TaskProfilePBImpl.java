@@ -8,6 +8,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.yarn.proto.PosumProtos.TaskProfileProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.TaskProfileProtoOrBuilder;
 
+import java.util.List;
+
 public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, TaskProfileProto, TaskProfileProto.Builder>
   implements TaskProfile {
 
@@ -355,6 +357,40 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
       return;
     }
     builder.setHttpAddress(address);
+  }
+
+  @Override
+  public List<String> getSplitLocations() {
+    TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    return p.getSplitLocationsList();
+  }
+
+  @Override
+  public void setSplitLocations(List<String> splitLocations) {
+    maybeInitBuilder();
+    builder.clearSplitLocations();
+    if (splitLocations == null) {
+      return;
+    }
+    builder.addAllSplitLocations(splitLocations);
+  }
+
+  @Override
+  public Long getSplitSize() {
+    TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if(!p.hasSplitSize())
+      return null;
+    return p.getSplitSize();
+  }
+
+  @Override
+  public void setSplitSize(Long splitSize) {
+    maybeInitBuilder();
+    builder.clearSplitSize();
+    if (splitSize == null) {
+      return;
+    }
+    builder.setSplitSize(splitSize);
   }
 
   @Override

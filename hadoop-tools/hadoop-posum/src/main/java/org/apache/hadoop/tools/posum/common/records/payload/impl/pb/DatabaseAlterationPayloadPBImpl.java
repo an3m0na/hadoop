@@ -3,10 +3,12 @@ package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DatabaseReferencePBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.DatabaseAlterationPayload;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
+import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseAlterationPayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseAlterationPayloadProtoOrBuilder;
 
@@ -103,6 +105,24 @@ public class DatabaseAlterationPayloadPBImpl extends DatabaseAlterationPayload i
       return;
     }
     builder.setDestination(((DatabaseReferencePBImpl) db).getProto());
+  }
+
+  @Override
+  public DataEntityCollection getTargetCollection() {
+    DatabaseAlterationPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasTargetCollection())
+      return null;
+    return DataEntityCollection.valueOf(p.getTargetCollection().name().substring("COLL_".length()));
+  }
+
+  @Override
+  public void setTargetCollection(DataEntityCollection collection) {
+    maybeInitBuilder();
+    if (collection == null) {
+      builder.clearTargetCollection();
+      return;
+    }
+    builder.setTargetCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + collection.name()));
   }
 
 

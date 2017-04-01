@@ -127,6 +127,14 @@ public class DataMasterCommService extends CompositeService implements DataMaste
           DatabaseAlterationPayload dbAlteration = (DatabaseAlterationPayload) request.getPayload();
           dmContext.getDataStore().copyDatabase(dbAlteration.getSourceDB(), dbAlteration.getDestinationDB());
           break;
+        case COPY_COLL:
+          dbAlteration = (DatabaseAlterationPayload) request.getPayload();
+          dmContext.getDataStore().copyCollection(
+            dbAlteration.getTargetCollection(),
+            dbAlteration.getSourceDB(),
+            dbAlteration.getDestinationDB()
+          );
+          break;
         default:
           return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
       }

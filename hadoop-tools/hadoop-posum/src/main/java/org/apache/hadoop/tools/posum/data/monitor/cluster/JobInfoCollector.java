@@ -8,22 +8,28 @@ import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.split.JobSplit;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.mapreduce.v2.util.MRBuilderUtils;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 class JobInfoCollector {
   private static Log logger = LogFactory.getLog(JobInfoCollector.class);
@@ -118,38 +124,63 @@ class JobInfoCollector {
   JobInfo getSubmittedJobInfo(String appId,
                               String user) throws IOException {
     ApplicationId realAppId = Utils.parseApplicationId(appId);
-    JobId jobId = Utils.composeJobId(realAppId.getClusterTimestamp(), realAppId.getId());
+    JobId jobId = MRBuilderUtils.newJobId(realAppId, realAppId.getId());
     final JobConfProxy confProxy = hdfsReader.getSubmittedConf(jobId, user);
-    final JobProfile job = getJobProfileFromConf(jobId, confProxy);
-    job.setTotalMapTasks(job.getInputSplits());
+    return getJobInfoFromConf(jobId, confProxy);
+  }
+
+  private JobInfo getJobInfoFromConf(JobId jobId, JobConfProxy jobConfProxy) throws IOException {
+    JobProfile job = Records.newRecord(JobProfile.class);
+    job.setId(jobId.toString());
+    job.setAppId(jobId.getAppId().toString());
+    job.setName(jobConfProxy.getEntry(MRJobConfig.JOB_NAME));
+    job.setUser(jobConfProxy.getEntry(MRJobConfig.USER_NAME));
+    job.setQueue(jobConfProxy.getEntry(MRJobConfig.QUEUE_NAME));
+    setClassNamesFromConf(job, jobConfProxy);
+
+    // read split info
+    JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = hdfsReader.getSplitMetaInfo(jobId, jobConfProxy);
+    job.setInputSplits(taskSplitMetaInfo.length);
+    job.setTotalMapTasks(taskSplitMetaInfo.length);
+
+    // add one map task stub per split
+    long inputLength = 0;
+    Set<String> aggregatedLocations = new HashSet<>();
+    List<TaskProfile> taskStubs = new ArrayList<>(taskSplitMetaInfo.length);
+    for (int i=0; i<taskSplitMetaInfo.length; i++) {
+      JobSplit.TaskSplitMetaInfo aTaskSplitMetaInfo = taskSplitMetaInfo[i];
+      inputLength += aTaskSplitMetaInfo.getInputDataLength();
+      aggregatedLocations.addAll(Arrays.asList(aTaskSplitMetaInfo.getLocations()));
+      TaskProfile task = Records.newRecord(TaskProfile.class);
+      task.setId(MRBuilderUtils.newTaskId(jobId, i, TaskType.MAP).toString());
+      task.setAppId(job.getAppId());
+      task.setJobId(job.getId());
+      task.setType(TaskType.MAP);
+      task.setState(TaskState.NEW);
+      task.setSplitLocations(Arrays.asList(aTaskSplitMetaInfo.getLocations()));
+      task.setSplitSize(aTaskSplitMetaInfo.getInputDataLength());
+      taskStubs.add(task);
+    }
+    job.setTotalInputBytes(inputLength);
+    job.setAggregatedSplitLocations(aggregatedLocations);
+
+    // add reduce task stubs according to configuration
     int reduces = 0;
-    String reducesString = confProxy.getEntry(MRJobConfig.NUM_REDUCES);
+    String reducesString = jobConfProxy.getEntry(MRJobConfig.NUM_REDUCES);
     if (reducesString != null && reducesString.length() > 0)
       reduces = Integer.valueOf(reducesString);
     job.setTotalReduceTasks(reduces);
-    return new JobInfo(job, confProxy, null);
-  }
-
-  private JobProfile getJobProfileFromConf(JobId jobId, JobConfProxy jobConfProxy) throws IOException {
-    JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = hdfsReader.getSplitMetaInfo(jobId, jobConfProxy);
-    long inputLength = 0;
-    List<String> splitLocations = new ArrayList<>(taskSplitMetaInfo.length);
-    for (JobSplit.TaskSplitMetaInfo aTaskSplitMetaInfo : taskSplitMetaInfo) {
-      inputLength += aTaskSplitMetaInfo.getInputDataLength();
-      splitLocations.add(StringUtils.join(" ", aTaskSplitMetaInfo.getLocations()));
+    for (int i=0; i<reduces; i++) {
+      TaskProfile task = Records.newRecord(TaskProfile.class);
+      task.setId(MRBuilderUtils.newTaskId(jobId, i, TaskType.REDUCE).toString());
+      task.setAppId(job.getAppId());
+      task.setJobId(job.getId());
+      task.setType(TaskType.REDUCE);
+      task.setState(TaskState.NEW);
+      taskStubs.add(task);
     }
 
-    JobProfile profile = Records.newRecord(JobProfile.class);
-    profile.setId(jobId.toString());
-    profile.setAppId(jobId.getAppId().toString());
-    profile.setName(jobConfProxy.getEntry(MRJobConfig.JOB_NAME));
-    profile.setUser(jobConfProxy.getEntry(MRJobConfig.USER_NAME));
-    profile.setQueue(jobConfProxy.getEntry(MRJobConfig.QUEUE_NAME));
-    profile.setTotalInputBytes(inputLength);
-    profile.setInputSplits(taskSplitMetaInfo.length);
-    setClassNamesFromConf(profile, jobConfProxy);
-    profile.setSplitLocations(splitLocations);
-    return profile;
+    return new JobInfo(job, jobConfProxy, taskStubs);
   }
 
   private void setClassNamesFromConf(JobProfile profile, JobConfProxy conf) {

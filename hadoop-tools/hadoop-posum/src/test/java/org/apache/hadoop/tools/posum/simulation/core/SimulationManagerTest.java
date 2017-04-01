@@ -6,7 +6,6 @@ import org.apache.hadoop.tools.posum.scheduler.portfolio.ShortestRTFirstPolicy;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -16,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class SimulationTest {
+public class SimulationManagerTest {
   private static final Class<? extends ResourceScheduler> SCHEDULER_CLASS = ShortestRTFirstPolicy.class;
   private static final String SCHEDULER_NAME= "SRTF";
   private static final Map<String, String> TOPOLOGY;
@@ -28,7 +27,7 @@ public class SimulationTest {
     TOPOLOGY.put("node326.cm.cluster", "rack2");
   }
 
-  private Simulation testSubject;
+  private SimulationManager testSubject;
 
   private DataStore dataStoreMock;
   @Mock
@@ -39,7 +38,7 @@ public class SimulationTest {
   public void init() {
     MockitoAnnotations.initMocks(this);
     dataStoreMock = Utils.mockDefaultWorkload();
-    testSubject = new Simulation(predictorMock, SCHEDULER_NAME, SCHEDULER_CLASS, dataStoreMock, TOPOLOGY);
+    testSubject = new SimulationManager(predictorMock, SCHEDULER_NAME, SCHEDULER_CLASS, dataStoreMock, TOPOLOGY);
   }
 
   @Test

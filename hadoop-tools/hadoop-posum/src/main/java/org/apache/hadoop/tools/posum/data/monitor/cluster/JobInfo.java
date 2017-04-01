@@ -3,13 +3,23 @@ package org.apache.hadoop.tools.posum.data.monitor.cluster;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
+
+import java.util.List;
 
 class JobInfo {
   private JobProfile profile;
   private JobConfProxy conf;
   private CountersProxy jobCounters;
+  private List<TaskProfile> taskStubs;
 
   JobInfo() {
+  }
+
+  JobInfo(JobProfile profile, JobConfProxy conf, List<TaskProfile> taskStubs) {
+    this.profile = profile;
+    this.conf = conf;
+    this.taskStubs = taskStubs;
   }
 
   JobInfo(JobProfile profile, JobConfProxy conf, CountersProxy jobCounters) {
@@ -70,5 +80,9 @@ class JobInfo {
       ", conf=" + conf +
       ", jobCounters=" + jobCounters +
       '}';
+  }
+
+  public List<TaskProfile> getTaskStubs() {
+    return taskStubs;
   }
 }

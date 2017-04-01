@@ -3,6 +3,8 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 
+import java.util.List;
+
 public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
 
   String getAppId();
@@ -72,4 +74,12 @@ public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
   String getHttpAddress();
 
   void setHttpAddress(String address);
+
+  List<String> getSplitLocations();
+
+  void setSplitLocations(List<String> splitLocations);
+
+  Long getSplitSize();
+
+  void setSplitSize(Long splitSize);
 }

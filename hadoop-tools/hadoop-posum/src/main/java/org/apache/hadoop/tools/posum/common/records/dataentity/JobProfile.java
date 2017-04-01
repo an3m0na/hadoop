@@ -4,6 +4,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
@@ -125,7 +126,7 @@ public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
   void setReducerClass(String name);
 
-  List<String> getSplitLocations();
+  Set<String> getAggregatedSplitLocations();
 
-  void setSplitLocations(List<String> locations);
+  void setAggregatedSplitLocations(Set<String> locations);
 }
