@@ -23,9 +23,8 @@ class TaskInfoCollector {
     for (TaskProfile task : tasks) {
       api.addFinishedAttemptInfo(task);
       task.setAppId(job.getAppId());
-      if (job.getSplitLocations() != null && task.getHttpAddress() != null) {
-        int splitIndex = Utils.parseTaskId(task.getId()).getId();
-        if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
+      if (task.getSplitLocations() != null && task.getHttpAddress() != null) {
+        if (task.getSplitLocations().contains(task.getHttpAddress()))
           task.setLocal(true);
       }
       CountersProxy counters = api.getFinishedTaskCounters(task.getJobId(), task.getId());

@@ -21,4 +21,6 @@ public interface DataStore {
 
   void copyDatabase(DatabaseReference sourceDB, DatabaseReference destinationDB);
 
+  void copyCollection(DataEntityCollection collection, DatabaseReference sourceDB, DatabaseReference destinationDB);
+
 }

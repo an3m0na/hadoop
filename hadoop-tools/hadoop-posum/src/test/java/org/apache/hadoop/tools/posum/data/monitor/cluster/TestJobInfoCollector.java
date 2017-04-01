@@ -2,12 +2,15 @@ package org.apache.hadoop.tools.posum.data.monitor.cluster;
 
 import org.apache.hadoop.mapreduce.split.JobSplit;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.yarn.util.Records;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,6 +20,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
 import static org.hamcrest.Matchers.is;
@@ -110,8 +114,23 @@ public class TestJobInfoCollector {
     expectedJob.setUberized(null);
     expectedJob.setInputSplits(LOCATIONS.length);
     expectedJob.setTotalInputBytes(INPUT_LENGTH);
-    expectedJob.setSplitLocations(Arrays.asList(LOCATIONS));
-    assertThat(ret, is(new JobInfo(expectedJob, entities.JOB_CONF, null)));
+    expectedJob.setAggregatedSplitLocations(new HashSet<>(Arrays.asList(LOCATIONS)));
+
+    TaskProfile expectedMap = Records.newRecord(TaskProfile.class);
+    expectedMap.setId(entities.RUNNING_MAP_TASK.getId());
+    expectedMap.setType(TaskType.MAP);
+    expectedMap.setJobId(expectedJob.getId());
+    expectedMap.setAppId(expectedJob.getAppId());
+    expectedMap.setSplitSize(INPUT_LENGTH);
+    expectedMap.setSplitLocations(Arrays.asList(LOCATIONS));
+
+    TaskProfile expectedReduce = Records.newRecord(TaskProfile.class);
+    expectedReduce.setId(entities.RUNNING_REDUCE_TASK.getId());
+    expectedReduce.setType(TaskType.REDUCE);
+    expectedReduce.setJobId(expectedJob.getId());
+    expectedReduce.setAppId(expectedJob.getAppId());
+
+    assertThat(ret, is(new JobInfo(expectedJob, entities.JOB_CONF, Arrays.asList(expectedMap, expectedReduce))));
   }
 
 

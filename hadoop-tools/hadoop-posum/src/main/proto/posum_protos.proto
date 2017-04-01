@@ -108,7 +108,7 @@ message JobProfileProto {
     optional string mapperClass = 29;
     optional string reducerClass = 30;
     optional StringStringMapPayloadProto flexFields = 31;
-    repeated string splitLocations = 32;
+    repeated string aggregatedSplitLocations = 32;
     optional int64 lastUpdated = 33;
 
     enum JobStateProto {
@@ -149,6 +149,8 @@ message TaskProfileProto {
     optional string httpAddress = 17;
     optional TaskStateProto state = 18;
     optional int64 lastUpdated = 19;
+    repeated string splitLocations = 20;
+    optional int64 splitSize = 21;
 
     enum TaskTypeProto {
         TYPE_MAP = 0;
@@ -339,6 +341,7 @@ message TaskPredictionPayloadProto {
 message DatabaseAlterationPayloadProto {
     optional DatabaseProto source = 1;
     optional DatabaseProto destination = 2;
+    optional EntityCollectionProto targetCollection = 3;
 }
 
 // --------- Database Calls ---------

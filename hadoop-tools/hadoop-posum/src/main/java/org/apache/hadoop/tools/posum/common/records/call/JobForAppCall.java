@@ -37,7 +37,7 @@ public abstract class JobForAppCall extends LockBasedDatabaseCallImpl<SingleEnti
       return SingleEntityPayload.newInstance(DataEntityCollection.JOB, profiles.get(0));
     if (profiles.size() > 1)
       throw new PosumException("Found too many profiles in database for app " + getAppId());
-    return null;
+    return SingleEntityPayload.newInstance(DataEntityCollection.JOB, null);
   }
 
   @Override

@@ -7,7 +7,6 @@ import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
-import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
@@ -69,10 +68,8 @@ class Simulation implements Callable<SimulationResultPayload> {
     predictor.initialize(db);
     stats.setStartTimeCluster(getLastUpdated());
     stats.setStartTimePhysical(System.currentTimeMillis());
-    simulationContext.setConf(PosumConfiguration.newInstance());
     simulationContext.setSchedulerClass(policyClass);
     simulationContext.setDatabase(db);
-    loadJobs();
   }
 
   private void tearDown() {
@@ -93,7 +90,7 @@ class Simulation implements Callable<SimulationResultPayload> {
   public SimulationResultPayload call() throws Exception {
     setUp();
     try {
-      new SimulationRunner(simulationContext).start();
+      new SimulationRunner(simulationContext).run();
       return SimulationResultPayload.newInstance(policyName, CompoundScorePayload.newInstance(runtime, penalty, cost));
     } catch (Exception e) {
       logger.error("Error during simulation. Shutting down simulation...", e);
@@ -101,40 +98,5 @@ class Simulation implements Callable<SimulationResultPayload> {
     } finally {
       tearDown();
     }
-  }
-
-  private void loadJobs() {
-    IdsByQueryCall getPendingJobs = IdsByQueryCall.newInstance(DataEntityCollection.JOB, null);
-    final FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
-    FindByQueryCall getTasks = FindByQueryCall.newInstance(DataEntityCollection.TASK, null);
-    List<String> jobIds = db.execute(getPendingJobs).getEntries();
-
-    List<JobProfile> jobs = new ArrayList<>(jobIds.size());
-    Map<String, List<TaskProfile>> tasks = new HashMap<>(jobIds.size());
-    for (String jobId : jobIds) {
-      getJob.setId(jobId);
-      JobProfile job = db.execute(getJob).getEntity();
-      jobs.add(job);
-      getTasks.setQuery(QueryUtils.is("jobId", jobId));
-      List<TaskProfile> jobTasks = db.execute(getTasks).getEntities();
-      for (TaskProfile task : jobTasks) {
-        Long duration = predictor.predictTaskDuration(new TaskPredictionInput(task.getId())).getDuration();
-        task.setFinishTime(task.getStartTime() + duration);
-      }
-      tasks.put(jobId, jobTasks);
-    }
-    simulationContext.setJobs(jobs);
-    simulationContext.setTasks(tasks);
-
-    final UpdateOrStoreCall updateJob = UpdateOrStoreCall.newInstance(DataEntityCollection.JOB, null);
-    simulationContext.setJobCompletionHandler(new JobCompletionHandler() {
-      @Override
-      public synchronized void handle(String jobId) {
-        JobProfile job = db.execute(getJob).getEntity();
-        job.setFinishTime(simulationContext.getCurrentTime());
-        updateJob.setEntity(job);
-        db.execute(updateJob);
-      }
-    });
   }
 }

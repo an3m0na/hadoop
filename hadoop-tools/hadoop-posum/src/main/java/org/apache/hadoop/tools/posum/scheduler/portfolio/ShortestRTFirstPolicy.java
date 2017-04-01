@@ -4,7 +4,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
+import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -87,22 +89,27 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
         app.setJobId(job.getId());
         app.setSubmitTime(job.getSubmitTime());
       }
-      if (orZero(job.getAvgMapDuration()) != 0) {
-        Long totalWork = orZero(job.getAvgMapDuration()) * orZero(job.getTotalMapTasks());
-        Long remainingWork = totalWork - orZero(job.getAvgMapDuration()) * orZero(job.getCompletedMaps());
-        if (orZero(job.getTotalReduceTasks()) > 0) {
+
+      long avgMapDuration = orZero(job.getAvgMapDuration());
+      int totalMaps = orZero(job.getTotalMapTasks());
+      int completedMaps = orZero(job.getCompletedMaps());
+
+      if (avgMapDuration != 0) {
+        Long totalWork = avgMapDuration * totalMaps;
+        Long remainingWork = totalWork - avgMapDuration * completedMaps;
+        int totalReduceTasks = orZero(job.getTotalReduceTasks());
+        if (totalReduceTasks > 0) {
           // there is reduce work to be done; get average task duration
           long avgReduceDuration = orZero(job.getAvgReduceDuration());
-          long avgMapSize = orZero(orZero(job.getInputBytes())) / orZero(job.getTotalMapTasks());
+          long avgMapSize = orZero(job.getInputBytes()) / completedMaps;
           if (avgReduceDuration == 0 && avgMapSize != 0) {
             // estimate avg reduce time
-            long totalReduceInputSize =
-              orZero(job.getMapOutputBytes()) / orZero(job.getCompletedMaps()) * orZero(job.getTotalMapTasks());
-            long reducerInputSize = totalReduceInputSize / orZero(job.getTotalReduceTasks());
+            long totalReduceInputSize = orZero(job.getMapOutputBytes()) / completedMaps * totalMaps;
+            long reducerInputSize = totalReduceInputSize / totalReduceTasks;
             avgReduceDuration = orZero(job.getAvgMapDuration()) * reducerInputSize / avgMapSize;
           }
-          remainingWork += avgReduceDuration * (orZero(job.getTotalReduceTasks()) - orZero(job.getCompletedReduces()));
-          totalWork += avgReduceDuration * orZero(job.getTotalReduceTasks());
+          remainingWork += avgReduceDuration * (totalReduceTasks - orZero(job.getCompletedReduces()));
+          totalWork += avgReduceDuration * totalReduceTasks;
         }
         app.setRemainingWork(remainingWork);
         app.setTotalWork(totalWork);

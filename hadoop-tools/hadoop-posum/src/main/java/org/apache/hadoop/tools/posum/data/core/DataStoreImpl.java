@@ -372,4 +372,22 @@ public class DataStoreImpl implements LockBasedDataStore {
       masterLock.readLock().unlock();
     }
   }
+
+  @Override
+  public void copyCollection(DataEntityCollection collection, DatabaseReference sourceDB, DatabaseReference destinationDB) {
+    lockForRead(sourceDB);
+    try {
+      lockForWrite(destinationDB);
+      try {
+        getCollectionForWrite(destinationDB, collection).drop();
+        List entities = getCollectionForRead(sourceDB, collection).find().toArray();
+        if (entities.size() > 0)
+          storeAll(destinationDB, collection, entities);
+      } finally {
+        unlockForWrite(destinationDB);
+      }
+    } finally {
+      unlockForRead(sourceDB);
+    }
+  }
 }

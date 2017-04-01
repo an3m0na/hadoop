@@ -8,6 +8,7 @@ import org.apache.hadoop.mapreduce.TaskCounter;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.mapreduce.v2.util.MRBuilderUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
@@ -25,7 +26,6 @@ import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleRespo
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.proto.PosumProtos;
-import org.apache.hadoop.yarn.util.Records;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -57,11 +57,8 @@ public class Utils {
     }
   }
 
-  public static JobId composeJobId(Long timestamp, Integer actualId) {
-    JobId jobId = Records.newRecord(JobId.class);
-    jobId.setAppId(ApplicationId.newInstance(timestamp, actualId));
-    jobId.setId(actualId);
-    return jobId;
+  private static JobId composeJobId(Long timestamp, Integer actualId) {
+    return MRBuilderUtils.newJobId(ApplicationId.newInstance(timestamp, actualId), actualId);
   }
 
   public static JobId parseJobId(String id) {
@@ -76,11 +73,11 @@ public class Utils {
   public static TaskId parseTaskId(String id) {
     try {
       String[] parts = id.split("_");
-      TaskId taskId = Records.newRecord(TaskId.class);
-      taskId.setJobId(composeJobId(Long.parseLong(parts[1]), Integer.parseInt(parts[2])));
-      taskId.setTaskType("m".equals(parts[3]) ? TaskType.MAP : TaskType.REDUCE);
-      taskId.setId(Integer.parseInt(parts[4]));
-      return taskId;
+      return MRBuilderUtils.newTaskId(
+        composeJobId(Long.parseLong(parts[1]), Integer.parseInt(parts[2])),
+        Integer.parseInt(parts[4]),
+        "m".equals(parts[3]) ? TaskType.MAP : TaskType.REDUCE
+      );
     } catch (Exception e) {
       throw new PosumException("Id parse exception for " + id, e);
     }
@@ -375,9 +372,8 @@ public class Utils {
         mapNo++;
         mapInputSize += orZero(task.getInputBytes());
         mapOutputSize += orZero(task.getOutputBytes());
-        if (job.getSplitLocations() != null && task.getHttpAddress() != null) {
-          int splitIndex = Utils.parseTaskId(task.getId()).getId();
-          if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
+        if (task.getSplitLocations() != null && task.getHttpAddress() != null) {
+         if (task.getSplitLocations().contains(task.getHttpAddress()))
             task.setLocal(true);
         }
       }
@@ -462,16 +458,16 @@ public class Utils {
         }
     }
   }
-  
-  public static long orZero(Long unsafeLong){
-    return unsafeLong == null? 0 : unsafeLong;
+
+  public static long orZero(Long unsafeLong) {
+    return unsafeLong == null ? 0 : unsafeLong;
   }
 
-  public static float orZero(Float unsafeFloat){
-    return unsafeFloat == null? 0 : unsafeFloat;
+  public static float orZero(Float unsafeFloat) {
+    return unsafeFloat == null ? 0 : unsafeFloat;
   }
 
-  public static int orZero(Integer unsafeInt){
-    return unsafeInt == null? 0 : unsafeInt;
+  public static int orZero(Integer unsafeInt) {
+    return unsafeInt == null ? 0 : unsafeInt;
   }
 }
