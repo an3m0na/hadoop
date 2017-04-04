@@ -4,7 +4,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.client.data.DataStore;
+import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.client.simulation.Simulator;
+import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.call.StoreAllCall;
+import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
+import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
@@ -12,12 +20,20 @@ import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.master.SimulationMasterContext;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 
+import javax.xml.crypto.Data;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.COUNTER;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_CONF;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
+import static org.apache.hadoop.tools.posum.common.util.Utils.copyRunningAppInfo;
 
 public class SimulatorImpl extends CompositeService implements Simulator {
 
@@ -50,14 +66,17 @@ public class SimulatorImpl extends CompositeService implements Simulator {
     super.serviceStart();
   }
 
+
   @Override
   public synchronized void startSimulation() {
+    copyRunningAppInfo(context.getDataBroker(), DatabaseReference.getMain(), DatabaseReference.getSimulation());
+
     simulationMap = new HashMap<>(policies.size());
     for (Map.Entry<String, Class<? extends PluginPolicy>> policy : policies.entrySet()) {
       logger.trace("Starting simulation for " + policy.getKey());
       Class<? extends PluginPolicy> policyClass = policy.getValue();
       // TODO find out hot topology works in hadoop
-      Simulation simulation = new Simulation(predictor, policyClass.getName(), policyClass, context.getDataBroker(), null);
+      SimulationManager simulation = new SimulationManager(predictor, policyClass.getName(), policyClass, context.getDataBroker(), null);
       simulationMap.put(policy.getKey(), new PendingResult(simulation, executor.submit(simulation)));
     }
     resultAggregator = new ResultAggregator(simulationMap.values(), this);

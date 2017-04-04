@@ -5,6 +5,8 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
+import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEvent;
+import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEvent;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
@@ -27,6 +29,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import static org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEventType.APPLICATION_FINISHED;
+import static org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEventType.CONTAINER_FINISHED;
+import static org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEventType.CONTAINER_STARTED;
+import static org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer.AM_TYPE;
 
 @Private
 @Unstable
@@ -90,7 +97,7 @@ public class MRAMDaemon extends AMDaemon {
   private int reduceTotal = 0;
   // waiting for AM container
   private boolean isAMContainerRunning = false;
-  private Container amContainer;
+  private SimulatedContainer amContainer;
   // finished
   private boolean isFinished = false;
   // resource for AM container
@@ -177,10 +184,16 @@ public class MRAMDaemon extends AMDaemon {
           && !response.getAllocatedContainers().isEmpty()) {
           // Get AM container
           Container container = response.getAllocatedContainers().get(0);
-          simulationContext.getNodeManagers().get(container.getNodeId())
-            .addNewContainer(container, -1L);
           // Start AM container
-          amContainer = container;
+          amContainer = new SimulatedContainer(
+            simulationContext,
+            container.getResource(),
+            AM_TYPE,
+            container.getNodeId(),
+            container.getId()
+          );
+          simulationContext.getDispatcher().getEventHandler()
+            .handle(new ContainerEvent(CONTAINER_STARTED, amContainer));
           LOG.debug(MessageFormat.format("Application {0} starts its " +
             "AM container ({1}).", appId, amContainer.getId()));
           isAMContainerRunning = true;
@@ -239,13 +252,14 @@ public class MRAMDaemon extends AMDaemon {
         (mapFinished == mapTotal) &&
         (reduceFinished == reduceTotal)) {
         // to release the AM container
-        simulationContext.getNodeManagers().get(amContainer.getNodeId())
-          .cleanupContainer(amContainer.getId());
+        simulationContext.getDispatcher().getEventHandler()
+          .handle(new ContainerEvent(CONTAINER_FINISHED, amContainer));
         isAMContainerRunning = false;
         LOG.debug(MessageFormat.format("Application {0} sends out event " +
           "to clean up its AM container.", appId));
         isFinished = true;
-        simulationContext.getJobCompletionHandler().handle(oldAppId);
+        simulationContext.getDispatcher().getEventHandler()
+          .handle(new ApplicationEvent(APPLICATION_FINISHED, oldAppId, appId));
         break;
       }
 
@@ -255,16 +269,19 @@ public class MRAMDaemon extends AMDaemon {
           SimulatedContainer cs = scheduledMaps.remove();
           LOG.debug(MessageFormat.format("Application {0} starts a " +
             "launch a mapper ({1}).", appId, container.getId()));
+          cs.setNodeId(container.getNodeId());
+          cs.setId(container.getId());
           assignedMaps.put(container.getId(), cs);
-          simulationContext.getNodeManagers().get(container.getNodeId())
-            .addNewContainer(container, cs.getLifeTime());
+          simulationContext.getDispatcher().getEventHandler().handle(new ContainerEvent(CONTAINER_STARTED, cs));
         } else if (!this.scheduledReduces.isEmpty()) {
           SimulatedContainer cs = scheduledReduces.remove();
           LOG.debug(MessageFormat.format("Application {0} starts a " +
             "launch a reducer ({1}).", appId, container.getId()));
+          cs.setNodeId(container.getNodeId());
+          cs.setId(container.getId());
           assignedReduces.put(container.getId(), cs);
-          simulationContext.getNodeManagers().get(container.getNodeId())
-            .addNewContainer(container, cs.getLifeTime());
+          simulationContext.getDispatcher().getEventHandler()
+            .handle(new ContainerEvent(CONTAINER_STARTED, cs));
         }
       }
     }

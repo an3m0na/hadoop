@@ -268,7 +268,7 @@ public abstract class TestDataStore {
 
   @Test
   public void testJobByAppId() throws Exception {
-    JobForAppCall getJob = JobForAppCall.newInstance(APP2_ID.toString(), USER2);
+    JobForAppCall getJob = JobForAppCall.newInstance(APP2_ID.toString());
     JobProfile job = db.execute(getJob).getEntity();
     assertThat(job, is(JOB2));
   }

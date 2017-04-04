@@ -60,31 +60,40 @@ public abstract class JobBehaviorPredictor {
   public abstract TaskPredictionOutput predictTaskDuration(TaskPredictionInput input);
 
   protected TaskPredictionInput completeInput(TaskPredictionInput input) {
-    if (input.getJob() != null && input.getTaskType() != null)
-      return input;
-
-    FindByIdCall getJobById = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
-    if (input.getJobId() != null && input.getTaskType() != null) {
-      getJobById.setId(input.getJobId());
-      JobProfile job = getDatabase().execute(getJobById).getEntity();
-      if (job == null)
-        throw new PosumException("Job not found or finished for id " + input.getJobId());
-      input.setJob(job);
-      return input;
+    if (input.getTaskId() != null) {
+      if (input.getTask() == null) {
+        input.setTask(getTaskById(input.getTaskId()));
+        input.setTaskType(input.getTask().getType());
+      }
     }
-    if (input.getJobId() == null)
-      throw new PosumException("Too little information for prediction! Input: " + input);
-    FindByIdCall getById = FindByIdCall.newInstance(DataEntityCollection.TASK, input.getTaskId());
-    TaskProfile task = getDatabase().execute(getById).getEntity();
-    if (task == null)
-      throw new PosumException("Task not found or finished for id " + input.getTaskId());
-
-    input.setTaskType(task.getType());
-    getJobById.setId(input.getJobId());
-    JobProfile job = getDatabase().execute(getJobById).getEntity();
-    input.setJob(job);
-
+    if (input.getTask() != null) {
+      if (input.getJob() == null)
+        input.setJob(getJobById(input.getTask().getJobId()));
+    } else {
+      if (input.getJob() == null) {
+        // no specific task => must have at least jobId and type
+        if (input.getJobId() == null || input.getTaskType() == null)
+          throw new PosumException("Too little information for prediction! Input: " + input);
+        input.setJob(getJobById(input.getJobId()));
+      }
+    }
     return input;
+  }
+
+  private JobProfile getJobById(String jobId) {
+    FindByIdCall getJobById = FindByIdCall.newInstance(DataEntityCollection.JOB, jobId);
+    JobProfile job = getDatabase().execute(getJobById).getEntity();
+    if (job == null)
+      throw new PosumException("Job not found or finished for id " + jobId);
+    return job;
+  }
+
+  private TaskProfile getTaskById(String taskId) {
+    FindByIdCall getTaskById = FindByIdCall.newInstance(DataEntityCollection.TASK, taskId);
+    TaskProfile task = getDatabase().execute(getTaskById).getEntity();
+    if (task == null)
+      throw new PosumException("Task not found or finished for id " + taskId);
+    return task;
   }
 
   Database getDatabase() {

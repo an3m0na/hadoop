@@ -81,11 +81,13 @@ public class Utils {
     JOB1.setFinishTime(APP1.getFinishTime());
 
     TASK11.setId(TASK11_ID.toString());
+    TASK11.setJobId(JOB1.getId());
     TASK11.setStartTime(JOB1.getStartTime());
     TASK11.setFinishTime(TASK11.getStartTime() + DURATION_UNIT * 3);
     TASK11.setHttpAddress(NODE1);
 
     TASK12.setId(TASK12_ID.toString());
+    TASK12.setJobId(JOB1.getId());
     TASK12.setStartTime(TASK11.getFinishTime());
     TASK12.setFinishTime(JOB1.getFinishTime());
     TASK12.setHttpAddress(NODE1);
@@ -108,11 +110,13 @@ public class Utils {
     JOB2.setFinishTime(APP2.getFinishTime());
 
     TASK21.setId(TASK21_ID.toString());
+    TASK21.setJobId(JOB2.getId());
     TASK21.setStartTime(JOB2.getStartTime());
     TASK21.setFinishTime(TASK21.getStartTime() + DURATION_UNIT);
     TASK21.setHttpAddress(NODE2);
 
     TASK22.setId(TASK22_ID.toString());
+    TASK22.setJobId(JOB2.getId());
     TASK22.setStartTime(TASK21.getFinishTime());
     TASK22.setFinishTime(JOB2.getFinishTime());
     TASK22.setHttpAddress(NODE2);

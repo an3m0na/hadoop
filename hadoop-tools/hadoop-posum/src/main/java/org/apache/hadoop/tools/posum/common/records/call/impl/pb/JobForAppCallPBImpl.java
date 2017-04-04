@@ -80,18 +80,6 @@ public class JobForAppCallPBImpl extends JobForAppCall implements PayloadPB {
   }
 
   @Override
-  public String getUser() {
-    JobForAppCallProtoOrBuilder p = viaProto ? proto : builder;
-    return p.getUser();
-  }
-
-  @Override
-  public void setUser(String user) {
-    maybeInitBuilder();
-    builder.setUser(user);
-  }
-
-  @Override
   public ByteString getProtoBytes() {
     return getProto().toByteString();
   }

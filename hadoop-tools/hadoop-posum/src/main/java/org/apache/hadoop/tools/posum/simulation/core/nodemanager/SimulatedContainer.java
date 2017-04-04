@@ -4,6 +4,7 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.yarn.api.records.ContainerId;
+import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.Resource;
 
 import java.util.concurrent.Delayed;
@@ -12,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 @Private
 @Unstable
 public class SimulatedContainer implements Delayed {
+  public static String AM_TYPE = "am";
+
   // id
   private ContainerId id;
   // resource allocated
@@ -28,13 +31,31 @@ public class SimulatedContainer implements Delayed {
   private int priority;
   // type
   private String type;
+
   private SimulationContext simulationContext;
+  private NodeId nodeId;
+  private String taskId;
 
   /**
-   * invoked when AM schedules containers to allocate
+   * invoked when AM schedules its container
+   */
+  public SimulatedContainer(SimulationContext simulationContext,
+                            Resource resource,
+                            String type,
+                            NodeId nodeId,
+                            ContainerId id) {
+    this.simulationContext = simulationContext;
+    this.resource = resource;
+    this.type = type;
+    this.nodeId = nodeId;
+    this.id = id;
+  }
+
+  /**
+   * invoked when AM schedules task containers to allocate
    */
   public SimulatedContainer(SimulationContext simulationContext, Resource resource, long lifeTime,
-                            String rack, String hostname, int priority, String type) {
+                            String rack, String hostname, int priority, String type, String taskId, ContainerId id) {
     this.simulationContext = simulationContext;
     this.resource = resource;
     this.lifeTime = lifeTime;
@@ -42,18 +63,8 @@ public class SimulatedContainer implements Delayed {
     this.priority = priority;
     this.type = type;
     this.rack = rack;
-  }
-
-  /**
-   * invoke when NM schedules containers to run
-   */
-  public SimulatedContainer(SimulationContext simulationContext, ContainerId id, Resource resource, long endTime,
-                            long lifeTime) {
-    this.simulationContext = simulationContext;
     this.id = id;
-    this.resource = resource;
-    this.endTime = endTime;
-    this.lifeTime = lifeTime;
+    this.taskId = taskId;
   }
 
   public Resource getResource() {
@@ -109,5 +120,29 @@ public class SimulatedContainer implements Delayed {
 
   public void setRack(String rack) {
     this.rack = rack;
+  }
+
+  public NodeId getNodeId() {
+    return nodeId;
+  }
+
+  public void setNodeId(NodeId nodeId) {
+    this.nodeId = nodeId;
+  }
+
+  public void setId(ContainerId id) {
+    this.id = id;
+  }
+
+  public String getTaskId() {
+    return taskId;
+  }
+
+  public void setTaskId(String taskId) {
+    this.taskId = taskId;
+  }
+
+  public void setEndTime(long endTime) {
+    this.endTime = endTime;
   }
 }

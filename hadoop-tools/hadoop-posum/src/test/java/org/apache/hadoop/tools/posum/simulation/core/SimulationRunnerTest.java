@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.simulation.core;
 
+import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.StoreAllCall;
 import org.apache.hadoop.tools.posum.common.records.call.TransactionCall;
@@ -13,6 +14,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoSchedule
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import javax.xml.crypto.Data;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,16 +37,19 @@ public class SimulationRunnerTest {
     Map<String, String> racks = new HashMap<>(2);
     racks.put(NODE1, RACK1);
     racks.put(NODE2, RACK1);
-    Database db = Database.from(new MockDataStoreImpl(), DatabaseReference.get(DatabaseReference.Type.SIMULATION, "runnerTest"));
+    DataStore store = new MockDataStoreImpl();
+    Database sourceDb = Database.from(store, DatabaseReference.getSimulation());
     TransactionCall transaction = TransactionCall.newInstance()
       .addCall(StoreAllCall.newInstance(DataEntityCollection.JOB, Arrays.asList(JOB1, JOB2)))
       .addCall(StoreAllCall.newInstance(DataEntityCollection.TASK, Arrays.asList(TASK11, TASK12)))
       .addCall(StoreAllCall.newInstance(DataEntityCollection.TASK, Arrays.asList(TASK21, TASK22)));
-    db.execute(transaction);
+    sourceDb.execute(transaction);
 
     SimulationContext context = new SimulationContext();
+    context.setSourceDatabase(sourceDb);
+    Database db = Database.from(store, DatabaseReference.get(DatabaseReference.Type.SIMULATION, "runnerTest"));
     context.setDatabase(db);
-    context.setSchedulerClass(ShortestRTFirstPolicy.class);
+    context.setSchedulerClass(FifoScheduler.class);
     context.setTopologyProvider(new TopologyProvider(Collections.singletonMap(0L, racks)));
     new SimulationRunner(context).run();
   }

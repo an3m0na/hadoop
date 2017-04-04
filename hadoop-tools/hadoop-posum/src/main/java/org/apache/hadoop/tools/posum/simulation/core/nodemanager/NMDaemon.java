@@ -2,12 +2,14 @@ package org.apache.hadoop.tools.posum.simulation.core.nodemanager;
 
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
+import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEvent;
+import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEventType;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerExitStatus;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerState;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
+import org.apache.hadoop.yarn.event.EventHandler;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.api.protocolrecords.NodeHeartbeatRequest;
 import org.apache.hadoop.yarn.server.api.protocolrecords.NodeHeartbeatResponse;
@@ -31,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.DelayQueue;
+
+import static org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer.AM_TYPE;
 
 public class NMDaemon extends WorkerDaemon {
   // node resource
@@ -64,12 +68,27 @@ public class NMDaemon extends WorkerDaemon {
       Collections.synchronizedList(new ArrayList<ContainerId>());
     releasedContainerList =
       Collections.synchronizedList(new ArrayList<ContainerId>());
-    containerQueue = new DelayQueue<SimulatedContainer>();
+    containerQueue = new DelayQueue<>();
     amContainerList =
       Collections.synchronizedList(new ArrayList<ContainerId>());
-    runningContainers =
-      new ConcurrentHashMap<ContainerId, SimulatedContainer>();
+    runningContainers = new ConcurrentHashMap<>();
 
+    simulationContext.getDispatcher().register(ContainerEventType.class, new EventHandler<ContainerEvent>() {
+      @Override
+      public void handle(ContainerEvent event) {
+        if (!event.getContainer().getNodeId().equals(node.getNodeID()))
+          return;
+        switch (event.getType()) {
+          case CONTAINER_STARTED:
+            addNewContainer(event.getContainer());
+            break;
+          case CONTAINER_FINISHED:
+            if (AM_TYPE.equals(event.getContainer().getType()))
+              cleanupContainer(event.getContainer().getId());
+            break;
+        }
+      }
+    });
   }
 
   @Override
@@ -204,22 +223,20 @@ public class NMDaemon extends WorkerDaemon {
   /**
    * launch a new container with the given life time
    */
-  public void addNewContainer(Container container, long lifeTimeMS) {
+  private void addNewContainer(SimulatedContainer container) {
     LOG.debug(MessageFormat.format("NodeManager {0} launches a new " +
       "container ({1}).", node.getNodeID(), container.getId()));
-    if (lifeTimeMS != -1) {
-      // normal container
-      SimulatedContainer cs = new SimulatedContainer(simulationContext, container.getId(),
-        container.getResource(), lifeTimeMS + simulationContext.getCurrentTime(),
-        lifeTimeMS);
-      containerQueue.add(cs);
-      runningContainers.put(cs.getId(), cs);
-    } else {
+    if (AM_TYPE.equals(container.getType())) {
       // AM container
-      // -1 means AMContainer
       synchronized (amContainerList) {
         amContainerList.add(container.getId());
       }
+    } else {
+      // normal container
+      long lifeTimeMS = container.getLifeTime(); //TODO use predictor if no lifetime
+      container.setEndTime(lifeTimeMS + simulationContext.getCurrentTime());
+      containerQueue.add(container);
+      runningContainers.put(container.getId(), container);
     }
   }
 

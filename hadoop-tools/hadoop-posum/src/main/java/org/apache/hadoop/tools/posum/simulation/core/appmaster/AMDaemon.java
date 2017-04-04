@@ -6,6 +6,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
+import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEvent;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
@@ -48,6 +49,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import static org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEventType.APPLICATION_SUBMITTED;
 
 @Private
 @Unstable
@@ -183,6 +186,9 @@ public abstract class AMDaemon extends WorkerDaemon {
     GetNewApplicationResponse newAppResponse =
       rm.getClientRMService().getNewApplication(newAppRequest);
     appId = newAppResponse.getApplicationId();
+
+    simulationContext.getDispatcher().getEventHandler()
+      .handle(new ApplicationEvent(APPLICATION_SUBMITTED, oldAppId, appId));
 
     // submit the application
     final SubmitApplicationRequest subAppRequest =
