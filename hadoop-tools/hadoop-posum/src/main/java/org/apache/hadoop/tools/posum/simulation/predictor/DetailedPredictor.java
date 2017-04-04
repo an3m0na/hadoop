@@ -181,7 +181,7 @@ public class DetailedPredictor extends JobBehaviorPredictor {
     JobProfile job = input.getJob();
 
     Double rate = 0.0;
-    boolean local = input.getNodeAddress() != null && input.getJob().getSplitLocations().contains(input.getNodeAddress());
+    boolean local = input.getNodeAddress() != null && input.getTask().getSplitLocations().contains(input.getNodeAddress());
     String rateKey = FLEX_KEY_PREFIX + (local ? FlexKeys.MAP_LOCAL : FlexKeys.MAP_REMOTE);
 
     if (input.getNodeAddress() == null) {

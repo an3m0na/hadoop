@@ -9,7 +9,10 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.mapreduce.v2.util.MRBuilderUtils;
+import org.apache.hadoop.tools.posum.client.data.DataStore;
+import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
@@ -41,6 +44,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.COUNTER;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_CONF;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 
 public class Utils {
 
@@ -469,5 +478,15 @@ public class Utils {
 
   public static int orZero(Integer unsafeInt) {
     return unsafeInt == null ? 0 : unsafeInt;
+  }
+
+  public static void copyRunningAppInfo(DataStore dataStore, DatabaseReference source, DatabaseReference target){
+    Database simDb = Database.from(dataStore, target);
+    simDb.clear();
+    dataStore.copyCollection(APP,  source, target);
+    dataStore.copyCollection(JOB,  source, target);
+    dataStore.copyCollection(JOB_CONF,  source, target);
+    dataStore.copyCollection(TASK,  source, target);
+    dataStore.copyCollection(COUNTER,  source, target);
   }
 }

@@ -115,7 +115,7 @@ class JobInfoCollector {
   }
 
   private JobProfile getCurrentProfileForApp(AppProfile app) {
-    SingleEntityPayload ret = db.execute(JobForAppCall.newInstance(app.getId(), app.getUser()));
+    SingleEntityPayload ret = db.execute(JobForAppCall.newInstance(app.getId()));
     if (ret == null)
       return null;
     return ret.getEntity();

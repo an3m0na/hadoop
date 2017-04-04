@@ -398,7 +398,6 @@ message TransactionCallProto {
 
 message JobForAppCallProto {
     required string appId = 1;
-    required string user = 2;
 }
 
 message SaveJobFlexFieldsCallProto {

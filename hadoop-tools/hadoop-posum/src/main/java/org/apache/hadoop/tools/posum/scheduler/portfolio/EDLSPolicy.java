@@ -83,7 +83,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
     if (db == null)
       // DataMaster is not connected; do nothing
       return null;
-    JobProfile job = db.execute(JobForAppCall.newInstance(appId, user)).getEntity();
+    JobProfile job = db.execute(JobForAppCall.newInstance(appId)).getEntity();
     if (job == null) {
       logger.error("Could not retrieve job info for " + appId);
       return null;
