@@ -13,7 +13,7 @@ import org.apache.hadoop.tools.posum.common.util.TopologyProvider;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEventType;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationMonitor;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEventType;
-import org.apache.hadoop.tools.posum.simulation.core.dispatcher.TaskMonitor;
+import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerMonitor;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
@@ -70,12 +70,12 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     db = Database.from(dataStore, dbRef);
     simulationContext.setDatabase(db);
 
-    // FIXME: initialize on sourceDb but use on db
+    // FIXME: initialize on main but use on db
     predictor.initialize(db);
     stats.setStartTimeCluster(getLastUpdated());
     stats.setStartTimePhysical(System.currentTimeMillis());
 
-    simulationContext.getDispatcher().register(ContainerEventType.class, new TaskMonitor(simulationContext, db));
+    simulationContext.getDispatcher().register(ContainerEventType.class, new ContainerMonitor(simulationContext, db));
     simulationContext.getDispatcher().register(ApplicationEventType.class, new ApplicationMonitor(simulationContext, db, sourceDb));
   }
 

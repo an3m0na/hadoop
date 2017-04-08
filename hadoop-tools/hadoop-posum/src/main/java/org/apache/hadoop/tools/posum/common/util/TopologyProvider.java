@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.common.util;
 import org.apache.hadoop.net.DNSToSwitchMapping;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,14 +21,13 @@ public class TopologyProvider implements DNSToSwitchMapping {
 
   public TopologyProvider() {
     this.topologySnapshots = new TreeMap<>();
+    this.topologySnapshots.put(0L, new HashMap<String, String>());
   }
 
   @Override
   public List<String> resolve(List<String> names) {
-    List<String> ret = new ArrayList<>(names.size());
-    for (String name : names)
-      ret.add(DEFAULT_RACK + "/" + name);
-    return ret;
+    //TODO something smarter
+    return resolve(0, names);
   }
 
   @Override
@@ -46,6 +46,24 @@ public class TopologyProvider implements DNSToSwitchMapping {
 
   public String resolve(long timestamp, String name) {
     return getSnapshot(timestamp).get(name);
+  }
+
+  public List<String> resolve(long timestamp, List<String> names) {
+    List<String> ret = new ArrayList<>(names.size());
+    for (String name : names) {
+      String rack = getSnapshot(timestamp).get(name);
+        ret.add(rack == null? DEFAULT_RACK : rack + "/" + name);
+    }
+    return ret;
+  }
+
+  public List<String> getRacks(long timestamp, List<String> names) {
+    List<String> ret = new ArrayList<>(names.size());
+    for (String name : names) {
+      String rack = getSnapshot(timestamp).get(name);
+      ret.add(rack == null? DEFAULT_RACK : rack);
+    }
+    return ret;
   }
 
   public Set<String> getActiveHosts(long timestamp) {

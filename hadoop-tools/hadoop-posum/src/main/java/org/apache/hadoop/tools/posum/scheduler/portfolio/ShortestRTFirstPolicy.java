@@ -18,8 +18,11 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.Capacity
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.LeafQueue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 
+import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
@@ -80,10 +83,11 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
     try {
       String appId = app.getApplicationId().toString();
       JobProfile job = fetchJobProfile(appId, app.getUser());
+      if (job == null) {
+        logger.debug("Could not update app priority for : " + app.getApplicationId() + " because job cannot be found");
+        return;
+      }
       if (app.getJobId() == null) {
-        if (job == null)
-          // something went wrong; do nothing
-          return;
         app.setJobId(job.getId());
         app.setSubmitTime(job.getSubmitTime());
       }
@@ -111,6 +115,7 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
         }
         app.setRemainingWork(remainingWork);
         app.setTotalWork(totalWork);
+        logger.debug(MessageFormat.format("Work for {0}: remaining={1}, total={2}", app.getJobId(), remainingWork, totalWork));
       }
     } catch (Exception e) {
       logger.debug("Could not update app priority for : " + app.getApplicationId(), e);
@@ -146,18 +151,18 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
     Set<FiCaSchedulerApp> apps = Utils.readField(queue, LeafQueue.class, applicationSetName);
     // calculate remaining times for each application and compute sum
     Double invertedSum = 0.0;
+    List<SRTFAppAttempt> savedApps = new ArrayList<>(apps.size());
     for (Iterator<FiCaSchedulerApp> i = apps.iterator(); i.hasNext(); ) {
       SRTFAppAttempt app = (SRTFAppAttempt) i.next();
       updateAppPriority(app);
       if (app.getRemainingWork() != null)
         invertedSum += 1.0 / app.getRemainingTime(getMinimumResourceCapability());
+      savedApps.add(app);
     }
-    for (Iterator<FiCaSchedulerApp> i = apps.iterator(); i.hasNext(); ) {
-      SRTFAppAttempt app = (SRTFAppAttempt) i.next();
-      // remove, update and add to resort
-      i.remove();
-      app.calculateDeficit(getMinimumResourceCapability(), getClusterResource(), invertedSum);
-      apps.add(app);
+    apps.clear();
+    for (SRTFAppAttempt savedApp : savedApps) {
+      savedApp.calculateDeficit(getMinimumResourceCapability(), getClusterResource(), invertedSum);
+      apps.add(savedApp);
     }
   }
 }

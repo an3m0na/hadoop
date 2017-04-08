@@ -105,13 +105,14 @@ public class MRAMDaemon extends AMDaemon {
   private final static int MR_AM_CONTAINER_RESOURCE_VCORES = 1;
 
   public final Logger LOG = Logger.getLogger(MRAMDaemon.class);
+  private float slowStartRatio;
 
   public MRAMDaemon(SimulationContext simulationContext) {
     super(simulationContext);
   }
 
   public void init(int heartbeatInterval, List<SimulatedContainer> containerList, ResourceManager rm,
-                   long traceStartTime, String user, String queue, String oldAppId) {
+                   long traceStartTime, String user, String queue, String oldAppId, float slowStartRatio) {
     super.init(heartbeatInterval, containerList, rm, traceStartTime, user, queue, oldAppId);
     amtype = "mapreduce";
 
@@ -130,6 +131,7 @@ public class MRAMDaemon extends AMDaemon {
     mapTotal = pendingMaps.size();
     reduceTotal = pendingReduces.size();
     totalContainers = mapTotal + reduceTotal;
+    this.slowStartRatio = slowStartRatio;
   }
 
   @Override
@@ -150,8 +152,8 @@ public class MRAMDaemon extends AMDaemon {
         MR_AM_CONTAINER_RESOURCE_VCORES),
       ResourceRequest.ANY, 1, 1);
     ask.add(amRequest);
-    LOG.debug(MessageFormat.format("Application {0} sends out allocate " +
-      "request for its AM", appId));
+    LOG.debug(MessageFormat.format("T={0}: Application {1} sends out allocate " +
+      "request for its AM", simulationContext.getCurrentTime(), appId));
     final AllocateRequest request = this.createAllocateRequest(ask);
 
     UserGroupInformation ugi =
@@ -194,8 +196,8 @@ public class MRAMDaemon extends AMDaemon {
           );
           simulationContext.getDispatcher().getEventHandler()
             .handle(new ContainerEvent(CONTAINER_STARTED, amContainer));
-          LOG.debug(MessageFormat.format("Application {0} starts its " +
-            "AM container ({1}).", appId, amContainer.getId()));
+          LOG.debug(MessageFormat.format("T={0}: Application {1} starts its " +
+            "AM container ({2}).", simulationContext.getCurrentTime(), appId, amContainer.getId()));
           isAMContainerRunning = true;
         }
       }
@@ -211,36 +213,40 @@ public class MRAMDaemon extends AMDaemon {
           ContainerId containerId = cs.getContainerId();
           if (cs.getExitStatus() == ContainerExitStatus.SUCCESS) {
             if (assignedMaps.containsKey(containerId)) {
-              LOG.debug(MessageFormat.format("Application {0} has one" +
-                "mapper finished ({1}).", appId, containerId));
-              assignedMaps.remove(containerId);
+              LOG.debug(MessageFormat.format("T={0}: Application {1} has one " +
+                "mapper finished ({2}).", appId, containerId));
+              SimulatedContainer simulatedContainer = assignedMaps.remove(containerId);
               mapFinished++;
               finishedContainers++;
+              simulationContext.getDispatcher().getEventHandler()
+                .handle(new ContainerEvent(CONTAINER_FINISHED, simulatedContainer));
             } else if (assignedReduces.containsKey(containerId)) {
-              LOG.debug(MessageFormat.format("Application {0} has one" +
-                "reducer finished ({1}).", appId, containerId));
-              assignedReduces.remove(containerId);
+              LOG.debug(MessageFormat.format("T={0}: Application {1} has one " +
+                "reducer finished ({2}).", simulationContext.getCurrentTime(), appId, containerId));
+              SimulatedContainer simulatedContainer = assignedReduces.remove(containerId);
               reduceFinished++;
               finishedContainers++;
+              simulationContext.getDispatcher().getEventHandler()
+                .handle(new ContainerEvent(CONTAINER_FINISHED, simulatedContainer));
             } else {
               // am container released event
               isFinished = true;
-              LOG.info(MessageFormat.format("Application {0} goes to " +
-                "cleanUp.", appId));
+              LOG.info(MessageFormat.format("T={0}: Application {1} goes to " +
+                "cleanUp.", simulationContext.getCurrentTime(), appId));
             }
           } else {
             // container to be killed
             if (assignedMaps.containsKey(containerId)) {
-              LOG.debug(MessageFormat.format("Application {0} has one " +
-                "mapper killed ({1}).", appId, containerId));
+              LOG.debug(MessageFormat.format("T={0}: Application {1} has one " +
+                "mapper killed ({2}).", appId, containerId));
               pendingFailedMaps.add(assignedMaps.remove(containerId));
             } else if (assignedReduces.containsKey(containerId)) {
-              LOG.debug(MessageFormat.format("Application {0} has one " +
-                "reducer killed ({1}).", appId, containerId));
+              LOG.debug(MessageFormat.format("T={0}: Application {1} has one " +
+                "reducer killed ({2}).", simulationContext.getCurrentTime(), appId, containerId));
               pendingFailedReduces.add(assignedReduces.remove(containerId));
             } else {
-              LOG.info(MessageFormat.format("Application {0}'s AM is " +
-                "going to be killed. Restarting...", appId));
+              LOG.info(MessageFormat.format("T={0}: Application {1}'s AM is " +
+                "going to be killed. Restarting...", simulationContext.getCurrentTime(), appId));
               restart();
             }
           }
@@ -255,8 +261,8 @@ public class MRAMDaemon extends AMDaemon {
         simulationContext.getDispatcher().getEventHandler()
           .handle(new ContainerEvent(CONTAINER_FINISHED, amContainer));
         isAMContainerRunning = false;
-        LOG.debug(MessageFormat.format("Application {0} sends out event " +
-          "to clean up its AM container.", appId));
+        LOG.debug(MessageFormat.format("T={0}: Application {1} sends out event " +
+          "to clean up its AM container.", simulationContext.getCurrentTime(), appId));
         isFinished = true;
         simulationContext.getDispatcher().getEventHandler()
           .handle(new ApplicationEvent(APPLICATION_FINISHED, oldAppId, appId));
@@ -267,16 +273,14 @@ public class MRAMDaemon extends AMDaemon {
       for (Container container : response.getAllocatedContainers()) {
         if (!scheduledMaps.isEmpty()) {
           SimulatedContainer cs = scheduledMaps.remove();
-          LOG.debug(MessageFormat.format("Application {0} starts a " +
-            "launch a mapper ({1}).", appId, container.getId()));
+          LOG.debug(MessageFormat.format("T={0}: Application {1} starts a mapper ({2}).", simulationContext.getCurrentTime(), appId, container.getId()));
           cs.setNodeId(container.getNodeId());
           cs.setId(container.getId());
           assignedMaps.put(container.getId(), cs);
           simulationContext.getDispatcher().getEventHandler().handle(new ContainerEvent(CONTAINER_STARTED, cs));
         } else if (!this.scheduledReduces.isEmpty()) {
           SimulatedContainer cs = scheduledReduces.remove();
-          LOG.debug(MessageFormat.format("Application {0} starts a " +
-            "launch a reducer ({1}).", appId, container.getId()));
+          LOG.debug(MessageFormat.format("T={0}: Application {1} starts a reducer ({2}).", simulationContext.getCurrentTime(), appId, container.getId()));
           cs.setNodeId(container.getNodeId());
           cs.setId(container.getId());
           assignedReduces.put(container.getId(), cs);
@@ -323,31 +327,31 @@ public class MRAMDaemon extends AMDaemon {
         // map phase
         if (!pendingMaps.isEmpty()) {
           ask = packageRequests(pendingMaps, PRIORITY_MAP);
-          LOG.debug(MessageFormat.format("Application {0} sends out " +
-            "request for {1} mappers.", appId, pendingMaps.size()));
+          LOG.debug(MessageFormat.format("T={0}: Application {1} sends out " +
+            "request for {2} mappers.", simulationContext.getCurrentTime(), appId, pendingMaps.size()));
           scheduledMaps.addAll(pendingMaps);
           pendingMaps.clear();
         } else if (!pendingFailedMaps.isEmpty() && scheduledMaps.isEmpty()) {
           ask = packageRequests(pendingFailedMaps, PRIORITY_MAP);
-          LOG.debug(MessageFormat.format("Application {0} sends out " +
-              "requests for {1} failed mappers.", appId,
+          LOG.debug(MessageFormat.format("T={0}: Application {1} sends out " +
+              "requests for {2} failed mappers.", simulationContext.getCurrentTime(), appId,
             pendingFailedMaps.size()));
           scheduledMaps.addAll(pendingFailedMaps);
           pendingFailedMaps.clear();
         }
-      } else if (reduceFinished != reduceTotal) {
+      } else if (reduceStarted() && reduceFinished != reduceTotal) {
         // reduce phase
         if (!pendingReduces.isEmpty()) {
           ask = packageRequests(pendingReduces, PRIORITY_REDUCE);
-          LOG.debug(MessageFormat.format("Application {0} sends out " +
-            "requests for {1} reducers.", appId, pendingReduces.size()));
+          LOG.debug(MessageFormat.format("T={0}: Application {1} sends out " +
+            "requests for {2} reducers.", simulationContext.getCurrentTime(), appId, pendingReduces.size()));
           scheduledReduces.addAll(pendingReduces);
           pendingReduces.clear();
         } else if (!pendingFailedReduces.isEmpty()
           && scheduledReduces.isEmpty()) {
           ask = packageRequests(pendingFailedReduces, PRIORITY_REDUCE);
-          LOG.debug(MessageFormat.format("Application {0} sends out " +
-              "request for {1} failed reducers.", appId,
+          LOG.debug(MessageFormat.format("T={0}: Application {1} sends out " +
+              "request for {2} failed reducers.", simulationContext.getCurrentTime(), simulationContext.getCurrentTime(), appId,
             pendingFailedReduces.size()));
           scheduledReduces.addAll(pendingFailedReduces);
           pendingFailedReduces.clear();
@@ -381,6 +385,10 @@ public class MRAMDaemon extends AMDaemon {
     if (response != null) {
       responseQueue.put(response);
     }
+  }
+
+  private boolean reduceStarted() {
+    return 1.0 * mapFinished / mapTotal >= slowStartRatio;
   }
 
   @Override
