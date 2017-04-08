@@ -1,16 +1,22 @@
 package org.apache.hadoop.tools.posum.simulation.core;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.StoreAllCall;
+import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.call.TransactionCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.data.mock.data.MockDataStoreImpl;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.ShortestRTFirstPolicy;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
+import org.apache.hadoop.yarn.util.Records;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -30,6 +36,7 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_HISTORY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
+import static org.apache.hadoop.tools.posum.test.Utils.DURATION_UNIT;
 import static org.apache.hadoop.tools.posum.test.Utils.JOB1;
 import static org.apache.hadoop.tools.posum.test.Utils.JOB2;
 import static org.apache.hadoop.tools.posum.test.Utils.NODE1;
@@ -43,8 +50,9 @@ import static org.apache.hadoop.tools.posum.test.Utils.TASK22;
 
 public class SimulationManagerTest {
   private static final Class<? extends ResourceScheduler> SCHEDULER_CLASS = ShortestRTFirstPolicy.class;
-  private static final String SCHEDULER_NAME= "SRTF";
+  private static final String SCHEDULER_NAME = "SRTF";
   private static final Map<String, String> TOPOLOGY;
+
   static {
     TOPOLOGY = new HashMap<>(4);
 //    TOPOLOGY.put("node323.cm.cluster", "rack1");
@@ -71,8 +79,31 @@ public class SimulationManagerTest {
   public void simpleTest() throws Exception {
     dataStoreMock = new MockDataStoreImpl();
     Database sourceDb = Database.from(dataStoreMock, DatabaseReference.getSimulation());
+
+    JobProfile job1 = JOB1.copy(), job2 = JOB2.copy();
+    job1.setAvgMapDuration(DURATION_UNIT * 5);
+    job1.setTotalMapTasks(job1.getTotalMapTasks() + 1);
+    job1.setCompletedMaps(1);
+    job1.setInputBytes(10000L);
+    job1.setMapOutputBytes(500L);
+    job2.setAvgMapDuration(DURATION_UNIT);
+    job2.setTotalMapTasks(job2.getTotalMapTasks() + 1);
+    job2.setCompletedMaps(1);
+    job2.setInputBytes(50000L);
+    job2.setMapOutputBytes(30L);
+
+    JobConfProxy jobConf1 = Records.newRecord(JobConfProxy.class);
+    jobConf1.setId(job1.getId());
+    Configuration innerConf = new Configuration();
+    innerConf.setFloat(MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART, 0.8f);
+    jobConf1.setConf(innerConf);
+
+    JobConfProxy jobConf2 = jobConf1.copy();
+    jobConf2.setId(job2.getId());
+
     TransactionCall transaction = TransactionCall.newInstance()
-      .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(JOB1, JOB2)))
+      .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(job1, job2)))
+      .addCall(StoreAllCall.newInstance(JOB_CONF, Arrays.asList(jobConf1, jobConf2)))
       .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(TASK11, TASK12)))
       .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(TASK21, TASK22)));
     sourceDb.execute(transaction);

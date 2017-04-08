@@ -1,12 +1,14 @@
 package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.simulation.core.appmaster.AMDaemon;
@@ -33,7 +35,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
+import static org.apache.hadoop.mapreduce.MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART;
 import static org.apache.hadoop.mapreduce.v2.api.records.TaskType.MAP;
+import static org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator.DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.AM_DAEMON_HEARTBEAT_INTERVAL_MS;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.AM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.NM_DAEMON_HEARTBEAT_INTERVAL_MS;
@@ -52,6 +56,7 @@ public class SimulationRunner {
   private static final String HOST_BASE = "192.168.1."; // needed because hostnames need to be resolvable
   private static final IdsByQueryCall GET_PENDING_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, null);
   private static final FindByIdCall GET_JOB = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
+  private static final FindByIdCall GET_CONF = FindByIdCall.newInstance(DataEntityCollection.JOB_CONF, null);
   private static final FindByQueryCall GET_TASKS = FindByQueryCall.newInstance(DataEntityCollection.TASK, null);
 
   private ResourceManager rm;
@@ -170,9 +175,14 @@ public class SimulationRunner {
       queueSize++;
       queueAppNumMap.put(queue, queueSize);
 
+      GET_CONF.setId(job.getId());
+      JobConfProxy jobConf = sourceDb.execute(GET_CONF).getEntity();
+      float slowStartRatio = jobConf.getConf().getFloat(COMPLETED_MAPS_FOR_REDUCE_SLOWSTART,
+        DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART);
+
       // create a new AM
-      AMDaemon amSim = new MRAMDaemon(context);
-      amSim.init(heartbeatInterval, createContainers(jobId), rm, jobStartTime, user, queue, appId);
+      MRAMDaemon amSim = new MRAMDaemon(context);
+      amSim.init(heartbeatInterval, createContainers(jobId), rm, jobStartTime, user, queue, appId, slowStartRatio);
       daemonPool.schedule(amSim);
       amMap.put(appId, amSim);
     }
@@ -187,14 +197,12 @@ public class SimulationRunner {
     List<TaskProfile> jobTasks = context.getSourceDatabase().execute(GET_TASKS).getEntities();
 
     for (TaskProfile task : jobTasks) {
-      String hostname = simulationHostNames.get(task.getHttpAddress());
-      String rack = context.getTopologyProvider().getSnapshot(0).get(task.getHttpAddress());
       Long taskStart = task.getStartTime();
       Long taskFinish = task.getFinishTime();
       Long lifeTime = taskStart != null && taskFinish != null? taskFinish - taskStart : null;
       int priority = 0;
       String type = task.getType() == MAP ? "map" : "reduce";
-      ret.add(new SimulatedContainer(context, containerResource, lifeTime, rack, hostname, priority, type, task.getId(), null));
+      ret.add(new SimulatedContainer(context, containerResource, lifeTime, priority, type, task.getId(), task.getSplitLocations()));
     }
     return ret;
   }

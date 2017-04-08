@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.simulation.core.dispatcher;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.util.MRBuilderUtils;
 import org.apache.hadoop.tools.posum.client.data.Database;
@@ -21,6 +23,7 @@ import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.event.EventHandler;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
@@ -36,6 +39,7 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.util.Utils.parseApplicationId;
 
 public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
+  private static final Log LOG = LogFactory.getLog(ApplicationMonitor.class);
   private SimulationContext simulationContext;
   private Database db;
   private Database sourceDb;
@@ -97,7 +101,7 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     }
 
     db.execute(transaction);
-    System.out.println("App finished: " + appId);
+    LOG.debug(MessageFormat.format("App finished: {0}", appId));
   }
 
   private void applicationSubmitted(String oldAppIdString, ApplicationId appId) {
@@ -141,6 +145,6 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     }
 
     db.execute(transaction);
-    System.out.println("App submitted. " + oldAppId + " becomes " + appId);
+    LOG.debug(MessageFormat.format("App submitted. {0} becomes {1}", oldAppId, appId));
   }
 }

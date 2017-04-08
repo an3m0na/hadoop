@@ -124,7 +124,7 @@ public abstract class AMDaemon extends WorkerDaemon {
 
   @Override
   public void cleanUp() throws Exception {
-    LOG.info(MessageFormat.format("Application {0} is shutting down.", appId));
+    LOG.info(MessageFormat.format("T={0}: Application {1} is shutting down.", simulationContext.getCurrentTime(), appId));
     // unregister application master
     final FinishApplicationMasterRequest finishAMRequest = recordFactory
       .newRecordInstance(FinishApplicationMasterRequest.class);
@@ -218,7 +218,7 @@ public abstract class AMDaemon extends WorkerDaemon {
         return null;
       }
     });
-    LOG.info(MessageFormat.format("Submit a new application {0}", appId));
+    LOG.info(MessageFormat.format("T={0}: Submit a new application {1}", simulationContext.getCurrentTime(), appId));
 
     // waiting until application ACCEPTED
     RMApp app = rm.getRMContext().getRMApps().get(appId);
@@ -262,7 +262,7 @@ public abstract class AMDaemon extends WorkerDaemon {
       });
 
     LOG.info(MessageFormat.format(
-      "Register the application master for application {0}", appId));
+      "T={0}: Register the application master for application {1}", simulationContext.getCurrentTime(), appId));
   }
 
   protected List<ResourceRequest> packageRequests(
@@ -272,30 +272,15 @@ public abstract class AMDaemon extends WorkerDaemon {
     Map<String, ResourceRequest> nodeLocalRequestMap = new HashMap<String, ResourceRequest>();
     ResourceRequest anyRequest = null;
     for (SimulatedContainer cs : csList) {
+      List<String> hosts = cs.getPreferredLocations();
+      List<String> racks = simulationContext.getTopologyProvider().getRacks(simulationContext.getCurrentTime(), hosts);
       // check rack local
-      String rackname = cs.getRack();
-      if (rackLocalRequestMap.containsKey(rackname)) {
-        rackLocalRequestMap.get(rackname).setNumContainers(
-          rackLocalRequestMap.get(rackname).getNumContainers() + 1);
-      } else {
-        ResourceRequest request = createResourceRequest(
-          cs.getResource(), rackname, priority, 1);
-        rackLocalRequestMap.put(rackname, request);
-      }
+      addContainers(rackLocalRequestMap, cs.getResource(), racks, priority);
       // check node local
-      String hostname = cs.getHostname();
-      if (nodeLocalRequestMap.containsKey(hostname)) {
-        nodeLocalRequestMap.get(hostname).setNumContainers(
-          nodeLocalRequestMap.get(hostname).getNumContainers() + 1);
-      } else {
-        ResourceRequest request = createResourceRequest(
-          cs.getResource(), hostname, priority, 1);
-        nodeLocalRequestMap.put(hostname, request);
-      }
+      addContainers(nodeLocalRequestMap, cs.getResource(), hosts, priority);
       // any
       if (anyRequest == null) {
-        anyRequest = createResourceRequest(
-          cs.getResource(), ResourceRequest.ANY, priority, 1);
+        anyRequest = createResourceRequest(cs.getResource(), ResourceRequest.ANY, priority, 1);
       } else {
         anyRequest.setNumContainers(anyRequest.getNumContainers() + 1);
       }
@@ -307,6 +292,17 @@ public abstract class AMDaemon extends WorkerDaemon {
       ask.add(anyRequest);
     }
     return ask;
+  }
+
+  private void addContainers(Map<String, ResourceRequest> requestMap, Resource resource, List<String> locations, int priority) {
+    for(String rack: locations){
+      ResourceRequest request = requestMap.get(rack);
+      if(request != null){
+        request.setNumContainers(request.getNumContainers() + 1);
+      }else{
+        requestMap.put(rack, createResourceRequest(resource, rack, priority, 1));
+      }
+    }
   }
 
   public String getQueue() {

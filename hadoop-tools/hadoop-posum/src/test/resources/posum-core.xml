@@ -26,4 +26,9 @@
     <value>20000</value>
   </property>
 
+  <property>
+    <name>tools.posum.scheduler.reprioritize.ms</name>
+    <value>10</value>
+  </property>
+
 </configuration>

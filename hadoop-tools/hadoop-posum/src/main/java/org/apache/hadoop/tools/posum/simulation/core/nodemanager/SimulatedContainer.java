@@ -7,6 +7,7 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.Resource;
 
+import java.util.List;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
@@ -15,21 +16,12 @@ import java.util.concurrent.TimeUnit;
 public class SimulatedContainer implements Delayed {
   public static String AM_TYPE = "am";
 
-  // id
   private ContainerId id;
-  // resource allocated
   private Resource resource;
-  // end time
-  private long endTime;
-  // life time (ms)
-  private long lifeTime;
-  // host name
-  private String hostname;
-  // rack
-  private String rack;
-  // priority
+  private Long endTime;
+  private Long lifeTime;
+  private List<String> preferredLocations;
   private int priority;
-  // type
   private String type;
 
   private SimulationContext simulationContext;
@@ -54,17 +46,20 @@ public class SimulatedContainer implements Delayed {
   /**
    * invoked when AM schedules task containers to allocate
    */
-  public SimulatedContainer(SimulationContext simulationContext, Resource resource, long lifeTime,
-                            String rack, String hostname, int priority, String type, String taskId, ContainerId id) {
+  public SimulatedContainer(SimulationContext simulationContext,
+                            Resource resource,
+                            Long lifeTime,
+                            int priority,
+                            String type,
+                            String taskId,
+                            List<String> preferredLocations) {
     this.simulationContext = simulationContext;
     this.resource = resource;
     this.lifeTime = lifeTime;
-    this.hostname = hostname;
     this.priority = priority;
     this.type = type;
-    this.rack = rack;
-    this.id = id;
     this.taskId = taskId;
+    this.preferredLocations = preferredLocations;
   }
 
   public Resource getResource() {
@@ -94,14 +89,6 @@ public class SimulatedContainer implements Delayed {
     return lifeTime;
   }
 
-  public String getHostname() {
-    return hostname;
-  }
-
-  public long getEndTime() {
-    return endTime;
-  }
-
   public int getPriority() {
     return priority;
   }
@@ -112,14 +99,6 @@ public class SimulatedContainer implements Delayed {
 
   public void setPriority(int p) {
     priority = p;
-  }
-
-  public String getRack() {
-    return rack;
-  }
-
-  public void setRack(String rack) {
-    this.rack = rack;
   }
 
   public NodeId getNodeId() {
@@ -144,5 +123,13 @@ public class SimulatedContainer implements Delayed {
 
   public void setEndTime(long endTime) {
     this.endTime = endTime;
+  }
+
+  public List<String> getPreferredLocations() {
+    return preferredLocations;
+  }
+
+  public void setPreferredLocations(List<String> preferredLocations) {
+    this.preferredLocations = preferredLocations;
   }
 }
