@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.simulation.predictor;
+package org.apache.hadoop.tools.posum.simulation.predictor.standard;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -7,6 +7,11 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.JobPredictionInput;
+import org.apache.hadoop.tools.posum.simulation.predictor.JobPredictionOutput;
+import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
+import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
 
 import java.util.List;
 

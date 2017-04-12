@@ -323,7 +323,7 @@ public class Utils {
             // this is because reduce_shuffle_bytes are also in compressed form
             case "MAP_OUTPUT_BYTES":
               Long previous = orZero(job.getMapOutputBytes());
-              if (previous == null || previous == 0)
+              if (previous == 0)
                 job.setMapOutputBytes(counter.getTotalCounterValue());
               break;
             case "MAP_OUTPUT_MATERIALIZED_BYTES":
@@ -382,7 +382,7 @@ public class Utils {
         mapInputSize += orZero(task.getInputBytes());
         mapOutputSize += orZero(task.getOutputBytes());
         if (task.getSplitLocations() != null && task.getHttpAddress() != null) {
-         if (task.getSplitLocations().contains(task.getHttpAddress()))
+          if (task.getSplitLocations().contains(task.getHttpAddress()))
             task.setLocal(true);
         }
       }
@@ -415,7 +415,7 @@ public class Utils {
     job.setMapOutputBytes(mapOutputSize);
     job.setReduceInputBytes(reduceInputSize);
     job.setOutputBytes(reduceOutputSize);
-    // update in case of discrepancy
+    // addSource in case of discrepancy
     job.setCompletedMaps(mapNo);
     job.setCompletedReduces(reduceNo);
   }
@@ -432,7 +432,7 @@ public class Utils {
             case "MAP_OUTPUT_BYTES":
               if (task.getType().equals(TaskType.MAP)) {
                 Long previous = orZero(task.getOutputBytes());
-                if (previous == null || previous == 0)
+                if (previous == 0)
                   task.setOutputBytes(counter.getTotalCounterValue());
               }
               break;
@@ -476,17 +476,52 @@ public class Utils {
     return unsafeFloat == null ? 0 : unsafeFloat;
   }
 
+  public static double orZero(Double unsafeDouble) {
+    return unsafeDouble == null ? 0 : unsafeDouble;
+  }
+
   public static int orZero(Integer unsafeInt) {
     return unsafeInt == null ? 0 : unsafeInt;
   }
 
-  public static void copyRunningAppInfo(DataStore dataStore, DatabaseReference source, DatabaseReference target){
+  public static boolean getBooleanFieldOrFalse(JobProfile job, String fieldString) {
+    String valueString = job.getFlexField(fieldString);
+    return valueString != null && Boolean.valueOf(valueString);
+  }
+
+  public static Double getDoubleField(JobProfile job, String fieldString) {
+    String valueString = job.getFlexField(fieldString);
+    return valueString == null ? null : Double.valueOf(valueString);
+  }
+
+  public static int getIntFieldOrZero(JobProfile job, String fieldString) {
+    String valueString = job.getFlexField(fieldString);
+    return valueString == null ? 0 : Integer.valueOf(valueString);
+  }
+
+  public static void copyRunningAppInfo(DataStore dataStore, DatabaseReference source, DatabaseReference target) {
     Database simDb = Database.from(dataStore, target);
     simDb.clear();
-    dataStore.copyCollection(APP,  source, target);
-    dataStore.copyCollection(JOB,  source, target);
-    dataStore.copyCollection(JOB_CONF,  source, target);
-    dataStore.copyCollection(TASK,  source, target);
-    dataStore.copyCollection(COUNTER,  source, target);
+    dataStore.copyCollection(APP, source, target);
+    dataStore.copyCollection(JOB, source, target);
+    dataStore.copyCollection(JOB_CONF, source, target);
+    dataStore.copyCollection(TASK, source, target);
+    dataStore.copyCollection(COUNTER, source, target);
+  }
+
+  public static Double getMapRate(JobProfile job) {
+    if (job.getAvgMapDuration() == null ||
+      job.getTotalInputBytes() == null ||
+      job.getTotalMapTasks() == null)
+      return null;
+    long inputPerTask = job.getTotalInputBytes() / job.getTotalMapTasks();
+    return 1.0 * inputPerTask / job.getAvgMapDuration();
+  }
+
+  public static Long getSplitSize(TaskProfile task, JobProfile job) {
+    if (task != null && task.getSplitSize() != null)
+      return task.getSplitSize();
+    // consider equal sizes; restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+    return Math.max(orZero(job.getTotalInputBytes()) / job.getTotalMapTasks(), 1);
   }
 }

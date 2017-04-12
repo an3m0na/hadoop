@@ -84,7 +84,7 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
       String appId = app.getApplicationId().toString();
       JobProfile job = fetchJobProfile(appId, app.getUser());
       if (job == null) {
-        logger.debug("Could not update app priority for : " + app.getApplicationId() + " because job cannot be found");
+        logger.debug("Could not addSource app priority for : " + app.getApplicationId() + " because job cannot be found");
         return;
       }
       if (app.getJobId() == null) {
@@ -118,7 +118,7 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
         logger.debug(MessageFormat.format("Work for {0}: remaining={1}, total={2}", app.getJobId(), remainingWork, totalWork));
       }
     } catch (Exception e) {
-      logger.debug("Could not update app priority for : " + app.getApplicationId(), e);
+      logger.debug("Could not addSource app priority for : " + app.getApplicationId(), e);
     }
   }
 

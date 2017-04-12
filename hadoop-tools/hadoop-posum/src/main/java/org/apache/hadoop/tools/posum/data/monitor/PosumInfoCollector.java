@@ -20,10 +20,10 @@ import org.apache.hadoop.tools.posum.common.records.payload.TaskPredictionPayloa
 import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.simulation.predictor.BasicPredictor;
-import org.apache.hadoop.tools.posum.simulation.predictor.DetailedPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
-import org.apache.hadoop.tools.posum.simulation.predictor.StandardPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 
 import java.util.HashMap;

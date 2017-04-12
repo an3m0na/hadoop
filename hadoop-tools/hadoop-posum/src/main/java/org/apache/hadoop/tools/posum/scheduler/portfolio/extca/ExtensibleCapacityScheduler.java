@@ -138,7 +138,7 @@ public abstract class ExtensibleCapacityScheduler<
 
   /**
    * Override this to populate custom fields of an instance of A to be used for prioritisation within a queue.
-   * By default, the priority is its ApplicationId, so no update is necessary
+   * By default, the priority is its ApplicationId, so no addSource is necessary
    *
    * @param app the application attempt
    */
@@ -211,7 +211,7 @@ public abstract class ExtensibleCapacityScheduler<
     Set<FiCaSchedulerApp> apps = Utils.readField(queue, LeafQueue.class, applicationSetName);
     for (Iterator<FiCaSchedulerApp> i = apps.iterator(); i.hasNext(); ) {
       A app = (A) i.next();
-      // remove, update and add to resort
+      // remove, addSource and add to resort
       i.remove();
       updateAppPriority(app);
       apps.add(app);
@@ -317,7 +317,7 @@ public abstract class ExtensibleCapacityScheduler<
       nodes.put(nodeManager.getNodeID(), schedulerNode);
       Resources.addTo(getClusterResource(), nodeManager.getTotalCapability());
 
-      // update this node to node label manager
+      // addSource this node to node label manager
       RMNodeLabelsManager labelManager = readField("labelManager");
       if (labelManager != null) {
         labelManager.activateNode(nodeManager.getNodeID(),
@@ -374,7 +374,7 @@ public abstract class ExtensibleCapacityScheduler<
       // Detach the application..
       source.finishApplicationAttempt(newAppAttempt, sourceQueueName);
       source.getParent().finishApplication(appId, newAppAttempt.getUser());
-      // Finish app & update metrics
+      // Finish app & addSource metrics
       newAppAttempt.move(dest);
       // Calculate its priority given the new scheduler
       updateAppPriority(newAppAttempt);
