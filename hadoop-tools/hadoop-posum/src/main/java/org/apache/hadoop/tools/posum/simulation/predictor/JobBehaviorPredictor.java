@@ -12,6 +12,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
 
 import java.util.List;
 
@@ -21,7 +22,7 @@ public abstract class JobBehaviorPredictor {
   protected final Long DEFAULT_TASK_DURATION;
   protected Configuration conf;
   private Database db;
-  private int historyBuffer;
+  protected int historyBuffer;
 
   protected JobBehaviorPredictor(Configuration conf) {
     this.conf = conf;
@@ -50,6 +51,10 @@ public abstract class JobBehaviorPredictor {
   }
 
   public void initialize(Database db) {
+    this.db = db;
+  }
+
+  public void switchDatabase(Database db){
     this.db = db;
   }
 
@@ -96,7 +101,7 @@ public abstract class JobBehaviorPredictor {
     return task;
   }
 
-  Database getDatabase() {
+  protected Database getDatabase() {
     if (db == null)
       throw new PosumException("Database not initialized in Predictor");
     return db;

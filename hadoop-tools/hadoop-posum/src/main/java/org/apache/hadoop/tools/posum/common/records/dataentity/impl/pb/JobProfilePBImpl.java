@@ -294,7 +294,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   public Integer getTotalMapTasks() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
     if (!p.hasTotalMapTasks())
-      return null;
+      return 0;
     return p.getTotalMapTasks();
   }
 
@@ -302,7 +302,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   public Integer getTotalReduceTasks() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
     if (!p.hasTotalReduceTasks())
-      return null;
+      return 0;
     return p.getTotalReduceTasks();
   }
 
@@ -382,7 +382,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   public Integer getCompletedMaps() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
     if (!p.hasCompletedMaps())
-      return null;
+      return 0;
     return p.getCompletedMaps();
   }
 
@@ -400,7 +400,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   public Integer getCompletedReduces() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
     if (!p.hasCompletedReduces())
-      return null;
+      return 0;
     return p.getCompletedReduces();
   }
 

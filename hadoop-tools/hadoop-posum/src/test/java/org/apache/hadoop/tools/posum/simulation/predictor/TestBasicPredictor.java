@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.simulation.predictor;
 
+import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
 import org.junit.Test;
 
 public class TestBasicPredictor extends TestPredictor<BasicPredictor> {

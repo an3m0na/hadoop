@@ -273,7 +273,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       }
 
       if (!ask.isEmpty()) {
-        LOG.trace("allocate: pre-update" +
+        LOG.trace("allocate: pre-addSource" +
           " applicationId=" + applicationAttemptId +
           " application=" + application);
         application.showRequests();
@@ -281,7 +281,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
         // Update application requests
         application.updateResourceRequests(ask);
 
-        LOG.trace("allocate: post-update" +
+        LOG.trace("allocate: post-addSource" +
           " applicationId=" + applicationAttemptId +
           " application=" + application);
         application.showRequests();
@@ -621,7 +621,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     assignFromQueue(node);
 
     // Update the applications' headroom to correctly take into
-    // account the containers assigned in this update.
+    // account the containers assigned in this addSource.
     for (SchedulerApplication<A> application : applications.values()) {
       A attempt = application.getCurrentAppAttempt();
       if (attempt == null) {

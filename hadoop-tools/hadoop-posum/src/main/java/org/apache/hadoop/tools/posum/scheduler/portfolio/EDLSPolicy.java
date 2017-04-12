@@ -135,9 +135,9 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
       }
       app.setExecutionTime(orZero(job.getAvgMapDuration()) * orZero(job.getCompletedMaps()) +
         orZero(job.getAvgReduceDuration()) * orZero(job.getCompletedReduces()));
-      // this is a batch job; update its slowdown
+      // this is a batch job; addSource its slowdown
     } catch (Exception e) {
-      logger.debug("Could not update app priority for : " + app.getApplicationId(), e);
+      logger.debug("Could not addSource app priority for : " + app.getApplicationId(), e);
     }
   }
 

@@ -69,7 +69,7 @@ class JobInfoCollector {
         logger.debug("Could not retrieve job info for app " + app.getId(), e);
       }
     }
-    // update job
+    // addSource job
     profile = api.getRunningJobInfo(app.getId(), app.getQueue(), profile);
     if (profile == null)
       // job might have finished; return
@@ -108,7 +108,7 @@ class JobInfoCollector {
       // there is no running record of the job
       job = api.getFinishedJobInfo(appId);
     } else {
-      // update the running info with the history info
+      // addSource the running info with the history info
       job = api.getFinishedJobInfo(appId, job.getId(), job);
     }
     return job;
