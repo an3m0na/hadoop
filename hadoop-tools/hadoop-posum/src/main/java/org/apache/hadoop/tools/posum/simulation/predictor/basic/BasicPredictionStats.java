@@ -57,12 +57,18 @@ public class BasicPredictionStats extends PredictionStats {
   }
 
   public void addSource(JobProfile job) {
-    if (job.getAvgMapDuration() != null) {
-      avgMapDuration = addValue(job.getAvgMapDuration().doubleValue(), avgMapDuration, mapDurations);
-    }
-    if (job.getAvgReduceDuration() != null) {
-      avgReduceDuration = addValue(job.getAvgReduceDuration().doubleValue(), avgReduceDuration, reduceDurations);
-    }
+    avgMapDuration = addValue(job.getAvgMapDuration().doubleValue(), avgMapDuration, mapDurations);
+    avgReduceDuration = addValue(job.getAvgReduceDuration().doubleValue(), avgReduceDuration, reduceDurations);
     incrementSampleSize();
+  }
+
+  @Override
+  public String toString() {
+    return "BasicPredictionStats{" +
+      "avgMapDuration=" + avgMapDuration +
+      ", mapDurations=" + mapDurations +
+      ", avgReduceDuration=" + avgReduceDuration +
+      ", reduceDurations=" + reduceDurations +
+      '}';
   }
 }

@@ -51,8 +51,9 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
     }
   }
 
-  public void initialize(Database db) {
-    this.model = initializeModel();
+  public void train(Database db) {
+    if (model == null)
+      model = initializeModel();
     this.db = db;
 
     // check for new finished jobs and train on them
@@ -148,6 +149,10 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
     if (db == null)
       throw new PosumException("Database not initialized in Predictor");
     return db;
+  }
+
+  public M getModel() {
+    return model;
   }
 
 }

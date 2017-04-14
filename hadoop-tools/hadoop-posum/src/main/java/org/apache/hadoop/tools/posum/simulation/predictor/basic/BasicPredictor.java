@@ -31,7 +31,7 @@ public class BasicPredictor extends JobBehaviorPredictor<BasicPredictionModel> {
       return new TaskPredictionOutput(job.getAvgMapDuration());
     BasicPredictionStats stats = model.getRelevantStats(job);
     if (stats != null && stats.getAvgMapDuration() != null) {
-      new TaskPredictionOutput(stats.getAvgMapDuration().longValue());
+      return new TaskPredictionOutput(stats.getAvgMapDuration().longValue());
     }
     return new TaskPredictionOutput(DEFAULT_TASK_DURATION);
   }
@@ -43,7 +43,7 @@ public class BasicPredictor extends JobBehaviorPredictor<BasicPredictionModel> {
       return new TaskPredictionOutput(job.getAvgReduceDuration());
     BasicPredictionStats stats = model.getRelevantStats(job);
     if (stats != null && stats.getAvgReduceDuration() != null) {
-      new TaskPredictionOutput(stats.getAvgReduceDuration().longValue());
+      return new TaskPredictionOutput(stats.getAvgReduceDuration().longValue());
     }
     return new TaskPredictionOutput(DEFAULT_TASK_DURATION);
   }

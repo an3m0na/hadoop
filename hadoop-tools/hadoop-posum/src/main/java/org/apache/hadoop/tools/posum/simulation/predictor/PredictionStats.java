@@ -20,7 +20,8 @@ public abstract class PredictionStats {
   }
 
   public void incrementSampleSize() {
-    sampleSize++;
+    if (sampleSize < maxHistory)
+      sampleSize++;
   }
 
   public int getRelevance() {
@@ -39,9 +40,11 @@ public abstract class PredictionStats {
   }
 
   public Double addValue(Double value, Double previousAverage, Queue<Double> values) {
-    double total = previousAverage == null ? 0 : previousAverage;
+    if(value == null)
+      return previousAverage;
+    double total = previousAverage == null ? 0 : previousAverage * values.size();
     total += value;
-    if (values.size() == maxHistory) {
+    if (values.size() >= maxHistory) {
       total -= values.remove();
     }
     values.add(value);
