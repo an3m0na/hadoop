@@ -53,13 +53,15 @@ public class NMDaemon extends WorkerDaemon {
   // heart beat response id
   private int RESPONSE_ID = 1;
   private final static Logger LOG = Logger.getLogger(NMDaemon.class);
+  private String originalHostname;
 
   public NMDaemon(SimulationContext simulationContext) {
     super(simulationContext);
   }
 
-  public void init(String rack, String hostname, int memory, int cores,
+  public void init(String rack, String hostname, String originalHostname, int memory, int cores,
                    int dispatchTime, int heartBeatInterval, ResourceManager rm) {
+    this.originalHostname = originalHostname;
     super.init(dispatchTime, heartBeatInterval);
     // create resource
     this.node = NodeInfo.newNodeInfo(rack, hostname, BuilderUtils.newResource(memory, cores));
@@ -236,7 +238,7 @@ public class NMDaemon extends WorkerDaemon {
       // normal container
       Long lifeTimeMS = container.getLifeTime();
       if(lifeTimeMS == null){
-        TaskPredictionInput predictionInput = new TaskPredictionInput(container.getTaskId());
+        TaskPredictionInput predictionInput = new TaskPredictionInput(container.getTaskId(), originalHostname);
         lifeTimeMS = simulationContext.getPredictor().predictTaskBehavior(predictionInput).getDuration();
       }
       container.setEndTime(lifeTimeMS + simulationContext.getCurrentTime());

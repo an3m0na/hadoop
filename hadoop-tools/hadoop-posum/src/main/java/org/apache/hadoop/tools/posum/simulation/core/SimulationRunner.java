@@ -114,7 +114,14 @@ public class SimulationRunner {
     for (String oldHostname : topology.keySet()) {
       // randomize the start time from -heartbeatInterval to zero, in order to start NMs before AMs
       NMDaemon nm = new NMDaemon(context);
-      nm.init(topology.get(oldHostname), assignNewHost(oldHostname), nmMemoryMB, nmVCores, -random.nextInt(heartbeatInterval), heartbeatInterval, rm);
+      nm.init(topology.get(oldHostname),
+        assignNewHost(oldHostname),
+        oldHostname,
+        nmMemoryMB,
+        nmVCores,
+        -random.nextInt(heartbeatInterval),
+        heartbeatInterval, rm
+      );
       nmMap.put(nm.getNode().getNodeID(), nm);
       daemonPool.schedule(nm);
     }
