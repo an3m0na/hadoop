@@ -66,11 +66,11 @@ public class PosumInfoCollector {
     Database db = Database.from(dataStore, DatabaseReference.getMain());
 //        predictor = JobBehaviorPredictor.newInstance(conf);
     basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
-    basicPredictor.initialize(db);
+    basicPredictor.train(db);
     standardPredictor = JobBehaviorPredictor.newInstance(conf, StandardPredictor.class);
-    standardPredictor.initialize(db);
+    standardPredictor.train(db);
     detailedPredictor = JobBehaviorPredictor.newInstance(conf, DetailedPredictor.class);
-    detailedPredictor.initialize(db);
+    detailedPredictor.train(db);
     predictionTimeout = conf.getLong(PosumConfiguration.PREDICTOR_TIMEOUT,
       PosumConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
   }

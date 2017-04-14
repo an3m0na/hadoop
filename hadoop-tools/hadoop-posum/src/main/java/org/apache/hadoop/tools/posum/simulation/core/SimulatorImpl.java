@@ -38,12 +38,12 @@ public class SimulatorImpl extends CompositeService implements Simulator {
   public SimulatorImpl(SimulationMasterContext context) {
     super(SimulatorImpl.class.getName());
     this.context = context;
-
   }
 
   @Override
   protected void serviceInit(Configuration conf) throws Exception {
     predictor = JobBehaviorPredictor.newInstance(context.getConf());
+    predictor.train(Database.from(context.getDataBroker(), DatabaseReference.getMain()));
     policies = new PolicyPortfolio(conf);
     executor = Executors.newFixedThreadPool(policies.size());
 
@@ -60,7 +60,7 @@ public class SimulatorImpl extends CompositeService implements Simulator {
   public synchronized void startSimulation() {
     DataStore dataStore = context.getDataBroker();
     copyRunningAppInfo(dataStore, DatabaseReference.getMain(), DatabaseReference.getSimulation());
-    predictor.initialize(Database.from(dataStore, DatabaseReference.getMain()));
+    predictor.train(Database.from(dataStore, DatabaseReference.getMain()));
     predictor.switchDatabase(Database.from(dataStore, DatabaseReference.getSimulation()));
 
     simulationMap = new HashMap<>(policies.size());
