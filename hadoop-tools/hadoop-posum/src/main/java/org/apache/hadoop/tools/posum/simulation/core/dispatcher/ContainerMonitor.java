@@ -56,7 +56,7 @@ public class ContainerMonitor implements EventHandler<ContainerEvent> {
 
   private void containerFinished(SimulatedContainer container) {
     TaskProfile task = db.execute(FindByIdCall.newInstance(TASK, container.getTaskId())).getEntity();
-    task.setStartTime(simulationContext.getCurrentTime());
+    task.setFinishTime(simulationContext.getCurrentTime());
     JobProfile job = db.execute(FindByIdCall.newInstance(JOB, task.getJobId())).getEntity();
     if (task.getType() == TaskType.MAP) {
       int completedMaps = orZero(job.getCompletedMaps());

@@ -89,7 +89,7 @@ public class StandardPredictor extends RateBasedPredictor<StandardPredictionMode
   }
 
   @Override
-  protected TaskPredictionOutput predictMapTaskDuration(TaskPredictionInput input) {
+  protected TaskPredictionOutput predictMapTaskBehavior(TaskPredictionInput input) {
     JobProfile job = input.getJob();
     if (orZero(job.getAvgMapDuration()) != 0)
       // we have average map duration; assume it will be the same
@@ -108,7 +108,7 @@ public class StandardPredictor extends RateBasedPredictor<StandardPredictionMode
   }
 
   @Override
-  protected TaskPredictionOutput predictReduceTaskDuration(TaskPredictionInput input) {
+  protected TaskPredictionOutput predictReduceTaskBehavior(TaskPredictionInput input) {
     JobProfile job = input.getJob();
     if (job.getAvgReduceDuration() != null)
       return new TaskPredictionOutput(job.getAvgReduceDuration());

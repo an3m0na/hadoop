@@ -4,6 +4,7 @@ import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEvent;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEventType;
+import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerExitStatus;
 import org.apache.hadoop.yarn.api.records.ContainerId;
@@ -233,7 +234,11 @@ public class NMDaemon extends WorkerDaemon {
       }
     } else {
       // normal container
-      long lifeTimeMS = container.getLifeTime(); //TODO use predictor if no lifetime
+      Long lifeTimeMS = container.getLifeTime();
+      if(lifeTimeMS == null){
+        TaskPredictionInput predictionInput = new TaskPredictionInput(container.getTaskId());
+        lifeTimeMS = simulationContext.getPredictor().predictTaskBehavior(predictionInput).getDuration();
+      }
       container.setEndTime(lifeTimeMS + simulationContext.getCurrentTime());
       containerQueue.add(container);
       runningContainers.put(container.getId(), container);

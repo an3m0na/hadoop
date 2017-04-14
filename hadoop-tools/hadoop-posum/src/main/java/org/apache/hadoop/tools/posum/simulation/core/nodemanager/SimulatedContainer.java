@@ -85,7 +85,7 @@ public class SimulatedContainer implements Delayed {
     return unit.convert(endTime - simulationContext.getCurrentTime(), TimeUnit.MILLISECONDS);
   }
 
-  public long getLifeTime() {
+  public Long getLifeTime() {
     return lifeTime;
   }
 
