@@ -42,8 +42,8 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
     ));
   }
 
-  public static JobBehaviorPredictor newInstance(Configuration conf,
-                                                 Class<? extends JobBehaviorPredictor> predictorClass) {
+  public static <T extends JobBehaviorPredictor> T newInstance(Configuration conf,
+                                                 Class<T> predictorClass) {
     try {
       return predictorClass.getConstructor(Configuration.class).newInstance(conf);
     } catch (Exception e) {
