@@ -99,7 +99,7 @@ public class SRTFAppAttempt extends ExtCaAppAttempt {
   public void calculateDeficit(Resource minAllocation, Resource maxResource, Double normalizer) {
     // if there is not enough information, assign at least a slot in order to start
     Double desired = new Integer(minAllocation.getMemory()).doubleValue();
-    if (remainingWork != null) {
+    if (remainingWork != null && totalWork != null) {
       // we have information
       Long remainingTime = getRemainingTime(minAllocation);
       // calculate resource share according to remaining time

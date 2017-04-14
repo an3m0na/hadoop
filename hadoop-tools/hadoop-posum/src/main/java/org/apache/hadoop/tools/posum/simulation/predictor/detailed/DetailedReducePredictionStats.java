@@ -1,18 +1,18 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.detailed;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
 
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.Common.FLEX_KEY_PREFIX;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.Common.FlexKeys.MERGE;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.Common.FlexKeys.REDUCE;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.Common.FlexKeys.SHUFFLE_FIRST;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.Common.FlexKeys.SHUFFLE_TYPICAL;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.MERGE;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.REDUCE;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.SHUFFLE_FIRST;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.SHUFFLE_TYPICAL;
 
-class DetailedReducePredictionStats extends DetailedPredictionStats {
+class DetailedReducePredictionStats extends PredictionStats {
   private Double avgReduceDuration;
   private Queue<Double> reduceDurations;
   private Double avgShuffleTypicalRate;
@@ -93,24 +93,24 @@ class DetailedReducePredictionStats extends DetailedPredictionStats {
     return reduceDurations;
   }
 
-  protected void updateStatsFromFlexFields(Map<String, String> flexFields) {
+  public void updateStatsFromFlexFields(Map<String, String> flexFields) {
     avgShuffleTypicalRate = addValue(
-      flexFields.get(FLEX_KEY_PREFIX + SHUFFLE_TYPICAL),
+      flexFields.get(SHUFFLE_TYPICAL.getKey()),
       avgShuffleTypicalRate,
       shuffleTypicalRates
     );
     avgShuffleFirstTime = addValue(
-      flexFields.get(FLEX_KEY_PREFIX + SHUFFLE_FIRST),
+      flexFields.get(SHUFFLE_FIRST.getKey()),
       avgShuffleFirstTime,
       shuffleFirstTimes
     );
     avgMergeRate = addValue(
-      flexFields.get(FLEX_KEY_PREFIX + MERGE),
+      flexFields.get(MERGE.getKey()),
       avgMergeRate,
       mergeRates
     );
     avgReduceRate = addValue(
-      flexFields.get(FLEX_KEY_PREFIX + REDUCE),
+      flexFields.get(REDUCE.getKey()),
       avgReduceRate,
       reduceRates
     );
@@ -121,10 +121,9 @@ class DetailedReducePredictionStats extends DetailedPredictionStats {
     if (job.getAvgReduceDuration() != null) {
       avgReduceDuration = addValue(job.getAvgReduceDuration().doubleValue(), avgReduceDuration, reduceDurations);
     }
-    sampleSize++;
+    incrementSampleSize();
   }
 
-  @Override
   public boolean isIncomplete() {
     return avgReduceDuration == null ||
       avgShuffleTypicalRate == null ||
@@ -133,7 +132,7 @@ class DetailedReducePredictionStats extends DetailedPredictionStats {
       avgReduceRate == null;
   }
 
-  public void completeFrom(DetailedReducePredictionStats otherStats) {
+  void completeFrom(DetailedReducePredictionStats otherStats) {
     if (avgReduceDuration == null && otherStats.getAvgReduceDuration() != null)
       avgReduceDuration = otherStats.getAvgReduceDuration();
     if (avgShuffleTypicalRate == null && otherStats.getAvgShuffleTypicalRate() != null)
@@ -144,5 +143,6 @@ class DetailedReducePredictionStats extends DetailedPredictionStats {
       avgMergeRate = otherStats.getAvgMergeRate();
     if (avgReduceRate == null && otherStats.getAvgReduceRate() != null)
       avgReduceRate = otherStats.getAvgReduceRate();
+    setRelevance(otherStats.getRelevance());
   }
 }

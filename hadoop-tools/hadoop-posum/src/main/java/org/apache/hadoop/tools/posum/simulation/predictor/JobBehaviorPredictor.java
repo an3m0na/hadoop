@@ -4,9 +4,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
-import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
-import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
-import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
+import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.call.SaveJobFlexFieldsCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
@@ -14,21 +13,23 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
-public abstract class JobBehaviorPredictor {
+import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
-  protected final Long DEFAULT_JOB_DURATION;
+public abstract class JobBehaviorPredictor<M extends PredictionModel> {
+
   protected final Long DEFAULT_TASK_DURATION;
   protected Configuration conf;
   private Database db;
   protected int historyBuffer;
+  protected M model;
 
   protected JobBehaviorPredictor(Configuration conf) {
     this.conf = conf;
     this.historyBuffer = conf.getInt(PosumConfiguration.PREDICTION_BUFFER, PosumConfiguration.PREDICTION_BUFFER_DEFAULT);
-    this.DEFAULT_JOB_DURATION = conf.getLong(PosumConfiguration.AVERAGE_JOB_DURATION,
-      PosumConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
     this.DEFAULT_TASK_DURATION = conf.getLong(PosumConfiguration.AVERAGE_TASK_DURATION,
       PosumConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
   }
@@ -51,20 +52,62 @@ public abstract class JobBehaviorPredictor {
   }
 
   public void initialize(Database db) {
+    this.model = initializeModel();
+    this.db = db;
+
+    // check for new finished jobs and train on them
+    IdsByQueryCall getFinishedJobIds = IdsByQueryCall.newInstance(DataEntityCollection.JOB_HISTORY, null);
+    List<String> historyJobIds = new LinkedList<>(db.execute(getFinishedJobIds).getEntries());
+    historyJobIds.removeAll(model.getSourceJobs());
+    for (String jobId : historyJobIds) {
+      FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB_HISTORY, jobId);
+      JobProfile job = getDatabase().execute(getJob).getEntity();
+      updatePredictionProfile(job, true);
+      model.updateModel(job);
+    }
+  }
+
+  protected abstract M initializeModel();
+
+  protected void updatePredictionProfile(JobProfile job, boolean fromHistory) {
+    Map<String, String> fieldMap = getPredictionProfileUpdates(job, fromHistory);
+
+    if (fieldMap != null && !fieldMap.isEmpty()) {
+      job.getFlexFields().putAll(fieldMap);
+      SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), fieldMap, fromHistory);
+      getDatabase().execute(saveFlexFields);
+    }
+  }
+
+  protected abstract Map<String, String> getPredictionProfileUpdates(JobProfile job, boolean fromHistory);
+
+  public void switchDatabase(Database db) {
     this.db = db;
   }
 
-  public void switchDatabase(Database db){
-    this.db = db;
+  /* WARNING! Prediction methods may throw exceptions if data model changes occur during computation (e.g. task finishes) */
+
+  public JobPredictionOutput predictJobDuration(JobPredictionInput input) {
+    FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, input.getJobId());
+    JobProfile job = getDatabase().execute(getJob).getEntity();
+    Long mapDuration = predictTaskDuration(new TaskPredictionInput(job, TaskType.MAP)).getDuration();
+    Long reduceDuration = predictTaskDuration(new TaskPredictionInput(job, TaskType.REDUCE)).getDuration();
+    return new JobPredictionOutput(mapDuration * orZero(job.getTotalMapTasks()) +
+      reduceDuration * orZero(job.getTotalReduceTasks()));
   }
 
-    /* WARNING! Prediction methods may throw exceptions if data model changes occur during computation (e.g. task finishes) */
+  public TaskPredictionOutput predictTaskDuration(TaskPredictionInput input) {
+    completeInput(input);
+    if (input.getTaskType().equals(TaskType.REDUCE))
+      return predictReduceTaskDuration(input);
+    return predictMapTaskDuration(input);
+  }
 
-  public abstract JobPredictionOutput predictJobDuration(JobPredictionInput input);
+  protected abstract TaskPredictionOutput predictMapTaskDuration(TaskPredictionInput input);
 
-  public abstract TaskPredictionOutput predictTaskDuration(TaskPredictionInput input);
+  protected abstract TaskPredictionOutput predictReduceTaskDuration(TaskPredictionInput input);
 
-  protected TaskPredictionInput completeInput(TaskPredictionInput input) {
+  private TaskPredictionInput completeInput(TaskPredictionInput input) {
     if (input.getTaskId() != null) {
       if (input.getTask() == null) {
         input.setTask(getTaskById(input.getTaskId()));
@@ -107,29 +150,4 @@ public abstract class JobBehaviorPredictor {
     return db;
   }
 
-  protected List<JobProfile> getComparableProfilesByName(JobProfile job) {
-    return getComparableProfilesForUser(job.getUser(), QueryUtils.is("name", job.getName()));
-  }
-
-  protected List<JobProfile> getComparableProfilesByType(JobProfile job, TaskType type) {
-    return getComparableProfilesForUser(job.getUser(),
-      QueryUtils.is(type.equals(TaskType.MAP) ? "mapperClass" : "reducerClass",
-        type.equals(TaskType.MAP) ? job.getMapperClass() : job.getReducerClass()));
-  }
-
-  private List<JobProfile> getComparableProfilesForUser(String user, DatabaseQuery detailedQuery) {
-    FindByQueryCall getComparableJobs = FindByQueryCall.newInstance(
-      DataEntityCollection.JOB_HISTORY,
-      detailedQuery,
-      -historyBuffer,
-      historyBuffer
-    );
-    List<JobProfile> comparable = getDatabase().execute(getComparableJobs).getEntities();
-    if (comparable.size() < 1) {
-      // get past jobs at least by the same user
-      getComparableJobs.setQuery(QueryUtils.is("user", user));
-      comparable = getDatabase().execute(getComparableJobs).getEntities();
-    }
-    return comparable;
-  }
 }
