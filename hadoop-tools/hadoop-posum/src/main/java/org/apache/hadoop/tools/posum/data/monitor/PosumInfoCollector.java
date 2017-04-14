@@ -128,7 +128,7 @@ public class PosumInfoCollector {
       TaskPredictionPayload prediction = TaskPredictionPayload.newInstance(
         predictor.getClass().getSimpleName(),
         taskId,
-        predictor.predictTaskDuration(new TaskPredictionInput(taskId)).getDuration()
+        predictor.predictTaskBehavior(new TaskPredictionInput(taskId)).getDuration()
       );
       StoreLogCall storePrediction = CallUtils.storeStatReportCall(LogEntry.Type.TASK_PREDICTION, prediction);
       dataStore.execute(storePrediction, null);

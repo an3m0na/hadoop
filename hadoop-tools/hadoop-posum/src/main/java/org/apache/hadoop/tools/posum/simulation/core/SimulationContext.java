@@ -7,6 +7,7 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.TopologyProvider;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonQueue;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.SimpleDispatcher;
+import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.yarn.event.Dispatcher;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
@@ -24,6 +25,7 @@ public class SimulationContext implements DatabaseProvider{
   private Database database;
   private Database sourceDatabase;
   private Dispatcher dispatcher = new SimpleDispatcher();
+  private JobBehaviorPredictor predictor;
 
   public long getCurrentTime() {
     return currentTime;
@@ -103,5 +105,13 @@ public class SimulationContext implements DatabaseProvider{
 
   public void setSourceDatabase(Database sourceDatabase) {
     this.sourceDatabase = sourceDatabase;
+  }
+
+  public JobBehaviorPredictor getPredictor() {
+    return predictor;
+  }
+
+  public void setPredictor(JobBehaviorPredictor predictor) {
+    this.predictor = predictor;
   }
 }

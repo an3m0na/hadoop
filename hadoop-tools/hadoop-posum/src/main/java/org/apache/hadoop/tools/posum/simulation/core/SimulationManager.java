@@ -70,8 +70,7 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     db = Database.from(dataStore, dbRef);
     simulationContext.setDatabase(db);
 
-    // FIXME: initialize on main but use on db
-    predictor.initialize(db);
+    simulationContext.setPredictor(predictor);
     stats.setStartTimeCluster(getLastUpdated());
     stats.setStartTimePhysical(System.currentTimeMillis());
 

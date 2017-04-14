@@ -25,7 +25,7 @@ public class BasicPredictor extends JobBehaviorPredictor<BasicPredictionModel> {
   }
 
   @Override
-  protected TaskPredictionOutput predictMapTaskDuration(TaskPredictionInput input) {
+  protected TaskPredictionOutput predictMapTaskBehavior(TaskPredictionInput input) {
     JobProfile job = input.getJob();
     if (job.getAvgMapDuration() != null)
       return new TaskPredictionOutput(job.getAvgMapDuration());
@@ -37,7 +37,7 @@ public class BasicPredictor extends JobBehaviorPredictor<BasicPredictionModel> {
   }
 
   @Override
-  protected TaskPredictionOutput predictReduceTaskDuration(TaskPredictionInput input) {
+  protected TaskPredictionOutput predictReduceTaskBehavior(TaskPredictionInput input) {
     JobProfile job = input.getJob();
     if (job.getAvgReduceDuration() != null)
       return new TaskPredictionOutput(job.getAvgReduceDuration());

@@ -146,7 +146,7 @@ public class DetailedPredictor extends RateBasedPredictor<DetailedPredictionMode
   }
 
   @Override
-  protected TaskPredictionOutput predictMapTaskDuration(TaskPredictionInput input) {
+  protected TaskPredictionOutput predictMapTaskBehavior(TaskPredictionInput input) {
     JobProfile job = input.getJob();
     updatePredictionProfile(job, false);
 
@@ -191,7 +191,7 @@ public class DetailedPredictor extends RateBasedPredictor<DetailedPredictionMode
   }
 
   @Override
-  protected TaskPredictionOutput predictReduceTaskDuration(TaskPredictionInput input) {
+  protected TaskPredictionOutput predictReduceTaskBehavior(TaskPredictionInput input) {
     JobProfile job = input.getJob();
     updatePredictionProfile(job, false);
 

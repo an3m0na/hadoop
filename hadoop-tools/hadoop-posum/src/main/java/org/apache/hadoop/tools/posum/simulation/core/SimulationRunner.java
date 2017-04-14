@@ -1,7 +1,6 @@
 package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;

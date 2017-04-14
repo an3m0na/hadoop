@@ -87,25 +87,25 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
 
   /* WARNING! Prediction methods may throw exceptions if data model changes occur during computation (e.g. task finishes) */
 
-  public JobPredictionOutput predictJobDuration(JobPredictionInput input) {
+  public JobPredictionOutput predictJobBehavior(JobPredictionInput input) {
     FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, input.getJobId());
     JobProfile job = getDatabase().execute(getJob).getEntity();
-    Long mapDuration = predictTaskDuration(new TaskPredictionInput(job, TaskType.MAP)).getDuration();
-    Long reduceDuration = predictTaskDuration(new TaskPredictionInput(job, TaskType.REDUCE)).getDuration();
+    Long mapDuration = predictTaskBehavior(new TaskPredictionInput(job, TaskType.MAP)).getDuration();
+    Long reduceDuration = predictTaskBehavior(new TaskPredictionInput(job, TaskType.REDUCE)).getDuration();
     return new JobPredictionOutput(mapDuration * orZero(job.getTotalMapTasks()) +
       reduceDuration * orZero(job.getTotalReduceTasks()));
   }
 
-  public TaskPredictionOutput predictTaskDuration(TaskPredictionInput input) {
+  public TaskPredictionOutput predictTaskBehavior(TaskPredictionInput input) {
     completeInput(input);
     if (input.getTaskType().equals(TaskType.REDUCE))
-      return predictReduceTaskDuration(input);
-    return predictMapTaskDuration(input);
+      return predictReduceTaskBehavior(input);
+    return predictMapTaskBehavior(input);
   }
 
-  protected abstract TaskPredictionOutput predictMapTaskDuration(TaskPredictionInput input);
+  protected abstract TaskPredictionOutput predictMapTaskBehavior(TaskPredictionInput input);
 
-  protected abstract TaskPredictionOutput predictReduceTaskDuration(TaskPredictionInput input);
+  protected abstract TaskPredictionOutput predictReduceTaskBehavior(TaskPredictionInput input);
 
   private TaskPredictionInput completeInput(TaskPredictionInput input) {
     if (input.getTaskId() != null) {
