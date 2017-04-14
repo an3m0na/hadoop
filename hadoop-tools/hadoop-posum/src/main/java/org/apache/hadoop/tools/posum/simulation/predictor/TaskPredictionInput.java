@@ -25,6 +25,10 @@ public class TaskPredictionInput {
     this(jobId, taskType, null);
   }
 
+  public TaskPredictionInput(JobProfile job, TaskType taskType) {
+    this(job, taskType, null);
+  }
+
   public TaskPredictionInput(String jobId, TaskType taskType, String nodeAddress) {
     this.jobId = jobId;
     this.taskType = taskType;

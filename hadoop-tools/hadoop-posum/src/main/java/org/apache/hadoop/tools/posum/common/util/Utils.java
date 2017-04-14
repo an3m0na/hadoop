@@ -508,20 +508,4 @@ public class Utils {
     dataStore.copyCollection(TASK, source, target);
     dataStore.copyCollection(COUNTER, source, target);
   }
-
-  public static Double getMapRate(JobProfile job) {
-    if (job.getAvgMapDuration() == null ||
-      job.getTotalInputBytes() == null ||
-      job.getTotalMapTasks() == null)
-      return null;
-    long inputPerTask = job.getTotalInputBytes() / job.getTotalMapTasks();
-    return 1.0 * inputPerTask / job.getAvgMapDuration();
-  }
-
-  public static Long getSplitSize(TaskProfile task, JobProfile job) {
-    if (task != null && task.getSplitSize() != null)
-      return task.getSplitSize();
-    // consider equal sizes; restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-    return Math.max(orZero(job.getTotalInputBytes()) / job.getTotalMapTasks(), 1);
-  }
 }

@@ -92,31 +92,35 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
         app.setSubmitTime(job.getSubmitTime());
       }
 
-      long avgMapDuration = orZero(job.getAvgMapDuration());
-      int totalMaps = orZero(job.getTotalMapTasks());
-      int completedMaps = orZero(job.getCompletedMaps());
+      Long avgMapDuration = job.getAvgMapDuration();
+      int totalMaps = job.getTotalMapTasks();
+      int completedMaps = job.getCompletedMaps();
+      if (avgMapDuration == null)
+        return;
 
-      if (avgMapDuration != 0) {
-        Long totalWork = avgMapDuration * totalMaps;
-        Long remainingWork = totalWork - avgMapDuration * completedMaps;
-        int totalReduceTasks = orZero(job.getTotalReduceTasks());
-        if (totalReduceTasks > 0) {
-          // there is reduce work to be done; get average task duration
-          long avgReduceDuration = orZero(job.getAvgReduceDuration());
-          long avgMapSize = orZero(job.getInputBytes()) / completedMaps;
-          if (avgReduceDuration == 0 && avgMapSize != 0) {
-            // estimate avg reduce time
-            long totalReduceInputSize = orZero(job.getMapOutputBytes()) / completedMaps * totalMaps;
-            long reducerInputSize = totalReduceInputSize / totalReduceTasks;
-            avgReduceDuration = orZero(job.getAvgMapDuration()) * reducerInputSize / avgMapSize;
-          }
-          remainingWork += avgReduceDuration * (totalReduceTasks - orZero(job.getCompletedReduces()));
-          totalWork += avgReduceDuration * totalReduceTasks;
-        }
-        app.setRemainingWork(remainingWork);
-        app.setTotalWork(totalWork);
-        logger.debug(MessageFormat.format("Work for {0}: remaining={1}, total={2}", app.getJobId(), remainingWork, totalWork));
+      long totalWork = avgMapDuration * totalMaps;
+      long remainingWork = totalWork - avgMapDuration * completedMaps;
+
+      int totalReduceTasks = job.getTotalReduceTasks();
+      Long avgReduceDuration = job.getAvgReduceDuration();
+      if (totalReduceTasks <= 0)
+        return;
+
+      if (avgReduceDuration == null && job.getInputBytes() != null && job.getMapOutputBytes() != null) {
+        // estimate avg reduce time
+        long avgMapSize = job.getInputBytes() / completedMaps;
+        long totalReduceInputSize = orZero(job.getMapOutputBytes()) / completedMaps * totalMaps;
+        long reducerInputSize = totalReduceInputSize / totalReduceTasks;
+        avgReduceDuration = job.getAvgMapDuration() * reducerInputSize / avgMapSize;
       }
+      if(avgReduceDuration == null)
+        return;
+
+      remainingWork += avgReduceDuration * (totalReduceTasks - job.getCompletedReduces());
+      totalWork += avgReduceDuration * totalReduceTasks;
+      app.setRemainingWork(remainingWork);
+      app.setTotalWork(totalWork);
+      logger.debug(MessageFormat.format("Work for {0}: remaining={1}, total={2}", app.getJobId(), remainingWork, totalWork));
     } catch (Exception e) {
       logger.debug("Could not addSource app priority for : " + app.getApplicationId(), e);
     }
