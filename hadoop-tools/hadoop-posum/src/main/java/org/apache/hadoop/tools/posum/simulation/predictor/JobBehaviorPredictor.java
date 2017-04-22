@@ -57,7 +57,7 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
     this.db = db;
 
     // check for new finished jobs and train on them
-    IdsByQueryCall getFinishedJobIds = IdsByQueryCall.newInstance(DataEntityCollection.JOB_HISTORY, null);
+    IdsByQueryCall getFinishedJobIds = IdsByQueryCall.newInstance(DataEntityCollection.JOB_HISTORY, null, "finishTime", false);
     List<String> historyJobIds = new LinkedList<>(db.execute(getFinishedJobIds).getEntries());
     historyJobIds.removeAll(model.getSourceJobs());
     for (String jobId : historyJobIds) {
@@ -126,6 +126,7 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
         input.setJob(getJobById(input.getJobId()));
       }
     }
+    updatePredictionProfile(input.getJob(), false);
     return input;
   }
 

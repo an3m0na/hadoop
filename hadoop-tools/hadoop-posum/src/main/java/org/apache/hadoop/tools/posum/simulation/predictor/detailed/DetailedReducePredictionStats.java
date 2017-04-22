@@ -1,7 +1,6 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.detailed;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
+import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleReducePredictionStats;
 
 import java.util.Map;
 import java.util.Queue;
@@ -12,25 +11,19 @@ import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKe
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.SHUFFLE_FIRST;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.SHUFFLE_TYPICAL;
 
-class DetailedReducePredictionStats extends PredictionStats {
-  private Double avgReduceDuration;
-  private Queue<Double> reduceDurations;
+class DetailedReducePredictionStats extends SimpleReducePredictionStats {
   private Double avgShuffleTypicalRate;
   private Queue<Double> shuffleTypicalRates;
   private Double avgShuffleFirstTime;
   private Queue<Double> shuffleFirstTimes;
   private Double avgMergeRate;
   private Queue<Double> mergeRates;
-  private Double avgReduceRate;
-  private Queue<Double> reduceRates;
 
   public DetailedReducePredictionStats(int maxHistory, int relevance) {
-    super(maxHistory, relevance);
-    this.reduceDurations = new ArrayBlockingQueue<>(maxHistory);
+    super(maxHistory, relevance, REDUCE.getKey());
     this.shuffleTypicalRates = new ArrayBlockingQueue<>(maxHistory);
     this.shuffleFirstTimes = new ArrayBlockingQueue<>(maxHistory);
     this.mergeRates = new ArrayBlockingQueue<>(maxHistory);
-    this.reduceRates = new ArrayBlockingQueue<>(maxHistory);
   }
 
   public Double getAvgShuffleTypicalRate() {
@@ -69,31 +62,8 @@ class DetailedReducePredictionStats extends PredictionStats {
     return mergeRates;
   }
 
-  public Double getAvgReduceRate() {
-    return avgReduceRate;
-  }
-
-  public void setAvgReduceRate(Double avgReduceRates) {
-    this.avgReduceRate = avgReduceRates;
-  }
-
-  public Queue<Double> getReduceRates() {
-    return reduceRates;
-  }
-
-  public Double getAvgReduceDuration() {
-    return avgReduceDuration;
-  }
-
-  public void setAvgReduceDuration(Double avgReduceDuration) {
-    this.avgReduceDuration = avgReduceDuration;
-  }
-
-  public Queue<Double> getReduceDurations() {
-    return reduceDurations;
-  }
-
   public void updateStatsFromFlexFields(Map<String, String> flexFields) {
+    super.updateStatsFromFlexFields(flexFields);
     avgShuffleTypicalRate = addValue(
       flexFields.get(SHUFFLE_TYPICAL.getKey()),
       avgShuffleTypicalRate,
@@ -109,38 +79,27 @@ class DetailedReducePredictionStats extends PredictionStats {
       avgMergeRate,
       mergeRates
     );
-    avgReduceRate = addValue(
-      flexFields.get(REDUCE.getKey()),
-      avgReduceRate,
-      reduceRates
-    );
   }
 
-  public void addSource(JobProfile job) {
-    updateStatsFromFlexFields(job.getFlexFields());
-    avgReduceDuration = addValue(job.getAvgReduceDuration().doubleValue(), avgReduceDuration, reduceDurations);
-    incrementSampleSize();
-  }
-
-  public boolean isIncomplete() {
-    return avgReduceDuration == null ||
+  boolean isIncomplete() {
+    return getAvgReduceDuration() == null ||
+      getAvgReduceRate() == null ||
       avgShuffleTypicalRate == null ||
       avgShuffleFirstTime == null ||
-      avgMergeRate == null ||
-      avgReduceRate == null;
+      avgMergeRate == null;
   }
 
   void completeFrom(DetailedReducePredictionStats otherStats) {
-    if (avgReduceDuration == null && otherStats.getAvgReduceDuration() != null)
-      avgReduceDuration = otherStats.getAvgReduceDuration();
+    if (getAvgReduceDuration() == null && otherStats.getAvgReduceDuration() != null)
+      setAvgReduceDuration(otherStats.getAvgReduceDuration());
+    if (getAvgReduceRate() == null && otherStats.getAvgReduceRate() != null)
+      setAvgReduceRate(otherStats.getAvgReduceRate());
+    setRelevance(otherStats.getRelevance());
     if (avgShuffleTypicalRate == null && otherStats.getAvgShuffleTypicalRate() != null)
       avgShuffleTypicalRate = otherStats.getAvgShuffleTypicalRate();
     if (avgShuffleFirstTime == null && otherStats.getAvgShuffleFirstTime() != null)
       avgShuffleFirstTime = otherStats.getAvgShuffleFirstTime();
     if (avgMergeRate == null && otherStats.getAvgMergeRate() != null)
       avgMergeRate = otherStats.getAvgMergeRate();
-    if (avgReduceRate == null && otherStats.getAvgReduceRate() != null)
-      avgReduceRate = otherStats.getAvgReduceRate();
-    setRelevance(otherStats.getRelevance());
   }
 }

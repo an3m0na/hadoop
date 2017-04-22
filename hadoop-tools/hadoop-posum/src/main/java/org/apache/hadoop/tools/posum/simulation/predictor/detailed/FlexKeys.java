@@ -7,9 +7,11 @@ enum FlexKeys {
   MAP_REMOTE,
   MAP_LOCAL,
   MAP_SELECTIVITY,
+  MAP_FINISH,
   SHUFFLE_FIRST,
   SHUFFLE_TYPICAL,
-  MERGE, REDUCE;
+  MERGE,
+  REDUCE;
 
   public String getKey() {
     return DetailedPredictor.class.getSimpleName() + "::" + this.name();

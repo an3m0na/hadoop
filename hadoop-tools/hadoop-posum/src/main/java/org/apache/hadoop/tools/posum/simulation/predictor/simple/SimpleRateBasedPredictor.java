@@ -1,14 +1,15 @@
-package org.apache.hadoop.tools.posum.simulation.predictor;
+package org.apache.hadoop.tools.posum.simulation.predictor.simple;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardMapPredictionStats;
+import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.PredictionModel;
+import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
 
 import java.util.List;
 
@@ -16,11 +17,11 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
-public abstract class RateBasedPredictor<M extends PredictionModel> extends JobBehaviorPredictor<M> {
+public abstract class SimpleRateBasedPredictor<M extends PredictionModel> extends JobBehaviorPredictor<M> {
 
-  private static final Log logger = LogFactory.getLog(RateBasedPredictor.class);
+  private static final Log logger = LogFactory.getLog(SimpleRateBasedPredictor.class);
 
-  public RateBasedPredictor(Configuration conf) {
+  public SimpleRateBasedPredictor(Configuration conf) {
     super(conf);
   }
 
@@ -53,7 +54,7 @@ public abstract class RateBasedPredictor<M extends PredictionModel> extends JobB
     return duration.longValue();
   }
 
-  protected Double getMapTaskSelectivity(JobProfile job, StandardMapPredictionStats mapStats, String selectivityKey) {
+  protected Double getMapTaskSelectivity(JobProfile job, SimpleMapPredictionStats mapStats, String selectivityKey) {
     // we try to get the selectivity from the map history
     if (mapStats == null || mapStats.getRelevance() > 1 || mapStats.getAvgSelectivity() == null) {
       // there is no history, or it is not relevant for selectivity, so get current selectivity
@@ -62,6 +63,12 @@ public abstract class RateBasedPredictor<M extends PredictionModel> extends JobB
       return selectivityString != null ? Double.valueOf(selectivityString) : null;
     }
     return mapStats.getAvgSelectivity();
+  }
+
+  protected TaskPredictionOutput handleNoMapInfo(JobProfile job) {
+    logger.debug("Insufficient map data for " + job.getId() + ". Using default");
+    // return the default; there is nothing we can do
+    return new TaskPredictionOutput(DEFAULT_TASK_DURATION);
   }
 
   protected TaskPredictionOutput handleNoReduceInfo(JobProfile job, Double avgSelectivity, Double mapRate) {

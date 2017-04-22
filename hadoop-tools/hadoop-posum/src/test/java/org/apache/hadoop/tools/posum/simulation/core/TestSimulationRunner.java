@@ -31,7 +31,7 @@ import static org.apache.hadoop.tools.posum.test.Utils.TASK21;
 import static org.apache.hadoop.tools.posum.test.Utils.TASK22;
 
 @Category(IntegrationTest.class)
-public class SimulationRunnerTest {
+public class TestSimulationRunner {
   @Test
   public void testDaemons() throws Exception {
     Map<String, String> racks = new HashMap<>(2);
