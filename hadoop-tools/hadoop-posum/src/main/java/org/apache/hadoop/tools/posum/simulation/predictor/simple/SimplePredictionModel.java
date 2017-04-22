@@ -1,12 +1,13 @@
-package org.apache.hadoop.tools.posum.simulation.predictor;
+package org.apache.hadoop.tools.posum.simulation.predictor.simple;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.simulation.predictor.PredictionModel;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class SimplePredictionModel implements PredictionModel{
+public abstract class SimplePredictionModel implements PredictionModel {
 
   protected int historyBuffer;
   protected Set<String> sourceJobs = new HashSet<>();

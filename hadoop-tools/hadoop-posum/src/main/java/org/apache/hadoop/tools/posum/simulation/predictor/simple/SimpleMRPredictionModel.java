@@ -1,16 +1,15 @@
-package org.apache.hadoop.tools.posum.simulation.predictor;
+package org.apache.hadoop.tools.posum.simulation.predictor.simple;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SimpleMRPredictionModel<M extends PredictionStats, R extends PredictionStats> extends SimplePredictionModel {
+public abstract class SimpleMRPredictionModel<M extends PredictionStats, R extends PredictionStats> extends SimplePredictionModel {
 
-  private Class<M> mapStatsClass;
-  private Class<R> reduceStatsClass;
+  protected Class<M> mapStatsClass;
+  protected Class<R> reduceStatsClass;
   private Map<String, M> mapStatsByUser = new HashMap<>();
   private Map<String, R> reduceStatsByUser = new HashMap<>();
   private Map<String, M> mapStatsByClass = new HashMap<>();
@@ -25,13 +24,9 @@ public class SimpleMRPredictionModel<M extends PredictionStats, R extends Predic
 
   @Override
   public void updateModel(JobProfile job) {
-    try {
-      updateStatsByType(job, mapStatsByClass, reduceStatsByClass, job.getMapperClass(), job.getReducerClass(), 1);
-      updateStatsByType(job, mapStatsByUser, reduceStatsByUser, job.getUser(), job.getUser(), 2);
-      sourceJobs.add(job.getId());
-    } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-      throw new PosumException("Could not construct appropriate statistics", e);
-    }
+    updateStatsByType(job, mapStatsByClass, reduceStatsByClass, job.getMapperClass(), job.getReducerClass(), 1);
+    updateStatsByType(job, mapStatsByUser, reduceStatsByUser, job.getUser(), job.getUser(), 2);
+    sourceJobs.add(job.getId());
   }
 
   private void updateStatsByType(JobProfile job,
@@ -39,22 +34,26 @@ public class SimpleMRPredictionModel<M extends PredictionStats, R extends Predic
                                  Map<String, R> reduceStatsDictionary,
                                  String mapKey,
                                  String reduceKey,
-                                 int relevance) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+                                 int relevance) {
     M mapStats = mapStatsDictionary.get(mapKey);
     if (mapStats == null) {
-      mapStats = mapStatsClass.getConstructor(int.class, int.class).newInstance(historyBuffer, relevance);
+      mapStats = newMapStats(historyBuffer, relevance);
       mapStatsDictionary.put(mapKey, mapStats);
     }
     mapStats.addSource(job);
     if (job.getTotalReduceTasks() > 0) {
       R reduceStats = reduceStatsDictionary.get(reduceKey);
       if (reduceStats == null) {
-        reduceStats = reduceStatsClass.getConstructor(int.class, int.class).newInstance(historyBuffer, relevance);
+        reduceStats = newReduceStats(historyBuffer, relevance);
         reduceStatsDictionary.put(reduceKey, reduceStats);
       }
       reduceStats.addSource(job);
     }
   }
+
+  protected abstract M newMapStats(int historyBuffer, int relevance);
+
+  protected abstract R newReduceStats(int historyBuffer, int relevance);
 
   public M getRelevantMapStats(JobProfile job) {
     return getRelevantMapStats(job.getMapperClass(), job.getUser());

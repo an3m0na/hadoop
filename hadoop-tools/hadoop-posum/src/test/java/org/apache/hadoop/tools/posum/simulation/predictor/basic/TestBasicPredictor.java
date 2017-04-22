@@ -28,10 +28,12 @@ public class TestBasicPredictor extends TestPredictor<BasicPredictor> {
     List<String> historicalJobs = db.execute(IdsByQueryCall.newInstance(JOB_HISTORY, null)).getEntries();
     assertThat(sourceJobs, containsInAnyOrder(historicalJobs.toArray()));
 
+    // check history stats for known user
     BasicPredictionStats someJobStats = predictor.getModel().getRelevantStats(someJob);
     assertThat(someJobStats.getAvgMapDuration(), is(2801.0));
     assertThat(someJobStats.getAvgReduceDuration(), is(66321.0));
 
+    // check history stats for unknown user
     BasicPredictionStats anotherJobStats = predictor.getModel().getRelevantStats(anotherJob);
     assertThat(anotherJobStats, nullValue());
   }

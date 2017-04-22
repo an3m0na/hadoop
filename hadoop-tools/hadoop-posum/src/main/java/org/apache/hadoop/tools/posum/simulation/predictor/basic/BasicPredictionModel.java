@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.basic;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.simulation.predictor.SimplePredictionModel;
+import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimplePredictionModel;
 
 import java.util.HashMap;
 import java.util.Map;

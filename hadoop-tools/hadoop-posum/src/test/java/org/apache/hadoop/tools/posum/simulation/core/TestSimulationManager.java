@@ -52,7 +52,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 
-public class SimulationManagerTest {
+public class TestSimulationManager {
   private static final Class<? extends ResourceScheduler> SCHEDULER_CLASS = FifoPolicy.class;
   private static final String SCHEDULER_NAME = "FIFO";
   private static final Map<String, String> TOPOLOGY;

@@ -8,9 +8,9 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.simulation.predictor.RateBasedPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
+import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleRateBasedPredictor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,8 +18,10 @@ import java.util.Map;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.getDoubleField;
 import static org.apache.hadoop.tools.posum.common.util.Utils.getDuration;
-import static org.apache.hadoop.tools.posum.common.util.Utils.getIntFieldOrZero;
+import static org.apache.hadoop.tools.posum.common.util.Utils.getIntField;
+import static org.apache.hadoop.tools.posum.common.util.Utils.getLongField;
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.MAP_FINISH;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.MAP_GENERAL;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.MAP_LOCAL;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.MAP_REMOTE;
@@ -31,7 +33,7 @@ import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKe
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.SHUFFLE_FIRST;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.SHUFFLE_TYPICAL;
 
-public class DetailedPredictor extends RateBasedPredictor<DetailedPredictionModel> {
+public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredictionModel> {
 
   private static final Log logger = LogFactory.getLog(DetailedPredictor.class);
 
@@ -47,13 +49,13 @@ public class DetailedPredictor extends RateBasedPredictor<DetailedPredictionMode
   @Override
   protected Map<String, String> getPredictionProfileUpdates(JobProfile job, boolean fromHistory) {
     Map<String, String> fieldMap = new HashMap<>(FlexKeys.values().length);
-    Long mapFinish = 0L; // keeps track of the finish time of the last map task
-    Double mapRate = 0.0, mapRemoteRate = 0.0, mapLocalRate = 0.0, shuffleTypicalRate = 0.0, mergeRate = 0.0, reduceRate = 0.0;
-    Integer mapRemoteNo = 0, mapLocalNo = 0, typicalShuffleNo = 0, firstShuffleNo = 0, reduceNo = 0;
-    Long shuffleFirstTime = 0L;
+    long mapFinish = 0L; // keeps track of the finish time of the last map task
+    double mapRate = 0.0, mapRemoteRate = 0.0, mapLocalRate = 0.0, shuffleTypicalRate = 0.0, mergeRate = 0.0, reduceRate = 0.0;
+    int totalMaps = 0, mapRemoteNo = 0, mapLocalNo = 0, typicalShuffleNo = 0, firstShuffleNo = 0, reduceNo = 0;
+    long shuffleFirstTime = 0L;
     List<TaskProfile> tasks = null;
 
-    if (getIntFieldOrZero(job, PROFILED_MAPS.getKey()) != job.getCompletedMaps()) {
+    if (!getIntField(job, PROFILED_MAPS.getKey(), 0).equals(job.getCompletedMaps())) {
       // nothing will work if we don't have input size info
       if (job.getTotalInputBytes() != null) {
         Long parsedInputBytes = 0L;
@@ -64,23 +66,24 @@ public class DetailedPredictor extends RateBasedPredictor<DetailedPredictionMode
         for (TaskProfile task : tasks) {
           if (getDuration(task) <= 0 || !task.getType().equals(TaskType.MAP))
             continue;
+          totalMaps++;
           // this is a finished map task; calculate general, local and remote processing rates
           Long taskInput = getSplitSize(task, job);
           parsedInputBytes += taskInput;
-          if (mapFinish < orZero(task.getFinishTime()))
-            mapFinish = orZero(task.getFinishTime());
+          if (mapFinish < task.getFinishTime())
+            mapFinish = task.getFinishTime();
           // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
           Double newRate = 1.0 * taskInput / getDuration(task);
           mapRate += newRate;
-          if (task.isLocal()) {
-            mapLocalRate += newRate;
-            mapLocalNo++;
-          } else {
-            mapRemoteRate += newRate;
-            mapRemoteNo++;
-          }
+          if (task.isLocal() != null)
+            if (task.isLocal()) {
+              mapLocalRate += newRate;
+              mapLocalNo++;
+            } else {
+              mapRemoteRate += newRate;
+              mapRemoteNo++;
+            }
         }
-        int totalMaps = mapLocalNo + mapRemoteNo;
         if (totalMaps != 0) {
           fieldMap.put(MAP_GENERAL.getKey(), Double.toString(mapRate / totalMaps));
           if (mapLocalNo != 0 && mapLocalRate != 0) {
@@ -94,20 +97,25 @@ public class DetailedPredictor extends RateBasedPredictor<DetailedPredictionMode
               // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
               Double.toString(1.0 * orZero(job.getMapOutputBytes()) / parsedInputBytes));
           }
-          if (totalMaps != job.getTotalMapTasks()) {
-            // map phase has not finished yet
-            mapFinish = Long.MAX_VALUE;
+          if (totalMaps == job.getTotalMapTasks()) {
+            // all map tasks were parsed
+            fieldMap.put(MAP_FINISH.getKey(), Long.toString(mapFinish));
           }
         }
         fieldMap.put(PROFILED_MAPS.getKey(), Integer.toString(totalMaps));
       }
     }
 
-    if (getIntFieldOrZero(job, PROFILED_REDUCES.getKey()) != job.getCompletedReduces()) {
+    if (!getIntField(job, PROFILED_REDUCES.getKey(), 0).equals(job.getCompletedReduces())) {
       if (tasks == null)
         tasks = getJobTasks(job.getId(), fromHistory);
       if (tasks == null)
         throw new PosumException("Tasks not found or finished for job " + job.getId());
+
+      if (mapFinish >= Long.MAX_VALUE) {
+        // mapFinish might not have been initialized
+        mapFinish = getLongField(job, MAP_FINISH.getKey(), Long.MAX_VALUE);
+      }
       for (TaskProfile task : tasks) {
         if (getDuration(task) <= 0 || !task.getType().equals(TaskType.REDUCE) || task.getInputBytes() == null)
           continue;
@@ -123,7 +131,6 @@ public class DetailedPredictor extends RateBasedPredictor<DetailedPredictionMode
           shuffleTypicalRate += 1.0 * taskInputBytes / task.getShuffleTime();
           typicalShuffleNo++;
         } else {
-          logger.debug("When this happens, mapFinish is " + mapFinish);
           shuffleFirstTime += task.getStartTime() + orZero(task.getShuffleTime()) - mapFinish;
           firstShuffleNo++;
         }
@@ -148,8 +155,6 @@ public class DetailedPredictor extends RateBasedPredictor<DetailedPredictionMode
   @Override
   protected TaskPredictionOutput predictMapTaskBehavior(TaskPredictionInput input) {
     JobProfile job = input.getJob();
-    updatePredictionProfile(job, false);
-
     DetailedMapPredictionStats jobStats = new DetailedMapPredictionStats(1, 0);
     jobStats.addSource(job);
 
@@ -181,20 +186,17 @@ public class DetailedPredictor extends RateBasedPredictor<DetailedPredictionMode
     return new TaskPredictionOutput(duration.longValue());
   }
 
-  private TaskPredictionOutput handleNoMapInfo(JobProfile job) {
+  @Override
+  protected TaskPredictionOutput handleNoMapInfo(JobProfile job) {
     if (job.getAvgMapDuration() != null)
       // if we do have at least the current average duration, return that, regardless of location
       return new TaskPredictionOutput(job.getAvgMapDuration());
-    logger.debug("Insufficient map data for " + job.getId() + ". Using default");
-    // return the default; there is nothing we can do
-    return new TaskPredictionOutput(DEFAULT_TASK_DURATION);
+    return super.handleNoMapInfo(job);
   }
 
   @Override
   protected TaskPredictionOutput predictReduceTaskBehavior(TaskPredictionInput input) {
     JobProfile job = input.getJob();
-    updatePredictionProfile(job, false);
-
     Double avgSelectivity = getMapTaskSelectivity(
       job,
       model.getRelevantMapStats(job),
@@ -220,7 +222,7 @@ public class DetailedPredictor extends RateBasedPredictor<DetailedPredictionMode
 
     if (jobStats.getAvgReduceDuration() == null)
       // we have no current or historical reduce information, not even average duration
-      return handleNoReduceInfo(job, avgSelectivity, getDoubleField(job, MAP_GENERAL.getKey()));
+      return handleNoReduceInfo(job, avgSelectivity, getDoubleField(job, MAP_GENERAL.getKey(), null));
 
     // we are still missing information
     // just return average reduce duration of the current job or historical jobs

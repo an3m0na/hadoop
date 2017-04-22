@@ -484,19 +484,24 @@ public class Utils {
     return unsafeInt == null ? 0 : unsafeInt;
   }
 
-  public static boolean getBooleanFieldOrFalse(JobProfile job, String fieldString) {
+  public static Boolean getBooleanField(JobProfile job, String fieldString, Boolean defaultValue) {
     String valueString = job.getFlexField(fieldString);
-    return valueString != null && Boolean.valueOf(valueString);
+    return valueString == null ? defaultValue : Boolean.valueOf(valueString);
   }
 
-  public static Double getDoubleField(JobProfile job, String fieldString) {
+  public static Double getDoubleField(JobProfile job, String fieldString, Double defaultValue) {
     String valueString = job.getFlexField(fieldString);
-    return valueString == null ? null : Double.valueOf(valueString);
+    return valueString == null ? defaultValue : Double.valueOf(valueString);
   }
 
-  public static int getIntFieldOrZero(JobProfile job, String fieldString) {
+  public static Long getLongField(JobProfile job, String fieldString, Long defaultValue) {
     String valueString = job.getFlexField(fieldString);
-    return valueString == null ? 0 : Integer.valueOf(valueString);
+    return valueString == null ? defaultValue : Long.valueOf(valueString);
+  }
+
+  public static Integer getIntField(JobProfile job, String fieldString, Integer defaultValue) {
+    String valueString = job.getFlexField(fieldString);
+    return valueString == null ? defaultValue : Integer.valueOf(valueString);
   }
 
   public static void copyRunningAppInfo(DataStore dataStore, DatabaseReference source, DatabaseReference target) {
