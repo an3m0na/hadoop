@@ -68,11 +68,11 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     TransactionCall transaction = TransactionCall.newInstance();
     AppProfile app = db.execute(FindByIdCall.newInstance(APP, appIdString)).getEntity();
     if (app != null) {
-      app.setFinishTime(simulationContext.getCurrentTime());
       transaction.addCall(DeleteByIdCall.newInstance(APP, appIdString));
       transaction.addCall(StoreCall.newInstance(APP_HISTORY, app));
     }
     JobProfile job = db.execute(JobForAppCall.newInstance(appIdString)).getEntity();
+    job.setFinishTime(simulationContext.getCurrentTime());
     transaction.addCall(DeleteByIdCall.newInstance(JOB, job.getId()));
     transaction.addCall(StoreCall.newInstance(JOB_HISTORY, job));
 
@@ -111,7 +111,6 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     AppProfile app = sourceDb.execute(FindByIdCall.newInstance(APP, oldAppIdString)).getEntity();
     if (app != null) {
       app.setId(appIdString);
-      app.setStartTime(simulationContext.getCurrentTime());
       transaction.addCall(StoreCall.newInstance(APP, app));
     }
     ApplicationId oldAppId = parseApplicationId(oldAppIdString);
@@ -121,6 +120,7 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     String oldJobIdString = oldJobId.toString();
     JobProfile job = sourceDb.execute(FindByIdCall.newInstance(JOB, oldJobIdString)).getEntity();
     job.setAppId(appIdString);
+    job.setStartTime(simulationContext.getCurrentTime());
     transaction.addCall(StoreCall.newInstance(JOB, job));
 
     JobConfProxy jobConf = sourceDb.execute(FindByIdCall.newInstance(JOB_CONF, oldJobIdString)).getEntity();

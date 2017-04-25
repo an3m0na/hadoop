@@ -26,6 +26,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
@@ -38,6 +39,9 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_HISTORY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
+import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
+import static org.apache.hadoop.tools.posum.test.Utils.APP1;
+import static org.apache.hadoop.tools.posum.test.Utils.APP2;
 import static org.apache.hadoop.tools.posum.test.Utils.DURATION_UNIT;
 import static org.apache.hadoop.tools.posum.test.Utils.JOB1;
 import static org.apache.hadoop.tools.posum.test.Utils.JOB2;
@@ -48,6 +52,9 @@ import static org.apache.hadoop.tools.posum.test.Utils.TASK11;
 import static org.apache.hadoop.tools.posum.test.Utils.TASK12;
 import static org.apache.hadoop.tools.posum.test.Utils.TASK21;
 import static org.apache.hadoop.tools.posum.test.Utils.TASK22;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.number.IsCloseTo.closeTo;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -58,11 +65,7 @@ public class TestSimulationManager {
   private static final Map<String, String> TOPOLOGY;
 
   static {
-    TOPOLOGY = new HashMap<>(4);
-//    TOPOLOGY.put("node323.cm.cluster", "rack1");
-//    TOPOLOGY.put("node324.cm.cluster", "rack2");
-//    TOPOLOGY.put("node325.cm.cluster", "rack2");
-//    TOPOLOGY.put("node326.cm.cluster", "rack2");
+    TOPOLOGY = new HashMap<>(2);
     TOPOLOGY.put(NODE1, RACK1);
     TOPOLOGY.put(NODE2, RACK1);
   }
@@ -80,7 +83,7 @@ public class TestSimulationManager {
   }
 
   @Test
-  public void simpleTest() throws Exception {
+  public void testSmallTrace() throws Exception {
     dataStoreMock = new MockDataStoreImpl();
     Database sourceDb = Database.from(dataStoreMock, DatabaseReference.getSimulation());
 
@@ -94,61 +97,63 @@ public class TestSimulationManager {
     jobConf2.setId(JOB2.getId());
 
     TransactionCall transaction = TransactionCall.newInstance()
+      .addCall(StoreAllCall.newInstance(APP, Arrays.asList(APP1, APP2)))
       .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(JOB1, JOB2)))
       .addCall(StoreAllCall.newInstance(JOB_CONF, Arrays.asList(jobConf1, jobConf2)))
-      .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(TASK11, TASK12)))
-      .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(TASK21, TASK22)));
+      .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(TASK11, TASK12, TASK21, TASK22)));
     sourceDb.execute(transaction);
 
     testSubject = new SimulationManager(predictorMock, SCHEDULER_NAME, SCHEDULER_CLASS, dataStoreMock, TOPOLOGY);
 
     SimulationResultPayload ret = testSubject.call();
-    //TODO test intended behavior
     System.out.println("-----------------------Before-----------------");
-    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(APP, null)).getEntities());
-    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(JOB, null)).getEntities());
-    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(JOB_CONF, null)).getEntities());
-    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(TASK, null)).getEntities());
-    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(COUNTER, null)).getEntities());
+    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(APP, null, ID_FIELD, false)).getEntities());
+    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(JOB, null, ID_FIELD, false)).getEntities());
+    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(TASK, null, ID_FIELD, false)).getEntities());
+    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(JOB_CONF, null, ID_FIELD, false)).getEntities());
+    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(COUNTER, null, ID_FIELD, false)).getEntities());
 
     Database db = Database.from(dataStoreMock, DatabaseReference.get(DatabaseReference.Type.SIMULATION, SCHEDULER_NAME));
     System.out.println("-----------------------After-----------------");
-    System.out.println(db.execute(FindByQueryCall.newInstance(APP_HISTORY, null)).getEntities());
-    System.out.println(db.execute(FindByQueryCall.newInstance(JOB_HISTORY, null)).getEntities());
-    System.out.println(db.execute(FindByQueryCall.newInstance(JOB_CONF_HISTORY, null)).getEntities());
-    System.out.println(db.execute(FindByQueryCall.newInstance(TASK_HISTORY, null)).getEntities());
-    System.out.println(db.execute(FindByQueryCall.newInstance(COUNTER_HISTORY, null)).getEntities());
+    System.out.println(db.execute(FindByQueryCall.newInstance(APP_HISTORY, null, ID_FIELD, false)).getEntities());
+    List<JobProfile> jobs = db.execute(FindByQueryCall.newInstance(JOB_HISTORY, null, ID_FIELD, false)).getEntities();
+    System.out.println(jobs);
+    List<TaskProfile> tasks = db.execute(FindByQueryCall.newInstance(TASK_HISTORY, null, ID_FIELD, false)).getEntities();
+    System.out.println(tasks);
+    System.out.println(db.execute(FindByQueryCall.newInstance(JOB_CONF_HISTORY, null, ID_FIELD, false)).getEntities());
+    System.out.println(db.execute(FindByQueryCall.newInstance(COUNTER_HISTORY, null, ID_FIELD, false)).getEntities());
 
+    assertThat(jobs.get(0).getStartTime(), is(0L));
+    assertThat(jobs.get(0).getFinishTime().doubleValue(), closeTo(312000, 2001));
+    assertThat(jobs.get(1).getStartTime(), is(60000L));
+    assertThat(jobs.get(1).getFinishTime().doubleValue(), closeTo(186000, 2001));
+
+    assertThat(tasks.get(0).getStartTime(), is(4000L));
+    assertThat(tasks.get(0).getFinishTime().doubleValue(), closeTo(186000, 1001));
+    assertThat(tasks.get(1).getStartTime().doubleValue(), closeTo(190000, 2001));
+    assertThat(tasks.get(1).getFinishTime().doubleValue(), closeTo(312000, 2001));
+    assertThat(tasks.get(2).getStartTime(), is(64000L));
+    assertThat(tasks.get(2).getFinishTime().doubleValue(), closeTo(126000, 1001));
+    assertThat(tasks.get(3).getStartTime().doubleValue(), closeTo(64000, 1001));
+    assertThat(tasks.get(3).getFinishTime().doubleValue(), closeTo(186000, 1001));
   }
 
   @Test
-  public void simplePredictionTest() throws Exception {
+  public void testMockPrediction() throws Exception {
     dataStoreMock = new MockDataStoreImpl();
     Database sourceDb = Database.from(dataStoreMock, DatabaseReference.getSimulation());
 
     when(predictorMock.predictTaskBehavior(any(TaskPredictionInput.class)))
       .thenReturn(new TaskPredictionOutput(DURATION_UNIT * 2));
 
-    JobProfile job1 = JOB1.copy(), job2 = JOB2.copy();
-    job1.setAvgMapDuration(DURATION_UNIT * 5);
-    job1.setTotalMapTasks(job1.getTotalMapTasks() + 1);
-    job1.setCompletedMaps(1);
-    job1.setInputBytes(10000L);
-    job1.setMapOutputBytes(500L);
-    job2.setAvgMapDuration(DURATION_UNIT);
-    job2.setTotalMapTasks(job2.getTotalMapTasks() + 1);
-    job2.setCompletedMaps(1);
-    job2.setInputBytes(50000L);
-    job2.setMapOutputBytes(30L);
-
     JobConfProxy jobConf1 = Records.newRecord(JobConfProxy.class);
-    jobConf1.setId(job1.getId());
+    jobConf1.setId(JOB1.getId());
     Configuration innerConf = new Configuration();
     innerConf.setFloat(MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART, 0.8f);
     jobConf1.setConf(innerConf);
 
     JobConfProxy jobConf2 = jobConf1.copy();
-    jobConf2.setId(job2.getId());
+    jobConf2.setId(JOB2.getId());
 
     TaskProfile task11 = TASK11.copy(), task12 = TASK12.copy(), task21 = TASK21.copy(), task22 = TASK22.copy();
     task11.setStartTime(null);
@@ -161,7 +166,7 @@ public class TestSimulationManager {
     task22.setFinishTime(null);
 
     TransactionCall transaction = TransactionCall.newInstance()
-      .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(job1, job2)))
+      .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(JOB1, JOB2)))
       .addCall(StoreAllCall.newInstance(JOB_CONF, Arrays.asList(jobConf1, jobConf2)))
       .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(task11, task12)))
       .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(task21, task22)));
@@ -170,23 +175,35 @@ public class TestSimulationManager {
     testSubject = new SimulationManager(predictorMock, SCHEDULER_NAME, SCHEDULER_CLASS, dataStoreMock, TOPOLOGY);
 
     SimulationResultPayload ret = testSubject.call();
-    //TODO test intended behavior
     System.out.println("-----------------------Before-----------------");
-    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(APP, null)).getEntities());
-    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(JOB, null)).getEntities());
-    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(JOB_CONF, null)).getEntities());
-    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(TASK, null)).getEntities());
-    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(COUNTER, null)).getEntities());
+    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(APP, null, ID_FIELD, false)).getEntities());
+    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(JOB, null, ID_FIELD, false)).getEntities());
+    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(TASK, null, ID_FIELD, false)).getEntities());
+    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(JOB_CONF, null, ID_FIELD, false)).getEntities());
+    System.out.println(sourceDb.execute(FindByQueryCall.newInstance(COUNTER, null, ID_FIELD, false)).getEntities());
 
     Database db = Database.from(dataStoreMock, DatabaseReference.get(DatabaseReference.Type.SIMULATION, SCHEDULER_NAME));
     System.out.println("-----------------------After-----------------");
-    System.out.println(db.execute(FindByQueryCall.newInstance(APP_HISTORY, null)).getEntities());
-    System.out.println(db.execute(FindByQueryCall.newInstance(JOB_HISTORY, null)).getEntities());
-    System.out.println(db.execute(FindByQueryCall.newInstance(JOB_CONF_HISTORY, null)).getEntities());
-    System.out.println(db.execute(FindByQueryCall.newInstance(TASK_HISTORY, null)).getEntities());
-    System.out.println(db.execute(FindByQueryCall.newInstance(COUNTER_HISTORY, null)).getEntities());
+    System.out.println(db.execute(FindByQueryCall.newInstance(APP_HISTORY, null, ID_FIELD, false)).getEntities());
+    List<JobProfile> jobs = db.execute(FindByQueryCall.newInstance(JOB_HISTORY, null, ID_FIELD, false)).getEntities();
+    System.out.println(jobs);
+    List<TaskProfile> tasks = db.execute(FindByQueryCall.newInstance(TASK_HISTORY, null, ID_FIELD, false)).getEntities();
+    System.out.println(tasks);
+    System.out.println(db.execute(FindByQueryCall.newInstance(JOB_CONF_HISTORY, null, ID_FIELD, false)).getEntities());
+    System.out.println(db.execute(FindByQueryCall.newInstance(COUNTER_HISTORY, null, ID_FIELD, false)).getEntities());
 
+    assertThat(jobs.get(0).getStartTime(), is(0L));
+    assertThat(jobs.get(0).getFinishTime().doubleValue(), closeTo(252000, 2001));
+    assertThat(jobs.get(1).getStartTime(), is(60000L));
+    assertThat(jobs.get(1).getFinishTime().doubleValue(), closeTo(186000, 2001));
+
+    assertThat(tasks.get(0).getStartTime(), is(4000L));
+    assertThat(tasks.get(0).getFinishTime().doubleValue(), closeTo(126000, 1001));
+    assertThat(tasks.get(1).getStartTime().doubleValue(), closeTo(130000, 2001));
+    assertThat(tasks.get(1).getFinishTime().doubleValue(), closeTo(252000, 2001));
+    assertThat(tasks.get(2).getStartTime().doubleValue(), closeTo(64000L, 1001L));
+    assertThat(tasks.get(2).getFinishTime().doubleValue(), closeTo(186000, 1001));
+    assertThat(tasks.get(3).getStartTime().doubleValue(), closeTo(64000, 2001));
+    assertThat(tasks.get(3).getFinishTime().doubleValue(), closeTo(186000, 2001));
   }
-
-
 } 
