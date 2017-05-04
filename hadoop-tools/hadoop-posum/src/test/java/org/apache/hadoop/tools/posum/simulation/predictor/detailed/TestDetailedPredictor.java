@@ -8,9 +8,11 @@ import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TestPredictor;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_HISTORY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.hamcrest.Matchers.closeTo;
@@ -36,7 +38,7 @@ public class TestDetailedPredictor extends TestPredictor<DetailedPredictor> {
     assertThat(someJobMapStats.getAvgRate(), closeTo(15891.11, 0.01));
     assertThat(someJobMapStats.getAvgSelectivity(), closeTo(1.361, 0.001));
     assertThat(someJobMapStats.getAvgLocalRate(), closeTo(16086.84, 0.01));
-    assertThat(someJobMapStats.getAvgRemoteRate(), closeTo(17564.46, 0.01));
+    assertThat(someJobMapStats.getAvgRemoteRate(), closeTo(14630.82, 0.01));
     assertThat(someJobReduceStats.getAvgReduceDuration(), closeTo(82522.0, 0.1));
     assertThat(someJobReduceStats.getAvgReduceRate(), closeTo(161242.10, 0.01));
     assertThat(someJobReduceStats.getAvgMergeRate(), closeTo(2463112.18, 0.01));
@@ -51,7 +53,7 @@ public class TestDetailedPredictor extends TestPredictor<DetailedPredictor> {
     assertThat(someJobMapStats.getAvgRate(), closeTo(16268.63, 0.01));
     assertThat(someJobMapStats.getAvgSelectivity(), closeTo(9.123E-8, 0.001E-8));
     assertThat(someJobMapStats.getAvgLocalRate(), closeTo(16253.48, 0.01));
-    assertThat(someJobMapStats.getAvgRemoteRate(), nullValue());
+    assertThat(someJobMapStats.getAvgRemoteRate(), closeTo(16314.75, 0.01));
     assertThat(someJobReduceStats.getAvgReduceDuration(), closeTo(129203.0, 0.1));
     assertThat(someJobReduceStats.getAvgReduceRate(), closeTo(9920.24, 0.01));
     assertThat(someJobReduceStats.getAvgMergeRate(), closeTo(3317439.20, 0.01));
@@ -77,10 +79,30 @@ public class TestDetailedPredictor extends TestPredictor<DetailedPredictor> {
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.MAP));
     assertThat(prediction.getDuration(), is(629L));
 
-    // check prediction on known average duration
+    // check rate-based prediction for local task
+    someJobMapTask.setSplitLocations(Collections.singletonList("bla"));
+    db.execute(UpdateOrStoreCall.newInstance(TASK, someJobMapTask));
+    db.execute(UpdateOrStoreCall.newInstance(JOB, someJob));
+    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJobMapTask.getId(), "bla"));
+    assertThat(prediction.getDuration(), is(621L));
+
+    // check rate-based prediction for remote task
+    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJobMapTask.getId(), "ha"));
+    assertThat(prediction.getDuration(), is(683L));
+
+    // check prediction on known average duration and irrelevant history
     someJob.setAvgMapDuration(1000L);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.MAP));
     assertThat(prediction.getDuration(), is(1000L));
+
+    // check prediction for relevant history
+    someJob.setMapperClass("org.apache.hadoop.mapreduce.lib.map.RegexMapper");
+    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.MAP));
+    assertThat(prediction.getDuration(), is(614L));
+
+    // check prediction for relevant history and known locality
+    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJobMapTask.getId(), "ha"));
+    assertThat(prediction.getDuration(), is(612L));
 
     // check no history prediction
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(anotherJob, TaskType.MAP));
@@ -94,17 +116,12 @@ public class TestDetailedPredictor extends TestPredictor<DetailedPredictor> {
 
   @Test
   public void testReducePrediction() throws Exception {
-    TaskPredictionOutput prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.REDUCE));
-    // check non-relevant history -> avg historical duration
-    assertThat(prediction.getDuration(), is(82522L));
-
     // check prediction with no selectivity data -> avg historical duration
-    someJob.setReducerClass("org.apache.nutch.indexer.IndexerMapReduce");
     someJob.setTotalInputBytes(100000000L);
     someJob.setTotalMapTasks(10);
     someJob.setTotalReduceTasks(2);
-    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.REDUCE));
-    assertThat(prediction.getDuration(), is(129203L));
+    TaskPredictionOutput prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.REDUCE));
+    assertThat(prediction.getDuration(), is(82522L));
 
     // check rate-based prediction with own selectivity data
     someJob.setMapOutputBytes(100L);
@@ -114,14 +131,20 @@ public class TestDetailedPredictor extends TestPredictor<DetailedPredictor> {
     db.execute(UpdateOrStoreCall.newInstance(TASK, someJobMapTask));
     someJob.setCompletedMaps(1);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.REDUCE));
-    assertThat(prediction.getDuration(), is(151773L));
+    assertThat(prediction.getDuration(), is(18990L));
 
     // check rate-based prediction with historical selectivity data
     someJob.setMapperClass("org.apache.nutch.indexer.IndexerMapReduce");
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.REDUCE));
-    assertThat(prediction.getDuration(), is(10467L));
+    assertThat(prediction.getDuration(), is(1309L));
 
     // check prediction for known avg duration and history
+    someJob.setAvgReduceDuration(1001L);
+    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.REDUCE));
+    assertThat(prediction.getDuration(), is(1309L));
+
+    // check prediction for restricted reduce info
+    someJob.setReducerClass("org.apache.nutch.indexer.IndexerMapReduce");
     someJob.setAvgReduceDuration(1001L);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.REDUCE));
     assertThat(prediction.getDuration(), is(1001L));

@@ -75,14 +75,13 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
           // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
           Double newRate = 1.0 * taskInput / getDuration(task);
           mapRate += newRate;
-          if (task.isLocal() != null)
-            if (task.isLocal()) {
-              mapLocalRate += newRate;
-              mapLocalNo++;
-            } else {
-              mapRemoteRate += newRate;
-              mapRemoteNo++;
-            }
+          if (Boolean.TRUE.equals(task.isLocal())) { // because protos are unpredictable
+            mapLocalRate += newRate;
+            mapLocalNo++;
+          } else {
+            mapRemoteRate += newRate;
+            mapRemoteNo++;
+          }
         }
         if (totalMaps != 0) {
           fieldMap.put(MAP_GENERAL.getKey(), Double.toString(mapRate / totalMaps));
