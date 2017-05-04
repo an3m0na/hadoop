@@ -55,7 +55,10 @@ public class SimpleReducePredictionStats extends PredictionStats {
 
   public void addSource(JobProfile job) {
     updateStatsFromFlexFields(job.getFlexFields());
-    avgReduceDuration = addValue(job.getAvgReduceDuration().doubleValue(), avgReduceDuration, reduceDurations);
+    job.getAvgReduceDuration();
+    Long avgDuration = job.getAvgReduceDuration();
+    if (avgDuration != null)
+      avgReduceDuration = addValue(avgDuration.doubleValue(), avgReduceDuration, reduceDurations);
     incrementSampleSize();
   }
 
