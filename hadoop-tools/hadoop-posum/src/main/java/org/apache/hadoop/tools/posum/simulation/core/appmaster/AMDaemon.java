@@ -273,7 +273,7 @@ public abstract class AMDaemon extends WorkerDaemon {
     ResourceRequest anyRequest = null;
     for (SimulatedContainer cs : csList) {
       List<String> hosts = cs.getPreferredLocations();
-      List<String> racks = simulationContext.getTopologyProvider().getRacks(simulationContext.getCurrentTime(), hosts);
+      List<String> racks = simulationContext.getTopologyProvider().getRacks(hosts);
       // check rack local
       addContainers(rackLocalRequestMap, cs.getResource(), racks, priority);
       // check node local

@@ -3,13 +3,14 @@ package org.apache.hadoop.tools.posum.test;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.TopologyProvider;
 import org.apache.hadoop.tools.posum.data.core.DataStoreImpl;
 import org.apache.hadoop.tools.posum.data.master.DataMasterContext;
 import org.apache.hadoop.tools.posum.data.monitor.cluster.ClusterMonitor;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class ManualTests{
+public class ManualTests {
   @Test
   @Ignore
   public void checkRegistration() {
@@ -32,5 +33,12 @@ public class ManualTests{
       e.printStackTrace();
     }
 
+  }
+
+  @Test
+  public void checkTopologyProvider() {
+    Configuration conf = PosumConfiguration.newInstance();
+    TopologyProvider provider = new TopologyProvider(conf);
+    System.out.println(provider.resolve("node301"));
   }
 }
