@@ -15,11 +15,10 @@ public class PolicyPortfolio extends HashMap<String, Class<? extends PluginPolic
 
   public enum StandardPolicy {
     FIFO(FifoPolicy.class),
-    DATA(DataOrientedPolicy.class),
     EDLS_SH(EDLSSharePolicy.class),
     EDLS_PR(EDLSPriorityPolicy.class),
-    LOCF(LocalityFirstPolicy.class),
-    SRTF(ShortestRTFirstPolicy.class);
+    LOCF(LocalityFirstPolicy.class);//,
+    //SRTF(ShortestRTFirstPolicy.class);
 
     Class<? extends PluginPolicy> implClass;
 
