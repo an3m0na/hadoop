@@ -35,10 +35,4 @@ public class ManualTests {
 
   }
 
-  @Test
-  public void checkTopologyProvider() {
-    Configuration conf = PosumConfiguration.newInstance();
-    TopologyProvider provider = new TopologyProvider(conf);
-    System.out.println(provider.resolve("node301"));
-  }
 }

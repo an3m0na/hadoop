@@ -43,7 +43,6 @@ public class SimulatorImpl extends CompositeService implements Simulator {
   @Override
   protected void serviceInit(Configuration conf) throws Exception {
     predictor = JobBehaviorPredictor.newInstance(context.getConf());
-    predictor.train(Database.from(context.getDataBroker(), DatabaseReference.getMain()));
     policies = new PolicyPortfolio(conf);
     executor = Executors.newFixedThreadPool(policies.size());
 
@@ -68,7 +67,7 @@ public class SimulatorImpl extends CompositeService implements Simulator {
       logger.trace("Starting simulation for " + policy.getKey());
       Class<? extends PluginPolicy> policyClass = policy.getValue();
       // TODO add topology
-      SimulationManager simulation = new SimulationManager(predictor, policyClass.getName(), policyClass, dataStore, null);
+      SimulationManager simulation = new SimulationManager(predictor, policyClass.getSimpleName(), policyClass, dataStore, null);
       simulationMap.put(policy.getKey(), new PendingResult(simulation, executor.submit(simulation)));
     }
     resultAggregator = new ResultAggregator(simulationMap.values(), this);

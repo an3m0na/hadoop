@@ -16,17 +16,21 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.TaskPredictionPayload;
 import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedPredictor;
-import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardPredictor;
-import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +44,7 @@ public class PosumInfoCollector {
   private final Configuration conf;
   private final Boolean fineGrained;
   private final Map<String, PolicyInfoPayload> policyMap;
+  private final Set<String> activeNodes;
   private Long lastCollectTime = 0L;
   private Long lastPrediction = 0L;
   private Long predictionTimeout = 0L;
@@ -63,6 +68,7 @@ public class PosumInfoCollector {
     for (String policy : policies) {
       policyMap.put(policy, PolicyInfoPayload.newInstance());
     }
+    activeNodes = new HashSet<>();
     Database db = Database.from(dataStore, DatabaseReference.getMain());
 //        predictor = JobBehaviorPredictor.newInstance(conf);
     basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
@@ -95,14 +101,14 @@ public class PosumInfoCollector {
     }
 
     // aggregate policy change decisions
-    FindByQueryCall findChoices = FindByQueryCall.newInstance(LogEntry.Type.POLICY_CHANGE.getCollection(),
+    FindByQueryCall findPolicyChanges = FindByQueryCall.newInstance(DataEntityCollection.AUDIT_LOG,
       QueryUtils.and(
         QueryUtils.is("type", LogEntry.Type.POLICY_CHANGE),
         QueryUtils.greaterThan("lastUpdated", lastCollectTime),
         QueryUtils.lessThanOrEqual("lastUpdated", now)
       ));
     List<LogEntry<SimplePropertyPayload>> policyChanges =
-      dataStore.execute(findChoices, DatabaseReference.getLogs()).getEntities();
+      dataStore.execute(findPolicyChanges, DatabaseReference.getLogs()).getEntities();
     if (policyChanges.size() > 0) {
       if (schedulingStart == 0)
         schedulingStart = policyChanges.get(0).getLastUpdated();
@@ -120,6 +126,28 @@ public class PosumInfoCollector {
       dataStore.execute(CallUtils.storeStatReportCall(LogEntry.Type.POLICY_MAP,
         PolicyInfoMapPayload.newInstance(policyMap)), null);
     }
+
+    // aggregate node change decisions
+    FindByQueryCall findNodeChanges = FindByQueryCall.newInstance(DataEntityCollection.AUDIT_LOG,
+      QueryUtils.and(
+        QueryUtils.in("type", Arrays.asList(LogEntry.Type.NODE_ADD, LogEntry.Type.NODE_REMOVE)),
+        QueryUtils.greaterThan("lastUpdated", lastCollectTime),
+        QueryUtils.lessThanOrEqual("lastUpdated", now)
+      ));
+    List<LogEntry<SimplePropertyPayload>> nodeChanges =
+      dataStore.execute(findNodeChanges, DatabaseReference.getLogs()).getEntities();
+    if (nodeChanges.size() > 0) {
+      for (LogEntry<SimplePropertyPayload> nodeChange : nodeChanges) {
+        String hostName = (String) nodeChange.getDetails().getValue();
+        if (nodeChange.getType().equals(LogEntry.Type.NODE_ADD))
+          activeNodes.add(hostName);
+        else
+          activeNodes.remove(hostName);
+      }
+      dataStore.execute(CallUtils.storeStatReportCall(LogEntry.Type.ACTIVE_NODES,
+        StringListPayload.newInstance(new ArrayList<>(activeNodes))), null);
+    }
+
     lastCollectTime = now;
   }
 

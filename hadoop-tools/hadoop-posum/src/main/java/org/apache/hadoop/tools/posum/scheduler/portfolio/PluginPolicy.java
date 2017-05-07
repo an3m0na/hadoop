@@ -2,6 +2,8 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
+import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSAppAttempt;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSQueue;
@@ -17,6 +19,9 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnSched
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplication;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeAddedSchedulerEvent;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeRemovedSchedulerEvent;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -100,4 +105,21 @@ public abstract class PluginPolicy<
   }
 
   public abstract void transferStateFromPolicy(PluginPolicy other);
+
+  @Override
+  public void handle(SchedulerEvent event) {
+    switch (event.getType()) {
+      case NODE_ADDED: {
+        NodeAddedSchedulerEvent nodeAddedEvent = (NodeAddedSchedulerEvent) event;
+        dbProvider.getDatabase().execute(StoreLogCall.newInstance(LogEntry.Type.NODE_ADD,
+          nodeAddedEvent.getAddedRMNode().getHostName()));
+      }
+      break;
+      case NODE_REMOVED: {
+        NodeRemovedSchedulerEvent nodeRemovedEvent = (NodeRemovedSchedulerEvent) event;
+        dbProvider.getDatabase().execute(StoreLogCall.newInstance(LogEntry.Type.NODE_REMOVE,
+          nodeRemovedEvent.getRemovedRMNode().getHostName()));
+      }
+    }
+  }
 }
