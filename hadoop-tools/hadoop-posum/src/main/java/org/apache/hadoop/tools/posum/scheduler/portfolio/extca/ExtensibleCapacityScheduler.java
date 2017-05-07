@@ -451,6 +451,7 @@ public abstract class ExtensibleCapacityScheduler<
 
   @Override
   public void handle(SchedulerEvent event) {
+    super.handle(event);
     switch (event.getType()) {
       case NODE_ADDED: {
         NodeAddedSchedulerEvent nodeAddedEvent = (NodeAddedSchedulerEvent) event;

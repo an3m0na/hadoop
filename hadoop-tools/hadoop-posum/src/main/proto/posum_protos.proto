@@ -186,6 +186,9 @@ message LogEntryProto {
         LG_POLICY_MAP = 2;
         LG_TASK_PREDICTION = 3;
         LG_GENERAL = 4;
+        LG_ACTIVE_NODES = 5;
+        LG_NODE_ADD = 6;
+        LG_NODE_REMOVE = 7;
     }
 }
 
@@ -210,6 +213,7 @@ message SimpleRequestProto {
         REQ_CLEAR_DATA = 5;
         REQ_CLEAR_DB = 6;
         REQ_COPY_DB = 7;
+        REQ_COPY_COLL = 8;
     }
 }
 

@@ -21,4 +21,8 @@
     <name>fs.defaultFS</name>
     <value>hdfs://localhost:9000</value>
   </property>
+  <property>
+    <name>topology.script.file.name</name>
+    <value>src/test/resources/rackResolver.sh</value>
+  </property>
 </configuration>

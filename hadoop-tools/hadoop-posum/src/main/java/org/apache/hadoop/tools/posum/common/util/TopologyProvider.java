@@ -1,9 +1,15 @@
 package org.apache.hadoop.tools.posum.common.util;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.client.data.DataStore;
+import org.apache.hadoop.tools.posum.common.records.call.CallUtils;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
+import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
 import org.apache.hadoop.yarn.util.RackResolver;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,12 +21,14 @@ public class TopologyProvider {
 
   private Map<String, String> topology;
   private Set<String> activeNodes;
+  private DataStore dataStore;
 
   public TopologyProvider(Map<String, String> topology) {
     this.topology = new TreeMap<>(topology);
   }
 
-  public TopologyProvider(Configuration conf) {
+  public TopologyProvider(Configuration conf, DataStore dataStore) {
+    this.dataStore = dataStore;
     RackResolver.init(conf);
   }
 
@@ -50,12 +58,16 @@ public class TopologyProvider {
   }
 
   public Set<String> getActiveNodes() {
-    if (activeNodes == null || activeNodes.isEmpty())
+    if (topology != null)
       return topology.keySet();
-    return activeNodes;
+    LogEntry<StringListPayload> activeNodesLog = dataStore.execute(
+      CallUtils.findStatReportCall(LogEntry.Type.ACTIVE_NODES), DatabaseReference.getLogs()).getEntity();
+    if (activeNodesLog != null) {
+      activeNodes = new HashSet<>(activeNodesLog.getDetails().getEntries());
+    }
+    if (activeNodes != null)
+      return activeNodes;
+    throw new PosumException("No active nodes are known");
   }
 
-  public void setActiveNodes(Set<String> activeNodes) {
-    this.activeNodes = activeNodes;
-  }
 }

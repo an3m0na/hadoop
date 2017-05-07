@@ -17,7 +17,6 @@ import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerMonitor
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -56,7 +55,9 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     this.dataStore = dataStore;
     this.stats = new SimulationStatistics();
     this.simulationContext = new SimulationContext();
-    this.simulationContext.setTopologyProvider(new TopologyProvider(topology));
+    TopologyProvider topologyProvider = topology == null ? new TopologyProvider(simulationContext.getConf(), dataStore) :
+      new TopologyProvider(topology);
+    this.simulationContext.setTopologyProvider(topologyProvider);
   }
 
   private void setUp() {
