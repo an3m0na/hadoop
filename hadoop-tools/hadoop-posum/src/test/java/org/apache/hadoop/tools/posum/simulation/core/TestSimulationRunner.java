@@ -50,7 +50,7 @@ public class TestSimulationRunner {
     Database db = Database.from(store, DatabaseReference.get(DatabaseReference.Type.SIMULATION, "runnerTest"));
     context.setDatabase(db);
     context.setSchedulerClass(FifoScheduler.class);
-    context.setTopologyProvider(new TopologyProvider(Collections.singletonMap(0L, racks)));
+    context.setTopologyProvider(new TopologyProvider(racks));
     new SimulationRunner(context).run();
   }
 }

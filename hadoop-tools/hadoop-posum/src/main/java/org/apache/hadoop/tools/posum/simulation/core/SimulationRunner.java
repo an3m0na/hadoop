@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import static org.apache.hadoop.mapreduce.MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART;
@@ -107,14 +108,14 @@ public class SimulationRunner {
     int heartbeatInterval = conf.getInt(NM_DAEMON_HEARTBEAT_INTERVAL_MS, NM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT);
 
     //FIXME: use a dynamic snapshot mechanism
-    Map<String, String> topology = context.getTopologyProvider().getSnapshot(0);
-    nmMap = new HashMap<>(topology.size());
-    simulationHostNames = new HashMap<>(topology.size());
+    Set<String> activeNodes = context.getTopologyProvider().getActiveNodes();
+    nmMap = new HashMap<>(activeNodes.size());
+    simulationHostNames = new HashMap<>(activeNodes.size());
     Random random = new Random();
-    for (String oldHostname : topology.keySet()) {
+    for (String oldHostname : activeNodes) {
       // randomize the start time from -heartbeatInterval to zero, in order to start NMs before AMs
       NMDaemon nm = new NMDaemon(context);
-      nm.init(topology.get(oldHostname),
+      nm.init(context.getTopologyProvider().resolve(oldHostname),
         assignNewHost(oldHostname),
         oldHostname,
         nmMemoryMB,

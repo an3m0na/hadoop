@@ -56,7 +56,7 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     this.dataStore = dataStore;
     this.stats = new SimulationStatistics();
     this.simulationContext = new SimulationContext();
-    this.simulationContext.setTopologyProvider(new TopologyProvider(Collections.singletonMap(0L, topology)));
+    this.simulationContext.setTopologyProvider(new TopologyProvider(topology));
   }
 
   private void setUp() {
