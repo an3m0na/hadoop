@@ -102,7 +102,7 @@ public class TestDetailedPredictor extends TestPredictor<DetailedPredictor> {
 
     // check prediction for relevant history and known locality
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJobMapTask.getId(), "ha"));
-    assertThat(prediction.getDuration(), is(612L));
+    assertThat(prediction.getDuration(), is(683L));
 
     // check no history prediction
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(anotherJob, TaskType.MAP));

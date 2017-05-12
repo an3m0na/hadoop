@@ -311,7 +311,7 @@ message SimulationResultPayloadProto {
 }
 
 message CompoundScorePayloadProto {
-    optional double runtime = 1;
+    optional double slowdown = 1;
     optional double penalty = 2;
     optional double cost = 3;
 }

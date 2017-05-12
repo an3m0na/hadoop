@@ -69,16 +69,16 @@ public class CompoundScorePayloadPBImpl extends CompoundScorePayload implements 
   }
 
   @Override
-  public Double getRuntime() {
+  public Double getSlowdown() {
     CompoundScorePayloadProtoOrBuilder p = viaProto ? proto : builder;
-    return p.getRuntime();
+    return p.getSlowdown();
   }
 
   @Override
-  public void setRuntime(Double runtime) {
+  public void setSlowdown(Double slowdown) {
     maybeInitBuilder();
-    if (runtime != null)
-      builder.setRuntime(runtime);
+    if (slowdown != null)
+      builder.setSlowdown(slowdown);
   }
 
   @Override

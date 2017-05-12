@@ -38,9 +38,6 @@ class SimulationManager implements Callable<SimulationResultPayload> {
   private SimulationStatistics stats;
   private static final FindByQueryCall GET_LATEST =
     FindByQueryCall.newInstance(JOB, null, "lastUpdated", true, 0, 1);
-  private Double runtime = 0.0;
-  private Double penalty = 0.0;
-  private Double cost = 0.0;
   private SimulationContext simulationContext;
 
 
@@ -97,7 +94,7 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     setUp();
     try {
       new SimulationRunner(simulationContext).run();
-      return SimulationResultPayload.newInstance(policyName, CompoundScorePayload.newInstance(runtime, penalty, cost));
+      return SimulationResultPayload.newInstance(policyName, new SimulationEvaluator(db).evaluate());
     } catch (Exception e) {
       logger.error("Error during simulation. Shutting down simulation...", e);
       return SimulationResultPayload.newInstance(policyName, CompoundScorePayload.newInstance(0.0, 0.0, 0.0));
