@@ -19,10 +19,10 @@ import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 import org.apache.hadoop.yarn.util.Records;
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -59,6 +59,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 
+@RunWith(MockitoJUnitRunner.class)
 public class TestSimulationManager {
   private static final Class<? extends ResourceScheduler> SCHEDULER_CLASS = FifoPolicy.class;
   private static final String SCHEDULER_NAME = "FIFO";
@@ -75,12 +76,6 @@ public class TestSimulationManager {
   private DataStore dataStoreMock;
   @Mock
   private JobBehaviorPredictor predictorMock;
-
-
-  @Before
-  public void init() {
-    MockitoAnnotations.initMocks(this);
-  }
 
   @Test
   public void testSmallTrace() throws Exception {
