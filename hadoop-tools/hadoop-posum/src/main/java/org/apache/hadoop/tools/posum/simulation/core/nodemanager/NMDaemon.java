@@ -132,6 +132,9 @@ public class NMDaemon extends WorkerDaemon {
     ns.setResponseId(RESPONSE_ID++);
     ns.setNodeHealthStatus(NodeHealthStatus.newInstance(true, "", 0));
     beatRequest.setNodeStatus(ns);
+    synchronized (simulationContext) {
+      simulationContext.setAwaitingScheduler(true);
+    }
     NodeHeartbeatResponse beatResponse =
       rm.getResourceTrackerService().nodeHeartbeat(beatRequest);
     if (!beatResponse.getContainersToCleanup().isEmpty()) {

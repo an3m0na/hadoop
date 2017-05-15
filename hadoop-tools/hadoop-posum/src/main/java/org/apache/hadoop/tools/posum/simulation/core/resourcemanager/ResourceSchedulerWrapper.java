@@ -58,7 +58,7 @@ public class ResourceSchedulerWrapper
 
   private Configuration conf;
   private ResourceScheduler scheduler;
-  private SimulationContext simulationContext;
+  private final SimulationContext simulationContext;
 
   public ResourceSchedulerWrapper(SimulationContext simulationContext) {
     super(ResourceSchedulerWrapper.class.getName());
@@ -69,7 +69,7 @@ public class ResourceSchedulerWrapper
   public void setConf(Configuration conf) {
     this.conf = conf;
     this.scheduler = ReflectionUtils.newInstance(simulationContext.getSchedulerClass(), conf);
-    if(scheduler instanceof PluginPolicy){
+    if (scheduler instanceof PluginPolicy) {
       ((PluginPolicy) scheduler).initializePlugin(PosumConfiguration.newInstance(), simulationContext);
     }
   }
@@ -86,11 +86,18 @@ public class ResourceSchedulerWrapper
 
   @Override
   public void handle(SchedulerEvent schedulerEvent) {
-    scheduler.handle(schedulerEvent);
+    try {
+      scheduler.handle(schedulerEvent);
 
-    if (schedulerEvent.getType() == SchedulerEventType.APP_REMOVED
-      && schedulerEvent instanceof AppRemovedSchedulerEvent) {
-      simulationContext.getRemainingJobsCounter().countDown();
+      if (schedulerEvent.getType() == SchedulerEventType.APP_REMOVED
+        && schedulerEvent instanceof AppRemovedSchedulerEvent) {
+        simulationContext.getRemainingJobsCounter().countDown();
+      }
+    } finally {
+      synchronized (simulationContext) {
+        simulationContext.setAwaitingScheduler(false);
+        simulationContext.notify();
+      }
     }
   }
 
