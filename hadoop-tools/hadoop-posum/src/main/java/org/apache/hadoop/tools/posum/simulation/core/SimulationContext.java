@@ -26,6 +26,7 @@ public class SimulationContext implements DatabaseProvider{
   private Database sourceDatabase;
   private Dispatcher dispatcher = new SimpleDispatcher();
   private JobBehaviorPredictor predictor;
+  private boolean awaitingScheduler;
 
   public long getCurrentTime() {
     return currentTime;
@@ -113,5 +114,13 @@ public class SimulationContext implements DatabaseProvider{
 
   public void setPredictor(JobBehaviorPredictor predictor) {
     this.predictor = predictor;
+  }
+
+  public void setAwaitingScheduler(boolean awaitingScheduler) {
+    this.awaitingScheduler = awaitingScheduler;
+  }
+
+  public boolean isAwaitingScheduler() {
+    return awaitingScheduler;
   }
 }

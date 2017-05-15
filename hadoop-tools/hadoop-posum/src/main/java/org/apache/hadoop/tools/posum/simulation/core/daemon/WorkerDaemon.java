@@ -14,7 +14,7 @@ public abstract class WorkerDaemon implements Daemon {
   private long repeatInterval;
   private static AtomicInteger nextId = new AtomicInteger(0);
   private int id = 0;
-  protected SimulationContext simulationContext;
+  protected final SimulationContext simulationContext;
 
   public WorkerDaemon(SimulationContext simulationContext) {
     this.simulationContext = simulationContext;
