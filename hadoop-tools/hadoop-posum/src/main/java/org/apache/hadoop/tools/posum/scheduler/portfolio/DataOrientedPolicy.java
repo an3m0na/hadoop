@@ -56,9 +56,9 @@ public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttemp
       String appId = app.getApplicationId().toString();
       if (app.getTotalInputSize() != null)
         return;
-      Database db = commService.getDatabase();
+      Database db = dbProvider.getDatabase();
       if (db != null) {
-        JobForAppCall getJob = JobForAppCall.newInstance(appId, app.getUser());
+        JobForAppCall getJob = JobForAppCall.newInstance(appId);
         JobProfile job = db.execute(getJob).getEntity();
         if (job != null) {
           Long size = job.getTotalInputBytes();
@@ -70,7 +70,7 @@ public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttemp
         }
       }
     } catch (Exception e) {
-      logger.debug("Could not update app priority for : " + app.getApplicationId(), e);
+      logger.debug("Could not addSource app priority for : " + app.getApplicationId(), e);
     }
   }
 }

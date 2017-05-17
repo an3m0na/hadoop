@@ -9,8 +9,9 @@ import org.apache.hadoop.yarn.proto.PosumProtos.JobProfileProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.JobProfileProtoOrBuilder;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobProfileProto, JobProfileProto.Builder>
   implements JobProfile {
@@ -293,7 +294,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   public Integer getTotalMapTasks() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
     if (!p.hasTotalMapTasks())
-      return null;
+      return 0;
     return p.getTotalMapTasks();
   }
 
@@ -301,7 +302,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   public Integer getTotalReduceTasks() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
     if (!p.hasTotalReduceTasks())
-      return null;
+      return 0;
     return p.getTotalReduceTasks();
   }
 
@@ -381,7 +382,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   public Integer getCompletedMaps() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
     if (!p.hasCompletedMaps())
-      return null;
+      return 0;
     return p.getCompletedMaps();
   }
 
@@ -399,7 +400,7 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   public Integer getCompletedReduces() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
     if (!p.hasCompletedReduces())
-      return null;
+      return 0;
     return p.getCompletedReduces();
   }
 
@@ -628,18 +629,18 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   }
 
   @Override
-  public List<String> getSplitLocations() {
+  public Set<String> getAggregatedSplitLocations() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-    return p.getSplitLocationsList();
+    return new HashSet<>(p.getAggregatedSplitLocationsList());
   }
 
   @Override
-  public void setSplitLocations(List<String> locations) {
+  public void setAggregatedSplitLocations(Set<String> locations) {
     maybeInitBuilder();
-    builder.clearSplitLocations();
+    builder.clearAggregatedSplitLocations();
     if (locations == null) {
       return;
     }
-    builder.addAllSplitLocations(locations);
+    builder.addAllAggregatedSplitLocations(locations);
   }
 }

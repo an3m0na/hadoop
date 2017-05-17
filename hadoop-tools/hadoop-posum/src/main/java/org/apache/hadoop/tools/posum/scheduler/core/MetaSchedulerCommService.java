@@ -15,6 +15,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
@@ -22,7 +23,7 @@ import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
 
-public class MetaSchedulerCommService extends CompositeService implements MetaSchedulerProtocol {
+public class MetaSchedulerCommService extends CompositeService implements MetaSchedulerProtocol, DatabaseProvider {
 
   private static Log logger = LogFactory.getLog(MetaSchedulerCommService.class);
 
@@ -103,6 +104,7 @@ public class MetaSchedulerCommService extends CompositeService implements MetaSc
     return SimpleResponse.newInstance(true);
   }
 
+  @Override
   public Database getDatabase() {
     if (dataClient == null)
       return null;

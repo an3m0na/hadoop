@@ -17,4 +17,11 @@ public class CallUtils {
   public static FindByIdCall findStatReportCall(LogEntry.Type type) {
     return FindByIdCall.newInstance(type.getCollection(), type.name());
   }
+
+  public static <T extends Payload> LogEntry<T> newLogEntry(LogEntry.Type type, T details) {
+    LogEntry<T> entity = Records.newRecord(LogEntry.class);
+    entity.setType(type);
+    entity.setDetails(details);
+    return entity;
+  }
 }

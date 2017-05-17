@@ -29,6 +29,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.xml.crypto.Data;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -268,7 +269,7 @@ public abstract class TestDataStore {
 
   @Test
   public void testJobByAppId() throws Exception {
-    JobForAppCall getJob = JobForAppCall.newInstance(APP2_ID.toString(), USER2);
+    JobForAppCall getJob = JobForAppCall.newInstance(APP2_ID.toString());
     JobProfile job = db.execute(getJob).getEntity();
     assertThat(job, is(JOB2));
   }
@@ -353,6 +354,12 @@ public abstract class TestDataStore {
     assertThat(dataStore.execute(allIds, otherDB).getEntries(), hasSize(jobNo));
     allIds.setEntityCollection(APP);
     assertThat(dataStore.execute(allIds, otherDB).getEntries(), hasSize(appNo));
+  }
+
+  @Test
+  public void testClearEmptyDatabase() throws Exception {
+    dataStore.clearDatabase(db.getTarget());
+    dataStore.clearDatabase(db.getTarget());
   }
 
   @Test

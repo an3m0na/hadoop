@@ -13,20 +13,15 @@ import java.util.List;
 
 public abstract class JobForAppCall extends LockBasedDatabaseCallImpl<SingleEntityPayload> {
 
-  public static JobForAppCall newInstance(String appId, String user) {
+  public static JobForAppCall newInstance(String appId) {
     JobForAppCall call = Records.newRecord(JobForAppCall.class);
     call.setAppId(appId);
-    call.setUser(user);
     return call;
   }
 
   public abstract String getAppId();
 
   public abstract void setAppId(String appId);
-
-  public abstract String getUser();
-
-  public abstract void setUser(String user);
 
   @Override
   public SingleEntityPayload execute(LockBasedDataStore dataStore, DatabaseReference db) {
@@ -37,7 +32,7 @@ public abstract class JobForAppCall extends LockBasedDatabaseCallImpl<SingleEnti
       return SingleEntityPayload.newInstance(DataEntityCollection.JOB, profiles.get(0));
     if (profiles.size() > 1)
       throw new PosumException("Found too many profiles in database for app " + getAppId());
-    return null;
+    return SingleEntityPayload.newInstance(DataEntityCollection.JOB, null);
   }
 
   @Override

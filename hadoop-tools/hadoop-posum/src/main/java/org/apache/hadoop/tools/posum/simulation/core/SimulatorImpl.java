@@ -4,7 +4,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.client.data.DataStore;
+import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.client.simulation.Simulator;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
 import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
@@ -18,6 +21,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import static org.apache.hadoop.tools.posum.common.util.Utils.copyRunningAppInfo;
 
 public class SimulatorImpl extends CompositeService implements Simulator {
 
@@ -33,7 +38,6 @@ public class SimulatorImpl extends CompositeService implements Simulator {
   public SimulatorImpl(SimulationMasterContext context) {
     super(SimulatorImpl.class.getName());
     this.context = context;
-
   }
 
   @Override
@@ -50,14 +54,20 @@ public class SimulatorImpl extends CompositeService implements Simulator {
     super.serviceStart();
   }
 
+
   @Override
   public synchronized void startSimulation() {
+    DataStore dataStore = context.getDataBroker();
+    copyRunningAppInfo(dataStore, DatabaseReference.getMain(), DatabaseReference.getSimulation());
+    predictor.train(Database.from(dataStore, DatabaseReference.getMain()));
+    predictor.switchDatabase(Database.from(dataStore, DatabaseReference.getSimulation()));
+
     simulationMap = new HashMap<>(policies.size());
     for (Map.Entry<String, Class<? extends PluginPolicy>> policy : policies.entrySet()) {
       logger.trace("Starting simulation for " + policy.getKey());
       Class<? extends PluginPolicy> policyClass = policy.getValue();
-      // TODO find out hot topology works in hadoop
-      Simulation simulation = new Simulation(predictor, policyClass.getName(), policyClass, context.getDataBroker(), null);
+      // TODO add topology
+      SimulationManager simulation = new SimulationManager(predictor, policyClass.getSimpleName(), policyClass, dataStore, null);
       simulationMap.put(policy.getKey(), new PendingResult(simulation, executor.submit(simulation)));
     }
     resultAggregator = new ResultAggregator(simulationMap.values(), this);

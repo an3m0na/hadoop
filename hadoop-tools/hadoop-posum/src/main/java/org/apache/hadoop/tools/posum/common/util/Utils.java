@@ -8,7 +8,11 @@ import org.apache.hadoop.mapreduce.TaskCounter;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.mapreduce.v2.util.MRBuilderUtils;
+import org.apache.hadoop.tools.posum.client.data.DataStore;
+import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
@@ -25,7 +29,6 @@ import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleRespo
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.proto.PosumProtos;
-import org.apache.hadoop.yarn.util.Records;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -42,6 +45,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.COUNTER;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_CONF;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
+
 public class Utils {
 
   private static Log logger = LogFactory.getLog(Utils.class);
@@ -57,11 +66,8 @@ public class Utils {
     }
   }
 
-  public static JobId composeJobId(Long timestamp, Integer actualId) {
-    JobId jobId = Records.newRecord(JobId.class);
-    jobId.setAppId(ApplicationId.newInstance(timestamp, actualId));
-    jobId.setId(actualId);
-    return jobId;
+  private static JobId composeJobId(Long timestamp, Integer actualId) {
+    return MRBuilderUtils.newJobId(ApplicationId.newInstance(timestamp, actualId), actualId);
   }
 
   public static JobId parseJobId(String id) {
@@ -76,11 +82,11 @@ public class Utils {
   public static TaskId parseTaskId(String id) {
     try {
       String[] parts = id.split("_");
-      TaskId taskId = Records.newRecord(TaskId.class);
-      taskId.setJobId(composeJobId(Long.parseLong(parts[1]), Integer.parseInt(parts[2])));
-      taskId.setTaskType("m".equals(parts[3]) ? TaskType.MAP : TaskType.REDUCE);
-      taskId.setId(Integer.parseInt(parts[4]));
-      return taskId;
+      return MRBuilderUtils.newTaskId(
+        composeJobId(Long.parseLong(parts[1]), Integer.parseInt(parts[2])),
+        Integer.parseInt(parts[4]),
+        "m".equals(parts[3]) ? TaskType.MAP : TaskType.REDUCE
+      );
     } catch (Exception e) {
       throw new PosumException("Id parse exception for " + id, e);
     }
@@ -317,7 +323,7 @@ public class Utils {
             // this is because reduce_shuffle_bytes are also in compressed form
             case "MAP_OUTPUT_BYTES":
               Long previous = orZero(job.getMapOutputBytes());
-              if (previous == null || previous == 0)
+              if (previous == 0)
                 job.setMapOutputBytes(counter.getTotalCounterValue());
               break;
             case "MAP_OUTPUT_MATERIALIZED_BYTES":
@@ -375,9 +381,8 @@ public class Utils {
         mapNo++;
         mapInputSize += orZero(task.getInputBytes());
         mapOutputSize += orZero(task.getOutputBytes());
-        if (job.getSplitLocations() != null && task.getHttpAddress() != null) {
-          int splitIndex = Utils.parseTaskId(task.getId()).getId();
-          if (job.getSplitLocations().get(splitIndex).equals(task.getHttpAddress()))
+        if (task.getSplitLocations() != null && task.getHttpAddress() != null) {
+          if (task.getSplitLocations().contains(task.getHttpAddress()))
             task.setLocal(true);
         }
       }
@@ -410,7 +415,7 @@ public class Utils {
     job.setMapOutputBytes(mapOutputSize);
     job.setReduceInputBytes(reduceInputSize);
     job.setOutputBytes(reduceOutputSize);
-    // update in case of discrepancy
+    // addSource in case of discrepancy
     job.setCompletedMaps(mapNo);
     job.setCompletedReduces(reduceNo);
   }
@@ -427,7 +432,7 @@ public class Utils {
             case "MAP_OUTPUT_BYTES":
               if (task.getType().equals(TaskType.MAP)) {
                 Long previous = orZero(task.getOutputBytes());
-                if (previous == null || previous == 0)
+                if (previous == 0)
                   task.setOutputBytes(counter.getTotalCounterValue());
               }
               break;
@@ -462,16 +467,50 @@ public class Utils {
         }
     }
   }
-  
-  public static long orZero(Long unsafeLong){
-    return unsafeLong == null? 0 : unsafeLong;
+
+  public static long orZero(Long unsafeLong) {
+    return unsafeLong == null ? 0 : unsafeLong;
   }
 
-  public static float orZero(Float unsafeFloat){
-    return unsafeFloat == null? 0 : unsafeFloat;
+  public static float orZero(Float unsafeFloat) {
+    return unsafeFloat == null ? 0 : unsafeFloat;
   }
 
-  public static int orZero(Integer unsafeInt){
-    return unsafeInt == null? 0 : unsafeInt;
+  public static double orZero(Double unsafeDouble) {
+    return unsafeDouble == null ? 0 : unsafeDouble;
+  }
+
+  public static int orZero(Integer unsafeInt) {
+    return unsafeInt == null ? 0 : unsafeInt;
+  }
+
+  public static Boolean getBooleanField(JobProfile job, String fieldString, Boolean defaultValue) {
+    String valueString = job.getFlexField(fieldString);
+    return valueString == null ? defaultValue : Boolean.valueOf(valueString);
+  }
+
+  public static Double getDoubleField(JobProfile job, String fieldString, Double defaultValue) {
+    String valueString = job.getFlexField(fieldString);
+    return valueString == null ? defaultValue : Double.valueOf(valueString);
+  }
+
+  public static Long getLongField(JobProfile job, String fieldString, Long defaultValue) {
+    String valueString = job.getFlexField(fieldString);
+    return valueString == null ? defaultValue : Long.valueOf(valueString);
+  }
+
+  public static Integer getIntField(JobProfile job, String fieldString, Integer defaultValue) {
+    String valueString = job.getFlexField(fieldString);
+    return valueString == null ? defaultValue : Integer.valueOf(valueString);
+  }
+
+  public static void copyRunningAppInfo(DataStore dataStore, DatabaseReference source, DatabaseReference target) {
+    Database simDb = Database.from(dataStore, target);
+    simDb.clear();
+    dataStore.copyCollection(APP, source, target);
+    dataStore.copyCollection(JOB, source, target);
+    dataStore.copyCollection(JOB_CONF, source, target);
+    dataStore.copyCollection(TASK, source, target);
+    dataStore.copyCollection(COUNTER, source, target);
   }
 }

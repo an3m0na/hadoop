@@ -1,32 +1,31 @@
 package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
+import org.apache.hadoop.tools.posum.client.data.Database;
+import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.TopologyProvider;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonQueue;
-import org.apache.hadoop.tools.posum.simulation.core.nodemanager.NMDaemon;
-import org.apache.hadoop.yarn.api.records.NodeId;
+import org.apache.hadoop.tools.posum.simulation.core.dispatcher.SimpleDispatcher;
+import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
+import org.apache.hadoop.yarn.event.Dispatcher;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-public class SimulationContext {
+public class SimulationContext implements DatabaseProvider{
 
   private volatile long currentTime = 0;
   private CountDownLatch remainingJobsCounter;
   private DaemonQueue daemonQueue = new DaemonQueue();
-  private Configuration conf;
+  private Configuration conf = PosumConfiguration.newInstance();
   private Class<? extends ResourceScheduler> schedulerClass;
-  private List<JobProfile> jobs;
-  private Map<String, List<TaskProfile>> tasks;
-  private Map<NodeId, NMDaemon> nodeManagers;
-  private JobCompletionHandler jobCompletionHandler;
   private long endTime = 0;
   private TopologyProvider topologyProvider;
+  private Database database;
+  private Database sourceDatabase;
+  private Dispatcher dispatcher = new SimpleDispatcher();
+  private JobBehaviorPredictor predictor;
 
   public long getCurrentTime() {
     return currentTime;
@@ -76,38 +75,6 @@ public class SimulationContext {
     this.schedulerClass = schedulerClass;
   }
 
-  public List<JobProfile> getJobs() {
-    return jobs;
-  }
-
-  public void setJobs(List<JobProfile> jobs) {
-    this.jobs = jobs;
-  }
-
-  public Map<String, List<TaskProfile>> getTasks() {
-    return tasks;
-  }
-
-  public void setTasks(Map<String, List<TaskProfile>> tasks) {
-    this.tasks = tasks;
-  }
-
-  public Map<NodeId, NMDaemon> getNodeManagers() {
-    return nodeManagers;
-  }
-
-  public void setNodeManagers(Map<NodeId, NMDaemon> nodeManagers) {
-    this.nodeManagers = nodeManagers;
-  }
-
-  public JobCompletionHandler getJobCompletionHandler() {
-    return jobCompletionHandler;
-  }
-
-  public void setJobCompletionHandler(JobCompletionHandler jobCompletionHandler) {
-    this.jobCompletionHandler = jobCompletionHandler;
-  }
-
   public long getEndTime() {
     return endTime;
   }
@@ -116,4 +83,35 @@ public class SimulationContext {
     this.endTime = endTime;
   }
 
+  public void setDatabase(Database database) {
+    this.database = database;
+  }
+
+  public Database getDatabase() {
+    return database;
+  }
+
+  public Dispatcher getDispatcher() {
+    return dispatcher;
+  }
+
+  public void setDispatcher(Dispatcher dispatcher) {
+    this.dispatcher = dispatcher;
+  }
+
+  public Database getSourceDatabase() {
+    return sourceDatabase;
+  }
+
+  public void setSourceDatabase(Database sourceDatabase) {
+    this.sourceDatabase = sourceDatabase;
+  }
+
+  public JobBehaviorPredictor getPredictor() {
+    return predictor;
+  }
+
+  public void setPredictor(JobBehaviorPredictor predictor) {
+    this.predictor = predictor;
+  }
 }

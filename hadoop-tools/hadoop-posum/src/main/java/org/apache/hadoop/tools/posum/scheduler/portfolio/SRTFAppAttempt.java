@@ -11,6 +11,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManage
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
+import java.text.MessageFormat;
+
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
 public class SRTFAppAttempt extends ExtCaAppAttempt {
@@ -91,13 +93,13 @@ public class SRTFAppAttempt extends ExtCaAppAttempt {
 
   public Long getRemainingTime(Resource minAllocation) {
     Integer currentSlots = getCurrentConsumption().getMemory() / minAllocation.getMemory();
-    return remainingWork / currentSlots;
+    return currentSlots == 0 ? Long.MAX_VALUE : remainingWork / currentSlots;
   }
 
   public void calculateDeficit(Resource minAllocation, Resource maxResource, Double normalizer) {
     // if there is not enough information, assign at least a slot in order to start
     Double desired = new Integer(minAllocation.getMemory()).doubleValue();
-    if (remainingWork != null) {
+    if (remainingWork != null && totalWork != null) {
       // we have information
       Long remainingTime = getRemainingTime(minAllocation);
       // calculate resource share according to remaining time
@@ -110,6 +112,8 @@ public class SRTFAppAttempt extends ExtCaAppAttempt {
     }
     desiredResource = desired.intValue();
     resourceDeficit = getCurrentConsumption().getMemory() - desiredResource;
+    logger.debug(MessageFormat.format("New deficit for {0}: {1}", getJobId(), resourceDeficit));
+
   }
 
   public Long getTotalWork() {

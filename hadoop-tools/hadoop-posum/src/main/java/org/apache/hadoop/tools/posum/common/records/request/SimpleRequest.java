@@ -19,7 +19,8 @@ public abstract class SimpleRequest<T> {
     LIST_COLLECTIONS(VoidRequestPBImpl.class),
     CLEAR_DATA(VoidRequestPBImpl.class),
     CLEAR_DB(DatabaseAlterationRequestPBImpl.class),
-    COPY_DB(DatabaseAlterationRequestPBImpl.class);
+    COPY_DB(DatabaseAlterationRequestPBImpl.class),
+    COPY_COLL(DatabaseAlterationRequestPBImpl.class);
 
     private Class<? extends SimpleRequestPBImpl> implClass;
     private static final String prefix = "REQ_";

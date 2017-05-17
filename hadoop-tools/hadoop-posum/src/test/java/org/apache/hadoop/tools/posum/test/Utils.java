@@ -4,8 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
-import org.apache.hadoop.mapreduce.v2.api.records.impl.pb.JobIdPBImpl;
-import org.apache.hadoop.mapreduce.v2.api.records.impl.pb.TaskIdPBImpl;
+import org.apache.hadoop.mapreduce.v2.util.MRBuilderUtils;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
@@ -40,9 +39,9 @@ public class Utils {
   public static final ApplicationId APP1_ID = ApplicationId.newInstance(CLUSTER_TIMESTAMP, 1);
   public static final ApplicationId APP2_ID = ApplicationId.newInstance(CLUSTER_TIMESTAMP, 2);
   public static final ApplicationId APP3_ID = ApplicationId.newInstance(CLUSTER_TIMESTAMP, 3);
-  public static final JobId JOB1_ID = new JobIdPBImpl();
-  public static final JobId JOB2_ID = new JobIdPBImpl();
-  public static final JobId JOB3_ID = new JobIdPBImpl();
+  public static final JobId JOB1_ID = MRBuilderUtils.newJobId(APP1_ID, 1);
+  public static final JobId JOB2_ID = MRBuilderUtils.newJobId(APP2_ID, 2);
+  public static final JobId JOB3_ID = MRBuilderUtils.newJobId(APP3_ID, 3);
   public static final AppProfile APP1 = Records.newRecord(AppProfile.class);
   public static final AppProfile APP2 = Records.newRecord(AppProfile.class);
   public static final AppProfile APP3 = Records.newRecord(AppProfile.class);
@@ -53,10 +52,10 @@ public class Utils {
   public static final TaskProfile TASK12 = Records.newRecord(TaskProfile.class);
   public static final TaskProfile TASK21 = Records.newRecord(TaskProfile.class);
   public static final TaskProfile TASK22 = Records.newRecord(TaskProfile.class);
-  public static final TaskId TASK11_ID = new TaskIdPBImpl();
-  public static final TaskId TASK12_ID = new TaskIdPBImpl();
-  public static final TaskId TASK21_ID = new TaskIdPBImpl();
-  public static final TaskId TASK22_ID = new TaskIdPBImpl();
+  public static final TaskId TASK11_ID = MRBuilderUtils.newTaskId(JOB1_ID, 1, TaskType.MAP);
+  public static final TaskId TASK12_ID =MRBuilderUtils.newTaskId(JOB1_ID, 2, TaskType.REDUCE);
+  public static final TaskId TASK21_ID = MRBuilderUtils.newTaskId(JOB2_ID, 1, TaskType.MAP);
+  public static final TaskId TASK22_ID = MRBuilderUtils.newTaskId(JOB2_ID, 2, TaskType.MAP);
 
   public static final String RACK1 = "firstRack";
   public static final String RACK2 = "secondRack";
@@ -71,8 +70,6 @@ public class Utils {
     APP1.setStartTime(CLUSTER_TIMESTAMP);
     APP1.setFinishTime(CLUSTER_TIMESTAMP + 5 * DURATION_UNIT);
 
-    JOB1_ID.setAppId(APP1_ID);
-    JOB1_ID.setId(1);
     JOB1.setId(JOB1_ID.toString());
     JOB1.setAppId(APP1.getId());
     JOB1.setName(APP1.getName());
@@ -83,18 +80,16 @@ public class Utils {
     JOB1.setStartTime(APP1.getStartTime());
     JOB1.setFinishTime(APP1.getFinishTime());
 
-    TASK11_ID.setJobId(JOB1_ID);
-    TASK11_ID.setId(1);
-    TASK11.setType(TaskType.MAP);
     TASK11.setId(TASK11_ID.toString());
+    TASK11.setJobId(JOB1.getId());
+    TASK11.setType(TaskType.MAP);
     TASK11.setStartTime(JOB1.getStartTime());
     TASK11.setFinishTime(TASK11.getStartTime() + DURATION_UNIT * 3);
     TASK11.setHttpAddress(NODE1);
 
-    TASK12_ID.setJobId(JOB1_ID);
-    TASK12_ID.setId(2);
-    TASK11.setType(TaskType.REDUCE);
     TASK12.setId(TASK12_ID.toString());
+    TASK12.setJobId(JOB1.getId());
+    TASK12.setType(TaskType.REDUCE);
     TASK12.setStartTime(TASK11.getFinishTime());
     TASK12.setFinishTime(JOB1.getFinishTime());
     TASK12.setHttpAddress(NODE1);
@@ -106,8 +101,6 @@ public class Utils {
     APP2.setStartTime(CLUSTER_TIMESTAMP + DURATION_UNIT);
     APP2.setFinishTime(CLUSTER_TIMESTAMP + 4 * DURATION_UNIT);
 
-    JOB2_ID.setAppId(APP2_ID);
-    JOB2_ID.setId(2);
     JOB2.setId(JOB2_ID.toString());
     JOB2.setAppId(APP2.getId());
     JOB2.setName(APP2.getName());
@@ -118,18 +111,16 @@ public class Utils {
     JOB2.setStartTime(APP2.getStartTime());
     JOB2.setFinishTime(APP2.getFinishTime());
 
-    TASK21_ID.setJobId(JOB2_ID);
-    TASK21_ID.setId(1);
-    TASK11.setType(TaskType.MAP);
     TASK21.setId(TASK21_ID.toString());
+    TASK21.setJobId(JOB2.getId());
+    TASK21.setType(TaskType.MAP);
     TASK21.setStartTime(JOB2.getStartTime());
     TASK21.setFinishTime(TASK21.getStartTime() + DURATION_UNIT);
     TASK21.setHttpAddress(NODE2);
 
-    TASK22_ID.setJobId(JOB2_ID);
-    TASK22_ID.setId(2);
-    TASK11.setType(TaskType.MAP);
     TASK22.setId(TASK22_ID.toString());
+    TASK22.setJobId(JOB2.getId());
+    TASK22.setType(TaskType.MAP);
     TASK22.setStartTime(TASK21.getFinishTime());
     TASK22.setFinishTime(JOB2.getFinishTime());
     TASK22.setHttpAddress(NODE2);
@@ -141,8 +132,6 @@ public class Utils {
     APP3.setStartTime(CLUSTER_TIMESTAMP + 2 * DURATION_UNIT);
     APP3.setFinishTime(CLUSTER_TIMESTAMP + 4 * DURATION_UNIT);
 
-    JOB3_ID.setAppId(APP3_ID);
-    JOB3_ID.setId(3);
     JOB3.setId(JOB3_ID.toString());
     JOB3.setAppId(APP3.getId());
     JOB3.setName(APP3.getName());

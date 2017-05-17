@@ -5,8 +5,6 @@ import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.simulation.Simulator;
 import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
 
-import java.util.Map;
-
 public class SimulationMasterContext {
   private DummyTokenSecretManager tokenSecretManager;
   private SimulationMasterCommService commService;

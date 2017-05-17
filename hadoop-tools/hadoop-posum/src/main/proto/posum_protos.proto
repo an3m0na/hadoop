@@ -108,7 +108,7 @@ message JobProfileProto {
     optional string mapperClass = 29;
     optional string reducerClass = 30;
     optional StringStringMapPayloadProto flexFields = 31;
-    repeated string splitLocations = 32;
+    repeated string aggregatedSplitLocations = 32;
     optional int64 lastUpdated = 33;
 
     enum JobStateProto {
@@ -149,6 +149,8 @@ message TaskProfileProto {
     optional string httpAddress = 17;
     optional TaskStateProto state = 18;
     optional int64 lastUpdated = 19;
+    repeated string splitLocations = 20;
+    optional int64 splitSize = 21;
 
     enum TaskTypeProto {
         TYPE_MAP = 0;
@@ -184,6 +186,9 @@ message LogEntryProto {
         LG_POLICY_MAP = 2;
         LG_TASK_PREDICTION = 3;
         LG_GENERAL = 4;
+        LG_ACTIVE_NODES = 5;
+        LG_NODE_ADD = 6;
+        LG_NODE_REMOVE = 7;
     }
 }
 
@@ -208,6 +213,7 @@ message SimpleRequestProto {
         REQ_CLEAR_DATA = 5;
         REQ_CLEAR_DB = 6;
         REQ_COPY_DB = 7;
+        REQ_COPY_COLL = 8;
     }
 }
 
@@ -339,6 +345,7 @@ message TaskPredictionPayloadProto {
 message DatabaseAlterationPayloadProto {
     optional DatabaseProto source = 1;
     optional DatabaseProto destination = 2;
+    optional EntityCollectionProto targetCollection = 3;
 }
 
 // --------- Database Calls ---------
@@ -395,7 +402,6 @@ message TransactionCallProto {
 
 message JobForAppCallProto {
     required string appId = 1;
-    required string user = 2;
 }
 
 message SaveJobFlexFieldsCallProto {

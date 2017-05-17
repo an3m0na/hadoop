@@ -4,56 +4,62 @@ import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.yarn.api.records.ContainerId;
+import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.Resource;
 
+import java.util.List;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
 @Private
 @Unstable
 public class SimulatedContainer implements Delayed {
-  // id
+  public static String AM_TYPE = "am";
+
   private ContainerId id;
-  // resource allocated
   private Resource resource;
-  // end time
-  private long endTime;
-  // life time (ms)
-  private long lifeTime;
-  // host name
-  private String hostname;
-  // rack
-  private String rack;
-  // priority
+  private Long endTime;
+  private Long lifeTime;
+  private List<String> preferredLocations;
   private int priority;
-  // type
   private String type;
+
   private SimulationContext simulationContext;
+  private NodeId nodeId;
+  private String taskId;
 
   /**
-   * invoked when AM schedules containers to allocate
+   * invoked when AM schedules its container
    */
-  public SimulatedContainer(SimulationContext simulationContext, Resource resource, long lifeTime,
-                            String rack, String hostname, int priority, String type) {
+  public SimulatedContainer(SimulationContext simulationContext,
+                            Resource resource,
+                            String type,
+                            NodeId nodeId,
+                            ContainerId id) {
     this.simulationContext = simulationContext;
     this.resource = resource;
-    this.lifeTime = lifeTime;
-    this.hostname = hostname;
-    this.priority = priority;
     this.type = type;
-    this.rack = rack;
+    this.nodeId = nodeId;
+    this.id = id;
   }
 
   /**
-   * invoke when NM schedules containers to run
+   * invoked when AM schedules task containers to allocate
    */
-  public SimulatedContainer(SimulationContext simulationContext, ContainerId id, Resource resource, long endTime,
-                            long lifeTime) {
+  public SimulatedContainer(SimulationContext simulationContext,
+                            Resource resource,
+                            Long lifeTime,
+                            int priority,
+                            String type,
+                            String taskId,
+                            List<String> preferredLocations) {
     this.simulationContext = simulationContext;
-    this.id = id;
     this.resource = resource;
-    this.endTime = endTime;
     this.lifeTime = lifeTime;
+    this.priority = priority;
+    this.type = type;
+    this.taskId = taskId;
+    this.preferredLocations = preferredLocations;
   }
 
   public Resource getResource() {
@@ -79,16 +85,8 @@ public class SimulatedContainer implements Delayed {
     return unit.convert(endTime - simulationContext.getCurrentTime(), TimeUnit.MILLISECONDS);
   }
 
-  public long getLifeTime() {
+  public Long getLifeTime() {
     return lifeTime;
-  }
-
-  public String getHostname() {
-    return hostname;
-  }
-
-  public long getEndTime() {
-    return endTime;
   }
 
   public int getPriority() {
@@ -103,11 +101,35 @@ public class SimulatedContainer implements Delayed {
     priority = p;
   }
 
-  public String getRack() {
-    return rack;
+  public NodeId getNodeId() {
+    return nodeId;
   }
 
-  public void setRack(String rack) {
-    this.rack = rack;
+  public void setNodeId(NodeId nodeId) {
+    this.nodeId = nodeId;
+  }
+
+  public void setId(ContainerId id) {
+    this.id = id;
+  }
+
+  public String getTaskId() {
+    return taskId;
+  }
+
+  public void setTaskId(String taskId) {
+    this.taskId = taskId;
+  }
+
+  public void setEndTime(long endTime) {
+    this.endTime = endTime;
+  }
+
+  public List<String> getPreferredLocations() {
+    return preferredLocations;
+  }
+
+  public void setPreferredLocations(List<String> preferredLocations) {
+    this.preferredLocations = preferredLocations;
   }
 }

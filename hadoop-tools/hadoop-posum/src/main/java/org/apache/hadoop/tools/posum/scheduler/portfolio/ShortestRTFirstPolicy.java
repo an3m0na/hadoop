@@ -6,9 +6,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.tools.posum.scheduler.core.MetaSchedulerCommService;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -18,8 +18,11 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.Capacity
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.LeafQueue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 
+import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
@@ -37,8 +40,8 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
   }
 
   @Override
-  public void initializePlugin(Configuration conf, MetaSchedulerCommService commService) {
-    super.initializePlugin(conf, commService);
+  public void initializePlugin(Configuration conf, DatabaseProvider dbProvider) {
+    super.initializePlugin(conf, dbProvider);
     maxCheck = conf.getLong(PosumConfiguration.REPRIORITIZE_INTERVAL,
       PosumConfiguration.REPRIORITIZE_INTERVAL_DEFAULT);
   }
@@ -61,11 +64,11 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
   }
 
   protected JobProfile fetchJobProfile(String appId, String user) {
-    Database db = commService.getDatabase();
+    Database db = dbProvider.getDatabase();
     if (db == null)
       // DataMaster is not connected; do nothing
       return null;
-    JobForAppCall getJobProfileForApp = JobForAppCall.newInstance(appId, user);
+    JobForAppCall getJobProfileForApp = JobForAppCall.newInstance(appId);
     JobProfile job = db.execute(getJobProfileForApp).getEntity();
     if (job == null) {
       logger.error("Could not retrieve job info for " + appId);
@@ -80,35 +83,46 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
     try {
       String appId = app.getApplicationId().toString();
       JobProfile job = fetchJobProfile(appId, app.getUser());
+      if (job == null) {
+        logger.debug("Could not addSource app priority for : " + app.getApplicationId() + " because job cannot be found");
+        return;
+      }
       if (app.getJobId() == null) {
-        if (job == null)
-          // something went wrong; do nothing
-          return;
         app.setJobId(job.getId());
         app.setSubmitTime(job.getSubmitTime());
       }
-      if (orZero(job.getAvgMapDuration()) != 0) {
-        Long totalWork = orZero(job.getAvgMapDuration()) * orZero(job.getTotalMapTasks());
-        Long remainingWork = totalWork - orZero(job.getAvgMapDuration()) * orZero(job.getCompletedMaps());
-        if (orZero(job.getTotalReduceTasks()) > 0) {
-          // there is reduce work to be done; get average task duration
-          long avgReduceDuration = orZero(job.getAvgReduceDuration());
-          long avgMapSize = orZero(orZero(job.getInputBytes())) / orZero(job.getTotalMapTasks());
-          if (avgReduceDuration == 0 && avgMapSize != 0) {
-            // estimate avg reduce time
-            long totalReduceInputSize =
-              orZero(job.getMapOutputBytes()) / orZero(job.getCompletedMaps()) * orZero(job.getTotalMapTasks());
-            long reducerInputSize = totalReduceInputSize / orZero(job.getTotalReduceTasks());
-            avgReduceDuration = orZero(job.getAvgMapDuration()) * reducerInputSize / avgMapSize;
-          }
-          remainingWork += avgReduceDuration * (orZero(job.getTotalReduceTasks()) - orZero(job.getCompletedReduces()));
-          totalWork += avgReduceDuration * orZero(job.getTotalReduceTasks());
-        }
-        app.setRemainingWork(remainingWork);
-        app.setTotalWork(totalWork);
+
+      Long avgMapDuration = job.getAvgMapDuration();
+      int totalMaps = job.getTotalMapTasks();
+      int completedMaps = job.getCompletedMaps();
+      if (avgMapDuration == null)
+        return;
+
+      long totalWork = avgMapDuration * totalMaps;
+      long remainingWork = totalWork - avgMapDuration * completedMaps;
+
+      int totalReduceTasks = job.getTotalReduceTasks();
+      Long avgReduceDuration = job.getAvgReduceDuration();
+      if (totalReduceTasks <= 0)
+        return;
+
+      if (avgReduceDuration == null && job.getInputBytes() != null && job.getMapOutputBytes() != null) {
+        // estimate avg reduce time
+        long avgMapSize = job.getInputBytes() / completedMaps;
+        long totalReduceInputSize = orZero(job.getMapOutputBytes()) / completedMaps * totalMaps;
+        long reducerInputSize = totalReduceInputSize / totalReduceTasks;
+        avgReduceDuration = job.getAvgMapDuration() * reducerInputSize / avgMapSize;
       }
+      if(avgReduceDuration == null)
+        return;
+
+      remainingWork += avgReduceDuration * (totalReduceTasks - job.getCompletedReduces());
+      totalWork += avgReduceDuration * totalReduceTasks;
+      app.setRemainingWork(remainingWork);
+      app.setTotalWork(totalWork);
+      logger.debug(MessageFormat.format("Work for {0}: remaining={1}, total={2}", app.getJobId(), remainingWork, totalWork));
     } catch (Exception e) {
-      logger.debug("Could not update app priority for : " + app.getApplicationId(), e);
+      logger.debug("Could not addSource app priority for : " + app.getApplicationId(), e);
     }
   }
 
@@ -141,18 +155,18 @@ public class ShortestRTFirstPolicy extends ExtensibleCapacityScheduler<SRTFAppAt
     Set<FiCaSchedulerApp> apps = Utils.readField(queue, LeafQueue.class, applicationSetName);
     // calculate remaining times for each application and compute sum
     Double invertedSum = 0.0;
+    List<SRTFAppAttempt> savedApps = new ArrayList<>(apps.size());
     for (Iterator<FiCaSchedulerApp> i = apps.iterator(); i.hasNext(); ) {
       SRTFAppAttempt app = (SRTFAppAttempt) i.next();
       updateAppPriority(app);
       if (app.getRemainingWork() != null)
         invertedSum += 1.0 / app.getRemainingTime(getMinimumResourceCapability());
+      savedApps.add(app);
     }
-    for (Iterator<FiCaSchedulerApp> i = apps.iterator(); i.hasNext(); ) {
-      SRTFAppAttempt app = (SRTFAppAttempt) i.next();
-      // remove, update and add to resort
-      i.remove();
-      app.calculateDeficit(getMinimumResourceCapability(), getClusterResource(), invertedSum);
-      apps.add(app);
+    apps.clear();
+    for (SRTFAppAttempt savedApp : savedApps) {
+      savedApp.calculateDeficit(getMinimumResourceCapability(), getClusterResource(), invertedSum);
+      apps.add(savedApp);
     }
   }
 }

@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.DeleteByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.DeleteByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.call.StoreAllCall;
 import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.call.TransactionCall;
 import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
@@ -171,9 +172,13 @@ public class AppInfoCollector {
           if (jobInfo != null) {
             updateCalls.addCall(StoreCall.newInstance(JOB, jobInfo.getProfile()));
             updateCalls.addCall(StoreCall.newInstance(JOB_CONF, jobInfo.getConf()));
+            updateCalls.addCall(StoreAllCall.newInstance(TASK, jobInfo.getTaskStubs()));
             if (auditEnabled) {
               auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(JOB, jobInfo.getProfile())));
               auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(JOB_CONF, jobInfo.getConf())));
+              for (TaskProfile task : jobInfo.getTaskStubs()) {
+                auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(TASK, task)));
+              }
             }
           }
         } catch (Exception e) {

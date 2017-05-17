@@ -9,6 +9,7 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.mapreduce.v2.util.MRBuilderUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
@@ -113,9 +114,7 @@ public class HadoopAPIClient {
 
   JobProfile getFinishedJobInfo(String appId) {
     ApplicationId realAppId = Utils.parseApplicationId(appId);
-    JobId expectedRealJobId = Records.newRecord(JobId.class);
-    expectedRealJobId.setAppId(realAppId);
-    expectedRealJobId.setId(realAppId.getId());
+    JobId expectedRealJobId = MRBuilderUtils.newJobId(realAppId, realAppId.getId());
     String expectedJobId = expectedRealJobId.toString();
 
     String rawString = restClient.getInfo(String.class,

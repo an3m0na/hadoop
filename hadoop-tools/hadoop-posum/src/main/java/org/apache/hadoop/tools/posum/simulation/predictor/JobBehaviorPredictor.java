@@ -4,30 +4,32 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
-import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
-import org.apache.hadoop.tools.posum.common.records.call.query.DatabaseQuery;
-import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
+import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.call.SaveJobFlexFieldsCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
-public abstract class JobBehaviorPredictor {
+import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
-  protected final Long DEFAULT_JOB_DURATION;
+public abstract class JobBehaviorPredictor<M extends PredictionModel> {
+
   protected final Long DEFAULT_TASK_DURATION;
   protected Configuration conf;
   private Database db;
-  private int historyBuffer;
+  protected int historyBuffer;
+  protected M model;
 
   protected JobBehaviorPredictor(Configuration conf) {
     this.conf = conf;
     this.historyBuffer = conf.getInt(PosumConfiguration.PREDICTION_BUFFER, PosumConfiguration.PREDICTION_BUFFER_DEFAULT);
-    this.DEFAULT_JOB_DURATION = conf.getLong(PosumConfiguration.AVERAGE_JOB_DURATION,
-      PosumConfiguration.AVERAGE_JOB_DURATION_DEFAULT);
     this.DEFAULT_TASK_DURATION = conf.getLong(PosumConfiguration.AVERAGE_TASK_DURATION,
       PosumConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
   }
@@ -40,8 +42,8 @@ public abstract class JobBehaviorPredictor {
     ));
   }
 
-  public static JobBehaviorPredictor newInstance(Configuration conf,
-                                                 Class<? extends JobBehaviorPredictor> predictorClass) {
+  public static <T extends JobBehaviorPredictor> T newInstance(Configuration conf,
+                                                 Class<T> predictorClass) {
     try {
       return predictorClass.getConstructor(Configuration.class).newInstance(conf);
     } catch (Exception e) {
@@ -49,73 +51,109 @@ public abstract class JobBehaviorPredictor {
     }
   }
 
-  public void initialize(Database db) {
+  public void train(Database db) {
+    if (model == null)
+      model = initializeModel();
+    this.db = db;
+
+    // check for new finished jobs and train on them
+    IdsByQueryCall getFinishedJobIds = IdsByQueryCall.newInstance(DataEntityCollection.JOB_HISTORY, null, "finishTime", false);
+    List<String> historyJobIds = new LinkedList<>(db.execute(getFinishedJobIds).getEntries());
+    historyJobIds.removeAll(model.getSourceJobs());
+    for (String jobId : historyJobIds) {
+      FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB_HISTORY, jobId);
+      JobProfile job = getDatabase().execute(getJob).getEntity();
+      updatePredictionProfile(job, true);
+      model.updateModel(job);
+    }
+  }
+
+  protected abstract M initializeModel();
+
+  protected void updatePredictionProfile(JobProfile job, boolean fromHistory) {
+    Map<String, String> fieldMap = getPredictionProfileUpdates(job, fromHistory);
+
+    if (fieldMap != null && !fieldMap.isEmpty()) {
+      job.getFlexFields().putAll(fieldMap);
+      SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), fieldMap, fromHistory);
+      getDatabase().execute(saveFlexFields);
+    }
+  }
+
+  protected abstract Map<String, String> getPredictionProfileUpdates(JobProfile job, boolean fromHistory);
+
+  public void switchDatabase(Database db) {
     this.db = db;
   }
 
-    /* WARNING! Prediction methods may throw exceptions if data model changes occur during computation (e.g. task finishes) */
+  /* WARNING! Prediction methods may throw exceptions if data model changes occur during computation (e.g. task finishes) */
 
-  public abstract JobPredictionOutput predictJobDuration(JobPredictionInput input);
+  public JobPredictionOutput predictJobBehavior(JobPredictionInput input) {
+    FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB, input.getJobId());
+    JobProfile job = getDatabase().execute(getJob).getEntity();
+    Long mapDuration = predictTaskBehavior(new TaskPredictionInput(job, TaskType.MAP)).getDuration();
+    Long reduceDuration = predictTaskBehavior(new TaskPredictionInput(job, TaskType.REDUCE)).getDuration();
+    return new JobPredictionOutput(mapDuration * orZero(job.getTotalMapTasks()) +
+      reduceDuration * orZero(job.getTotalReduceTasks()));
+  }
 
-  public abstract TaskPredictionOutput predictTaskDuration(TaskPredictionInput input);
+  public TaskPredictionOutput predictTaskBehavior(TaskPredictionInput input) {
+    completeInput(input);
+    if (input.getTaskType().equals(TaskType.REDUCE))
+      return predictReduceTaskBehavior(input);
+    return predictMapTaskBehavior(input);
+  }
 
-  protected TaskPredictionInput completeInput(TaskPredictionInput input) {
-    if (input.getJob() != null && input.getTaskType() != null)
-      return input;
+  protected abstract TaskPredictionOutput predictMapTaskBehavior(TaskPredictionInput input);
 
-    FindByIdCall getJobById = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
-    if (input.getJobId() != null && input.getTaskType() != null) {
-      getJobById.setId(input.getJobId());
-      JobProfile job = getDatabase().execute(getJobById).getEntity();
-      if (job == null)
-        throw new PosumException("Job not found or finished for id " + input.getJobId());
-      input.setJob(job);
-      return input;
+  protected abstract TaskPredictionOutput predictReduceTaskBehavior(TaskPredictionInput input);
+
+  private TaskPredictionInput completeInput(TaskPredictionInput input) {
+    if (input.getTaskId() != null) {
+      if (input.getTask() == null) {
+        input.setTask(getTaskById(input.getTaskId()));
+        input.setTaskType(input.getTask().getType());
+      }
     }
-    if (input.getJobId() == null)
-      throw new PosumException("Too little information for prediction! Input: " + input);
-    FindByIdCall getById = FindByIdCall.newInstance(DataEntityCollection.TASK, input.getTaskId());
-    TaskProfile task = getDatabase().execute(getById).getEntity();
-    if (task == null)
-      throw new PosumException("Task not found or finished for id " + input.getTaskId());
-
-    input.setTaskType(task.getType());
-    getJobById.setId(input.getJobId());
-    JobProfile job = getDatabase().execute(getJobById).getEntity();
-    input.setJob(job);
-
+    if (input.getTask() != null) {
+      if (input.getJob() == null)
+        input.setJob(getJobById(input.getTask().getJobId()));
+    } else {
+      if (input.getJob() == null) {
+        // no specific task => must have at least jobId and type
+        if (input.getJobId() == null || input.getTaskType() == null)
+          throw new PosumException("Too little information for prediction! Input: " + input);
+        input.setJob(getJobById(input.getJobId()));
+      }
+    }
+    updatePredictionProfile(input.getJob(), false);
     return input;
   }
 
-  Database getDatabase() {
+  private JobProfile getJobById(String jobId) {
+    FindByIdCall getJobById = FindByIdCall.newInstance(DataEntityCollection.JOB, jobId);
+    JobProfile job = getDatabase().execute(getJobById).getEntity();
+    if (job == null)
+      throw new PosumException("Job not found or finished for id " + jobId);
+    return job;
+  }
+
+  private TaskProfile getTaskById(String taskId) {
+    FindByIdCall getTaskById = FindByIdCall.newInstance(DataEntityCollection.TASK, taskId);
+    TaskProfile task = getDatabase().execute(getTaskById).getEntity();
+    if (task == null)
+      throw new PosumException("Task not found or finished for id " + taskId);
+    return task;
+  }
+
+  protected Database getDatabase() {
     if (db == null)
       throw new PosumException("Database not initialized in Predictor");
     return db;
   }
 
-  protected List<JobProfile> getComparableProfilesByName(JobProfile job) {
-    return getComparableProfilesForUser(job.getUser(), QueryUtils.is("name", job.getName()));
+  public M getModel() {
+    return model;
   }
 
-  protected List<JobProfile> getComparableProfilesByType(JobProfile job, TaskType type) {
-    return getComparableProfilesForUser(job.getUser(),
-      QueryUtils.is(type.equals(TaskType.MAP) ? "mapperClass" : "reducerClass",
-        type.equals(TaskType.MAP) ? job.getMapperClass() : job.getReducerClass()));
-  }
-
-  private List<JobProfile> getComparableProfilesForUser(String user, DatabaseQuery detailedQuery) {
-    FindByQueryCall getComparableJobs = FindByQueryCall.newInstance(
-      DataEntityCollection.JOB_HISTORY,
-      detailedQuery,
-      -historyBuffer,
-      historyBuffer
-    );
-    List<JobProfile> comparable = getDatabase().execute(getComparableJobs).getEntities();
-    if (comparable.size() < 1) {
-      // get past jobs at least by the same user
-      getComparableJobs.setQuery(QueryUtils.is("user", user));
-      comparable = getDatabase().execute(getComparableJobs).getEntities();
-    }
-    return comparable;
-  }
 }

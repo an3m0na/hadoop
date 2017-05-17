@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.simulation.predictor;
 
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 
 public class TaskPredictionInput {
   private String taskId;
@@ -9,6 +10,7 @@ public class TaskPredictionInput {
   private String nodeAddress;
   private String jobId;
   private JobProfile job;
+  private TaskProfile task;
 
   public TaskPredictionInput(String taskId) {
     this(taskId, (String) null);
@@ -21,6 +23,10 @@ public class TaskPredictionInput {
 
   public TaskPredictionInput(String jobId, TaskType taskType) {
     this(jobId, taskType, null);
+  }
+
+  public TaskPredictionInput(JobProfile job, TaskType taskType) {
+    this(job, taskType, null);
   }
 
   public TaskPredictionInput(String jobId, TaskType taskType, String nodeAddress) {
@@ -83,5 +89,13 @@ public class TaskPredictionInput {
       ", jobId='" + jobId + '\'' +
       ", job=" + job +
       '}';
+  }
+
+  public void setTask(TaskProfile task) {
+    this.task = task;
+  }
+
+  public TaskProfile getTask() {
+    return task;
   }
 }

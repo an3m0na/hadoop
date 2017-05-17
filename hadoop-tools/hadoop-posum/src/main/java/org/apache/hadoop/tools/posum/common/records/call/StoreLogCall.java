@@ -15,7 +15,7 @@ public abstract class StoreLogCall extends LockBasedDatabaseCallImpl<SimplePrope
   }
 
   public static StoreLogCall newInstance(LogEntry.Type type, String message) {
-    return newInstance(newLogEntry(type == null ? LogEntry.Type.GENERAL : type,
+    return newInstance(CallUtils.newLogEntry(type == null ? LogEntry.Type.GENERAL : type,
       SimplePropertyPayload.newInstance(null, message)));
   }
 
@@ -23,12 +23,7 @@ public abstract class StoreLogCall extends LockBasedDatabaseCallImpl<SimplePrope
     return newInstance(LogEntry.Type.GENERAL, message);
   }
 
-  private static <T extends Payload> LogEntry<T> newLogEntry(LogEntry.Type type, T details) {
-    LogEntry<T> entity = Records.newRecord(LogEntry.class);
-    entity.setType(type);
-    entity.setDetails(details);
-    return entity;
-  }
+
 
   public abstract <T extends Payload> LogEntry<T> getLogEntry();
 
