@@ -7,15 +7,15 @@ import org.apache.hadoop.tools.posum.common.util.GeneralLooper;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMasterContext;
 
-public class SimulationManager extends GeneralLooper<SimulationManager> {
-  private static Log logger = LogFactory.getLog(SimulationManager.class);
+public class SimulationMonitor extends GeneralLooper<SimulationMonitor> {
+  private static Log logger = LogFactory.getLog(SimulationMonitor.class);
 
   private final OrchestrationMasterContext context;
   private volatile boolean simulationRunning = false;
   private final Object lock = new Object();
 
-  public SimulationManager(OrchestrationMasterContext context) {
-    super(SimulationManager.class);
+  public SimulationMonitor(OrchestrationMasterContext context) {
+    super(SimulationMonitor.class);
     this.context = context;
   }
 

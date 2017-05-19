@@ -67,7 +67,7 @@ public class SimulatorImpl extends CompositeService implements Simulator {
       logger.trace("Starting simulation for " + policy.getKey());
       Class<? extends PluginPolicy> policyClass = policy.getValue();
       // TODO add topology
-      SimulationManager simulation = new SimulationManager(predictor, policyClass.getSimpleName(), policyClass, dataStore, null);
+      SimulationManager simulation = new SimulationManager(predictor, policy.getKey(), policyClass, dataStore, null);
       simulationMap.put(policy.getKey(), new PendingResult(simulation, executor.submit(simulation)));
     }
     resultAggregator = new ResultAggregator(simulationMap.values(), this);
