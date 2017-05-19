@@ -11,6 +11,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManage
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+
 public class EDLSAppAttempt extends ExtCaAppAttempt {
   private static final Log logger = LogFactory.getLog(EDLSAppAttempt.class);
 
@@ -70,7 +72,7 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
   }
 
   public Double getSlowdown() {
-    if (executionTime == 0)
+    if (orZero(executionTime) == 0)
       return 0.0;
     long waitTime = System.currentTimeMillis() - submitTime;
     return 1.0 * waitTime / Math.max(executionTime, minExecTime);

@@ -18,7 +18,7 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
   private static Log logger = LogFactory.getLog(Orchestrator.class);
 
   private OrchestrationMasterContext pmContext;
-  private SimulationManager simulationManager;
+  private SimulationMonitor simulationMonitor;
   private boolean switchEnabled;
 
   public Orchestrator(OrchestrationMasterContext pmContext) {
@@ -28,8 +28,8 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
 
   @Override
   protected void serviceInit(Configuration conf) throws Exception {
-    simulationManager = new SimulationManager(pmContext);
-    simulationManager.init(conf);
+    simulationMonitor = new SimulationMonitor(pmContext);
+    simulationMonitor.init(conf);
     switchEnabled = getConfig().getBoolean(PosumConfiguration.POLICY_SWITCH_ENABLED,
       PosumConfiguration.POLICY_SWITCH_ENABLED_DEFAULT);
     super.serviceInit(conf);
@@ -40,9 +40,9 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
     try {
       switch (event.getType()) {
         case SIMULATOR_CONNECTED:
-          if (!simulationManager.isInState(STATE.STARTED)) {
-            addIfService(simulationManager);
-            simulationManager.start();
+          if (!simulationMonitor.isInState(STATE.STARTED)) {
+            addIfService(simulationMonitor);
+            simulationMonitor.start();
             logger.info("Simulator connected");
           }
           break;
@@ -51,7 +51,7 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
           pmContext.getCommService().getSimulator().startSimulation();
           break;
         case SIMULATION_FINISH:
-          simulationManager.simulationFinished();
+          simulationMonitor.simulationFinished();
           ConcurrentSkipListSet<SimulationResultPayload> results = event.getCastContent();
           logger.trace("Policy scores: " + results);
           decidePolicyChange(results);
