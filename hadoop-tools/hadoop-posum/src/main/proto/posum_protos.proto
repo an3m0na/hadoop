@@ -85,7 +85,7 @@ message JobProfileProto {
     optional int32 totalMapTasks = 6;
     optional int32 totalReduceTasks = 7;
     optional int32 inputSplits = 8; // only from conf
-    optional int64 totalInputBytes = 9; // only from conf
+    optional int64 totalSplitSize = 9; // only from conf
     optional int64 inputBytes = 10; // ongoing
     optional int64 mapOutputBytes = 11;
     optional int64 reduceInputBytes = 12;
@@ -110,6 +110,8 @@ message JobProfileProto {
     optional StringStringMapPayloadProto flexFields = 31;
     repeated string aggregatedSplitLocations = 32;
     optional int64 lastUpdated = 33;
+    optional int64 deadline = 34;
+
 
     enum JobStateProto {
         STATE_NEW = 0;

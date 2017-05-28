@@ -24,9 +24,9 @@ public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
   void setTotalReduceTasks(Integer totalReduceTasks);
 
-  Long getTotalInputBytes();
+  Long getTotalSplitSize();
 
-  void setTotalInputBytes(Long inputBytes);
+  void setTotalSplitSize(Long inputBytes);
 
   Long getInputBytes();
 
@@ -129,4 +129,8 @@ public interface JobProfile extends GeneralDataEntity<JobProfile> {
   Set<String> getAggregatedSplitLocations();
 
   void setAggregatedSplitLocations(Set<String> locations);
+
+  Long getDeadline();
+
+  void setDeadline(Long deadline);
 }

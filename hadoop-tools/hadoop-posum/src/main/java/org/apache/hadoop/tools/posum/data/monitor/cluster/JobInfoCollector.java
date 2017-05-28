@@ -19,6 +19,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -91,7 +92,8 @@ class JobInfoCollector {
     info.setProfile(profile);
 
     JobConfProxy jobConf = api.getFinishedJobConf(profile.getId());
-    setClassNamesFromConf(profile, jobConf);
+    setClassNames(profile, jobConf);
+    setDeadline(profile, jobConf);
     info.setConf(jobConf);
 
     CountersProxy counters = api.getFinishedJobCounters(profile.getId());
@@ -136,7 +138,8 @@ class JobInfoCollector {
     job.setName(jobConfProxy.getEntry(MRJobConfig.JOB_NAME));
     job.setUser(jobConfProxy.getEntry(MRJobConfig.USER_NAME));
     job.setQueue(jobConfProxy.getEntry(MRJobConfig.QUEUE_NAME));
-    setClassNamesFromConf(job, jobConfProxy);
+    setClassNames(job, jobConfProxy);
+    setDeadline(job, jobConfProxy);
 
     // read split info
     JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = hdfsReader.getSplitMetaInfo(jobId, jobConfProxy);
@@ -147,7 +150,7 @@ class JobInfoCollector {
     long inputLength = 0;
     Set<String> aggregatedLocations = new HashSet<>();
     List<TaskProfile> taskStubs = new ArrayList<>(taskSplitMetaInfo.length);
-    for (int i=0; i<taskSplitMetaInfo.length; i++) {
+    for (int i = 0; i < taskSplitMetaInfo.length; i++) {
       JobSplit.TaskSplitMetaInfo aTaskSplitMetaInfo = taskSplitMetaInfo[i];
       inputLength += aTaskSplitMetaInfo.getInputDataLength();
       aggregatedLocations.addAll(Arrays.asList(aTaskSplitMetaInfo.getLocations()));
@@ -161,7 +164,7 @@ class JobInfoCollector {
       task.setSplitSize(aTaskSplitMetaInfo.getInputDataLength());
       taskStubs.add(task);
     }
-    job.setTotalInputBytes(inputLength);
+    job.setTotalSplitSize(inputLength);
     job.setAggregatedSplitLocations(aggregatedLocations);
 
     // add reduce task stubs according to configuration
@@ -170,7 +173,7 @@ class JobInfoCollector {
     if (reducesString != null && reducesString.length() > 0)
       reduces = Integer.valueOf(reducesString);
     job.setTotalReduceTasks(reduces);
-    for (int i=0; i<reduces; i++) {
+    for (int i = 0; i < reduces; i++) {
       TaskProfile task = Records.newRecord(TaskProfile.class);
       task.setId(MRBuilderUtils.newTaskId(jobId, i, TaskType.REDUCE).toString());
       task.setAppId(job.getAppId());
@@ -183,7 +186,13 @@ class JobInfoCollector {
     return new JobInfo(job, jobConfProxy, taskStubs);
   }
 
-  private void setClassNamesFromConf(JobProfile profile, JobConfProxy conf) {
+  private void setDeadline(JobProfile job, JobConfProxy confProxy) {
+    String deadlineString = confProxy.getEntry(PosumConfiguration.APP_DEADLINE);
+    if (deadlineString != null)
+      job.setDeadline(Long.valueOf(deadlineString));
+  }
+
+  private void setClassNames(JobProfile profile, JobConfProxy conf) {
     String classString = conf.getEntry(MRJobConfig.MAP_CLASS_ATTR);
     if (classString == null)
       classString = conf.getEntry(OLD_MAP_CLASS_ATTR);

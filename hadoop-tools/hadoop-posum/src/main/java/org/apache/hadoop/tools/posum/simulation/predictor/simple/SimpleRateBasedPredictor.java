@@ -38,18 +38,18 @@ public abstract class SimpleRateBasedPredictor<M extends PredictionModel> extend
   }
 
   protected static Long getAvgSplitSize(JobProfile job) {
-    if (job.getTotalInputBytes() == null || job.getTotalMapTasks() < 1)
+    if (job.getTotalSplitSize() == null || job.getTotalMapTasks() < 1)
       return null;
     // consider equal sizes; restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-    return Math.max(job.getTotalInputBytes() / job.getTotalMapTasks(), 1);
+    return Math.max(job.getTotalSplitSize() / job.getTotalMapTasks(), 1);
   }
 
   protected static Long getReduceDuration(JobProfile job, Double avgSelectivity, Double avgRate) {
-    if (job.getTotalInputBytes() == null || avgSelectivity == null || avgRate == null)
+    if (job.getTotalSplitSize() == null || avgSelectivity == null || avgRate == null)
       return null;
     // calculate how much input the task has
     // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-    Double inputPerTask = Math.max(orZero(job.getTotalInputBytes()) * avgSelectivity / job.getTotalReduceTasks(), 1);
+    Double inputPerTask = Math.max(orZero(job.getTotalSplitSize()) * avgSelectivity / job.getTotalReduceTasks(), 1);
     Double duration = inputPerTask / avgRate;
     return duration.longValue();
   }

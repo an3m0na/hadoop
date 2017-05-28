@@ -44,9 +44,9 @@ public class TestTaskInfoCollector {
   public void getFinishedTaskInfoTest() {
     when(apiMock.getFinishedTasksInfo(entities.JOB_ID)).thenReturn(Arrays.asList(entities.FINISHED_TASKS));
     when(apiMock.getFinishedTaskCounters(entities.JOB_ID, entities.FINISHED_TASKS[0].getId()))
-      .thenReturn(entities.TASK_COUNTERS);
+      .thenReturn(entities.TASK_COUNTERS_MAP);
     when(apiMock.getFinishedTaskCounters(entities.JOB_ID, entities.FINISHED_TASKS[1].getId()))
-      .thenReturn(entities.TASK_COUNTERS);
+      .thenReturn(entities.TASK_COUNTERS_REDUCE);
 
     TaskInfo info = testSubject.getFinishedTaskInfo(entities.FINISHED_JOB);
 
@@ -54,7 +54,7 @@ public class TestTaskInfoCollector {
     verify(apiMock, times(1)).addFinishedAttemptInfo(entities.FINISHED_TASKS[1]);
     assertThat(info.getTasks(), containsInAnyOrder(entities.FINISHED_TASKS));
 
-    assertThat(info.getCounters(), containsInAnyOrder(entities.TASK_COUNTERS, entities.TASK_COUNTERS));
+    assertThat(info.getCounters(), containsInAnyOrder(entities.TASK_COUNTERS_MAP, entities.TASK_COUNTERS_REDUCE));
     assertThat(entities.FINISHED_TASKS[0].getInputBytes(), is(48L));
     assertThat(entities.FINISHED_TASKS[0].getOutputBytes(), is(2235L));
     assertThat(entities.FINISHED_TASKS[1].getInputBytes(), is(2235L));
@@ -65,9 +65,9 @@ public class TestTaskInfoCollector {
   public void getRunningTaskInfoTest() {
     when(apiMock.getRunningTasksInfo(entities.RUNNING_JOB)).thenReturn(Arrays.asList(entities.RUNNING_TASKS));
     when(apiMock.getRunningTaskCounters(entities.APP_ID, entities.JOB_ID, entities.RUNNING_TASKS[0].getId()))
-      .thenReturn(entities.TASK_COUNTERS);
+      .thenReturn(entities.TASK_COUNTERS_MAP);
     when(apiMock.getRunningTaskCounters(entities.APP_ID, entities.JOB_ID, entities.RUNNING_TASKS[1].getId()))
-      .thenReturn(entities.TASK_COUNTERS);
+      .thenReturn(entities.TASK_COUNTERS_REDUCE);
     when(apiMock.addRunningAttemptInfo(entities.RUNNING_TASKS[0])).thenReturn(true);
     when(apiMock.addRunningAttemptInfo(entities.RUNNING_TASKS[1])).thenReturn(true);
 
@@ -77,7 +77,7 @@ public class TestTaskInfoCollector {
     verify(apiMock, times(1)).addRunningAttemptInfo(entities.RUNNING_TASKS[1]);
     assertThat(info.getTasks(), containsInAnyOrder(entities.RUNNING_TASKS));
 
-    assertThat(info.getCounters(), containsInAnyOrder(entities.TASK_COUNTERS, entities.TASK_COUNTERS));
+    assertThat(info.getCounters(), containsInAnyOrder(entities.TASK_COUNTERS_MAP, entities.TASK_COUNTERS_REDUCE));
     assertThat(entities.RUNNING_TASKS[0].getInputBytes(), is(48L));
     assertThat(entities.RUNNING_TASKS[0].getOutputBytes(), is(2235L));
     assertThat(entities.RUNNING_TASKS[1].getInputBytes(), is(2235L));
