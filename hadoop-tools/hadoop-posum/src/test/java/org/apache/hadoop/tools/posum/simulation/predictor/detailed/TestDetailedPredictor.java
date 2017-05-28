@@ -74,7 +74,7 @@ public class TestDetailedPredictor extends TestPredictor<DetailedPredictor> {
     assertThat(prediction.getDuration(), is(1500L));
 
     // check rate-based prediction
-    someJob.setTotalInputBytes(100000000L);
+    someJob.setTotalSplitSize(100000000L);
     someJob.setTotalMapTasks(10);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.MAP));
     assertThat(prediction.getDuration(), is(629L));
@@ -117,7 +117,7 @@ public class TestDetailedPredictor extends TestPredictor<DetailedPredictor> {
   @Test
   public void testReducePrediction() throws Exception {
     // check prediction with no selectivity data -> avg historical duration
-    someJob.setTotalInputBytes(100000000L);
+    someJob.setTotalSplitSize(100000000L);
     someJob.setTotalMapTasks(10);
     someJob.setTotalReduceTasks(2);
     TaskPredictionOutput prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.REDUCE));

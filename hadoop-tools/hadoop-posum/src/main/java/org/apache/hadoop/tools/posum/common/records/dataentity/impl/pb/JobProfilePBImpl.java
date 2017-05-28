@@ -183,21 +183,21 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   }
 
   @Override
-  public Long getTotalInputBytes() {
+  public Long getTotalSplitSize() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-    if (!p.hasTotalInputBytes())
+    if (!p.hasTotalSplitSize())
       return null;
-    return p.getTotalInputBytes();
+    return p.getTotalSplitSize();
   }
 
   @Override
-  public void setTotalInputBytes(Long inputBytes) {
+  public void setTotalSplitSize(Long inputBytes) {
     maybeInitBuilder();
     if (inputBytes == null) {
-      builder.clearInputBytes();
+      builder.clearTotalSplitSize();
       return;
     }
-    builder.setTotalInputBytes(inputBytes);
+    builder.setTotalSplitSize(inputBytes);
   }
 
   @Override
@@ -642,5 +642,23 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
       return;
     }
     builder.addAllAggregatedSplitLocations(locations);
+  }
+
+  @Override
+  public Long getDeadline() {
+    JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasDeadline())
+      return null;
+    return p.getDeadline();
+  }
+
+  @Override
+  public void setDeadline(Long deadline) {
+    maybeInitBuilder();
+    if (deadline == null) {
+      builder.clearDeadline();
+      return;
+    }
+    builder.setDeadline(deadline);
   }
 }

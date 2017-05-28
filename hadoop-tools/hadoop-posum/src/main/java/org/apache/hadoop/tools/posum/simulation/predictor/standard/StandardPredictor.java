@@ -44,7 +44,7 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
 
     if (!getIntField(job, PROFILED_MAPS.getKey(), 0).equals(job.getCompletedMaps())) {
       // nothing will work if we don't have input size info
-      if (job.getTotalInputBytes() != null) {
+      if (job.getTotalSplitSize() != null) {
         long parsedInputBytes = 0L;
         double mapRate = 0.0;
         int taskNo = 0;

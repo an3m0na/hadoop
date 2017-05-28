@@ -188,8 +188,8 @@ public class TestHadoopAPIClient {
   public void taskCountersMappingTest() throws Exception {
     ObjectMapper mapper = new ObjectMapper();
     HadoopAPIClient.TaskCountersWrapper counters = mapper.readValue(Utils.getApiJson("task_counters.json"), HadoopAPIClient.TaskCountersWrapper.class);
-    counters.jobTaskCounters.setLastUpdated(entities.TASK_COUNTERS.getLastUpdated());
-    assertThat(counters.jobTaskCounters, is(entities.TASK_COUNTERS));
+    counters.jobTaskCounters.setLastUpdated(entities.TASK_COUNTERS_MAP.getLastUpdated());
+    assertThat(counters.jobTaskCounters, is(entities.TASK_COUNTERS_MAP));
   }
 
   @Test

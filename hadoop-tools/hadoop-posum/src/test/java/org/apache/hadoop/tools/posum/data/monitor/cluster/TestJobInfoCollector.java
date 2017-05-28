@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_CONF;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
@@ -113,8 +114,11 @@ public class TestJobInfoCollector {
     expectedJob.setCompletedReduces(null);
     expectedJob.setUberized(null);
     expectedJob.setInputSplits(LOCATIONS.length);
-    expectedJob.setTotalInputBytes(INPUT_LENGTH);
+    expectedJob.setTotalSplitSize(INPUT_LENGTH);
     expectedJob.setAggregatedSplitLocations(new HashSet<>(Arrays.asList(LOCATIONS)));
+    expectedJob.setMapperClass(entities.JOB_CONF.getEntry("mapreduce.job.map.class"));
+    expectedJob.setReducerClass(entities.JOB_CONF.getEntry("mapreduce.job.reduce.class"));
+    expectedJob.setDeadline(1326381330000L);
 
     TaskProfile expectedMap = Records.newRecord(TaskProfile.class);
     expectedMap.setId(entities.RUNNING_MAP_TASK.getId());

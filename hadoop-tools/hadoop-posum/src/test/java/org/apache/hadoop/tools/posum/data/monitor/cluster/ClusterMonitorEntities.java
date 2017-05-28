@@ -32,7 +32,7 @@ class ClusterMonitorEntities {
   final TaskProfile RUNNING_REDUCE_TASK, RUNNING_MAP_TASK;
   final TaskProfile DETAILED_REDUCE_TASK;
   final TaskProfile FINISHED_DETAILED_REDUCE_TASK;
-  final CountersProxy JOB_COUNTERS, TASK_COUNTERS;
+  final CountersProxy JOB_COUNTERS, TASK_COUNTERS_MAP, TASK_COUNTERS_REDUCE;
   final JobConfProxy JOB_CONF;
 
   ClusterMonitorEntities() {
@@ -145,9 +145,13 @@ class ClusterMonitorEntities {
     JOB_COUNTERS.setId(JOB_ID);
     JOB_COUNTERS.setCounterGroup(createCounterGroups(true));
 
-    TASK_COUNTERS = Records.newRecord(CountersProxy.class);
-    TASK_COUNTERS.setId(RUNNING_MAP_TASK.getId());
-    TASK_COUNTERS.setTaskCounterGroup(createCounterGroups(false));
+    TASK_COUNTERS_MAP = Records.newRecord(CountersProxy.class);
+    TASK_COUNTERS_MAP.setId(RUNNING_MAP_TASK.getId());
+    TASK_COUNTERS_MAP.setTaskCounterGroup(createCounterGroups(false));
+
+    TASK_COUNTERS_REDUCE = Records.newRecord(CountersProxy.class);
+    TASK_COUNTERS_REDUCE.setId(RUNNING_REDUCE_TASK.getId());
+    TASK_COUNTERS_REDUCE.setTaskCounterGroup(createCounterGroups(false));
 
     JOB_CONF = Records.newRecord(JobConfProxy.class);
     JOB_CONF.setId(JOB_ID);
@@ -160,6 +164,9 @@ class ClusterMonitorEntities {
     properties.put("mapreduce.job.user.name", "user1");
     properties.put("mapreduce.job.queuename", "a1");
     properties.put("mapreduce.job.reduces", "1");
+    properties.put("mapreduce.job.reduce.class", "org.team.SomeReducer");
+    properties.put("mapreduce.job.map.class", "org.team.SomeMapper");
+    properties.put("yarn.application.deadline", "1326381330000");
     JOB_CONF.setPropertyMap(properties);
   }
 
