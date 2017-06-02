@@ -29,4 +29,12 @@ public class Database {
   public static Database from(DataStore dataStore, DatabaseReference db) {
     return new Database(dataStore, db);
   }
+
+  public void awaitUpdate() throws InterruptedException {
+    dataStore.awaitUpdate(selectedDatabase);
+  }
+
+  public void notifyUpdate() {
+    dataStore.notifyUpdate(selectedDatabase);
+  }
 }
