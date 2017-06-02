@@ -57,8 +57,8 @@ public class BasicPredictionStats extends PredictionStats {
   }
 
   public void addSource(JobProfile job) {
-    avgMapDuration = addValue(job.getAvgMapDuration().doubleValue(), avgMapDuration, mapDurations);
-    avgReduceDuration = addValue(job.getAvgReduceDuration().doubleValue(), avgReduceDuration, reduceDurations);
+    avgMapDuration = addValue(job.getAvgMapDuration(), avgMapDuration, mapDurations);
+    avgReduceDuration = addValue(job.getAvgReduceDuration(), avgReduceDuration, reduceDurations);
     incrementSampleSize();
   }
 

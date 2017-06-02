@@ -119,7 +119,7 @@ public class TestSimulationEvaluator {
     when(db.execute(FindByQueryCall.newInstance(DataEntityCollection.JOB_CONF_HISTORY, null)))
       .thenReturn(MultiEntityPayload.newInstance(DataEntityCollection.JOB_CONF_HISTORY, EXPIRED_CONFS));
     CompoundScorePayload result = new SimulationEvaluator(db).evaluate();
-    assertThat(result, is(CompoundScorePayload.newInstance( 7.712307692307692, 244.5, 0.0)));
+    assertThat(result, is(CompoundScorePayload.newInstance( 7.712307692307692, 79112.5, 0.0)));
   }
 
 

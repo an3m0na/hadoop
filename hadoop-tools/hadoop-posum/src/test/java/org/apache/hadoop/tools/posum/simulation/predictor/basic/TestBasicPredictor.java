@@ -30,8 +30,8 @@ public class TestBasicPredictor extends TestPredictor<BasicPredictor> {
 
     // check history stats for known user
     BasicPredictionStats someJobStats = predictor.getModel().getRelevantStats(someJob);
-    assertThat(someJobStats.getAvgMapDuration(), is(2801.0));
-    assertThat(someJobStats.getAvgReduceDuration(), is(66321.0));
+    assertThat(someJobStats.getAvgMapDuration(), is(2869.0));
+    assertThat(someJobStats.getAvgReduceDuration(), is(82522.0));
 
     // check history stats for unknown user
     BasicPredictionStats anotherJobStats = predictor.getModel().getRelevantStats(anotherJob);
@@ -41,7 +41,7 @@ public class TestBasicPredictor extends TestPredictor<BasicPredictor> {
   @Test
   public void testMapPrediction() throws Exception {
     TaskPredictionOutput prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob.getId(), TaskType.MAP));
-    assertThat(prediction.getDuration(), is(2801L));
+    assertThat(prediction.getDuration(), is(2869L));
 
     someJob.setAvgMapDuration(1000L);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob.getId(), TaskType.MAP));
@@ -58,7 +58,7 @@ public class TestBasicPredictor extends TestPredictor<BasicPredictor> {
   @Test
   public void testReducePrediction() throws Exception {
     TaskPredictionOutput prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob.getId(), TaskType.REDUCE));
-    assertThat(prediction.getDuration(), is(66321L));
+    assertThat(prediction.getDuration(), is(82522L));
 
     someJob.setAvgReduceDuration(1001L);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob.getId(), TaskType.REDUCE));
