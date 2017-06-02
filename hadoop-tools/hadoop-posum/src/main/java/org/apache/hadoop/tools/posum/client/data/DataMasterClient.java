@@ -112,4 +112,24 @@ public class DataMasterClient extends AbstractService implements DataStore {
       dmClient
     );
   }
+
+  @Override
+  public void awaitUpdate(DatabaseReference db) throws InterruptedException {
+    Utils.sendSimpleRequest(
+      "awaitUpdate",
+      SimpleRequest.newInstance(SimpleRequest.Type.AWAIT_UPDATE,
+        DatabaseAlterationPayload.newInstance(db)),
+      dmClient
+    );
+  }
+
+  @Override
+  public void notifyUpdate(DatabaseReference db) {
+    Utils.sendSimpleRequest(
+      "notifyUpdate",
+      SimpleRequest.newInstance(SimpleRequest.Type.NOTIFY_UPDATE,
+        DatabaseAlterationPayload.newInstance(db)),
+      dmClient
+    );
+  }
 }

@@ -77,6 +77,7 @@ public class AppInfoCollector {
         }
       }
     }
+    db.notifyUpdate();
   }
 
   private void moveAppToHistory(final AppProfile app) {

@@ -20,7 +20,9 @@ public abstract class SimpleRequest<T> {
     CLEAR_DATA(VoidRequestPBImpl.class),
     CLEAR_DB(DatabaseAlterationRequestPBImpl.class),
     COPY_DB(DatabaseAlterationRequestPBImpl.class),
-    COPY_COLL(DatabaseAlterationRequestPBImpl.class);
+    COPY_COLL(DatabaseAlterationRequestPBImpl.class),
+    AWAIT_UPDATE(DatabaseAlterationRequestPBImpl.class),
+    NOTIFY_UPDATE(DatabaseAlterationRequestPBImpl.class);
 
     private Class<? extends SimpleRequestPBImpl> implClass;
     private static final String prefix = "REQ_";

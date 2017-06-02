@@ -56,7 +56,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
                                 boolean isAppRecovering,
                                 ReservationId reservationID) {
 
-    JobProfile job = fetchJobProfile(applicationId.toString(), user);
+    JobProfile job = fetchJobProfile(applicationId.toString());
     logger.info("resolving queue");
     if (job == null) {
       logger.info("job not found");
@@ -73,15 +73,20 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
     return resolveQueue(queue, applicationId, user, false, null);
   }
 
-  protected JobProfile fetchJobProfile(String appId, String user) {
+  protected JobProfile fetchJobProfile(String appId) {
     Database db = dbProvider.getDatabase();
     if (db == null)
       // DataMaster is not connected; do nothing
       return null;
     JobProfile job = db.execute(JobForAppCall.newInstance(appId)).getEntity();
-    if (job == null) {
-      logger.error("Could not retrieve job info for " + appId);
-      return null;
+    while (job == null) {
+      try {
+        db.awaitUpdate();
+      } catch (InterruptedException e) {
+        logger.error("Could not retrieve job information for " + appId);
+        return null;
+      }
+      job = db.execute(JobForAppCall.newInstance(appId)).getEntity();
     }
     return job;
   }
@@ -97,7 +102,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         // DataMaster is not connected; do nothing
         return;
       String appId = app.getApplicationId().toString();
-      JobProfile job = fetchJobProfile(appId, app.getUser());
+      JobProfile job = fetchJobProfile(appId);
       if (app.getType() == null) {
         if (job == null)
           // something went wrong; do nothing

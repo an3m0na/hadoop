@@ -23,4 +23,8 @@ public interface DataStore {
 
   void copyCollection(DataEntityCollection collection, DatabaseReference sourceDB, DatabaseReference destinationDB);
 
+  void awaitUpdate(DatabaseReference db) throws InterruptedException;
+
+  void notifyUpdate(DatabaseReference db);
+
 }
