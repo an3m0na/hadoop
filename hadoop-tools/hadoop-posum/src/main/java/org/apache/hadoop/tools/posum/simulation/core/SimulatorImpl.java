@@ -7,6 +7,8 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.client.simulation.Simulator;
+import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
@@ -59,12 +61,16 @@ public class SimulatorImpl extends CompositeService implements Simulator {
   public synchronized void startSimulation() {
     DataStore dataStore = context.getDataBroker();
     copyRunningAppInfo(dataStore, DatabaseReference.getMain(), DatabaseReference.getSimulation());
+    if (getRunningJobCount() < 1) {
+      logger.debug("Queue is empty. No simulations will start");
+      return;
+    }
     predictor.train(Database.from(dataStore, DatabaseReference.getMain()));
     predictor.switchDatabase(Database.from(dataStore, DatabaseReference.getSimulation()));
 
     simulationMap = new HashMap<>(policies.size());
     for (Map.Entry<String, Class<? extends PluginPolicy>> policy : policies.entrySet()) {
-      logger.trace("Starting simulation for " + policy.getKey());
+      logger.debug("Starting simulation for " + policy.getKey());
       Class<? extends PluginPolicy> policyClass = policy.getValue();
       // TODO add topology
       SimulationManager simulation = new SimulationManager(predictor, policy.getKey(), policyClass, dataStore, null);
@@ -72,6 +78,11 @@ public class SimulatorImpl extends CompositeService implements Simulator {
     }
     resultAggregator = new ResultAggregator(simulationMap.values(), this);
     executor.execute(resultAggregator);
+  }
+
+  private int getRunningJobCount() {
+    IdsByQueryCall allJobs = IdsByQueryCall.newInstance(DataEntityCollection.JOB, null);
+    return context.getDataBroker().execute(allJobs, DatabaseReference.getSimulation()).getEntries().size();
   }
 
   void simulationsDone(List<SimulationResultPayload> results) {

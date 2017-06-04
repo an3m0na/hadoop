@@ -165,7 +165,7 @@
         "counterGroupName": "org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter",
         "counter": [
           {
-            "value": 0,
+            "value": 48,
             "name": "BYTES_READ"
           }
         ]

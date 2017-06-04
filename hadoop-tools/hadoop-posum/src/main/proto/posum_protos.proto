@@ -37,6 +37,7 @@ enum EntityCollectionProto {
     COLL_POSUM_STATS = 11;
     COLL_PREDICTOR_LOG = 12;
     COLL_AUDIT_LOG = 13;
+    COLL_DEADLINE = 14;
 }
 
 message AppProfileProto {
@@ -197,6 +198,12 @@ message LogEntryProto {
 message CountersProxyProto {
     required string id = 1;
     repeated CounterGroupInfoPayloadProto groups = 2;
+    optional int64 lastUpdated = 3;
+}
+
+message ExternalDeadlineProto {
+    required string id = 1;
+    optional int64 deadline = 2;
     optional int64 lastUpdated = 3;
 }
 

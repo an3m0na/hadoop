@@ -86,6 +86,8 @@ public class PosumConfiguration {
   public static final String DEFAULT_POLICY_DEFAULT = "FIFO";
   public static final String POLICY_SWITCH_ENABLED = SCHEDULER_PREFIX + "policy-switch-enabled";
   public static final boolean POLICY_SWITCH_ENABLED_DEFAULT = true;
+  public static final String DATABASE_DEADLINES = SCHEDULER_PREFIX + "db.deadlines";
+  public static final boolean DATABASE_DEADLINES_DEFAULT = false;
 
   public static final String SIMULATION_INTERVAL = SIMULATOR_PREFIX + "interval";
   public static final long SIMULATION_INTERVAL_DEFAULT = 120000;
@@ -145,4 +147,5 @@ public class PosumConfiguration {
   public static final int SIMULATION_CONTAINER_MEMORY_MB_DEFAULT = 1024;
   public static final String SIMULATION_CONTAINER_VCORES = SIMULATION_CONTAINER_PREFIX + "vcores";
   public static final int SIMULATION_CONTAINER_VCORES_DEFAULT = 1;
+
 }

@@ -12,12 +12,15 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskState;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.mapreduce.v2.util.MRBuilderUtils;
 import org.apache.hadoop.tools.posum.client.data.Database;
+import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
+import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.ExternalDeadline;
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
@@ -32,6 +35,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.DATABASE_DEADLINES;
+import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.DATABASE_DEADLINES_DEFAULT;
+
 class JobInfoCollector {
   private static Log logger = LogFactory.getLog(JobInfoCollector.class);
 
@@ -41,6 +47,7 @@ class JobInfoCollector {
   private HadoopAPIClient api;
   private Database db;
   private HdfsReader hdfsReader;
+  private boolean databaseDeadlines;
 
   JobInfoCollector() {
 
@@ -54,6 +61,7 @@ class JobInfoCollector {
     } catch (IOException e) {
       throw new PosumException("Cannot not access HDFS ", e);
     }
+    this.databaseDeadlines = conf.getBoolean(DATABASE_DEADLINES, DATABASE_DEADLINES_DEFAULT);
   }
 
   JobInfo getRunningJobInfo(AppProfile app) {
@@ -75,6 +83,9 @@ class JobInfoCollector {
     if (profile == null)
       // job might have finished; return
       return null;
+    if (databaseDeadlines && profile.getDeadline() == null) {
+      setDatabaseDeadline(profile);
+    }
     info.setProfile(profile);
     // get counters
     CountersProxy counters = api.getRunningJobCounters(app.getId(), profile.getId());
@@ -93,7 +104,7 @@ class JobInfoCollector {
 
     JobConfProxy jobConf = api.getFinishedJobConf(profile.getId());
     setClassNames(profile, jobConf);
-    setDeadline(profile, jobConf);
+    setDeadlineFromConf(profile, jobConf);
     info.setConf(jobConf);
 
     CountersProxy counters = api.getFinishedJobCounters(profile.getId());
@@ -139,7 +150,8 @@ class JobInfoCollector {
     job.setUser(jobConfProxy.getEntry(MRJobConfig.USER_NAME));
     job.setQueue(jobConfProxy.getEntry(MRJobConfig.QUEUE_NAME));
     setClassNames(job, jobConfProxy);
-    setDeadline(job, jobConfProxy);
+    if (!databaseDeadlines)
+      setDeadlineFromConf(job, jobConfProxy);
 
     // read split info
     JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfo = hdfsReader.getSplitMetaInfo(jobId, jobConfProxy);
@@ -186,10 +198,19 @@ class JobInfoCollector {
     return new JobInfo(job, jobConfProxy, taskStubs);
   }
 
-  private void setDeadline(JobProfile job, JobConfProxy confProxy) {
+  private void setDeadlineFromConf(JobProfile job, JobConfProxy confProxy) {
     String deadlineString = confProxy.getEntry(PosumConfiguration.APP_DEADLINE);
     if (deadlineString != null)
       job.setDeadline(Long.valueOf(deadlineString));
+    else
+      job.setDeadline(0L);
+  }
+
+  private void setDatabaseDeadline(JobProfile job) {
+    FindByIdCall findDeadline = FindByIdCall.newInstance(DataEntityCollection.DEADLINE, job.getId());
+    ExternalDeadline deadline = db.execute(findDeadline).getEntity();
+    if (deadline != null)
+      job.setDeadline(deadline.getDeadline());
   }
 
   private void setClassNames(JobProfile profile, JobConfProxy conf) {
