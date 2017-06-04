@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.dataentity;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.AppProfilePBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.CountersProxyPBImpl;
+import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.ExternalDeadlinePBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.JobConfProxyPBImpl;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.JobProfilePBImpl;
@@ -22,7 +23,8 @@ public enum DataEntityCollection {
   HISTORY("history", HistoryProfilePBImpl.class),
   POSUM_STATS("posum_stats", LogEntryPBImpl.class),
   PREDICTOR_LOG("predictor_log", LogEntryPBImpl.class),
-  AUDIT_LOG("audit_log", LogEntryPBImpl.class);
+  AUDIT_LOG("audit_log", LogEntryPBImpl.class),
+  DEADLINE("deadlines", ExternalDeadlinePBImpl.class);
 
   private String label;
   private Class<? extends GeneralDataEntity> mappedClass;

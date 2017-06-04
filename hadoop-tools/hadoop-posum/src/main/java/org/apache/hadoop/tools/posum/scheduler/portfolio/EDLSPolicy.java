@@ -57,15 +57,12 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
                                 ReservationId reservationID) {
 
     JobProfile job = fetchJobProfile(applicationId.toString());
-    logger.info("resolving queue");
-    if (job == null) {
-      logger.info("job not found");
+    if (job == null || job.getDeadline() == 0) {
+      logger.debug("Adding app to BC queue " + applicationId);
       return BATCH_QUEUE;
     }
-    if (job.getDeadline() == null)
-      return DEADLINE_QUEUE;
-    logger.info("deadline not found");
-    return BATCH_QUEUE;
+    logger.debug("Adding app to DC queue " + applicationId);
+    return DEADLINE_QUEUE;
   }
 
   @Override
@@ -79,7 +76,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
       // DataMaster is not connected; do nothing
       return null;
     JobProfile job = db.execute(JobForAppCall.newInstance(appId)).getEntity();
-    while (job == null) {
+    while (job == null || job.getDeadline() == null) {
       try {
         db.awaitUpdate();
       } catch (InterruptedException e) {

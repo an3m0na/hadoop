@@ -215,7 +215,7 @@ class ClusterMonitorEntities {
         CounterInfoPayload.newInstance("COMMITTED_HEAP_BYTES", 378863616)
       )),
       CounterGroupInfoPayload.newInstance("org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter", Collections.singletonList(
-        CounterInfoPayload.newInstance("BYTES_READ", 0)
+        CounterInfoPayload.newInstance("BYTES_READ", 48)
       )),
       CounterGroupInfoPayload.newInstance("org.apache.hadoop.mapreduce.lib.output.FileOutputFormatCounter", Collections.singletonList(
         CounterInfoPayload.newInstance("BYTES_WRITTEN", 0)

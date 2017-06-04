@@ -3,8 +3,6 @@ package org.apache.hadoop.tools.posum.common.util;
 import org.apache.commons.lang.WordUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.mapreduce.FileSystemCounter;
-import org.apache.hadoop.mapreduce.TaskCounter;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskId;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
@@ -316,40 +314,31 @@ public class Utils {
     if (counters == null)
       return;
     for (CounterGroupInfoPayload group : counters.getCounterGroup()) {
-      if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
-        for (CounterInfoPayload counter : group.getCounter()) {
-          switch (counter.getName()) {
-            // make sure to record map materialized (compressed) bytes if compression is enabled
-            // this is because reduce_shuffle_bytes are also in compressed form
-            case "MAP_OUTPUT_BYTES":
-              Long previous = orZero(job.getMapOutputBytes());
-              if (previous == 0)
-                job.setMapOutputBytes(counter.getTotalCounterValue());
-              break;
-            case "MAP_OUTPUT_MATERIALIZED_BYTES":
-              Long value = counter.getTotalCounterValue();
-              if (value > 0)
-                job.setMapOutputBytes(value);
-              break;
-            case "REDUCE_SHUFFLE_BYTES":
-              job.setReduceInputBytes(counter.getTotalCounterValue());
-              break;
-          }
+      for (CounterInfoPayload counter : group.getCounter()) {
+        switch (counter.getName()) {
+          // make sure to record map materialized (compressed) bytes if compression is enabled
+          // this is because reduce_shuffle_bytes are also in compressed form
+          case "MAP_OUTPUT_BYTES":
+            Long previous = orZero(job.getMapOutputBytes());
+            if (previous == 0)
+              job.setMapOutputBytes(counter.getTotalCounterValue());
+            break;
+          case "MAP_OUTPUT_MATERIALIZED_BYTES":
+            Long value = counter.getTotalCounterValue();
+            if (value > 0)
+              job.setMapOutputBytes(value);
+            break;
+          case "REDUCE_SHUFFLE_BYTES":
+            job.setReduceInputBytes(counter.getTotalCounterValue());
+            break;
+          case "BYTES_READ":
+            job.setInputBytes(counter.getTotalCounterValue());
+            break;
+          case "BYTES_WRITTEN":
+            job.setOutputBytes(counter.getTotalCounterValue());
+            break;
         }
-      if (FileSystemCounter.class.getName().equals(group.getCounterGroupName()))
-        for (CounterInfoPayload counter : group.getCounter()) {
-          switch (counter.getName()) {
-            case "FILE_BYTES_READ":
-              job.setInputBytes(orZero(job.getInputBytes()) + counter.getMapCounterValue());
-              break;
-            case "HDFS_BYTES_READ":
-              job.setInputBytes(orZero(job.getInputBytes()) + counter.getMapCounterValue());
-              break;
-            case "HDFS_BYTES_WRITTEN":
-              job.setOutputBytes(orZero(job.getOutputBytes()) + counter.getReduceCounterValue());
-              break;
-          }
-        }
+      }
     }
   }
 
@@ -368,7 +357,7 @@ public class Utils {
   public static void updateJobStatisticsFromTasks(JobProfile job, List<TaskProfile> tasks) {
     if (tasks == null)
       return;
-    long mapDuration = 0, reduceDuration = 0, reduceTime = 0, shuffleTime = 0, mergeTime = 0, avgDuration = 0;
+    long mapDuration = 0, reduceDuration = 0, reduceTime = 0, shuffleTime = 0, mergeTime = 0;
     int mapNo = 0, reduceNo = 0, avgNo = 0;
     long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
 
@@ -395,7 +384,6 @@ public class Utils {
         reduceInputSize += orZero(task.getInputBytes());
         reduceOutputSize += orZero(task.getOutputBytes());
       }
-      avgDuration += getDuration(task);
       avgNo++;
     }
 
@@ -415,7 +403,6 @@ public class Utils {
     job.setMapOutputBytes(mapOutputSize);
     job.setReduceInputBytes(reduceInputSize);
     job.setOutputBytes(reduceOutputSize);
-    // addSource in case of discrepancy
     job.setCompletedMaps(mapNo);
     job.setCompletedReduces(reduceNo);
   }
@@ -424,47 +411,39 @@ public class Utils {
     if (counters == null)
       return;
     for (CounterGroupInfoPayload group : counters.getCounterGroup()) {
-      if (TaskCounter.class.getName().equals(group.getCounterGroupName()))
-        for (CounterInfoPayload counter : group.getCounter()) {
-          switch (counter.getName()) {
-            // make sure to record map materialized (compressed) bytes if compression is enabled
-            // this is because reduce_shuffle_bytes are also in compressed form
-            case "MAP_OUTPUT_BYTES":
-              if (task.getType().equals(TaskType.MAP)) {
-                Long previous = orZero(task.getOutputBytes());
-                if (previous == 0)
-                  task.setOutputBytes(counter.getTotalCounterValue());
-              }
-              break;
-            case "MAP_OUTPUT_MATERIALIZED_BYTES":
-              if (task.getType().equals(TaskType.MAP)) {
-                Long value = counter.getTotalCounterValue();
-                if (value > 0)
-                  task.setOutputBytes(value);
-              }
-              break;
-            case "REDUCE_SHUFFLE_BYTES":
-              if (task.getType().equals(TaskType.REDUCE))
-                task.setInputBytes(counter.getTotalCounterValue());
-              break;
-          }
+      for (CounterInfoPayload counter : group.getCounter()) {
+        switch (counter.getName()) {
+          // make sure to record map materialized (compressed) bytes if compression is enabled
+          // this is because reduce_shuffle_bytes are also in compressed form
+          case "MAP_OUTPUT_BYTES":
+            if (task.getType().equals(TaskType.MAP)) {
+              Long previous = orZero(task.getOutputBytes());
+              if (previous == 0)
+                task.setOutputBytes(counter.getTotalCounterValue());
+            }
+            break;
+          case "MAP_OUTPUT_MATERIALIZED_BYTES":
+            if (task.getType().equals(TaskType.MAP)) {
+              Long value = counter.getTotalCounterValue();
+              if (value > 0)
+                task.setOutputBytes(value);
+            }
+            break;
+          case "REDUCE_SHUFFLE_BYTES":
+            if (task.getType().equals(TaskType.REDUCE))
+              task.setInputBytes(counter.getTotalCounterValue());
+            break;
+          case "BYTES_READ":
+            if (task.getType().equals(TaskType.MAP)) {
+              task.setInputBytes(counter.getTotalCounterValue());
+            }
+            break;
+          case "BYTES_WRITTEN":
+            if (task.getType().equals(TaskType.REDUCE))
+              task.setOutputBytes(counter.getTotalCounterValue());
+            break;
         }
-      if (FileSystemCounter.class.getName().equals(group.getCounterGroupName()))
-        for (CounterInfoPayload counter : group.getCounter()) {
-          switch (counter.getName()) {
-            case "HDFS_BYTES_READ":
-              if (task.getType().equals(TaskType.MAP)) {
-                task.setInputBytes(orZero(task.getInputBytes()) +
-                  counter.getTotalCounterValue());
-              }
-              break;
-            case "HDFS_BYTES_WRITTEN":
-              if (task.getType().equals(TaskType.REDUCE))
-                task.setOutputBytes(orZero(task.getOutputBytes()) +
-                  counter.getTotalCounterValue());
-              break;
-          }
-        }
+      }
     }
   }
 

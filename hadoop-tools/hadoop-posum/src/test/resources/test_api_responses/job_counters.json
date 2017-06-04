@@ -239,7 +239,7 @@
           {
             "reduceCounterValue" : 0,
             "mapCounterValue" : 0,
-            "totalCounterValue" : 0,
+            "totalCounterValue" : 48,
             "name" : "BYTES_READ"
           }
         ]
