@@ -24,6 +24,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.ExternalD
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.RestClient;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
@@ -78,21 +79,25 @@ class JobInfoCollector {
         logger.debug("Could not retrieve job info for app " + app.getId(), e);
       }
     }
-    // addSource job
-    profile = api.getRunningJobInfo(app.getId(), app.getQueue(), profile);
-    if (profile == null)
-      // job might have finished; return
-      return null;
-    if (databaseDeadlines && profile.getDeadline() == null) {
+    if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
+      JobProfile newProfile = api.getRunningJobInfo(app.getId(), app.getQueue(), profile);
+      if (newProfile == null)
+        // job might have finished; return
+        return null;
+      profile = newProfile;
+    }
+    if (profile != null && databaseDeadlines && profile.getDeadline() == null) {
       setDatabaseDeadline(profile);
     }
     info.setProfile(profile);
-    // get counters
-    CountersProxy counters = api.getRunningJobCounters(app.getId(), profile.getId());
-    if (counters == null)
-      // job might have finished; return
-      return null;
-    info.setJobCounters(counters);
+    if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
+      // get counters
+      CountersProxy counters = api.getRunningJobCounters(app.getId(), profile.getId());
+      if (counters == null)
+        // job might have finished; return
+        return null;
+      info.setJobCounters(counters);
+    }
     return info;
   }
 
@@ -104,7 +109,12 @@ class JobInfoCollector {
 
     JobConfProxy jobConf = api.getFinishedJobConf(profile.getId());
     setClassNames(profile, jobConf);
-    setDeadlineFromConf(profile, jobConf);
+    if (profile.getDeadline() == null) {
+      if (databaseDeadlines)
+        setDatabaseDeadline(profile);
+      else
+        setDeadlineFromConf(profile, jobConf);
+    }
     info.setConf(jobConf);
 
     CountersProxy counters = api.getFinishedJobCounters(profile.getId());
