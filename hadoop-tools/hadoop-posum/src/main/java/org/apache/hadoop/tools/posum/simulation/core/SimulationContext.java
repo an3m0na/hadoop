@@ -20,6 +20,7 @@ public class SimulationContext implements DatabaseProvider{
   private DaemonQueue daemonQueue = new DaemonQueue();
   private Configuration conf = PosumConfiguration.newInstance();
   private Class<? extends ResourceScheduler> schedulerClass;
+  private long startTime = 0;
   private long endTime = 0;
   private TopologyProvider topologyProvider;
   private Database database;
@@ -122,5 +123,13 @@ public class SimulationContext implements DatabaseProvider{
 
   public boolean isAwaitingScheduler() {
     return awaitingScheduler;
+  }
+
+  public long getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(long startTime) {
+    this.startTime = startTime;
   }
 }

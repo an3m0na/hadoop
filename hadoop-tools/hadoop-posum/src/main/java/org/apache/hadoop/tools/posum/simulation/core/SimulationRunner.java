@@ -50,11 +50,12 @@ import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMUL
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_CONTAINER_MEMORY_MB_DEFAULT;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_CONTAINER_VCORES;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_CONTAINER_VCORES_DEFAULT;
+import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
 public class SimulationRunner {
   private final static Logger LOG = Logger.getLogger(SimulationRunner.class);
   private static final String HOST_BASE = "192.168.1."; // needed because hostnames need to be resolvable
-  private static final IdsByQueryCall GET_PENDING_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, null);
+  private static final IdsByQueryCall GET_PENDING_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, null, "startTime", false);
   private static final FindByIdCall GET_JOB = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
   private static final FindByIdCall GET_CONF = FindByIdCall.newInstance(DataEntityCollection.JOB_CONF, null);
   private static final FindByQueryCall GET_TASKS = FindByQueryCall.newInstance(DataEntityCollection.TASK, null);
@@ -154,7 +155,6 @@ public class SimulationRunner {
     int heartbeatInterval = conf.getInt(AM_DAEMON_HEARTBEAT_INTERVAL_MS, AM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT);
 
 
-    long baselineTime = 0;
     Map<String, Integer> queueAppNumMap = new HashMap<>();
 
     Database sourceDb = context.getSourceDatabase();
@@ -162,11 +162,12 @@ public class SimulationRunner {
     List<String> jobIds = sourceDb.execute(GET_PENDING_JOBS).getEntries();
     Map<String, AMDaemon> amMap = new HashMap<>(jobIds.size());
 
+    long baselineTime = context.getStartTime();
     for (String jobId : jobIds) {
       // load job information
       GET_JOB.setId(jobId);
       JobProfile job = sourceDb.execute(GET_JOB).getEntity();
-      long jobStartTime = job.getStartTime();
+      long jobStartTime = orZero(job.getStartTime());
       if (baselineTime == 0)
         baselineTime = jobStartTime;
       jobStartTime -= baselineTime;

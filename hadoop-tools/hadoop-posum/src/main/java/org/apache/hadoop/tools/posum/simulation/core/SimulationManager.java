@@ -59,6 +59,7 @@ class SimulationManager implements Callable<SimulationResultPayload> {
 
   private void setUp() {
     simulationContext.setSchedulerClass(policyClass);
+    simulationContext.setStartTime(System.currentTimeMillis());
 
     sourceDb = Database.from(dataStore, DatabaseReference.getSimulation());
     simulationContext.setSourceDatabase(sourceDb);
