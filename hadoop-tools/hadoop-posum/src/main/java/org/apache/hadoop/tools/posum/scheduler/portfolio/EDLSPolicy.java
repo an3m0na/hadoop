@@ -110,7 +110,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         app.setDeadline(job.getDeadline());
       }
       app.setExecutionTime(orZero(job.getAvgMapDuration()) * job.getCompletedMaps() +
-        job.getAvgReduceDuration() * job.getCompletedReduces());
+        orZero(job.getAvgReduceDuration()) * job.getCompletedReduces());
     } catch (Exception e) {
       logger.debug("Could not update app priority for : " + app.getApplicationId(), e);
     }

@@ -11,6 +11,7 @@ import org.apache.hadoop.yarn.proto.PosumProtos.JobConfProxyProtoOrBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, JobConfProxyProto, JobConfProxyProto.Builder>
   implements JobConfProxy {
@@ -133,6 +134,18 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
       }
     }
     return propertyMap;
+  }
+
+  public Set<Map.Entry<String, String>> getPropertySet() {
+    return getPropertyMap().entrySet();
+  }
+
+  public void setPropertySet(Set<Map.Entry<String, String>> propertySet) {
+    Map<String, String> map = new HashMap<>(propertySet.size());
+    for (Map.Entry<String, String> entry : propertySet) {
+      map.put(entry.getKey(), entry.getValue());
+    }
+    setPropertyMap(map);
   }
 
   public void setPropertyMap(Map<String, String> propertyMap) {
