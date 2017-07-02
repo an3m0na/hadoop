@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.hadoop.tools.posum.common.records.dataentity.ExternalDeadline;
 import org.apache.hadoop.yarn.proto.PosumProtos.ExternalDeadlineProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.ExternalDeadlineProtoOrBuilder;
 
