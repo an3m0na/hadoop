@@ -23,7 +23,7 @@ function TabManager(env) {
   };
 
   self.initialize = function () {
-    navBar.find(".an3-nav-link").on("click", function () {
+    $(".an3-nav-link").on("click", function () {
         var link = $(this);
         var div = link.attr("href");
         var newState = div.substr(1);
