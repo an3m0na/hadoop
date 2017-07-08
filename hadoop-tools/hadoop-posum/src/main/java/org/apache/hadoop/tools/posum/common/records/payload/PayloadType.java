@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.common.records.payload;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.CollectionMapPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.MultiEntityPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.PolicyInfoMapPayloadPBImpl;
+import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.PolicyInfoPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SimplePropertyPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.SingleEntityPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.StringListPayloadPBImpl;
@@ -20,6 +21,7 @@ public enum PayloadType {
   STRING_LIST(StringListPayloadPBImpl.class),
   TASK_PREDICTION(TaskPredictionPayloadPBImpl.class),
   POLICY_INFO_MAP(PolicyInfoMapPayloadPBImpl.class),
+  POLICY_INFO(PolicyInfoPayloadPBImpl.class),
   COLLECTION_MAP(CollectionMapPayloadPBImpl.class);
 
   private Class<? extends PayloadPB> implClass;
