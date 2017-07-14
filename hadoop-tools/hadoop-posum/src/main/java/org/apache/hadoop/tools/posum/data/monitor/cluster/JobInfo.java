@@ -79,10 +79,11 @@ class JobInfo {
       "profile=" + profile +
       ", conf=" + conf +
       ", jobCounters=" + jobCounters +
+      ", taskStubs=" + taskStubs +
       '}';
   }
 
-  public List<TaskProfile> getTaskStubs() {
+  List<TaskProfile> getTaskStubs() {
     return taskStubs;
   }
 }
