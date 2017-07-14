@@ -42,7 +42,6 @@ public class OrchestrationCommService extends CompositeService implements Orches
   private MetaSchedulerClient schedulerClient;
   private DataMasterClient dataClient;
   private SimulatorClient simulatorClient;
-
   private String connectAddress;
 
   public OrchestrationCommService(OrchestrationMasterContext context) {
