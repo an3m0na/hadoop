@@ -154,7 +154,6 @@ public class AppInfoCollector {
       // add stubs for each task and exit
       List<TaskProfile> taskStubs = jobInfo.getTaskStubs();
       if (taskStubs != null) {
-        // it means the profile is not new, but task stubs should be already there
         updateCalls.addCall(StoreAllCall.newInstance(TASK, taskStubs));
         for (TaskProfile task : taskStubs) {
           auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(TASK, task)));
