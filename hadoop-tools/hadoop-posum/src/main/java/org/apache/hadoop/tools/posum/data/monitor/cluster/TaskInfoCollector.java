@@ -38,7 +38,7 @@ class TaskInfoCollector {
 
   TaskInfo getRunningTaskInfo(JobProfile job) {
     List<TaskProfile> tasks = api.getRunningTasksInfo(job);
-    if (tasks == null) {
+    if (tasks == null || tasks.size() == 0) {
       return null;
     }
     List<CountersProxy> countersList = new ArrayList<>(tasks.size());
