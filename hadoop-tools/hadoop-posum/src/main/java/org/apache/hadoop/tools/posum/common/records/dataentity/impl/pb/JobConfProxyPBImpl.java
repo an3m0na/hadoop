@@ -19,6 +19,46 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
   public JobConfProxyPBImpl() {
   }
 
+  public static class ConfEntry implements Map.Entry<String, String> {
+    private String key;
+    private String value;
+
+    @Override
+    public String getKey() {
+      return this.key;
+    }
+
+    @Override
+    public String getValue() {
+      return this.value;
+    }
+
+    @Override
+    public String setValue(String value) {
+      String old = this.value;
+      this.value = value;
+      return old;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      ConfEntry confEntry = (ConfEntry) o;
+
+      if (key != null ? !key.equals(confEntry.key) : confEntry.key != null) return false;
+      return value != null ? value.equals(confEntry.value) : confEntry.value == null;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = key != null ? key.hashCode() : 0;
+      result = 31 * result + (value != null ? value.hashCode() : 0);
+      return result;
+    }
+  }
+
   public JobConfProxyPBImpl(JobConfProxyProto proto) {
     super(proto);
   }
@@ -140,9 +180,9 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
     return getPropertyMap().entrySet();
   }
 
-  public void setPropertySet(Set<Map.Entry<String, String>> propertySet) {
+  public void setPropertySet(Set<ConfEntry> propertySet) {
     Map<String, String> map = new HashMap<>(propertySet.size());
-    for (Map.Entry<String, String> entry : propertySet) {
+    for (ConfEntry entry : propertySet) {
       map.put(entry.getKey(), entry.getValue());
     }
     setPropertyMap(map);
