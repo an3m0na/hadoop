@@ -2,6 +2,7 @@ function Tab(container) {
   this.id = container.attr("id");
   this.container = container;
   this.plots = {};
+  this.lastRefreshed = 0;
 }
 
 function TabManager(env) {
@@ -58,7 +59,7 @@ function TabManager(env) {
   self.load = function (tab) {
     var path, traces, layout;
     if (tab.id == "scheduler") {
-      path = env.isTest ? "/html/js/dmmetrics_policies.json" : env.comm.dmPath + "/policies";
+      path = env.isTest ? "js/dmmetrics_policies.json" : env.comm.dmPath + "/policies";
       env.comm.requestData(path, function (data) {
 
         //plot_policies_map
@@ -116,7 +117,7 @@ function TabManager(env) {
         Plotly.newPlot("plot_policies_list", traces, layout);
       });
 
-      path = env.isTest ? "/html/js/psmetrics_scheduler.json" : env.comm.psPath + "/scheduler";
+      path = env.isTest ? "js/psmetrics_scheduler.json" : env.comm.psPath + "/scheduler";
       env.comm.requestData(path, function (data) {
         self.updateTimeSeries(tab,
           "plot_timecost",
@@ -132,7 +133,7 @@ function TabManager(env) {
         );
       });
     } else if (tab.id == "system") {
-      path = env.isTest ? "/html/js/metrics_system.json" : env.comm.psPath + "/system";
+      path = env.isTest ? "js/metrics_system.json" : env.comm.psPath + "/system";
       self.updateTimeSeries(tab,
         "plot_ps_jvm",
         path,
@@ -145,7 +146,7 @@ function TabManager(env) {
         "JVM Memory on Portfolio Scheduler",
         {title: "Memory (GB)", tickmode: "linear", dtick: 0.25}
       );
-      path = env.isTest ? "/html/js/metrics_system.json" : env.comm.masterPath + "/system";
+      path = env.isTest ? "js/metrics_system.json" : env.comm.masterPath + "/system";
       self.updateTimeSeries(tab,
         "plot_pm_jvm",
         path,
@@ -158,7 +159,7 @@ function TabManager(env) {
         "JVM Memory on POSUM Master",
         {title: "Memory (GB)", tickmode: "linear", dtick: 0.25}
       );
-      path = env.isTest ? "/html/js/metrics_system.json" : env.comm.dmPath + "/system";
+      path = env.isTest ? "js/metrics_system.json" : env.comm.dmPath + "/system";
       self.updateTimeSeries(tab,
         "plot_dm_jvm",
         path,
@@ -172,7 +173,7 @@ function TabManager(env) {
         {title: "Memory (GB)", tickmode: "linear", dtick: 0.25}
       );
 
-      path = env.isTest ? "/html/js/metrics_system.json" : env.comm.smPath + "/system";
+      path = env.isTest ? "js/metrics_system.json" : env.comm.smPath + "/system";
       self.updateTimeSeries(tab,
         "plot_sm_jvm",
         path,
@@ -187,7 +188,7 @@ function TabManager(env) {
       );
 
     } else if (tab.id == "cluster") {
-      path = env.isTest ? "/html/js/psmetrics_cluster.json" : env.comm.psPath + "/cluster";
+      path = env.isTest ? "js/psmetrics_cluster.json" : env.comm.psPath + "/cluster";
       env.comm.requestData(path, function (data) {
 
         self.updateTimeSeries(tab,
@@ -215,6 +216,20 @@ function TabManager(env) {
           "Running Containers",
           {title: "Number", tickmode: "linear"}
         );
+      });
+    } else if (tab.id == "logs") {
+      path = env.isTest ? "js/logs.json" : env.comm.dmPath + "/logs";
+      var lastRefreshed = tab.lastRefreshed;
+      env.comm.requestData(path + "?since=" + lastRefreshed, function (data) {
+        tab.lastRefreshed = moment().unix() * 1000;
+        if (!data)
+          return;
+        data.forEach(function (log) {
+          tab.container.find("#log_table")
+            .append('<tr class="info"><td>' +
+              moment.unix(log.timestamp / 1000).calendar() + '</td><td>' + log.message.replace(/\n/g, "<br/>") +
+              '</td></tr>');
+        });
       });
     }
   };

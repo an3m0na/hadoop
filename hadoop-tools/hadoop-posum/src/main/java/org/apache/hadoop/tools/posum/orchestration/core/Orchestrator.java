@@ -7,7 +7,6 @@ import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.client.scheduler.MetaScheduler;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMasterContext;
 import org.apache.hadoop.yarn.event.EventHandler;
@@ -20,6 +19,8 @@ import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.COST_
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.COST_SCALE_FACTOR_DEFAULT;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.PENALTY_SCALE_FACTOR;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.PENALTY_SCALE_FACTOR_DEFAULT;
+import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.POLICY_SWITCH_ENABLED;
+import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.POLICY_SWITCH_ENABLED_DEFAULT;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SLOWDOWN_SCALE_FACTOR;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SLOWDOWN_SCALE_FACTOR_DEFAULT;
 
@@ -53,17 +54,16 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
   public Orchestrator(OrchestrationMasterContext pmContext) {
     super(Orchestrator.class.getName());
     this.pmContext = pmContext;
-    this.slowdownScaleFactor = getConfig().getDouble(SLOWDOWN_SCALE_FACTOR, SLOWDOWN_SCALE_FACTOR_DEFAULT);
-    this.penaltyScaleFactor = getConfig().getDouble(PENALTY_SCALE_FACTOR, PENALTY_SCALE_FACTOR_DEFAULT);
-    this.costScaleFactor = getConfig().getDouble(COST_SCALE_FACTOR, COST_SCALE_FACTOR_DEFAULT);
   }
 
   @Override
   protected void serviceInit(Configuration conf) throws Exception {
     simulationMonitor = new SimulationMonitor(pmContext);
     simulationMonitor.init(conf);
-    switchEnabled = getConfig().getBoolean(PosumConfiguration.POLICY_SWITCH_ENABLED,
-      PosumConfiguration.POLICY_SWITCH_ENABLED_DEFAULT);
+    switchEnabled = getConfig().getBoolean(POLICY_SWITCH_ENABLED, POLICY_SWITCH_ENABLED_DEFAULT);
+    slowdownScaleFactor = getConfig().getDouble(SLOWDOWN_SCALE_FACTOR, SLOWDOWN_SCALE_FACTOR_DEFAULT);
+    penaltyScaleFactor = getConfig().getDouble(PENALTY_SCALE_FACTOR, PENALTY_SCALE_FACTOR_DEFAULT);
+    costScaleFactor = getConfig().getDouble(COST_SCALE_FACTOR, COST_SCALE_FACTOR_DEFAULT);
     super.serviceInit(conf);
   }
 
