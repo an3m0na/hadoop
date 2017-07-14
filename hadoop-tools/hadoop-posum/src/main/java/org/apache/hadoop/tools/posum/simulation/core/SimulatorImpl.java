@@ -18,6 +18,7 @@ import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.master.SimulationMasterContext;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +65,7 @@ public class SimulatorImpl extends CompositeService implements Simulator {
     copyRunningAppInfo(dataStore, DatabaseReference.getMain(), DatabaseReference.getSimulation());
     if (getRunningJobCount() < 1) {
       logger.debug("Queue is empty. No simulations will start");
+      simulationsDone(Collections.<SimulationResultPayload>emptyList());
       return;
     }
     predictor.train(Database.from(dataStore, DatabaseReference.getMain()));
@@ -90,7 +92,8 @@ public class SimulatorImpl extends CompositeService implements Simulator {
     HandleSimResultRequest resultRequest = HandleSimResultRequest.newInstance();
     resultRequest.setResults(results);
     logger.trace("Sending simulation result request");
-    context.getDataBroker().execute(StoreLogCall.newInstance("Simulation results: " + results), null);
+    String message = results.size() > 0 ? "Simulation results: " + results : "Simulation was not performed";
+    context.getDataBroker().execute(StoreLogCall.newInstance(message), null);
     context.getCommService().getOrchestratorMaster().handleSimulationResult(resultRequest);
   }
 
