@@ -13,7 +13,7 @@ $(document).ready(function () {
   env.comm = comm;
   env.tabManager = tabManager;
 
-  var path = env.isTest ? "/html/js/conf.json" : env.comm.masterPath + "/conf";
+  var path = env.isTest ? "js/conf.json" : env.comm.masterPath + "/conf";
   env.comm.requestData(path, function (data) {
     if (window.location.hostname != "localhost") {
       var address = data.psAddress;

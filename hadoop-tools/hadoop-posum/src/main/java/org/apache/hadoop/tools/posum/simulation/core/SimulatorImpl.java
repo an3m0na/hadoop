@@ -8,6 +8,7 @@ import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.client.simulation.Simulator;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
@@ -89,8 +90,8 @@ public class SimulatorImpl extends CompositeService implements Simulator {
     HandleSimResultRequest resultRequest = HandleSimResultRequest.newInstance();
     resultRequest.setResults(results);
     logger.trace("Sending simulation result request");
+    context.getDataBroker().execute(StoreLogCall.newInstance("Simulation results: " + results), null);
     context.getCommService().getOrchestratorMaster().handleSimulationResult(resultRequest);
-
   }
 
   @Override

@@ -1,0 +1,17 @@
+{
+  "successful": true,
+  "result": [
+    {
+      "timestamp": 1461952157630,
+      "message": "This is an info message"
+    },
+    {
+      "timestamp": 1461952168630,
+      "message": "This is another info message"
+    },
+    {
+      "timestamp": 1461952190000,
+      "message": "And the last one is a very very very very very very looooooong info message.\nWith actual new lines in it. And the last one is a very very very very very very looooooong info message.\nWith actual new lines in it. And the last one is a very very very very very very looooooong info message.\nWith actual new lines in it. And the last one is a very very very very very very looooooong info message. With actual new lines in it. And the last one is a very very very very very very looooooong info message. With actual new lines in it. And the last one is a very very very very very very looooooong info message. With actual new lines in it. "
+    }
+  ]
+}
