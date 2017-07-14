@@ -4,7 +4,6 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayl
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 public abstract class HandleSimResultRequest {
 
@@ -20,8 +19,7 @@ public abstract class HandleSimResultRequest {
 
   public abstract void setResults(List<SimulationResultPayload> results);
 
-  //the underlying implementation should be thread safe and ordered ascending by score
-  public abstract ConcurrentSkipListSet<SimulationResultPayload> getResults();
+  public abstract List<SimulationResultPayload> getResults();
 
   public abstract void addResult(SimulationResultPayload result);
 }

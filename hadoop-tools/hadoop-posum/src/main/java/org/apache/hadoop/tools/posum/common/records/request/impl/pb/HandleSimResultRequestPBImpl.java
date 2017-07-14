@@ -8,20 +8,17 @@ import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.proto.PosumProtos.HandleSimResultRequestProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.HandleSimResultRequestProtoOrBuilder;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
 
   private HandleSimResultRequestProto proto = HandleSimResultRequestProto.getDefaultInstance();
   private HandleSimResultRequestProto.Builder builder = null;
   private boolean viaProto = false;
-  private Lock lock = new ReentrantLock();
 
-  private ConcurrentSkipListSet<SimulationResultPayload> results;
+  private List<SimulationResultPayload> results;
 
   public HandleSimResultRequestPBImpl() {
     builder = HandleSimResultRequestProto.newBuilder();
@@ -110,17 +107,15 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
   }
 
   @Override
-  public ConcurrentSkipListSet<SimulationResultPayload> getResults() {
-    lock.lock();
+  public List<SimulationResultPayload> getResults() {
     if (this.results == null) {
       HandleSimResultRequestProtoOrBuilder p = viaProto ? proto : builder;
-      this.results = new ConcurrentSkipListSet<>();
+      this.results = new ArrayList<>(p.getResultsCount());
       for (PosumProtos.SimulationResultPayloadProto simProto : p.getResultsList()) {
         SimulationResultPayload result = new SimulationResultPayloadPBImpl(simProto);
         results.add(result);
       }
     }
-    lock.unlock();
     return this.results;
   }
 
@@ -133,9 +128,6 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
   public void setResults(List<SimulationResultPayload> results) {
     if (results == null)
       return;
-    lock.lock();
-    this.results = new ConcurrentSkipListSet<>();
-    this.results.addAll(results);
-    lock.unlock();
+    this.results = new ArrayList<>(results);
   }
 }

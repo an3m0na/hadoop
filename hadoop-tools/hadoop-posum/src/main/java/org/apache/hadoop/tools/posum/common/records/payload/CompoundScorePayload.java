@@ -23,12 +23,12 @@ public abstract class CompoundScorePayload implements Payload {
 
   public abstract void setCost(Double cost);
 
-  public Double calculateValue() {
-    //TODO change to include all
-    Double slowdown = getSlowdown();
-    if (slowdown != null)
-      return slowdown;
-    return 0.0;
+  public CompoundScorePayload subtract(CompoundScorePayload that) {
+    return newInstance(
+      this.getSlowdown() - that.getSlowdown(),
+      this.getPenalty() - that.getPenalty(),
+      this.getCost() - that.getCost()
+    );
   }
 
   @Override
