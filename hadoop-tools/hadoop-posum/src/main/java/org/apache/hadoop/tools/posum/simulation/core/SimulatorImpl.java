@@ -62,12 +62,12 @@ public class SimulatorImpl extends CompositeService implements Simulator {
   @Override
   public synchronized void startSimulation() {
     DataStore dataStore = context.getDataBroker();
-    copyRunningAppInfo(dataStore, DatabaseReference.getMain(), DatabaseReference.getSimulation());
     if (getRunningJobCount() < 1) {
       logger.debug("Queue is empty. No simulations will start");
       simulationsDone(Collections.<SimulationResultPayload>emptyList());
       return;
     }
+    copyRunningAppInfo(dataStore, DatabaseReference.getMain(), DatabaseReference.getSimulation());
     predictor.train(Database.from(dataStore, DatabaseReference.getMain()));
     predictor.switchDatabase(Database.from(dataStore, DatabaseReference.getSimulation()));
 
@@ -85,7 +85,7 @@ public class SimulatorImpl extends CompositeService implements Simulator {
 
   private int getRunningJobCount() {
     IdsByQueryCall allJobs = IdsByQueryCall.newInstance(DataEntityCollection.JOB, null);
-    return context.getDataBroker().execute(allJobs, DatabaseReference.getSimulation()).getEntries().size();
+    return context.getDataBroker().execute(allJobs, DatabaseReference.getMain()).getEntries().size();
   }
 
   void simulationsDone(List<SimulationResultPayload> results) {
