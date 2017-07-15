@@ -187,6 +187,7 @@ public abstract class AMDaemon extends WorkerDaemon {
       rm.getClientRMService().getNewApplication(newAppRequest);
     appId = newAppResponse.getApplicationId();
 
+    LOG.debug("Calling application submitted for " + oldAppId);
     simulationContext.getDispatcher().getEventHandler()
       .handle(new ApplicationEvent(APPLICATION_SUBMITTED, oldAppId, appId));
 
@@ -295,11 +296,11 @@ public abstract class AMDaemon extends WorkerDaemon {
   }
 
   private void addContainers(Map<String, ResourceRequest> requestMap, Resource resource, List<String> locations, int priority) {
-    for(String rack: locations){
+    for (String rack : locations) {
       ResourceRequest request = requestMap.get(rack);
-      if(request != null){
+      if (request != null) {
         request.setNumContainers(request.getNumContainers() + 1);
-      }else{
+      } else {
         requestMap.put(rack, createResourceRequest(resource, rack, priority, 1));
       }
     }

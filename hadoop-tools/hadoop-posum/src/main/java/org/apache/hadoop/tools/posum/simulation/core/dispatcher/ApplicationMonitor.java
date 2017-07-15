@@ -105,6 +105,7 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
   }
 
   private void applicationSubmitted(String oldAppIdString, ApplicationId appId) {
+    LOG.debug("Doing application submitted for " + oldAppIdString);
     String appIdString = appId.toString();
 
     TransactionCall transaction = TransactionCall.newInstance();
