@@ -90,7 +90,7 @@ public class DataMasterCommService extends CompositeService implements DataMaste
   @Override
   public SimpleResponse executeDatabaseCall(DatabaseCallExecutionRequest request) {
     DatabaseCallType callType = DatabaseCallType.fromMappedClass(request.getCall().getClass());
-    logger.debug("Got request for call " + callType);
+    logger.trace("Got request for call " + callType);
     if (callType == null) {
       String message = "Unrecognized call implementation " + request.getCall().getClass();
       logger.error(message);
@@ -144,7 +144,9 @@ public class DataMasterCommService extends CompositeService implements DataMaste
             ((DatabaseAlterationPayload) request.getPayload()).getSourceDB());
           break;
         case RESET:
-          dmContext.getDataStore().reset();
+          dmContext.getDataStore().clear();
+          dmContext.getClusterInfo().reset();
+          dmContext.getPosumInfo().reset();
           break;
         default:
           return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
