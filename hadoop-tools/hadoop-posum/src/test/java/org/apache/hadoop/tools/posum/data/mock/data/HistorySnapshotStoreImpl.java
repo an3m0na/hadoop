@@ -395,10 +395,4 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
     broker.notifyUpdate(db);
   }
 
-  @Override
-  public void reset() {
-    broker.reset();
-    setSnapshotTime(0L);
-  }
-
 }

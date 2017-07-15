@@ -95,6 +95,7 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
           orchestrationContext.getCommService().getDataMaster().reset();
           orchestrationContext.getCommService().getDataMaster()
             .execute(StoreLogCall.newInstance("System reset complete"), null);
+          logger.info("System reset complete");
           break;
         default:
           throw new PosumException("Could not handle event of type " + event.getType());
