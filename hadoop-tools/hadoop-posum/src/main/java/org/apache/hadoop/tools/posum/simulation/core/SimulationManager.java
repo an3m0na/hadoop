@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
@@ -94,6 +95,7 @@ class SimulationManager implements Callable<SimulationResultPayload> {
   public SimulationResultPayload call() throws Exception {
     setUp();
     try {
+      dataStore.execute(StoreLogCall.newInstance("Starting simulation for " + policyName), null);
       new SimulationRunner(simulationContext).run();
       return SimulationResultPayload.newInstance(policyName, new SimulationEvaluator(db).evaluate());
     } catch (Exception e) {
