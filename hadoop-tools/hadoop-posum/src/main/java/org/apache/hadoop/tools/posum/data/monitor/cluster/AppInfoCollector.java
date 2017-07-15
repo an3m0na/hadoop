@@ -41,7 +41,6 @@ public class AppInfoCollector {
 
   private static Log logger = LogFactory.getLog(AppInfoCollector.class);
 
-  private Set<String> running = new HashSet<>();
   private Set<String> finished = new HashSet<>();
   private Database db;
   private HadoopAPIClient api;
@@ -74,7 +73,6 @@ public class AppInfoCollector {
         } else {
           logger.trace("App " + app.getId() + " is running");
           updateAppInfo(app);
-          running.add(app.getId());
         }
       }
     }
@@ -84,7 +82,6 @@ public class AppInfoCollector {
   private void moveAppToHistory(final AppProfile app) {
     final String appId = app.getId();
     logger.trace("Moving " + appId + " to history");
-    running.remove(appId);
     finished.add(appId);
 
     JobInfo jobInfo = jobInfoCollector.getFinishedJobInfo(app);
@@ -183,4 +180,7 @@ public class AppInfoCollector {
       db.execute(auditCalls);
   }
 
+  public void reset() {
+    // do nothing
+  }
 }

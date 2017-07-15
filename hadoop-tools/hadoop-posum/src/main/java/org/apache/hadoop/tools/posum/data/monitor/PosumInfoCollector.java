@@ -52,11 +52,10 @@ public class PosumInfoCollector {
   private Long schedulingStart = 0L;
   private String lastUsedPolicy;
   //TODO use only this predictor for regular experiments
-  //    private JobBehaviorPredictor predictor;
+//      private JobBehaviorPredictor predictor;
   private JobBehaviorPredictor basicPredictor;
   private JobBehaviorPredictor standardPredictor;
   private JobBehaviorPredictor detailedPredictor;
-
 
   public PosumInfoCollector(Configuration conf, DataStore dataStore) {
     this.dataStore = dataStore;
@@ -65,30 +64,36 @@ public class PosumInfoCollector {
     fineGrained = conf.getBoolean(PosumConfiguration.FINE_GRAINED_MONITOR,
       PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
     api = new PosumAPIClient(conf);
-    Set<String> policies = new PolicyPortfolio(conf).keySet();
-    policyMap = new HashMap<>(policies.size());
-    for (String policy : policies) {
-      policyMap.put(policy, PolicyInfoPayload.newInstance());
-    }
+    policyMap = new HashMap<>();
+    initializePolicyMap();
     activeNodes = new HashSet<>();
-    Database db = Database.from(dataStore, DatabaseReference.getMain());
 //        predictor = JobBehaviorPredictor.newInstance(conf);
     basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
-    basicPredictor.train(db);
     standardPredictor = JobBehaviorPredictor.newInstance(conf, StandardPredictor.class);
-    standardPredictor.train(db);
     detailedPredictor = JobBehaviorPredictor.newInstance(conf, DetailedPredictor.class);
-    detailedPredictor.train(db);
     predictionTimeout = conf.getLong(PosumConfiguration.PREDICTOR_TIMEOUT,
       PosumConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
   }
 
-  void refresh() {
+  private void initializePolicyMap() {
+    Set<String> policies = new PolicyPortfolio(conf).keySet();
+    for (String policy : policies) {
+      policyMap.put(policy, PolicyInfoPayload.newInstance());
+    }
+  }
+
+  synchronized void refresh() {
     long now = System.currentTimeMillis();
     if (fineGrained) {
       //TODO get metrics from all services and persist to database
       if (now - lastPrediction > predictionTimeout) {
         // make new predictions
+        Database db = Database.from(dataStore, DatabaseReference.getMain());
+//        predictor.train(db);
+        basicPredictor.train(db);
+        standardPredictor.train(db);
+        detailedPredictor.train(db);
+
         IdsByQueryCall getAllTasks = IdsByQueryCall.newInstance(DataEntityCollection.TASK, null);
         List<String> taskIds = dataStore.execute(getAllTasks, DatabaseReference.getMain()).getEntries();
         for (String taskId : taskIds) {
@@ -172,4 +177,24 @@ public class PosumInfoCollector {
     }
   }
 
+  public synchronized void reset() {
+    // save current active nodes data
+    logDb.execute(CallUtils.storeStatReportCall(LogEntry.Type.ACTIVE_NODES,
+      StringListPayload.newInstance(new ArrayList<>(activeNodes))));
+
+    // reinitialize predictors
+    //        predictor.clearHistory();
+    basicPredictor.clearHistory();
+    standardPredictor.clearHistory();
+    detailedPredictor.clearHistory();
+
+    // reinitialize policy map
+    initializePolicyMap();
+    long now = System.currentTimeMillis();
+    schedulingStart = now;
+    PolicyInfoPayload info = policyMap.get(lastUsedPolicy);
+    info.start(now);
+    logDb.execute(CallUtils.storeStatReportCall(LogEntry.Type.POLICY_MAP,
+      PolicyInfoMapPayload.newInstance(policyMap)));
+  }
 }
