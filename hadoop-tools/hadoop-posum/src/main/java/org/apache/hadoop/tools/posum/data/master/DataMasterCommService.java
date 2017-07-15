@@ -143,6 +143,9 @@ public class DataMasterCommService extends CompositeService implements DataMaste
           dmContext.getDataStore().notifyUpdate(
             ((DatabaseAlterationPayload) request.getPayload()).getSourceDB());
           break;
+        case RESET:
+          dmContext.getDataStore().reset();
+          break;
         default:
           return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
       }

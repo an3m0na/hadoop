@@ -132,4 +132,12 @@ public class DataMasterClient extends AbstractService implements DataStore {
       dmClient
     );
   }
+
+  public void reset(){
+    Utils.sendSimpleRequest(
+      "reset",
+      SimpleRequest.newInstance(SimpleRequest.Type.RESET),
+      dmClient
+    );
+  }
 }

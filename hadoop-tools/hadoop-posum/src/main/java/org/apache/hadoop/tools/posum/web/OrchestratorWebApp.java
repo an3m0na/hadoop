@@ -3,6 +3,8 @@ package org.apache.hadoop.tools.posum.web;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
+import org.apache.hadoop.tools.posum.orchestration.core.PosumEvent;
+import org.apache.hadoop.tools.posum.orchestration.core.PosumEventType;
 import org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMasterContext;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.handler.AbstractHandler;
@@ -38,6 +40,9 @@ public class OrchestratorWebApp extends PosumWebApp {
                 case "/system":
                   ret = getSystemMetrics();
                   break;
+                case "/reset":
+                  ret = reset();
+                  break;
                 default:
                   ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
               }
@@ -55,6 +60,11 @@ public class OrchestratorWebApp extends PosumWebApp {
         }
       }
     };
+  }
+
+  private JsonNode reset() {
+    context.getDispatcher().getEventHandler().handle(new PosumEvent(PosumEventType.SYSTEM_RESET));
+    return wrapResult("Reset successful");
   }
 
   private JsonNode getConfiguration() {

@@ -27,4 +27,6 @@ public interface DataStore {
 
   void notifyUpdate(DatabaseReference db);
 
+  void reset();
+
 }

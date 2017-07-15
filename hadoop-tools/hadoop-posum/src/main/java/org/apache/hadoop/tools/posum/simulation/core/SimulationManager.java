@@ -91,6 +91,10 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     return 0;
   }
 
+  public void stop() {
+    exit = true;
+  }
+
   @Override
   public SimulationResultPayload call() throws Exception {
     setUp();
@@ -99,7 +103,10 @@ class SimulationManager implements Callable<SimulationResultPayload> {
       new SimulationRunner(simulationContext).run();
       return SimulationResultPayload.newInstance(policyName, new SimulationEvaluator(db).evaluate());
     } catch (Exception e) {
-      logger.error("Error during simulation. Shutting down simulation...", e);
+      if(!exit) {
+        // termination was not intentional
+        logger.error("Error during simulation. Shutting down simulation...", e);
+      }
       return SimulationResultPayload.newInstance(policyName, CompoundScorePayload.newInstance(0.0, 0.0, 0.0));
     } finally {
       tearDown();

@@ -32,13 +32,22 @@ class ResultAggregator implements Runnable {
     }
   }
 
+  public void stop() {
+    for (PendingResult pendingResult : pendingResults) {
+      pendingResult.getSimulation().stop();
+    }
+    exit = true;
+  }
+
   private void awaitResult(PendingResult result) {
     try {
       finalResults.add(result.getResult().get());
       if (finalResults.size() == pendingResults.size())
         simulator.simulationsDone(finalResults);
     } catch (Exception e) {
-      logger.error("Error processing simulation", e);
+      if (!exit)
+        // exiting was not intentional
+        logger.error("Error aggregating simulation results", e);
     }
   }
 }
