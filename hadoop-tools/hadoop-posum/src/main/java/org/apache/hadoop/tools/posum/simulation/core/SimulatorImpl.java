@@ -18,15 +18,15 @@ import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.master.SimulationMasterContext;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.copyRunningAppInfo;
+import static org.apache.hadoop.util.ShutdownThreadsHelper.shutdownExecutorService;
 
 public class SimulatorImpl extends CompositeService implements Simulator {
 
@@ -34,10 +34,10 @@ public class SimulatorImpl extends CompositeService implements Simulator {
 
   private SimulationMasterContext context;
   private PolicyPortfolio policies;
-  private Map<String, PendingResult> simulationMap;
   private JobBehaviorPredictor predictor;
   private ExecutorService executor;
   private ResultAggregator resultAggregator;
+  private volatile boolean simulationOngoing = false;
 
   public SimulatorImpl(SimulationMasterContext context) {
     super(SimulatorImpl.class.getName());
@@ -61,6 +61,7 @@ public class SimulatorImpl extends CompositeService implements Simulator {
 
   @Override
   public synchronized void startSimulation() {
+    simulationOngoing = true;
     DataStore dataStore = context.getDataBroker();
     if (getRunningJobCount() < 1) {
       logger.debug("Queue is empty. No simulations will start");
@@ -71,16 +72,35 @@ public class SimulatorImpl extends CompositeService implements Simulator {
     predictor.train(Database.from(dataStore, DatabaseReference.getMain()));
     predictor.switchDatabase(Database.from(dataStore, DatabaseReference.getSimulation()));
 
-    simulationMap = new HashMap<>(policies.size());
+    List<PendingResult> simulations = new ArrayList<>(policies.size());
     for (Map.Entry<String, Class<? extends PluginPolicy>> policy : policies.entrySet()) {
       logger.debug("Starting simulation for " + policy.getKey());
       Class<? extends PluginPolicy> policyClass = policy.getValue();
       // TODO add topology
       SimulationManager simulation = new SimulationManager(predictor, policy.getKey(), policyClass, dataStore, null);
-      simulationMap.put(policy.getKey(), new PendingResult(simulation, executor.submit(simulation)));
+      simulations.add(new PendingResult(simulation, executor.submit(simulation)));
     }
-    resultAggregator = new ResultAggregator(simulationMap.values(), this);
+    resultAggregator = new ResultAggregator(simulations, this);
     executor.execute(resultAggregator);
+  }
+
+  @Override
+  public synchronized void reset() {
+    logger.debug("Simulator resetting...");
+    if (simulationOngoing) {
+      logger.debug("Shutting down simulations and executor...");
+
+      resultAggregator.stop();
+      try {
+        shutdownExecutorService(executor);
+      } catch (InterruptedException e) {
+        logger.error("Simulator pool did not shut down correctly", e);
+      }
+      simulationsDone(Collections.<SimulationResultPayload>emptyList());
+      executor = Executors.newFixedThreadPool(policies.size());
+    }
+    predictor.clearHistory();
+    logger.debug("Reset successful");
   }
 
   private int getRunningJobCount() {
@@ -95,29 +115,12 @@ public class SimulatorImpl extends CompositeService implements Simulator {
     String message = results.size() > 0 ? "Simulation results: " + results : "Simulation was not performed";
     context.getDataBroker().execute(StoreLogCall.newInstance(message), null);
     context.getCommService().getOrchestratorMaster().handleSimulationResult(resultRequest);
+    simulationOngoing = false;
   }
 
   @Override
   protected void serviceStop() throws Exception {
-    shutdownExecutor();
+    shutdownExecutorService(executor);
     super.serviceStop();
-  }
-
-  private void shutdownExecutor() {
-    executor.shutdown(); // Disable new tasks from being submitted
-    try {
-      // Wait a while for existing tasks to terminate
-      if (!executor.awaitTermination(20, TimeUnit.SECONDS)) {
-        executor.shutdownNow(); // Cancel currently executing tasks
-        // Wait a while for tasks to respond to being cancelled
-        if (!executor.awaitTermination(10, TimeUnit.SECONDS))
-          System.err.println("Pool did not terminate");
-      }
-    } catch (InterruptedException ie) {
-      // (Re-)Cancel if current thread also interrupted
-      executor.shutdownNow();
-      // Preserve interrupt status
-      Thread.currentThread().interrupt();
-    }
   }
 }

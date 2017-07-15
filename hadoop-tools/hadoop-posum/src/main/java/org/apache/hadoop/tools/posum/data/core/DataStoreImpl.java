@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.POSUM_STATS;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.ACTIVE_NODES;
 import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
 
 public class DataStoreImpl implements LockBasedDataStore {
@@ -407,6 +409,22 @@ public class DataStoreImpl implements LockBasedDataStore {
     Object monitor = getDatabaseAssets(db).updateMonitor;
     synchronized (monitor) {
       monitor.notify();
+    }
+  }
+
+  @Override
+  public void reset() {
+    logger.debug("DataStore resetting...");
+    lockAll();
+    try {
+      // persist the active nodes entry for proper operation
+      DatabaseReference db = DatabaseReference.getLogs();
+      GeneralDataEntity activeNodesEntry = getCollection(db, getDatabaseAssets(db), POSUM_STATS).findOneById(ACTIVE_NODES.name());
+      clear();
+      JacksonDBCollection<GeneralDataEntity, String> collection = getCollection(db, getDatabaseAssets(db), POSUM_STATS);
+      collection.insert(activeNodesEntry);
+    } finally {
+      unlockAll();
     }
   }
 }

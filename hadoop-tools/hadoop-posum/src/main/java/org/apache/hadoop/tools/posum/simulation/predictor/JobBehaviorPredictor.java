@@ -43,7 +43,7 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
   }
 
   public static <T extends JobBehaviorPredictor> T newInstance(Configuration conf,
-                                                 Class<T> predictorClass) {
+                                                               Class<T> predictorClass) {
     try {
       return predictorClass.getConstructor(Configuration.class).newInstance(conf);
     } catch (Exception e) {
@@ -156,4 +156,7 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
     return model;
   }
 
+  public void clearHistory() {
+    model = null;
+  }
 }

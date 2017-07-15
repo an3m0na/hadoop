@@ -225,6 +225,7 @@ message SimpleRequestProto {
         REQ_COPY_COLL = 8;
         REQ_AWAIT_UPDATE = 9;
         REQ_NOTIFY_UPDATE = 10;
+        REQ_RESET = 11;
     }
 }
 

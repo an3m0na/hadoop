@@ -169,7 +169,7 @@ public class OrchestrationCommService extends CompositeService implements Orches
     return SimpleResponse.newInstance(true, dataClient.getConnectAddress());
   }
 
-  public DataStore getDataBroker() {
+  public DataMasterClient getDataMaster() {
     if (dataClient != null && dataClient.isInState(STATE.STARTED))
       return dataClient;
     else return null;

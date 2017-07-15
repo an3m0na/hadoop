@@ -92,6 +92,9 @@ public class SimulationMasterCommService extends CompositeService implements Sim
         case START:
           context.getSimulator().startSimulation();
           break;
+        case RESET:
+          context.getSimulator().reset();
+          break;
         default:
           return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());
       }

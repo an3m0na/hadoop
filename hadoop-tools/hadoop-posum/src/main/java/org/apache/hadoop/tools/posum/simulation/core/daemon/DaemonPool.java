@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE_DEFAULT;
+import static org.apache.hadoop.util.ShutdownThreadsHelper.shutdownExecutorService;
 
 public class DaemonPool {
   private final static Logger LOG = Logger.getLogger(DaemonPool.class);
@@ -36,17 +37,11 @@ public class DaemonPool {
     queue.enqueue(timeKeeper);
   }
 
-  public void forceStop() {
-    executor.shutdownNow();
-  }
-
   public void shutDown() {
     try {
-      System.out.println("DaemonPool shutting down");
-      executor.shutdown();
-      executor.awaitTermination(1, TimeUnit.SECONDS);
+      shutdownExecutorService(executor);
     } catch (InterruptedException e) {
-      LOG.error("Could not shut down DaemonPool", e);
+      LOG.error("Daemon pool shutdown interrupted", e);
     }
   }
 

@@ -77,4 +77,9 @@ public class SimulatorClient extends AbstractService implements Simulator {
   public void startSimulation() {
     sendSimpleRequest(SimpleRequest.Type.START);
   }
+
+  @Override
+  public void reset() {
+    sendSimpleRequest(SimpleRequest.Type.RESET);
+  }
 }
