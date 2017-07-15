@@ -59,14 +59,14 @@ public abstract class SimpleRateBasedPredictor<M extends PredictionModel> extend
     if (mapStats == null || mapStats.getRelevance() > 1 || mapStats.getAvgSelectivity() == null) {
       // there is no history, or it is not relevant for selectivity, so get current selectivity
       String selectivityString = job.getFlexField(selectivityKey);
-      logger.debug("Using own selectivity for " + job.getId() + ": " + selectivityString);
+      logger.trace("Using own selectivity for " + job.getId() + ": " + selectivityString);
       return selectivityString != null ? Double.valueOf(selectivityString) : null;
     }
     return mapStats.getAvgSelectivity();
   }
 
   protected TaskPredictionOutput handleNoMapInfo(JobProfile job) {
-    logger.debug("Insufficient map data for " + job.getId() + ". Using default");
+    logger.trace("Insufficient map data for " + job.getId() + ". Using default");
     // return the default; there is nothing we can do
     return new TaskPredictionOutput(DEFAULT_TASK_DURATION);
   }
@@ -76,10 +76,10 @@ public abstract class SimpleRateBasedPredictor<M extends PredictionModel> extend
     Long duration = getReduceDuration(job, avgSelectivity, mapRate);
     if (duration == null) {
       // our selectivity or map rate data is unreliable; just return default duration
-      logger.debug("Insufficient reduce data for " + job.getName() + ". Using default");
+      logger.trace("Insufficient reduce data for " + job.getName() + ". Using default");
       return new TaskPredictionOutput(DEFAULT_TASK_DURATION);
     }
-    logger.debug("Reduce duration computed based on map data for " + job.getId() + " as " + duration + "from (remote) mapRate=" + mapRate + " and selectivity=" + avgSelectivity);
+    logger.trace("Reduce duration computed based on map data for " + job.getId() + " as " + duration + "from (remote) mapRate=" + mapRate + " and selectivity=" + avgSelectivity);
     return new TaskPredictionOutput(duration);
   }
 }

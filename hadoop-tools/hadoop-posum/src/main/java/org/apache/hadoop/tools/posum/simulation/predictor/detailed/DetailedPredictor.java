@@ -181,7 +181,7 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
     if (splitSize == null)
       return handleNoMapInfo(job);
     Double duration = splitSize / rate;
-    logger.debug("Map duration for " + job.getId() + " should be " + splitSize + " / " + rate + "=" + duration);
+    logger.trace("Map duration for " + job.getId() + " should be " + splitSize + " / " + rate + "=" + duration);
     return new TaskPredictionOutput(duration.longValue());
   }
 
@@ -225,7 +225,7 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
 
     // we are still missing information
     // just return average reduce duration of the current job or historical jobs
-    logger.debug("Reduce duration calculated as simple average for " + job.getId() + " =  " + jobStats.getAvgReduceDuration());
+    logger.trace("Reduce duration calculated as simple average for " + job.getId() + " =  " + jobStats.getAvgReduceDuration());
     return new TaskPredictionOutput(jobStats.getAvgReduceDuration().longValue());
   }
 
@@ -241,7 +241,7 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
     if (shuffleTime == null)
       return null;
     Double duration = shuffleTime + inputPerTask / jobStats.getAvgMergeRate() + inputPerTask / jobStats.getAvgReduceRate();
-    logger.debug("Reduce duration for " + job.getId() + " should be " + shuffleTime + " + " +
+    logger.trace("Reduce duration for " + job.getId() + " should be " + shuffleTime + " + " +
       inputPerTask + " / " + jobStats.getAvgMergeRate() + " + " +
       inputPerTask + " / " + jobStats.getAvgReduceRate() + "=" + duration);
     return new TaskPredictionOutput(duration.longValue());
