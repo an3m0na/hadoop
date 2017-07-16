@@ -103,7 +103,7 @@ class SimulationManager implements Callable<SimulationResultPayload> {
       new SimulationRunner(simulationContext).run();
       return SimulationResultPayload.newInstance(policyName, new SimulationEvaluator(db).evaluate());
     } catch (Exception e) {
-      if(!exit) {
+      if (!exit) {
         // termination was not intentional
         logger.error("Error during simulation. Shutting down simulation...", e);
       }

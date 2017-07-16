@@ -240,7 +240,7 @@ public class NMDaemon extends WorkerDaemon {
     } else {
       // normal container
       Long lifeTimeMS = container.getLifeTime();
-      if(lifeTimeMS == null){
+      if (lifeTimeMS == null) {
         TaskPredictionInput predictionInput = new TaskPredictionInput(container.getTaskId(), originalHostname);
         lifeTimeMS = simulationContext.getPredictor().predictTaskBehavior(predictionInput).getDuration();
       }

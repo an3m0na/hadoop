@@ -7,9 +7,9 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleRateBasedPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
+import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleRateBasedPredictor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -103,7 +103,7 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
 
     double duration = 1.0 * inputPerMap / mapStats.getAvgRate();
     logger.trace("Map duration for " + job.getId() + " should be " + inputPerMap + " / " + mapStats.getAvgRate() + " = " + duration);
-    return new TaskPredictionOutput((long)duration);
+    return new TaskPredictionOutput((long) duration);
   }
 
   @Override

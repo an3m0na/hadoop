@@ -14,15 +14,12 @@ import static org.apache.hadoop.util.ShutdownThreadsHelper.shutdownExecutorServi
 public class DaemonPool {
   private final static Logger LOG = Logger.getLogger(DaemonPool.class);
 
-
   private final DaemonQueue queue;
   private ThreadPoolExecutor executor;
   private TimeKeeperDaemon timeKeeper;
-  private SimulationContext simulationContext;
 
   @SuppressWarnings("unchecked")
   public DaemonPool(SimulationContext simulationContext) {
-    this.simulationContext = simulationContext;
     queue = new DaemonQueue();
     simulationContext.setDaemonQueue(queue);
 
@@ -39,6 +36,7 @@ public class DaemonPool {
 
   public void shutDown() {
     try {
+      timeKeeper.stop();
       shutdownExecutorService(executor);
     } catch (InterruptedException e) {
       LOG.error("Daemon pool shutdown interrupted", e);
@@ -49,7 +47,4 @@ public class DaemonPool {
     queue.enqueue(daemon);
   }
 
-  public void forget(WorkerDaemon daemon) {
-    queue.evict(daemon);
-  }
 }

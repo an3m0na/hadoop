@@ -1,51 +1,87 @@
 package org.apache.hadoop.tools.posum.simulation.core.daemon;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DaemonQueue extends DelayQueue<Daemon> {
-  private Set<Daemon> running = Collections.newSetFromMap(new ConcurrentHashMap<Daemon, Boolean>());
+  private final Set<Daemon> running = Collections.synchronizedSet(new HashSet<Daemon>());
+  private final Lock lock = new ReentrantLock();
+  private final Condition notEmpty = lock.newCondition();
+  private final Condition empty = lock.newCondition();
+  private final Set<Daemon> untracked = Collections.synchronizedSet(new HashSet<Daemon>());
 
-  @Override
-  public Daemon poll() {
-    Daemon element = super.poll();
-    running.add(element);
-    return element;
+  void markUntracked(Daemon daemon) {
+    untracked.add(daemon);
   }
 
   @Override
   public Daemon take() throws InterruptedException {
-    Daemon element = super.take();
-    running.add(element);
-    return element;
+    lock.lock();
+    try {
+      Daemon element;
+      while ((element = super.poll(0, TimeUnit.MILLISECONDS)) == null) {
+        notEmpty.await();
+      }
+      updateState(element, true);
+      return element;
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  void enqueue(Daemon element) {
+    lock.lock();
+    try {
+      updateState(element, false);
+      add(element);
+      notEmpty.signalAll();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  private void updateState(Daemon element, boolean isRunning) {
+    if (untracked.contains(element))
+      return;
+    if (isRunning) {
+      running.add(element);
+    } else {
+      running.remove(element);
+      if (running.isEmpty())
+        empty.signalAll();
+    }
+  }
+
+  void evict(Daemon daemon) {
+    lock.lock();
+    try {
+      updateState(daemon, false);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  void awaitEmpty() throws InterruptedException {
+    lock.lock();
+    try {
+      while (!running.isEmpty())
+        empty.await();
+    } finally {
+      lock.unlock();
+    }
   }
 
   @Override
-  public Daemon poll(long timeout, TimeUnit unit) throws InterruptedException {
-    Daemon element = super.poll(timeout, unit);
-    running.add(element);
-    return element;
-  }
-
-  public void enqueue(Daemon element) {
-    running.remove(element);
-    add(element);
-    synchronized (this) {
-      notify();
-    }
-  }
-
-  public void evict(Daemon element) {
-    running.remove(element);
-    synchronized (this) {
-      notify();
-    }
-  }
-
-  public int countRunning() {
-    return running.size();
+  public String toString() {
+    return "DaemonQueue{" +
+      "running=" + running +
+      ", contents=" + super.toString() +
+      '}';
   }
 }
