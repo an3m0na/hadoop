@@ -96,7 +96,7 @@ public class RestClient {
       WebResource resource = client.resource(trackingUI.address).path(destination);
       response = resource.head();
       if (response.getStatus() != 200) {
-        logger.debug("Could not connect to resource " + resource.toString());
+        logger.trace("Could not connect to resource " + resource.toString());
         return null;
       }
 
