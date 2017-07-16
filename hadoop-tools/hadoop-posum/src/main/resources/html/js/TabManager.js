@@ -221,8 +221,7 @@ function TabManager(env) {
       path = env.isTest ? "js/logs.json" : env.comm.dmPath + "/logs";
       var lastRefreshed = tab.lastRefreshed;
       env.comm.requestData(path + "?since=" + lastRefreshed, function (data) {
-        tab.lastRefreshed = moment().unix() * 1000;
-        if (!data)
+        if (!data || data.length == 0)
           return;
         data.forEach(function (log) {
           tab.container.find("#log_table")
@@ -230,6 +229,7 @@ function TabManager(env) {
               moment.unix(log.timestamp / 1000).calendar() + '</td><td>' + log.message.replace(/\n/g, "<br/>") +
               '</td></tr>');
         });
+        tab.lastRefreshed = data[data.length-1].timestamp;
       });
     }
   };
