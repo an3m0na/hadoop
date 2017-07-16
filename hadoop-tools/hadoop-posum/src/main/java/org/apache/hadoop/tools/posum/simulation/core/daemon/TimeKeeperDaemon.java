@@ -20,7 +20,8 @@ public class TimeKeeperDaemon implements Daemon {
 
   public TimeKeeperDaemon(SimulationContext simulationContext) {
     this.simulationContext = simulationContext;
-    this.queue = simulationContext.getDaemonQueue();
+    queue = simulationContext.getDaemonQueue();
+    queue.markUntracked(this);
   }
 
   @Override
@@ -33,11 +34,11 @@ public class TimeKeeperDaemon implements Daemon {
         simulationContext.setCurrentTime(simulationContext.getCurrentTime() + nextExpiration);
       }
       if (!stopped) {
-        queue.add(this);
+        queue.enqueue(this);
       }
     } catch (Exception e) {
-      e.printStackTrace();
-      Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
+      if (!stopped)
+        LOG.error("Error occurred while running time keeper", e);
     }
   }
 
@@ -51,11 +52,7 @@ public class TimeKeeperDaemon implements Daemon {
 
   private void waitForRunningDaemons() throws InterruptedException {
     // wait for currently running daemons to finish current step
-    synchronized (queue) {
-      while (queue.countRunning() > 1) {
-        queue.wait();
-      }
-    }
+    queue.awaitEmpty();
   }
 
   private long getNextExpiration() {

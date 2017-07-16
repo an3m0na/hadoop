@@ -13,11 +13,11 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler
 
 import java.util.concurrent.CountDownLatch;
 
-public class SimulationContext implements DatabaseProvider{
+public class SimulationContext implements DatabaseProvider {
 
   private volatile long currentTime = 0;
   private CountDownLatch remainingJobsCounter;
-  private DaemonQueue daemonQueue = new DaemonQueue();
+  private DaemonQueue daemonQueue;
   private Configuration conf = PosumConfiguration.newInstance();
   private Class<? extends ResourceScheduler> schedulerClass;
   private long startTime = 0;
@@ -131,5 +131,24 @@ public class SimulationContext implements DatabaseProvider{
 
   public void setStartTime(long startTime) {
     this.startTime = startTime;
+  }
+
+  @Override
+  public String toString() {
+    return "SimulationContext{" +
+      "currentTime=" + currentTime +
+      ", remainingJobsCounter=" + remainingJobsCounter +
+      ", daemonQueue=" + daemonQueue +
+      ", conf=" + conf +
+      ", schedulerClass=" + schedulerClass +
+      ", startTime=" + startTime +
+      ", endTime=" + endTime +
+      ", topologyProvider=" + topologyProvider +
+      ", database=" + database +
+      ", sourceDatabase=" + sourceDatabase +
+      ", dispatcher=" + dispatcher +
+      ", predictor=" + predictor +
+      ", awaitingScheduler=" + awaitingScheduler +
+      '}';
   }
 }

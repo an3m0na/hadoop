@@ -61,7 +61,7 @@ public class SimulationRunner {
   private static final FindByQueryCall GET_TASKS = FindByQueryCall.newInstance(DataEntityCollection.TASK, null);
 
   private ResourceManager rm;
-  private static DaemonPool daemonPool;
+  private DaemonPool daemonPool;
   private SimulationContext context;
   private Configuration conf;
   private Map<String, String> simulationHostNames;
