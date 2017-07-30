@@ -61,9 +61,9 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements Payl
 
   private void mergeLocalToBuilder() {
     maybeInitBuilder();
-    builder.clearEntities();
     if (entities == null)
       return;
+    builder.clearEntities();
     Iterable<ByteString> iterable =
       new Iterable<ByteString>() {
 
@@ -153,6 +153,7 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements Payl
   public <T extends GeneralDataEntity<T>> void setEntities(List<T> entities) {
     maybeInitBuilder();
     if (entities == null) {
+      builder.clearEntities();
       this.entities = null;
       return;
     }

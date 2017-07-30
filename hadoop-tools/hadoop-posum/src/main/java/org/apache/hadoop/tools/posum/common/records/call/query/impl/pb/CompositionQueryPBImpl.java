@@ -59,9 +59,9 @@ public class CompositionQueryPBImpl extends CompositionQuery implements PayloadP
 
   private void mergeLocalToBuilder() {
     maybeInitBuilder();
-    builder.clearQueries();
     if (queries == null)
       return;
+    builder.clearQueries();
     final Iterable<DatabaseQueryProto> iterable =
       new Iterable<DatabaseQueryProto>() {
         @Override
@@ -138,6 +138,8 @@ public class CompositionQueryPBImpl extends CompositionQuery implements PayloadP
   @Override
   public void setQueries(List<DatabaseQuery> queries) {
     maybeInitBuilder();
+    if(queries == null)
+      builder.clearQueries();
     this.queries = queries;
   }
 

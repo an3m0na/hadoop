@@ -60,9 +60,9 @@ public class PropertyRangeQueryPBImpl extends PropertyRangeQuery implements Payl
 
   private void mergeLocalToBuilder() {
     maybeInitBuilder();
-    builder.clearValues();
     if (values == null)
       return;
+    builder.clearValues();
     final Iterable<SimplePropertyPayloadProto> iterable =
       new Iterable<SimplePropertyPayloadProto>() {
         @Override
@@ -159,6 +159,11 @@ public class PropertyRangeQueryPBImpl extends PropertyRangeQuery implements Payl
   @Override
   public void setValues(List<?> values) {
     maybeInitBuilder();
+    if(values == null){
+      builder.clearValues();
+      this.values = null;
+      return;
+    }
     this.values = new ArrayList<>(values);
   }
 

@@ -146,6 +146,9 @@ public class SimpleResponsePBImpl<T extends Payload> extends SimpleResponse<T> {
   @Override
   public void setPayload(T payload) {
     maybeInitBuilder();
+    if(payload == null){
+      builder.clearPayload();
+    }
     this.payload = payload;
   }
 }

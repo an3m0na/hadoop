@@ -58,9 +58,9 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
 
   private void mergeLocalToBuilder() {
     maybeInitBuilder();
-    builder.clearResults();
     if (results == null)
       return;
+    builder.clearResults();
     final Iterable<PosumProtos.SimulationResultPayloadProto> iterable =
       new Iterable<PosumProtos.SimulationResultPayloadProto>() {
 
@@ -126,8 +126,12 @@ public class HandleSimResultRequestPBImpl extends HandleSimResultRequest {
 
   @Override
   public void setResults(List<SimulationResultPayload> results) {
-    if (results == null)
+    maybeInitBuilder();
+    if (results == null){
+      builder.clearResults();
+      this.results = null;
       return;
+    }
     this.results = new ArrayList<>(results);
   }
 }

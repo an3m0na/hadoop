@@ -11,15 +11,13 @@ class JobInfo {
   private JobProfile profile;
   private JobConfProxy conf;
   private CountersProxy jobCounters;
-  private List<TaskProfile> taskStubs;
 
   JobInfo() {
   }
 
-  JobInfo(JobProfile profile, JobConfProxy conf, List<TaskProfile> taskStubs) {
+  JobInfo(JobProfile profile, JobConfProxy conf) {
     this.profile = profile;
     this.conf = conf;
-    this.taskStubs = taskStubs;
   }
 
   JobInfo(JobProfile profile, JobConfProxy conf, CountersProxy jobCounters) {
@@ -79,11 +77,7 @@ class JobInfo {
       "profile=" + profile +
       ", conf=" + conf +
       ", jobCounters=" + jobCounters +
-      ", taskStubs=" + taskStubs +
       '}';
   }
 
-  List<TaskProfile> getTaskStubs() {
-    return taskStubs;
-  }
 }

@@ -65,17 +65,17 @@ class DetailedReducePredictionStats extends SimpleReducePredictionStats {
   public void updateStatsFromFlexFields(Map<String, String> flexFields) {
     super.updateStatsFromFlexFields(flexFields);
     avgShuffleTypicalRate = addValue(
-      flexFields.get(SHUFFLE_TYPICAL.getKey()),
+      flexFields == null ? null : flexFields.get(SHUFFLE_TYPICAL.getKey()),
       avgShuffleTypicalRate,
       shuffleTypicalRates
     );
     avgShuffleFirstTime = addValue(
-      flexFields.get(SHUFFLE_FIRST.getKey()),
+      flexFields == null ? null : flexFields.get(SHUFFLE_FIRST.getKey()),
       avgShuffleFirstTime,
       shuffleFirstTimes
     );
     avgMergeRate = addValue(
-      flexFields.get(MERGE.getKey()),
+      flexFields == null ? null : flexFields.get(MERGE.getKey()),
       avgMergeRate,
       mergeRates
     );

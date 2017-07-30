@@ -3,14 +3,19 @@ package org.apache.hadoop.tools.posum.data.monitor.cluster;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 
+import java.util.Collections;
 import java.util.List;
 
 class TaskInfo {
   private List<TaskProfile> tasks;
-  private List<CountersProxy> counters;
+  private List<CountersProxy> counters = Collections.emptyList();
 
   TaskInfo() {
 
+  }
+
+  TaskInfo(List<TaskProfile> tasks) {
+    this.tasks = tasks;
   }
 
   TaskInfo(List<TaskProfile> tasks, List<CountersProxy> counters) {

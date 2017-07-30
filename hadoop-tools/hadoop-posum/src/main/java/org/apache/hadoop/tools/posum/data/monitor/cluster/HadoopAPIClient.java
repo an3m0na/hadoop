@@ -198,17 +198,23 @@ public class HadoopAPIClient {
     return job;
   }
 
-  List<TaskProfile> getFinishedTasksInfo(String jobId) {
+  List<TaskProfile> getFinishedTasksInfo(String jobId, List<TaskProfile> previousTasks) {
     String rawString = restClient.getInfo(String.class,
       RestClient.TrackingUI.HISTORY, "jobs/%s/tasks", new String[]{jobId});
     JsonNode rawTasks = getRawNode(rawString, "tasks", "task");
     if (rawTasks == null)
       return Collections.emptyList();
+    Map<String, TaskProfile> previousTasksById = new HashMap<>(previousTasks.size());
+    for (TaskProfile previousTask : previousTasks) {
+      previousTasksById.put(previousTask.getId(), previousTask);
+    }
     List<TaskProfile> tasks = new ArrayList<>(rawTasks.size());
     for (int i = 0; i < rawTasks.size(); i++) {
       JsonNode rawTask = rawTasks.get(i);
-      TaskProfile task = Records.newRecord(TaskProfile.class);
-      task.setId(rawTask.get("id").asText());
+      String taskId = rawTask.get("id").asText();
+      TaskProfile previousTask =  previousTasksById.get(taskId);
+      TaskProfile task = previousTask!= null ? previousTask : Records.newRecord(TaskProfile.class);
+      task.setId(taskId);
       task.setJobId(jobId);
       task.setType(TaskType.valueOf(rawTask.get("type").asText()));
       task.setStartTime(rawTask.get("startTime").asLong());
@@ -221,17 +227,23 @@ public class HadoopAPIClient {
     return tasks;
   }
 
-  List<TaskProfile> getRunningTasksInfo(JobProfile job) {
+  List<TaskProfile> getRunningTasksInfo(JobProfile job, List<TaskProfile> previousTasks) {
     String rawString = restClient.getInfo(String.class,
       RestClient.TrackingUI.AM, "jobs/%s/tasks", new String[]{job.getAppId(), job.getId()});
     JsonNode rawTasks = getRawNode(rawString, "tasks", "task");
     if (rawTasks == null)
       return Collections.emptyList();
+    Map<String, TaskProfile> previousTasksById = new HashMap<>(previousTasks.size());
+    for (TaskProfile previousTask : previousTasks) {
+      previousTasksById.put(previousTask.getId(), previousTask);
+    }
     List<TaskProfile> tasks = new ArrayList<>(rawTasks.size());
     for (int i = 0; i < rawTasks.size(); i++) {
       JsonNode rawTask = rawTasks.get(i);
-      TaskProfile task = Records.newRecord(TaskProfile.class);
-      task.setId(rawTask.get("id").asText());
+      String taskId = rawTask.get("id").asText();
+      TaskProfile previousTask =  previousTasksById.get(taskId);
+      TaskProfile task = previousTask!= null ? previousTask : Records.newRecord(TaskProfile.class);
+      task.setId(taskId);
       task.setAppId(job.getAppId());
       task.setJobId(job.getId());
       task.setType(TaskType.valueOf(rawTask.get("type").asText()));

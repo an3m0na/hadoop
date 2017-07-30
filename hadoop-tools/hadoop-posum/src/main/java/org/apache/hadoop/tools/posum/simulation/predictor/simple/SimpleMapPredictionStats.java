@@ -49,12 +49,12 @@ public class SimpleMapPredictionStats extends PredictionStats {
 
   public void updateStatsFromFlexFields(Map<String, String> flexFields) {
     avgRate = addValue(
-      flexFields.get(rateKey),
+      flexFields == null ? null : flexFields.get(rateKey),
       avgRate,
       rates
     );
     avgSelectivity = addValue(
-      flexFields.get(selectivityKey),
+      flexFields == null ? null : flexFields.get(selectivityKey),
       avgSelectivity,
       selectivities
     );

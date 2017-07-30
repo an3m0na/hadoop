@@ -72,9 +72,8 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
 
   protected void updatePredictionProfile(JobProfile job, boolean fromHistory) {
     Map<String, String> fieldMap = getPredictionProfileUpdates(job, fromHistory);
-
     if (fieldMap != null && !fieldMap.isEmpty()) {
-      job.getFlexFields().putAll(fieldMap);
+      job.addAllFlexFields(fieldMap);
       SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), fieldMap, fromHistory);
       getDatabase().execute(saveFlexFields);
     }

@@ -15,7 +15,7 @@
         "nodeHttpAddress" : "host.domain.com:8042",
         "type" : "REDUCE",
         "startTime" : 1326381446544,
-        "id" : "attempt_1326821518301_0005_r_0_0",
+        "id" : "attempt_1326821518301_0005_r_000000_0",
         "finishTime" : 0
       }
     ]
