@@ -39,6 +39,7 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -80,8 +81,8 @@ public class TestAppInfoCollector {
     when(apiMock.getAppsInfo()).thenReturn(Arrays.asList(entities.RUNNING_APPS));
     when(jobInfoCollector.getRunningJobInfo(entities.RUNNING_APP))
       .thenReturn(new JobInfo(entities.RUNNING_JOB, entities.JOB_CONF, entities.JOB_COUNTERS));
-    when(taskInfoCollector.getRunningTaskInfo(entities.RUNNING_JOB))
-      .thenReturn(new TaskInfo(Arrays.asList(entities.RUNNING_TASKS), 
+    when(taskInfoCollector.getRunningTaskInfo(entities.RUNNING_APP, entities.RUNNING_JOB))
+      .thenReturn(new TaskInfo(Arrays.asList(entities.RUNNING_TASKS),
         Arrays.asList(entities.TASK_COUNTERS_MAP, entities.TASK_COUNTERS_REDUCE)));
 
     // first refresh on running job

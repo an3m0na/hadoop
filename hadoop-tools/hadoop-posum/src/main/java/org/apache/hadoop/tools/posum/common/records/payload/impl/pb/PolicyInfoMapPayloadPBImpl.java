@@ -61,9 +61,9 @@ public class PolicyInfoMapPayloadPBImpl extends PolicyInfoMapPayload implements 
 
   private void mergeLocalToBuilder() {
     maybeInitBuilder();
-    builder.clearEntries();
     if (entries == null)
       return;
+    builder.clearEntries();
     Iterable<PolicyInfoPayloadProto> iterable =
       new Iterable<PolicyInfoPayloadProto>() {
 
@@ -128,6 +128,9 @@ public class PolicyInfoMapPayloadPBImpl extends PolicyInfoMapPayload implements 
   @Override
   public void setEntries(Map<String, PolicyInfoPayload> entries) {
     maybeInitBuilder();
+    if(entries == null){
+      builder.clearEntries();
+    }
     this.entries = entries;
   }
 

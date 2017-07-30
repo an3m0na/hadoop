@@ -34,6 +34,7 @@ public class CountersProxyPBImpl extends GeneralDataEntityPBImpl<CountersProxy, 
   void buildProto() {
     maybeInitBuilder();
     if (counterGroup != null) {
+      builder.clearGroups();
       Iterable<CounterGroupInfoPayloadProto> iterable =
         new Iterable<CounterGroupInfoPayloadProto>() {
           @Override
@@ -126,11 +127,19 @@ public class CountersProxyPBImpl extends GeneralDataEntityPBImpl<CountersProxy, 
 
   @Override
   public void setCounterGroup(List<CounterGroupInfoPayload> counterGroups) {
+    maybeInitBuilder();
+    if(counterGroups == null){
+      builder.clearGroups();
+    }
     this.counterGroup = counterGroups;
   }
 
   @Override
   public void setTaskCounterGroup(List<CounterGroupInfoPayload> counterGroups) {
+    maybeInitBuilder();
+    if(counterGroups == null){
+      builder.clearGroups();
+    }
     this.counterGroup = counterGroups;
   }
 }

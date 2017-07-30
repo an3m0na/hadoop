@@ -6,7 +6,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.DeleteByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.DeleteByQueryCall;
-import org.apache.hadoop.tools.posum.common.records.call.StoreAllCall;
 import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.call.TransactionCall;
 import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
@@ -56,7 +55,7 @@ public class AppInfoCollector {
     this.db = db;
     this.api = new HadoopAPIClient();
     this.jobInfoCollector = new JobInfoCollector(conf, db);
-    this.taskInfoCollector = new TaskInfoCollector();
+    this.taskInfoCollector = new TaskInfoCollector(db);
     this.auditEnabled = conf.getBoolean(PosumConfiguration.MONITOR_KEEP_HISTORY,
       PosumConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
   }
@@ -142,21 +141,12 @@ public class AppInfoCollector {
     }
 
     JobProfile job = jobInfo.getProfile();
-    TaskInfo taskInfo = taskInfoCollector.getRunningTaskInfo(job);
+    TaskInfo taskInfo = taskInfoCollector.getRunningTaskInfo(app, job);
     if (taskInfo == null) {
       if (api.checkAppFinished(app)) {
         moveAppToHistory(app);
         return;
       }
-      // add stubs for each task and exit
-      List<TaskProfile> taskStubs = jobInfo.getTaskStubs();
-      if (taskStubs != null) {
-        updateCalls.addCall(StoreAllCall.newInstance(TASK, taskStubs));
-        for (TaskProfile task : taskStubs) {
-          auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(TASK, task)));
-        }
-      }
-
     } else {
       for (TaskProfile task : taskInfo.getTasks()) {
         updateCalls.addCall(UpdateOrStoreCall.newInstance(TASK, task));

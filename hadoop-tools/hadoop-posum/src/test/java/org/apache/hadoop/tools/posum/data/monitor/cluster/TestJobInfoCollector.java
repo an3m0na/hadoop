@@ -33,9 +33,6 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class TestJobInfoCollector {
 
-  private final String[] LOCATIONS = new String[]{"someLocation"};
-  private final long INPUT_LENGTH = 1L;
-
   @Mock
   private Database dbMock;
   @Mock
@@ -47,10 +44,12 @@ public class TestJobInfoCollector {
   private JobInfoCollector testSubject = new JobInfoCollector();
 
   private ClusterMonitorEntities entities;
+  private JobSplit.TaskSplitMetaInfo[] taskSplitMetaInfos;
 
   @Before
   public void init() {
     entities = new ClusterMonitorEntities();
+     taskSplitMetaInfos = new JobSplit.TaskSplitMetaInfo[] {new JobSplit.TaskSplitMetaInfo(null, entities.SPLIT_LOCATIONS.get(0).toArray(new String[]{}), entities.SPLIT_SIZES.get(0))};
   }
 
   @Test
@@ -69,8 +68,7 @@ public class TestJobInfoCollector {
   public void getNewRunningJobInfoTest() throws IOException {
     JobId jobId = Utils.parseJobId(entities.JOB_ID);
     when(hdfsReaderMock.getSubmittedConf(jobId, entities.RUNNING_APP.getUser())).thenReturn(entities.JOB_CONF);
-    when(hdfsReaderMock.getSplitMetaInfo(jobId, entities.JOB_CONF))
-      .thenReturn(new JobSplit.TaskSplitMetaInfo[]{new JobSplit.TaskSplitMetaInfo(null, LOCATIONS, INPUT_LENGTH)});
+    when(hdfsReaderMock.getSplitMetaInfo(jobId, entities.JOB_CONF)).thenReturn(taskSplitMetaInfos);
     when(dbMock.execute(any(JobForAppCall.class))).thenReturn(null);
     when(apiMock.getRunningJobInfo(eq(entities.APP_ID), eq(entities.RUNNING_APP.getQueue()), any(JobProfile.class)))
       .thenReturn(entities.RUNNING_JOB);
@@ -98,8 +96,7 @@ public class TestJobInfoCollector {
   public void getSubmittedJobInfoTest() throws IOException {
     JobId jobId = Utils.parseJobId(entities.JOB_ID);
     when(hdfsReaderMock.getSubmittedConf(jobId, entities.RUNNING_APP.getUser())).thenReturn(entities.JOB_CONF);
-    when(hdfsReaderMock.getSplitMetaInfo(jobId, entities.JOB_CONF))
-      .thenReturn(new JobSplit.TaskSplitMetaInfo[]{new JobSplit.TaskSplitMetaInfo(null, LOCATIONS, INPUT_LENGTH)});
+    when(hdfsReaderMock.getSplitMetaInfo(jobId, entities.JOB_CONF)).thenReturn(taskSplitMetaInfos);
     JobInfo ret = testSubject.getSubmittedJobInfo(entities.APP_ID, entities.RUNNING_APP.getUser());
 
     ret.getProfile().setLastUpdated(entities.RUNNING_JOB.getLastUpdated());
@@ -113,28 +110,11 @@ public class TestJobInfoCollector {
     expectedJob.setCompletedMaps(null);
     expectedJob.setCompletedReduces(null);
     expectedJob.setUberized(null);
-    expectedJob.setInputSplits(LOCATIONS.length);
-    expectedJob.setTotalSplitSize(INPUT_LENGTH);
-    expectedJob.setAggregatedSplitLocations(new HashSet<>(Arrays.asList(LOCATIONS)));
     expectedJob.setMapperClass(entities.JOB_CONF.getEntry("mapreduce.job.map.class"));
     expectedJob.setReducerClass(entities.JOB_CONF.getEntry("mapreduce.job.reduce.class"));
     expectedJob.setDeadline(1326381330000L);
 
-    TaskProfile expectedMap = Records.newRecord(TaskProfile.class);
-    expectedMap.setId(entities.RUNNING_MAP_TASK.getId());
-    expectedMap.setType(TaskType.MAP);
-    expectedMap.setJobId(expectedJob.getId());
-    expectedMap.setAppId(expectedJob.getAppId());
-    expectedMap.setSplitSize(INPUT_LENGTH);
-    expectedMap.setSplitLocations(Arrays.asList(LOCATIONS));
-
-    TaskProfile expectedReduce = Records.newRecord(TaskProfile.class);
-    expectedReduce.setId(entities.RUNNING_REDUCE_TASK.getId());
-    expectedReduce.setType(TaskType.REDUCE);
-    expectedReduce.setJobId(expectedJob.getId());
-    expectedReduce.setAppId(expectedJob.getAppId());
-
-    assertThat(ret, is(new JobInfo(expectedJob, entities.JOB_CONF, Arrays.asList(expectedMap, expectedReduce))));
+    assertThat(ret, is(new JobInfo(expectedJob, entities.JOB_CONF)));
   }
 
 

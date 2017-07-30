@@ -74,8 +74,8 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
   @Override
   void buildProto() {
     maybeInitBuilder();
-    propertyMap = getPropertyMap();
-    if (propertyMap != null) {
+    if (propertyMap != null || conf != null) {
+      propertyMap = getPropertyMap();
       StringStringMapPayloadPBImpl mapPayloadPB = new StringStringMapPayloadPBImpl();
       mapPayloadPB.setEntries(propertyMap);
       builder.setProperties(mapPayloadPB.getProto());
@@ -146,6 +146,11 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
 
   @Override
   public void setConf(Configuration conf) {
+    maybeInitBuilder();
+    if (conf == null) {
+      builder.clearProperties();
+      propertyMap = null;
+    }
     this.conf = conf;
   }
 
@@ -181,6 +186,7 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
   }
 
   public void setPropertySet(Set<ConfEntry> propertySet) {
+    maybeInitBuilder();
     Map<String, String> map = new HashMap<>(propertySet.size());
     for (ConfEntry entry : propertySet) {
       map.put(entry.getKey(), entry.getValue());
@@ -189,6 +195,11 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
   }
 
   public void setPropertyMap(Map<String, String> propertyMap) {
+    maybeInitBuilder();
+    if (propertyMap == null) {
+      builder.clearProperties();
+      conf = null;
+    }
     this.propertyMap = propertyMap;
   }
 

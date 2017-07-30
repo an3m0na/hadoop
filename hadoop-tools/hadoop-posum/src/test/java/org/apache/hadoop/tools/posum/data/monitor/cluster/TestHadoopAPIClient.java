@@ -14,6 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -97,6 +100,11 @@ public class TestHadoopAPIClient {
     when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s"), any(String[].class)))
       .thenReturn(Utils.getApiJson("history_jobs_job.json"));
     ret = testSubject.getFinishedJobInfo(entities.APP_ID, entities.JOB_ID, entities.RUNNING_JOB);
+    JobProfile expectedJob = entities.RUNNING_JOB.copy();
+    expectedJob.setLastUpdated(ret.getLastUpdated());
+    expectedJob.setSplitLocations(null);
+    expectedJob.setSplitSizes(null);
+    expectedJob.setTotalSplitSize(null);
     assertThat(ret, is(entities.FINISHED_JOB));
   }
 
@@ -109,21 +117,27 @@ public class TestHadoopAPIClient {
 
     when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs"), any(String[].class)))
       .thenReturn(Utils.getApiJson("jobs.json"));
+
     ret = testSubject.getRunningJobInfo(entities.APP_ID, entities.RUNNING_APP.getQueue(), null);
-    ret.setLastUpdated(entities.RUNNING_JOB.getLastUpdated());
-    assertThat(ret, is(entities.RUNNING_JOB));
+
+    JobProfile expectedJob = entities.RUNNING_JOB.copy();
+    expectedJob.setLastUpdated(ret.getLastUpdated());
+    expectedJob.setSplitLocations(null);
+    expectedJob.setSplitSizes(null);
+    expectedJob.setTotalSplitSize(null);
+    assertThat(ret, is(expectedJob));
   }
 
   @Test
   public void getFinishedTasksInfoTest() throws Exception {
     when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s/tasks"), any(String[].class)))
       .thenReturn("{}");
-    List<TaskProfile> ret = testSubject.getFinishedTasksInfo(entities.JOB_ID);
+    List<TaskProfile> ret = testSubject.getFinishedTasksInfo(entities.JOB_ID, new ArrayList<TaskProfile>());
     assertThat(ret, empty());
 
     when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s/tasks"), any(String[].class)))
       .thenReturn(Utils.getApiJson("history_tasks.json"));
-    ret = testSubject.getFinishedTasksInfo(entities.JOB_ID);
+    ret = testSubject.getFinishedTasksInfo(entities.JOB_ID, Arrays.asList(entities.RUNNING_TASKS));
     ret.get(0).setLastUpdated(entities.FINISHED_TASKS[0].getLastUpdated());
     ret.get(1).setLastUpdated(entities.FINISHED_TASKS[1].getLastUpdated());
     assertThat(ret, containsInAnyOrder(entities.FINISHED_TASKS));
@@ -133,13 +147,13 @@ public class TestHadoopAPIClient {
   public void getRunningTasksInfoTest() throws Exception {
     when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs/%s/tasks"), any(String[].class)))
       .thenReturn("{}");
-    List<TaskProfile> ret = testSubject.getRunningTasksInfo(entities.RUNNING_JOB);
+    List<TaskProfile> ret = testSubject.getRunningTasksInfo(entities.RUNNING_JOB, new ArrayList<TaskProfile>());
     assertThat(ret, empty());
 
     when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs/%s/tasks"), any(String[].class)))
       .thenReturn(Utils.getApiJson("tasks.json"));
 
-    ret = testSubject.getRunningTasksInfo(entities.RUNNING_JOB);
+    ret = testSubject.getRunningTasksInfo(entities.RUNNING_JOB, Arrays.asList(entities.RUNNING_TASKS));
 
     ret.get(0).setLastUpdated(entities.RUNNING_MAP_TASK.getLastUpdated());
     ret.get(1).setLastUpdated(entities.RUNNING_REDUCE_TASK.getLastUpdated());

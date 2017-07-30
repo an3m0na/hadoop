@@ -64,9 +64,9 @@ public class CollectionMapPayloadPBImpl extends CollectionMapPayload implements 
 
   private void mergeLocalToBuilder() {
     maybeInitBuilder();
-    builder.clearEntries();
     if (entries == null)
       return;
+    builder.clearEntries();
     Iterable<CollectionEntryProto> iterable =
       new Iterable<CollectionEntryProto>() {
 
@@ -139,6 +139,9 @@ public class CollectionMapPayloadPBImpl extends CollectionMapPayload implements 
   @Override
   public void setEntries(Map<DatabaseReference, List<DataEntityCollection>> entries) {
     maybeInitBuilder();
+    if(entries == null){
+      builder.clearEntries();
+    }
     this.entries = entries;
   }
 
