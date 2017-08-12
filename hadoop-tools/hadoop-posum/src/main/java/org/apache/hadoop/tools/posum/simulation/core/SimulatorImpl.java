@@ -86,21 +86,25 @@ public class SimulatorImpl extends CompositeService implements Simulator {
 
   @Override
   public synchronized void reset() {
-    logger.debug("Simulator resetting...");
-    if (simulationOngoing) {
-      logger.debug("Shutting down simulations and executor...");
+    try {
+      logger.debug("Simulator resetting...");
+      if (simulationOngoing) {
+        logger.debug("Shutting down simulations and executor...");
 
-      resultAggregator.stop();
-      try {
-        shutdownExecutorService(executor);
-      } catch (InterruptedException e) {
-        logger.error("Simulator pool did not shut down correctly", e);
+        resultAggregator.stop();
+        try {
+          shutdownExecutorService(executor);
+        } catch (InterruptedException e) {
+          logger.error("Simulator pool did not shut down correctly", e);
+        }
+        simulationsDone(Collections.<SimulationResultPayload>emptyList());
+        executor = Executors.newFixedThreadPool(policies.size());
       }
-      simulationsDone(Collections.<SimulationResultPayload>emptyList());
-      executor = Executors.newFixedThreadPool(policies.size());
+      predictor.clearHistory();
+      logger.debug("Reset successful");
+    } catch (Exception e) {
+      logger.error("An error occurred while resetting simulator", e);
     }
-    predictor.clearHistory();
-    logger.debug("Reset successful");
   }
 
   private int getRunningJobCount() {
