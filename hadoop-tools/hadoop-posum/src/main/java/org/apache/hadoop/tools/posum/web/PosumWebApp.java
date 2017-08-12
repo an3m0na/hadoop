@@ -107,13 +107,13 @@ public class PosumWebApp extends HttpServlet {
   }
 
   protected JsonNode getSystemMetrics() {
-    double free = Runtime.getRuntime().freeMemory();
     double max = Runtime.getRuntime().maxMemory();
     double total = Runtime.getRuntime().totalMemory();
+    double used = total - Runtime.getRuntime().freeMemory();
     return wrapResult(new JsonObject()
       .put("time", System.currentTimeMillis())
       .put("jvm", new JsonObject()
-        .put("free", String.format("%.3f", free / 1024 / 1024 / 1024))
+        .put("used", String.format("%.3f", used / 1024 / 1024 / 1024))
         .put("max", String.format("%.3f", max / 1024 / 1024 / 1024))
         .put("total", String.format("%.3f", total / 1024 / 1024 / 1024)))
       .getNode());
