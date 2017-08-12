@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.management.OperatingSystemMXBean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.util.json.JsonElement;
@@ -17,6 +18,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 
 public class PosumWebApp extends HttpServlet {
   private static final long serialVersionUID = 1905162041950251407L;
@@ -108,14 +110,22 @@ public class PosumWebApp extends HttpServlet {
 
   protected JsonNode getSystemMetrics() {
     double max = Runtime.getRuntime().maxMemory();
-    double total = Runtime.getRuntime().totalMemory();
-    double used = total - Runtime.getRuntime().freeMemory();
+    double totalMb = Runtime.getRuntime().totalMemory();
+    double usedMb = totalMb - Runtime.getRuntime().freeMemory();
+    OperatingSystemMXBean osManagement = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+    double processLoad = osManagement.getProcessCpuLoad();
+    double totalLoad = osManagement.getSystemCpuLoad();
+    int threadCount = ManagementFactory.getThreadMXBean().getThreadCount();
     return wrapResult(new JsonObject()
       .put("time", System.currentTimeMillis())
       .put("jvm", new JsonObject()
-        .put("used", String.format("%.3f", used / 1024 / 1024 / 1024))
+        .put("used", String.format("%.3f", usedMb / 1024 / 1024 / 1024))
         .put("max", String.format("%.3f", max / 1024 / 1024 / 1024))
-        .put("total", String.format("%.3f", total / 1024 / 1024 / 1024)))
+        .put("total", String.format("%.3f", totalMb / 1024 / 1024 / 1024)))
+      .put("cpu", new JsonObject()
+        .put("total", String.format("%.1f", totalLoad * 100))
+        .put("process", String.format("%.1f", processLoad * 100)))
+      .put("threadCount", Integer.toString(threadCount))
       .getNode());
   }
 }

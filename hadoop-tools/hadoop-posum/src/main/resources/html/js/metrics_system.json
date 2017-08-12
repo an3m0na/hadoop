@@ -6,6 +6,11 @@
       "total": 10,
       "max": 12,
       "used": 5
-    }
+    },
+    "cpu": {
+      "total": 0.823,
+      "process": 0.562
+    },
+    "threadCount": 30
   }
 }
