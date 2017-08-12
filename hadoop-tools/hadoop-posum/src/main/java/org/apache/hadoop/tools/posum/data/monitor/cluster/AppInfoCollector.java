@@ -61,6 +61,7 @@ public class AppInfoCollector {
   }
 
   void refresh() {
+    logger.debug("Starting update");
     List<AppProfile> apps = api.getAppsInfo();
     logger.trace("Found " + apps.size() + " apps");
     for (AppProfile app : apps) {
@@ -75,12 +76,13 @@ public class AppInfoCollector {
         }
       }
     }
+    logger.debug("Finished update");
     db.notifyUpdate();
   }
 
   private void moveAppToHistory(final AppProfile app) {
     final String appId = app.getId();
-    logger.trace("Moving " + appId + " to history");
+    logger.debug("Moving " + appId + " to history");
     finished.add(appId);
 
     JobInfo jobInfo = jobInfoCollector.getFinishedJobInfo(app);
@@ -114,6 +116,7 @@ public class AppInfoCollector {
     } catch (Exception e) {
       logger.error("Could not move app data to history", e);
     }
+    logger.debug("Finished moving " + appId + " to history");
   }
 
   private void updateAppInfo(final AppProfile app) {
@@ -123,6 +126,7 @@ public class AppInfoCollector {
     updateCalls.addCall(UpdateOrStoreCall.newInstance(APP, app));
     auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(APP, app)));
 
+    logger.debug("Getting job info for " + app.getId());
     JobInfo jobInfo = jobInfoCollector.getRunningJobInfo(app);
     if (jobInfo == null) {
       if (api.checkAppFinished(app))
@@ -141,6 +145,7 @@ public class AppInfoCollector {
     }
 
     JobProfile job = jobInfo.getProfile();
+    logger.debug("Getting task info for " + app.getId());
     TaskInfo taskInfo = taskInfoCollector.getRunningTaskInfo(app, job);
     if (taskInfo == null) {
       if (api.checkAppFinished(app)) {
