@@ -58,6 +58,10 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     this.simulationContext.setTopologyProvider(topologyProvider);
   }
 
+  public String getPolicyName(){
+    return policyName;
+  }
+
   private void setUp() {
     simulationContext.setSchedulerClass(policyClass);
     simulationContext.setStartTime(System.currentTimeMillis());
@@ -102,12 +106,14 @@ class SimulationManager implements Callable<SimulationResultPayload> {
       dataStore.execute(StoreLogCall.newInstance("Starting simulation for " + policyName), null);
       new SimulationRunner(simulationContext).run();
       return SimulationResultPayload.newInstance(policyName, new SimulationEvaluator(db).evaluate());
+    } catch (InterruptedException e) {
+      if (!exit)
+        // exiting was not intentional
+        logger.error("Simulation was interrupted unexpectedly", e);
+      return SimulationResultPayload.newInstance(policyName, null);
     } catch (Exception e) {
-      if (!exit) {
-        // termination was not intentional
-        logger.error("Error during simulation. Shutting down simulation...", e);
-      }
-      return SimulationResultPayload.newInstance(policyName, CompoundScorePayload.newInstance(0.0, 0.0, 0.0));
+      logger.error("Error during simulation. Shutting down simulation...", e);
+      return SimulationResultPayload.newInstance(policyName, null);
     } finally {
       tearDown();
     }

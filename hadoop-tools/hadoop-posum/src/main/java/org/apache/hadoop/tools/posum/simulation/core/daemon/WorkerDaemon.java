@@ -63,7 +63,7 @@ public abstract class WorkerDaemon implements Daemon {
         simulationContext.getDaemonQueue().enqueue(this);
       }
     } catch (Exception e) {
-      LOG.trace("Error running worker daemon ", e);
+      LOG.debug("Error running worker daemon ", e);
     }
   }
 
