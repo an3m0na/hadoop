@@ -36,9 +36,9 @@ public class TimeKeeperDaemon implements Daemon {
       if (!stopped) {
         queue.enqueue(this);
       }
-    } catch (Exception e) {
+    } catch (InterruptedException e) {
       if (!stopped)
-        LOG.error("Error occurred while running time keeper", e);
+        LOG.error("Time keeper was interrupted", e);
     }
   }
 
