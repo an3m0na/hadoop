@@ -187,7 +187,7 @@ public abstract class AMDaemon extends WorkerDaemon {
       rm.getClientRMService().getNewApplication(newAppRequest);
     appId = newAppResponse.getApplicationId();
 
-    LOG.debug("Calling application submitted for " + oldAppId);
+    LOG.trace("Calling application submitted for " + oldAppId);
     simulationContext.getDispatcher().getEventHandler()
       .handle(new ApplicationEvent(APPLICATION_SUBMITTED, oldAppId, appId));
 
