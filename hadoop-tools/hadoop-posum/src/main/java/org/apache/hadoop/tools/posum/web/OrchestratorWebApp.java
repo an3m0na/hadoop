@@ -64,7 +64,7 @@ public class OrchestratorWebApp extends PosumWebApp {
 
   private JsonNode reset() {
     context.getDispatcher().getEventHandler().handle(new PosumEvent(PosumEventType.SYSTEM_RESET));
-    return wrapResult("Reset successful");
+    return wrapResult("Reset finished");
   }
 
   private JsonNode getConfiguration() {
