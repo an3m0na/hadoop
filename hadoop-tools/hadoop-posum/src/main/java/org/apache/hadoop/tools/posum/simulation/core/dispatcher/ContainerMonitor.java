@@ -51,7 +51,7 @@ public class ContainerMonitor implements EventHandler<ContainerEvent> {
     TransactionCall transaction = TransactionCall.newInstance()
       .addCall(UpdateOrStoreCall.newInstance(TASK, task));
     db.execute(transaction);
-    LOG.debug(MessageFormat.format("Container started: {0}", container.getId()));
+    LOG.trace(MessageFormat.format("Container started: {0}", container.getId()));
   }
 
   private void containerFinished(SimulatedContainer container) {
@@ -69,6 +69,6 @@ public class ContainerMonitor implements EventHandler<ContainerEvent> {
       .addCall(UpdateOrStoreCall.newInstance(TASK, task))
       .addCall(UpdateOrStoreCall.newInstance(JOB, job));
     db.execute(transaction);
-    LOG.debug(MessageFormat.format("Container finished: {0}", container.getId()));
+    LOG.trace(MessageFormat.format("Container finished: {0}", container.getId()));
   }
 }
