@@ -115,7 +115,7 @@ public class NMDaemon extends WorkerDaemon {
       while ((cs = containerQueue.poll()) != null) {
         runningContainers.remove(cs.getId());
         completedContainerList.add(cs.getId());
-        LOG.debug(MessageFormat.format("T={0}: Container {1} has completed", simulationContext.getCurrentTime(),
+        LOG.trace(MessageFormat.format("T={0}: Container {1} has completed", simulationContext.getCurrentTime(),
           cs.getId()));
       }
     }
@@ -146,13 +146,13 @@ public class NMDaemon extends WorkerDaemon {
             synchronized (amContainerList) {
               amContainerList.remove(containerId);
             }
-            LOG.debug(MessageFormat.format("T={0}: NodeManager {1} releases " +
+            LOG.trace(MessageFormat.format("T={0}: NodeManager {1} releases " +
               "an AM ({2}).", simulationContext.getCurrentTime(), node.getNodeID(), containerId));
           } else {
             cs = runningContainers.remove(containerId);
             containerQueue.remove(cs);
             releasedContainerList.add(containerId);
-            LOG.debug(MessageFormat.format("T={0}: NodeManager {1} releases a " +
+            LOG.trace(MessageFormat.format("T={0}: NodeManager {1} releases a " +
               "container ({2}).", simulationContext.getCurrentTime(), node.getNodeID(), containerId));
           }
         }
@@ -192,7 +192,7 @@ public class NMDaemon extends WorkerDaemon {
     // add complete containers
     synchronized (completedContainerList) {
       for (ContainerId cId : completedContainerList) {
-        LOG.debug(MessageFormat.format("T={0}: NodeManager {1} completed" +
+        LOG.trace(MessageFormat.format("T={0}: NodeManager {1} completed" +
           " container ({2}).", simulationContext.getCurrentTime(), node.getNodeID(), cId));
         csList.add(newContainerStatus(
           cId, ContainerState.COMPLETE, ContainerExitStatus.SUCCESS));
@@ -202,7 +202,7 @@ public class NMDaemon extends WorkerDaemon {
     // released containers
     synchronized (releasedContainerList) {
       for (ContainerId cId : releasedContainerList) {
-        LOG.debug(MessageFormat.format("T={0}: NodeManager {1} released container" +
+        LOG.trace(MessageFormat.format("T={0}: NodeManager {1} released container" +
           " ({2}).", simulationContext.getCurrentTime(), simulationContext.getCurrentTime(), node.getNodeID(), cId));
         csList.add(newContainerStatus(
           cId, ContainerState.COMPLETE, ContainerExitStatus.ABORTED));
@@ -230,7 +230,7 @@ public class NMDaemon extends WorkerDaemon {
    * launch a new container with the given life time
    */
   private void addNewContainer(SimulatedContainer container) {
-    LOG.debug(MessageFormat.format("T={0}: NodeManager {1} launches a new " +
+    LOG.trace(MessageFormat.format("T={0}: NodeManager {1} launches a new " +
       "container ({2}).", simulationContext.getCurrentTime(), node.getNodeID(), container.getId()));
     if (AM_TYPE.equals(container.getType())) {
       // AM container
