@@ -84,6 +84,7 @@ public class SimulationMasterCommService extends CompositeService implements Sim
 
   @Override
   public SimpleResponse handleSimpleRequest(SimpleRequest request) {
+    logger.debug("Simulator receives request " + request.getType());
     try {
       switch (request.getType()) {
         case PING:
