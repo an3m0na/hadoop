@@ -143,8 +143,32 @@ function TabManager(env) {
         function (traceObject) {
           return traceObject
         },
-        "JVM Memory on Portfolio Scheduler",
+        "JVM Memory for Portfolio Scheduler",
         {title: "Memory (GB)", tickmode: "linear", dtick: 0.25}
+      );
+      self.updateTimeSeries(tab,
+        "plot_ps_cpu",
+        path,
+        function (data) {
+          return data.cpu
+        },
+        function (traceObject) {
+          return traceObject
+        },
+        "CPU Load for Portfolio Scheduler",
+        {title: "Fraction (%)", tickmode: "linear", dtick: 0.25}
+      );
+      self.updateTimeSeries(tab,
+        "plot_ps_threads",
+        path,
+        function (data) {
+          return {"count": data.threadCount}
+        },
+        function (traceObject) {
+          return traceObject
+        },
+        "Active Threads for Portfolio Scheduler",
+        {title: "Total Number", tickmode: "linear", dtick: 0.25}
       );
       path = env.isTest ? "js/metrics_system.json" : env.comm.masterPath + "/system";
       self.updateTimeSeries(tab,
@@ -156,8 +180,32 @@ function TabManager(env) {
         function (traceObject) {
           return traceObject
         },
-        "JVM Memory on POSUM Master",
+        "JVM Memory for POSUM Master",
         {title: "Memory (GB)", tickmode: "linear", dtick: 0.25}
+      );
+      self.updateTimeSeries(tab,
+        "plot_pm_cpu",
+        path,
+        function (data) {
+          return data.cpu
+        },
+        function (traceObject) {
+          return traceObject
+        },
+        "CPU Load for POSUM Master",
+        {title: "Fraction (%)", tickmode: "linear", dtick: 0.25}
+      );
+      self.updateTimeSeries(tab,
+        "plot_pm_threads",
+        path,
+        function (data) {
+          return {"count": data.threadCount}
+        },
+        function (traceObject) {
+          return traceObject
+        },
+        "Active Threads for POSUM Master",
+        {title: "Total Number", tickmode: "linear", dtick: 0.25}
       );
       path = env.isTest ? "js/metrics_system.json" : env.comm.dmPath + "/system";
       self.updateTimeSeries(tab,
@@ -169,10 +217,33 @@ function TabManager(env) {
         function (traceObject) {
           return traceObject
         },
-        "JVM Memory on Data Master",
+        "JVM Memory for Data Master",
         {title: "Memory (GB)", tickmode: "linear", dtick: 0.25}
       );
-
+      self.updateTimeSeries(tab,
+        "plot_dm_cpu",
+        path,
+        function (data) {
+          return data.cpu
+        },
+        function (traceObject) {
+          return traceObject
+        },
+        "CPU Load for Data Master",
+        {title: "Fraction (%)", tickmode: "linear", dtick: 0.25}
+      );
+      self.updateTimeSeries(tab,
+        "plot_dm_threads",
+        path,
+        function (data) {
+          return {"count": data.threadCount}
+        },
+        function (traceObject) {
+          return traceObject
+        },
+        "Active Threads for Data Master",
+        {title: "Total Number", tickmode: "linear", dtick: 0.25}
+      );
       path = env.isTest ? "js/metrics_system.json" : env.comm.smPath + "/system";
       self.updateTimeSeries(tab,
         "plot_sm_jvm",
@@ -183,10 +254,33 @@ function TabManager(env) {
         function (traceObject) {
           return traceObject
         },
-        "JVM Memory on Simulation Master",
+        "JVM Memory for Simulation Master",
         {title: "Memory (GB)", tickmode: "linear", dtick: 0.25}
       );
-
+      self.updateTimeSeries(tab,
+        "plot_sm_cpu",
+        path,
+        function (data) {
+          return data.cpu
+        },
+        function (traceObject) {
+          return traceObject
+        },
+        "CPU Load for Simulation Master",
+        {title: "Fraction (%)", tickmode: "linear", dtick: 0.25}
+      );
+      self.updateTimeSeries(tab,
+        "plot_sm_threads",
+        path,
+        function (data) {
+          return {"count": data.threadCount}
+        },
+        function (traceObject) {
+          return traceObject
+        },
+        "Active Threads for Simulation Master",
+        {title: "Total Number", tickmode: "linear", dtick: 0.25}
+      );
     } else if (tab.id == "cluster") {
       path = env.isTest ? "js/psmetrics_cluster.json" : env.comm.psPath + "/cluster";
       env.comm.requestData(path, function (data) {
@@ -229,7 +323,7 @@ function TabManager(env) {
               moment.unix(log.timestamp / 1000).calendar() + '</td><td>' + log.message.replace(/\n/g, "<br/>") +
               '</td></tr>');
         });
-        tab.lastRefreshed = data[data.length-1].timestamp;
+        tab.lastRefreshed = data[data.length - 1].timestamp;
       });
     }
   };
