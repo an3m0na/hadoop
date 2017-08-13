@@ -16,7 +16,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -102,10 +101,7 @@ public class TestHadoopAPIClient {
     ret = testSubject.getFinishedJobInfo(entities.APP_ID, entities.JOB_ID, entities.RUNNING_JOB);
     JobProfile expectedJob = entities.RUNNING_JOB.copy();
     expectedJob.setLastUpdated(ret.getLastUpdated());
-    expectedJob.setSplitLocations(null);
-    expectedJob.setSplitSizes(null);
-    expectedJob.setTotalSplitSize(null);
-    assertThat(ret, is(entities.FINISHED_JOB));
+    assertThat(ret, is(expectedJob));
   }
 
   @Test
