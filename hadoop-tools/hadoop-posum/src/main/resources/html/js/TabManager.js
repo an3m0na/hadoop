@@ -313,14 +313,20 @@ function TabManager(env) {
       });
     } else if (tab.id == "logs") {
       path = env.isTest ? "js/logs.json" : env.comm.dmPath + "/logs";
-      var lastRefreshed = tab.lastRefreshed;
+      const lastRefreshed = tab.lastRefreshed;
       env.comm.requestData(path + "?since=" + lastRefreshed, function (data) {
         if (!data || data.length == 0)
           return;
         data.forEach(function (log) {
+          const timestamp = moment.unix(log.timestamp / 1000);
+          const sameYear = moment().subtract(1, "years").isBefore(timestamp);
+          const sameDay = moment().subtract(1, "days").isBefore(timestamp);
+          const timeFormat = "HH:mm:ss";
+          const dateFormat =  sameYear? "MM-DD" : "YYYY-MM-DD";
+          const pattern = sameDay? timeFormat : dateFormat + " " + timeFormat;
           tab.container.find("#log_table")
-            .append('<tr class="info"><td>' +
-              moment.unix(log.timestamp / 1000).calendar() + '</td><td>' + log.message.replace(/\n/g, "<br/>") +
+            .append('<tr class="info"><td class="text-nowrap">' +
+              timestamp.format(pattern) + '</td><td>' + log.message.replace(/\n/g, "<br/>") +
               '</td></tr>');
         });
         tab.lastRefreshed = data[data.length - 1].timestamp;
