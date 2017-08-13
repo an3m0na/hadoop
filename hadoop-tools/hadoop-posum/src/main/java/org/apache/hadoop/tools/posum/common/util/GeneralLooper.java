@@ -27,7 +27,7 @@ public abstract class GeneralLooper<T> extends AbstractService {
       try {
         long time;
         lastRun = System.currentTimeMillis();
-        while (!exit) {
+        while (!exit && sleepInterval >= 0) {
           try {
             doAction();
             time = lastRun + sleepInterval - System.currentTimeMillis();
