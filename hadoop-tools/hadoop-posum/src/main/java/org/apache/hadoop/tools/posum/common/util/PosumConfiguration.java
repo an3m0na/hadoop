@@ -20,7 +20,6 @@ public class PosumConfiguration {
   public static final String ORCHESTRATOR_PREFIX = PREFIX + "orchestrator.";
   public static final String MONITOR_PREFIX = PREFIX + "monitor.";
   public static final String PREDICTOR_PREFIX = PREFIX + "predictor.";
-  public static final String SIMULATOR_PREFIX = PREFIX + "simulator.";
   public static final String DATABASE_PREFIX = PREFIX + "database.";
   public static final String SCHEDULER_PREFIX = PREFIX + "scheduler.";
   public static final String SIMULATION_PREFIX = PREFIX + "simulation.";
@@ -90,14 +89,14 @@ public class PosumConfiguration {
   public static final String DATABASE_DEADLINES = SCHEDULER_PREFIX + "db.deadlines";
   public static final boolean DATABASE_DEADLINES_DEFAULT = false;
 
-  public static final String SIMULATION_INTERVAL = SIMULATOR_PREFIX + "interval";
+  public static final String SIMULATION_INTERVAL = SIMULATION_PREFIX + "interval";
   public static final long SIMULATION_INTERVAL_DEFAULT = 120000;
 
-  public static final String SIMULATOR_BIND_ADDRESS = SIMULATOR_PREFIX + "bind-host";
-  public static final String SIMULATOR_ADDRESS = SIMULATOR_PREFIX + "address";
+  public static final String SIMULATOR_BIND_ADDRESS = SIMULATION_PREFIX + "bind-host";
+  public static final String SIMULATOR_ADDRESS = SIMULATION_PREFIX + "address";
   public static final int SIMULATOR_PORT_DEFAULT = 17030;
   public static final String SIMULATOR_ADDRESS_DEFAULT = "0.0.0.0:" + SIMULATOR_PORT_DEFAULT;
-  public static final String SIMULATOR_SERVICE_THREAD_COUNT = SIMULATOR_PREFIX + "conn.thread-count";
+  public static final String SIMULATOR_SERVICE_THREAD_COUNT = SIMULATION_PREFIX + "conn.thread-count";
   public static final int SIMULATOR_SERVICE_THREAD_COUNT_DEFAULT = 3;
 
   public static final String MASTER_WEBAPP_PORT = ORCHESTRATOR_PREFIX + "webapp.port";
@@ -109,7 +108,7 @@ public class PosumConfiguration {
   public static final String DM_WEBAPP_PORT = DATABASE_PREFIX + "webapp.port";
   public static final int DM_WEBAPP_PORT_DEFAULT = 18020;
 
-  public static final String SIMULATOR_WEBAPP_PORT = SIMULATOR_PREFIX + "webapp.port";
+  public static final String SIMULATOR_WEBAPP_PORT = SIMULATION_PREFIX + "webapp.port";
   public static final int SIMULATOR_WEBAPP_PORT_DEFAULT = 18030;
 
   public static final String SCHEDULER_METRICS_ON = SCHEDULER_PREFIX + "metrics.on";
@@ -132,7 +131,6 @@ public class PosumConfiguration {
 
   public static final String SIMULATION_RUNNER_POOL_SIZE = SIMULATION_PREFIX + "concurrent.daemons";
   public static final int SIMULATION_RUNNER_POOL_SIZE_DEFAULT = 10;
-  public static final String SIMULATION_SCHEDULER = SCHEDULER_PREFIX + "scheduler.class";
   public static final String NM_DAEMON_PREFIX = SIMULATION_PREFIX + "nm.";
   public static final String NM_DAEMON_MEMORY_MB = NM_DAEMON_PREFIX + "memory.mb";
   public static final int NM_DAEMON_MEMORY_MB_DEFAULT = 10240;
