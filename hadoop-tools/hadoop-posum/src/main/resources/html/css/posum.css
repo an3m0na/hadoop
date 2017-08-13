@@ -535,3 +535,7 @@ ul.nav {
 .jumbotron {
   background: url("../img/emblemonly.png") right no-repeat #D0FDFD;
 }
+
+.text-nowrap {
+  white-space: nowrap;
+}
