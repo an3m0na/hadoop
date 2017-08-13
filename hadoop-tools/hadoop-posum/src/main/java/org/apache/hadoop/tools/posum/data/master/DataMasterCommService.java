@@ -145,8 +145,8 @@ public class DataMasterCommService extends CompositeService implements DataMaste
           break;
         case RESET:
           dmContext.getDataStore().clear();
-          dmContext.getClusterInfo().reset();
-          dmContext.getPosumInfo().reset();
+          dmContext.getClusterInfoCollector().reset();
+          dmContext.getPosumInfoCollector().reset();
           break;
         default:
           return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());

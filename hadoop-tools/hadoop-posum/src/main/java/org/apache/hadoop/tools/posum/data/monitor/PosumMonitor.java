@@ -27,7 +27,7 @@ public class PosumMonitor extends GeneralLooper<PosumMonitor> {
   @Override
   protected void doAction() {
     RestClient.TrackingUI.checkUpdated(context.getCommService().getSystemAddresses());
-    context.getPosumInfo().refresh();
+    context.getPosumInfoCollector().collect();
   }
 
 }

@@ -82,7 +82,7 @@ public class PosumInfoCollector {
     }
   }
 
-  synchronized void refresh() {
+  synchronized void collect() {
     long now = System.currentTimeMillis();
     if (fineGrained) {
       //TODO get metrics from all services and persist to database

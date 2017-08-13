@@ -55,12 +55,12 @@ public class AppInfoCollector {
     this.db = db;
     this.api = new HadoopAPIClient();
     this.jobInfoCollector = new JobInfoCollector(conf, db);
-    this.taskInfoCollector = new TaskInfoCollector(db);
+    this.taskInfoCollector = new TaskInfoCollector(conf, db);
     this.auditEnabled = conf.getBoolean(PosumConfiguration.MONITOR_KEEP_HISTORY,
       PosumConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
   }
 
-  void refresh() {
+  void collect() {
     List<AppProfile> apps = api.getAppsInfo();
     logger.trace("Found " + apps.size() + " apps");
     for (AppProfile app : apps) {
@@ -171,5 +171,9 @@ public class AppInfoCollector {
 
   public void reset() {
     // do nothing
+  }
+
+  void shutDown() throws InterruptedException {
+    taskInfoCollector.shutDown();
   }
 }
