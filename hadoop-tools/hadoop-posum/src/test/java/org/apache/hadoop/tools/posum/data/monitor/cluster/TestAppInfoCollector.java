@@ -39,7 +39,6 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -85,8 +84,8 @@ public class TestAppInfoCollector {
       .thenReturn(new TaskInfo(Arrays.asList(entities.RUNNING_TASKS),
         Arrays.asList(entities.TASK_COUNTERS_MAP, entities.TASK_COUNTERS_REDUCE)));
 
-    // first refresh on running job
-    testSubject.refresh();
+    // first collect on running job
+    testSubject.collect();
 
     List<AppProfile> apps = dbMock.execute(FindByQueryCall.newInstance(APP, null)).getEntities();
     assertThat(apps, containsInAnyOrder(entities.RUNNING_APPS));
@@ -106,8 +105,8 @@ public class TestAppInfoCollector {
     }
     assertThat(historyEntities, containsInAnyOrder(expectedHistoryEntities));
 
-    // second refresh on running job
-    testSubject.refresh();
+    // second collect on running job
+    testSubject.collect();
 
     apps = dbMock.execute(FindByQueryCall.newInstance(APP, null)).getEntities();
     assertThat(apps, containsInAnyOrder(entities.RUNNING_APPS));
@@ -157,7 +156,7 @@ public class TestAppInfoCollector {
       .thenReturn(new TaskInfo(Arrays.asList(entities.FINISHED_TASKS), 
         Arrays.asList(entities.TASK_COUNTERS_MAP, entities.TASK_COUNTERS_REDUCE)));
 
-    testSubject.refresh();
+    testSubject.collect();
 
     List<AppProfile> apps = dbMock.execute(FindByQueryCall.newInstance(APP, null)).getEntities();
     assertThat(apps, empty());
