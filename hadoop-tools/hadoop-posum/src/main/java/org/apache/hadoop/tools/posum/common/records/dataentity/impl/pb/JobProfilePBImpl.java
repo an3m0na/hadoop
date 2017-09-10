@@ -4,14 +4,17 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.StringListPayloadPBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.impl.pb.StringStringMapPayloadPBImpl;
 import org.apache.hadoop.yarn.proto.PosumProtos.JobProfileProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.JobProfileProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.StringListPayloadProto;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobProfileProto, JobProfileProto.Builder>
   implements JobProfile {
@@ -29,15 +32,54 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   }
 
   private Map<String, String> flexMap;
+  private List<List<String>> splitLocations;
+  private List<Long> splitSizes;
 
   @Override
   void buildProto() {
     maybeInitBuilder();
-    builder.clearFlexFields();
     if (flexMap != null) {
+      builder.clearFlexFields();
       StringStringMapPayloadPBImpl flexFields = new StringStringMapPayloadPBImpl();
       flexFields.setEntries(flexMap);
       builder.setFlexFields(flexFields.getProto());
+    }
+    if (splitLocations != null) {
+      builder.clearSplitLocations();
+      Iterable<StringListPayloadProto> iterable =
+        new Iterable<StringListPayloadProto>() {
+
+          @Override
+          public Iterator<StringListPayloadProto> iterator() {
+            return new Iterator<StringListPayloadProto>() {
+
+              Iterator<List<String>> entryIterator = splitLocations.iterator();
+
+              @Override
+              public void remove() {
+                throw new UnsupportedOperationException();
+              }
+
+              @Override
+              public StringListPayloadProto next() {
+                List<String> entry = entryIterator.next();
+                StringListPayloadPBImpl impl = new StringListPayloadPBImpl();
+                impl.setEntries(entry);
+                return impl.getProto();
+              }
+
+              @Override
+              public boolean hasNext() {
+                return entryIterator.hasNext();
+              }
+            };
+          }
+        };
+      builder.addAllSplitLocations(iterable);
+    }
+    if (splitSizes != null) {
+      builder.clearSplitSizes();
+      builder.addAllSplitSizes(splitSizes);
     }
     proto = builder.build();
   }
@@ -183,21 +225,21 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   }
 
   @Override
-  public Long getTotalInputBytes() {
+  public Long getTotalSplitSize() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-    if (!p.hasTotalInputBytes())
+    if (!p.hasTotalSplitSize())
       return null;
-    return p.getTotalInputBytes();
+    return p.getTotalSplitSize();
   }
 
   @Override
-  public void setTotalInputBytes(Long inputBytes) {
+  public void setTotalSplitSize(Long inputBytes) {
     maybeInitBuilder();
     if (inputBytes == null) {
-      builder.clearInputBytes();
+      builder.clearTotalSplitSize();
       return;
     }
-    builder.setTotalInputBytes(inputBytes);
+    builder.setTotalSplitSize(inputBytes);
   }
 
   @Override
@@ -433,24 +475,6 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   }
 
   @Override
-  public Integer getInputSplits() {
-    JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-    if (!p.hasInputSplits())
-      return null;
-    return p.getInputSplits();
-  }
-
-  @Override
-  public void setInputSplits(Integer inputSplits) {
-    maybeInitBuilder();
-    if (inputSplits == null) {
-      builder.clearInputSplits();
-      return;
-    }
-    builder.setInputSplits(inputSplits);
-  }
-
-  @Override
   public Long getAvgMapDuration() {
     JobProfileProtoOrBuilder p = viaProto ? proto : builder;
     if (!p.hasAvgMapDuration())
@@ -558,37 +582,46 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   }
 
   @Override
-  public void addAll(Map<String, String> other) {
+  public void addAllFlexFields(Map<String, String> other) {
     maybeInitBuilder();
-    // initialize flex fields
-    getFlexFields();
-    if (flexMap == null)
-      flexMap = new HashMap<>();
-    flexMap.putAll(other);
+    if (other != null) {
+      maybeInitFlexFields();
+      if (flexMap == null)
+        flexMap = new HashMap<>(other.size());
+      flexMap.putAll(other);
+    }
   }
 
   @Override
   public String getFlexField(String name) {
-    // initialize flex fields
-    getFlexFields();
-    if (flexMap == null)
-      flexMap = new HashMap<>();
-    return flexMap.get(name);
+    maybeInitFlexFields();
+    return flexMap == null ? null : flexMap.get(name);
   }
 
   @Override
   public Map<String, String> getFlexFields() {
-    if (flexMap == null) {
-      JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-      if (!p.hasFlexFields())
-        return null;
-      flexMap = new StringStringMapPayloadPBImpl(p.getFlexFields()).getEntries();
-    }
+    maybeInitFlexFields();
     return flexMap;
   }
 
   public void setFlexFields(Map<String, String> flexFields) {
-    flexMap = flexFields;
+    if (flexFields == null) {
+      builder.clearFlexFields();
+      flexMap = null;
+      return;
+    }
+    flexMap = new HashMap<>(flexFields.size());
+    flexMap.putAll(flexFields);
+  }
+
+  private void maybeInitFlexFields() {
+    if (flexMap == null) {
+      JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+      if (p.hasFlexFields()) {
+        flexMap = new HashMap<>();
+        flexMap.putAll(new StringStringMapPayloadPBImpl(p.getFlexFields()).getEntries());
+      }
+    }
   }
 
   @Override
@@ -629,18 +662,60 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
   }
 
   @Override
-  public Set<String> getAggregatedSplitLocations() {
-    JobProfileProtoOrBuilder p = viaProto ? proto : builder;
-    return new HashSet<>(p.getAggregatedSplitLocationsList());
+  public List<List<String>> getSplitLocations() {
+    if (splitLocations == null) {
+      JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+      List<StringListPayloadProto> protoList = p.getSplitLocationsList();
+      splitLocations = new ArrayList<>(protoList.size());
+      for (StringListPayloadProto stringListPayloadProto : protoList) {
+        splitLocations.add(new StringListPayloadPBImpl(stringListPayloadProto).getEntries());
+      }
+    }
+    return splitLocations;
   }
 
   @Override
-  public void setAggregatedSplitLocations(Set<String> locations) {
+  public void setSplitSizes(List<Long> splitSizes) {
     maybeInitBuilder();
-    builder.clearAggregatedSplitLocations();
-    if (locations == null) {
+    if (splitSizes == null) {
+      builder.clearSplitSizes();
+    }
+    this.splitSizes = splitSizes;
+  }
+
+  @Override
+  public List<Long> getSplitSizes() {
+    if (splitSizes == null) {
+      JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+      splitSizes = new ArrayList<>(p.getSplitSizesList());
+    }
+    return splitSizes;
+  }
+
+  @Override
+  public void setSplitLocations(List<List<String>> splitLocations) {
+    maybeInitBuilder();
+    if (splitLocations == null) {
+      builder.clearSplitLocations();
+    }
+    this.splitLocations = splitLocations;
+  }
+
+  @Override
+  public Long getDeadline() {
+    JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasDeadline())
+      return null;
+    return p.getDeadline();
+  }
+
+  @Override
+  public void setDeadline(Long deadline) {
+    maybeInitBuilder();
+    if (deadline == null) {
+      builder.clearDeadline();
       return;
     }
-    builder.addAllAggregatedSplitLocations(locations);
+    builder.setDeadline(deadline);
   }
 }

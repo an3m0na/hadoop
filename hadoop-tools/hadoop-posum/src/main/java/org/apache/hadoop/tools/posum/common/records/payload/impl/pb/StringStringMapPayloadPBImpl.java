@@ -58,9 +58,9 @@ public class StringStringMapPayloadPBImpl extends StringStringMapPayload impleme
 
   private void mergeLocalToBuilder() {
     maybeInitBuilder();
-    builder.clearEntries();
     if (entries == null)
       return;
+    builder.clearEntries();
     Iterable<YarnProtos.StringStringMapProto> iterable =
       new Iterable<YarnProtos.StringStringMapProto>() {
 
@@ -133,6 +133,9 @@ public class StringStringMapPayloadPBImpl extends StringStringMapPayload impleme
   @Override
   public void setEntries(Map<String, String> entries) {
     maybeInitBuilder();
+    if(entries == null){
+      builder.clearEntries();
+    }
     this.entries = entries;
   }
 

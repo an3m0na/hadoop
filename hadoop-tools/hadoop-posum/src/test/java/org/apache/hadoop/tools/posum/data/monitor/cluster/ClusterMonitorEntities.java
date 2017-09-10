@@ -32,8 +32,10 @@ class ClusterMonitorEntities {
   final TaskProfile RUNNING_REDUCE_TASK, RUNNING_MAP_TASK;
   final TaskProfile DETAILED_REDUCE_TASK;
   final TaskProfile FINISHED_DETAILED_REDUCE_TASK;
-  final CountersProxy JOB_COUNTERS, TASK_COUNTERS;
+  final CountersProxy JOB_COUNTERS, TASK_COUNTERS_MAP, TASK_COUNTERS_REDUCE;
   final JobConfProxy JOB_CONF;
+  final List<List<String>> SPLIT_LOCATIONS;
+  final List<Long> SPLIT_SIZES;
 
   ClusterMonitorEntities() {
     APP_ID = "application_1326821518301_0005";
@@ -60,6 +62,9 @@ class ClusterMonitorEntities {
 
     JOB_ID = "job_1326821518301_0005";
 
+    SPLIT_LOCATIONS = Collections.singletonList(Arrays.asList("node1", "node2"));
+    SPLIT_SIZES = Collections.singletonList(100L);
+
     RUNNING_JOB = Records.newRecord(JobProfile.class);
     RUNNING_JOB.setId(JOB_ID);
     RUNNING_JOB.setAppId(APP_ID);
@@ -76,6 +81,9 @@ class ClusterMonitorEntities {
     RUNNING_JOB.setCompletedReduces(0);
     RUNNING_JOB.setMapProgress(58f);
     RUNNING_JOB.setReduceProgress(0f);
+    RUNNING_JOB.setSplitLocations(SPLIT_LOCATIONS);
+    RUNNING_JOB.setSplitSizes(SPLIT_SIZES);
+    RUNNING_JOB.setTotalSplitSize(100L);
 
     RUNNING_JOBS = new JobProfile[]{RUNNING_JOB};
 
@@ -92,9 +100,12 @@ class ClusterMonitorEntities {
     FINISHED_JOB.setAvgReduceTime(124961L);
     FINISHED_JOB.setMapProgress(100f);
     FINISHED_JOB.setReduceProgress(100f);
+    FINISHED_JOB.setSplitLocations(SPLIT_LOCATIONS);
+    FINISHED_JOB.setSplitSizes(SPLIT_SIZES);
+    FINISHED_JOB.setTotalSplitSize(100L);
 
     RUNNING_MAP_TASK = Records.newRecord(TaskProfile.class);
-    RUNNING_MAP_TASK.setId("task_1326821518301_0005_m_0");
+    RUNNING_MAP_TASK.setId("task_1326821518301_0005_m_000000");
     RUNNING_MAP_TASK.setAppId(APP_ID);
     RUNNING_MAP_TASK.setJobId(JOB_ID);
     RUNNING_MAP_TASK.setType(TaskType.MAP);
@@ -102,9 +113,11 @@ class ClusterMonitorEntities {
     RUNNING_MAP_TASK.setFinishTime(0L);
     RUNNING_MAP_TASK.setState(TaskState.RUNNING);
     RUNNING_MAP_TASK.setReportedProgress(58f);
+    RUNNING_MAP_TASK.setSplitLocations(SPLIT_LOCATIONS.get(0));
+    RUNNING_MAP_TASK.setSplitSize(SPLIT_SIZES.get(0));
 
     RUNNING_REDUCE_TASK = Records.newRecord(TaskProfile.class);
-    RUNNING_REDUCE_TASK.setId("task_1326821518301_0005_r_0");
+    RUNNING_REDUCE_TASK.setId("task_1326821518301_0005_r_000000");
     RUNNING_REDUCE_TASK.setAppId(APP_ID);
     RUNNING_REDUCE_TASK.setJobId(JOB_ID);
     RUNNING_REDUCE_TASK.setType(TaskType.REDUCE);
@@ -113,19 +126,22 @@ class ClusterMonitorEntities {
     RUNNING_REDUCE_TASK.setState(TaskState.RUNNING);
     RUNNING_REDUCE_TASK.setReportedProgress(0f);
 
+
     RUNNING_TASKS = new TaskProfile[]{RUNNING_MAP_TASK, RUNNING_REDUCE_TASK};
 
     TaskProfile FINISHED_MAP_TASK = RUNNING_MAP_TASK.copy();
-    FINISHED_MAP_TASK.setAppId(null);
+    FINISHED_MAP_TASK.setAppId(APP_ID);
     FINISHED_MAP_TASK.setFinishTime(1326381453318L);
-    FINISHED_MAP_TASK.setSuccessfulAttempt("attempt_1326821518301_0005_m_0_0");
+    FINISHED_MAP_TASK.setSuccessfulAttempt("attempt_1326821518301_0005_m_000000_0");
     FINISHED_MAP_TASK.setState(TaskState.SUCCEEDED);
     FINISHED_MAP_TASK.setReportedProgress(100f);
+    FINISHED_MAP_TASK.setSplitLocations(SPLIT_LOCATIONS.get(0));
+    FINISHED_MAP_TASK.setSplitSize(SPLIT_SIZES.get(0));
 
     TaskProfile FINISHED_REDUCE_TASK = RUNNING_REDUCE_TASK.copy();
-    FINISHED_REDUCE_TASK.setAppId(null);
+    FINISHED_REDUCE_TASK.setAppId(APP_ID);
     FINISHED_REDUCE_TASK.setFinishTime(1326381582103L);
-    FINISHED_REDUCE_TASK.setSuccessfulAttempt("attempt_1326821518301_0005_r_0_0");
+    FINISHED_REDUCE_TASK.setSuccessfulAttempt("attempt_1326821518301_0005_r_000000_0");
     FINISHED_REDUCE_TASK.setState(TaskState.SUCCEEDED);
     FINISHED_REDUCE_TASK.setReportedProgress(100f);
 
@@ -145,9 +161,13 @@ class ClusterMonitorEntities {
     JOB_COUNTERS.setId(JOB_ID);
     JOB_COUNTERS.setCounterGroup(createCounterGroups(true));
 
-    TASK_COUNTERS = Records.newRecord(CountersProxy.class);
-    TASK_COUNTERS.setId(RUNNING_MAP_TASK.getId());
-    TASK_COUNTERS.setTaskCounterGroup(createCounterGroups(false));
+    TASK_COUNTERS_MAP = Records.newRecord(CountersProxy.class);
+    TASK_COUNTERS_MAP.setId(RUNNING_MAP_TASK.getId());
+    TASK_COUNTERS_MAP.setTaskCounterGroup(createCounterGroups(false));
+
+    TASK_COUNTERS_REDUCE = Records.newRecord(CountersProxy.class);
+    TASK_COUNTERS_REDUCE.setId(RUNNING_REDUCE_TASK.getId());
+    TASK_COUNTERS_REDUCE.setTaskCounterGroup(createCounterGroups(false));
 
     JOB_CONF = Records.newRecord(JobConfProxy.class);
     JOB_CONF.setId(JOB_ID);
@@ -160,6 +180,9 @@ class ClusterMonitorEntities {
     properties.put("mapreduce.job.user.name", "user1");
     properties.put("mapreduce.job.queuename", "a1");
     properties.put("mapreduce.job.reduces", "1");
+    properties.put("mapreduce.job.reduce.class", "org.team.SomeReducer");
+    properties.put("mapreduce.job.map.class", "org.team.SomeMapper");
+    properties.put("yarn.application.deadline", "1326381330000");
     JOB_CONF.setPropertyMap(properties);
   }
 
@@ -208,7 +231,7 @@ class ClusterMonitorEntities {
         CounterInfoPayload.newInstance("COMMITTED_HEAP_BYTES", 378863616)
       )),
       CounterGroupInfoPayload.newInstance("org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter", Collections.singletonList(
-        CounterInfoPayload.newInstance("BYTES_READ", 0)
+        CounterInfoPayload.newInstance("BYTES_READ", 48)
       )),
       CounterGroupInfoPayload.newInstance("org.apache.hadoop.mapreduce.lib.output.FileOutputFormatCounter", Collections.singletonList(
         CounterInfoPayload.newInstance("BYTES_WRITTEN", 0)

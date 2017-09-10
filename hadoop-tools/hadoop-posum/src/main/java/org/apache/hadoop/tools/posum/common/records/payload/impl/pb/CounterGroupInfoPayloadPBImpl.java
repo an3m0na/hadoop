@@ -67,6 +67,7 @@ public class CounterGroupInfoPayloadPBImpl extends CounterGroupInfoPayload imple
   private void mergeLocalToBuilder() {
     maybeInitBuilder();
     if (this.counter != null) {
+      builder.clearCounters();
       Iterable<CounterInfoPayloadProto> iterable =
         new Iterable<CounterInfoPayloadProto>() {
 
@@ -129,6 +130,10 @@ public class CounterGroupInfoPayloadPBImpl extends CounterGroupInfoPayload imple
 
   @Override
   public void setCounter(List<CounterInfoPayload> counter) {
+    maybeInitBuilder();
+    if(counter == null){
+      builder.clearCounters();
+    }
     this.counter = counter;
   }
 

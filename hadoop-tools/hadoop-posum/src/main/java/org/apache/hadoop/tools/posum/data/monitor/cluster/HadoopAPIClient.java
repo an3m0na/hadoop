@@ -71,6 +71,7 @@ public class HadoopAPIClient {
       app.setState(YarnApplicationState.valueOf(rawApp.get("state").asText()));
       app.setStatus(FinalApplicationStatus.valueOf(rawApp.get("finalStatus").asText()));
       app.setTrackingUI(RestClient.TrackingUI.fromLabel(rawApp.get("trackingUI").asText()));
+      app.setLastUpdated(System.currentTimeMillis());
       apps.add(app);
     }
     return apps;
@@ -167,6 +168,7 @@ public class HadoopAPIClient {
     job.setAvgShuffleTime(rawJob.get("avgShuffleTime").asLong());
     job.setAvgMergeTime(rawJob.get("avgMergeTime").asLong());
     job.setAvgReduceDuration(job.getAvgShuffleTime() + job.getAvgMergeTime() + job.getAvgReduceTime());
+    job.setLastUpdated(System.currentTimeMillis());
     return job;
   }
 
@@ -195,20 +197,27 @@ public class HadoopAPIClient {
     job.setTotalMapTasks(rawJob.get("mapsTotal").asInt());
     job.setTotalReduceTasks(rawJob.get("reducesTotal").asInt());
     job.setUberized(rawJob.get("uberized").asBoolean());
+    job.setLastUpdated(System.currentTimeMillis());
     return job;
   }
 
-  List<TaskProfile> getFinishedTasksInfo(String jobId) {
+  List<TaskProfile> getFinishedTasksInfo(String jobId, List<TaskProfile> previousTasks) {
     String rawString = restClient.getInfo(String.class,
       RestClient.TrackingUI.HISTORY, "jobs/%s/tasks", new String[]{jobId});
     JsonNode rawTasks = getRawNode(rawString, "tasks", "task");
     if (rawTasks == null)
       return Collections.emptyList();
+    Map<String, TaskProfile> previousTasksById = new HashMap<>(previousTasks.size());
+    for (TaskProfile previousTask : previousTasks) {
+      previousTasksById.put(previousTask.getId(), previousTask);
+    }
     List<TaskProfile> tasks = new ArrayList<>(rawTasks.size());
     for (int i = 0; i < rawTasks.size(); i++) {
       JsonNode rawTask = rawTasks.get(i);
-      TaskProfile task = Records.newRecord(TaskProfile.class);
-      task.setId(rawTask.get("id").asText());
+      String taskId = rawTask.get("id").asText();
+      TaskProfile previousTask =  previousTasksById.get(taskId);
+      TaskProfile task = previousTask!= null ? previousTask : Records.newRecord(TaskProfile.class);
+      task.setId(taskId);
       task.setJobId(jobId);
       task.setType(TaskType.valueOf(rawTask.get("type").asText()));
       task.setStartTime(rawTask.get("startTime").asLong());
@@ -216,22 +225,29 @@ public class HadoopAPIClient {
       task.setReportedProgress(new Double(rawTask.get("progress").asDouble()).floatValue());
       task.setState(TaskState.valueOf(rawTask.get("state").asText()));
       task.setSuccessfulAttempt(rawTask.get("successfulAttempt").asText());
+      task.setLastUpdated(System.currentTimeMillis());
       tasks.add(task);
     }
     return tasks;
   }
 
-  List<TaskProfile> getRunningTasksInfo(JobProfile job) {
+  List<TaskProfile> getRunningTasksInfo(JobProfile job, List<TaskProfile> previousTasks) {
     String rawString = restClient.getInfo(String.class,
       RestClient.TrackingUI.AM, "jobs/%s/tasks", new String[]{job.getAppId(), job.getId()});
     JsonNode rawTasks = getRawNode(rawString, "tasks", "task");
     if (rawTasks == null)
       return Collections.emptyList();
+    Map<String, TaskProfile> previousTasksById = new HashMap<>(previousTasks.size());
+    for (TaskProfile previousTask : previousTasks) {
+      previousTasksById.put(previousTask.getId(), previousTask);
+    }
     List<TaskProfile> tasks = new ArrayList<>(rawTasks.size());
     for (int i = 0; i < rawTasks.size(); i++) {
       JsonNode rawTask = rawTasks.get(i);
-      TaskProfile task = Records.newRecord(TaskProfile.class);
-      task.setId(rawTask.get("id").asText());
+      String taskId = rawTask.get("id").asText();
+      TaskProfile previousTask =  previousTasksById.get(taskId);
+      TaskProfile task = previousTask!= null ? previousTask : Records.newRecord(TaskProfile.class);
+      task.setId(taskId);
       task.setAppId(job.getAppId());
       task.setJobId(job.getId());
       task.setType(TaskType.valueOf(rawTask.get("type").asText()));
@@ -239,6 +255,7 @@ public class HadoopAPIClient {
       task.setFinishTime(rawTask.get("finishTime").asLong());
       task.setReportedProgress(new Double(rawTask.get("progress").asDouble()).floatValue());
       task.setState(TaskState.valueOf(rawTask.get("state").asText()));
+      task.setLastUpdated(System.currentTimeMillis());
       tasks.add(task);
     }
     return tasks;
@@ -312,6 +329,7 @@ public class HadoopAPIClient {
       map.put(property.get("name").asText(), property.get("value").asText());
     }
     conf.setPropertyMap(map);
+    conf.setLastUpdated(System.currentTimeMillis());
     return conf;
   }
 
@@ -321,6 +339,7 @@ public class HadoopAPIClient {
         RestClient.TrackingUI.AM, "jobs/%s/counters", new String[]{appId, jobId});
       if (wrapper == null)
         return null;
+      wrapper.jobCounters.setLastUpdated(System.currentTimeMillis());
       return wrapper.jobCounters;
     } catch (Exception e) {
       logger.debug("Exception parsing counters from AM", e);
@@ -334,6 +353,7 @@ public class HadoopAPIClient {
         RestClient.TrackingUI.AM, "jobs/%s/tasks/%s/counters", new String[]{appId, jobId, taskId});
       if (wrapper == null)
         return null;
+      wrapper.jobTaskCounters.setLastUpdated(System.currentTimeMillis());
       return wrapper.jobTaskCounters;
     } catch (Exception e) {
       logger.debug("Exception parsing counters from AM", e);
@@ -348,6 +368,7 @@ public class HadoopAPIClient {
         RestClient.TrackingUI.HISTORY, "jobs/%s/counters", new String[]{jobId});
       if (wrapper == null)
         return null;
+      wrapper.jobCounters.setLastUpdated(System.currentTimeMillis());
       return wrapper.jobCounters;
     } catch (Exception e) {
       logger.debug("Exception parsing counters from HISTORY", e);
@@ -361,6 +382,7 @@ public class HadoopAPIClient {
         RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/counters", new String[]{jobId, taskId});
       if (wrapper == null)
         return null;
+      wrapper.jobTaskCounters.setLastUpdated(System.currentTimeMillis());
       return wrapper.jobTaskCounters;
     } catch (Exception e) {
       logger.debug("Exception parsing counters from HISTORY", e);

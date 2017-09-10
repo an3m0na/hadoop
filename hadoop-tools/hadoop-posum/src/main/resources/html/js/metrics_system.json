@@ -3,9 +3,14 @@
   "result": {
     "time": 1461952157630,
     "jvm": {
-      "total": 12,
-      "max": 10,
-      "free": 5
-    }
+      "total": 10,
+      "max": 12,
+      "used": 5
+    },
+    "cpu": {
+      "total": 0.823,
+      "process": 0.562
+    },
+    "threadCount": 30
   }
 }

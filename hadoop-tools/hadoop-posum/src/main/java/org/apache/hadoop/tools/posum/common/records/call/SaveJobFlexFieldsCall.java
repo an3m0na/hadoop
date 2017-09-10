@@ -38,7 +38,7 @@ public abstract class SaveJobFlexFieldsCall extends LockBasedDatabaseCallImpl<Vo
     JobProfile job = dataStore.<JobProfile>findById(db, type, getJobId());
     if (job == null)
       throw new PosumException("Could not find job to save flex-fields: " + getJobId());
-    job.addAll(getNewFields());
+    job.addAllFlexFields(getNewFields());
     dataStore.updateOrStore(db, type, job);
     return VoidPayload.newInstance();
   }

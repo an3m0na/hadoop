@@ -9,8 +9,8 @@ public class DataMasterContext {
   private DummyTokenSecretManager tokenSecretManager;
   private DataStore dataStore;
   private DataMasterCommService commService;
-  private AppInfoCollector clusterInfo;
-  private PosumInfoCollector posumInfo;
+  private AppInfoCollector clusterInfoCollector;
+  private PosumInfoCollector posumInfoCollector;
 
   public void setTokenSecretManager(DummyTokenSecretManager tokenSecretManager) {
     this.tokenSecretManager = tokenSecretManager;
@@ -36,19 +36,19 @@ public class DataMasterContext {
     return commService;
   }
 
-  public AppInfoCollector getClusterInfo() {
-    return clusterInfo;
+  public AppInfoCollector getClusterInfoCollector() {
+    return clusterInfoCollector;
   }
 
-  public void setClusterInfo(AppInfoCollector clusterInfo) {
-    this.clusterInfo = clusterInfo;
+  public void setClusterInfoCollector(AppInfoCollector clusterInfoCollector) {
+    this.clusterInfoCollector = clusterInfoCollector;
   }
 
-  public PosumInfoCollector getPosumInfo() {
-    return posumInfo;
+  public PosumInfoCollector getPosumInfoCollector() {
+    return posumInfoCollector;
   }
 
-  public void setPosumInfo(PosumInfoCollector posumInfo) {
-    this.posumInfo = posumInfo;
+  public void setPosumInfoCollector(PosumInfoCollector posumInfoCollector) {
+    this.posumInfoCollector = posumInfoCollector;
   }
 }

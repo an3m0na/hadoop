@@ -6,13 +6,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.DeleteByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.DeleteByQueryCall;
-import org.apache.hadoop.tools.posum.common.records.call.StoreAllCall;
 import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.call.TransactionCall;
 import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
@@ -40,7 +40,6 @@ public class AppInfoCollector {
 
   private static Log logger = LogFactory.getLog(AppInfoCollector.class);
 
-  private Set<String> running = new HashSet<>();
   private Set<String> finished = new HashSet<>();
   private Database db;
   private HadoopAPIClient api;
@@ -56,12 +55,12 @@ public class AppInfoCollector {
     this.db = db;
     this.api = new HadoopAPIClient();
     this.jobInfoCollector = new JobInfoCollector(conf, db);
-    this.taskInfoCollector = new TaskInfoCollector();
+    this.taskInfoCollector = new TaskInfoCollector(conf, db);
     this.auditEnabled = conf.getBoolean(PosumConfiguration.MONITOR_KEEP_HISTORY,
       PosumConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
   }
 
-  void refresh() {
+  void collect() {
     List<AppProfile> apps = api.getAppsInfo();
     logger.trace("Found " + apps.size() + " apps");
     for (AppProfile app : apps) {
@@ -73,16 +72,14 @@ public class AppInfoCollector {
         } else {
           logger.trace("App " + app.getId() + " is running");
           updateAppInfo(app);
-          running.add(app.getId());
         }
       }
     }
+    db.notifyUpdate();
   }
 
   private void moveAppToHistory(final AppProfile app) {
     final String appId = app.getId();
-    logger.trace("Moving " + appId + " to history");
-    running.remove(appId);
     finished.add(appId);
 
     JobInfo jobInfo = jobInfoCollector.getFinishedJobInfo(app);
@@ -123,31 +120,33 @@ public class AppInfoCollector {
     TransactionCall auditCalls = TransactionCall.newInstance();
 
     updateCalls.addCall(UpdateOrStoreCall.newInstance(APP, app));
-    if (auditEnabled)
-      auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(APP, app)));
+    auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(APP, app)));
 
-    if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-      JobInfo jobInfo = jobInfoCollector.getRunningJobInfo(app);
-      if (jobInfo == null) {
-        if (api.checkAppFinished(app))
-          moveAppToHistory(app);
+    JobInfo jobInfo = jobInfoCollector.getRunningJobInfo(app);
+    if (jobInfo == null) {
+      if (api.checkAppFinished(app))
+        moveAppToHistory(app);
+      return;
+    }
+    JobConfProxy jobConf = jobInfo.getConf();
+    if (jobConf != null) {
+      updateCalls.addCall(UpdateOrStoreCall.newInstance(JOB_CONF, jobConf));
+      auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(JOB_CONF, jobConf)));
+    }
+    CountersProxy jobCounters = jobInfo.getJobCounters();
+    if (jobCounters != null) {
+      updateCalls.addCall(UpdateOrStoreCall.newInstance(COUNTER, jobCounters));
+      auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(COUNTER, jobCounters)));
+    }
+
+    JobProfile job = jobInfo.getProfile();
+    TaskInfo taskInfo = taskInfoCollector.getRunningTaskInfo(app, job);
+    if (taskInfo == null) {
+      if (api.checkAppFinished(app)) {
+        moveAppToHistory(app);
         return;
       }
-      if (jobInfo.getConf() != null) {
-        updateCalls.addCall(UpdateOrStoreCall.newInstance(JOB_CONF, jobInfo.getConf()));
-        auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(JOB_CONF, jobInfo.getConf())));
-      }
-      JobProfile job = jobInfo.getProfile();
-      updateCalls.addCall(UpdateOrStoreCall.newInstance(COUNTER, jobInfo.getJobCounters()));
-      auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(COUNTER, jobInfo.getJobCounters())));
-
-      TaskInfo taskInfo = taskInfoCollector.getRunningTaskInfo(job);
-      if (taskInfo == null) {
-        if (api.checkAppFinished(app))
-          moveAppToHistory(app);
-        return;
-      }
-
+    } else {
       for (TaskProfile task : taskInfo.getTasks()) {
         updateCalls.addCall(UpdateOrStoreCall.newInstance(TASK, task));
         auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(TASK, task)));
@@ -159,40 +158,22 @@ public class AppInfoCollector {
       }
 
       Utils.updateJobStatisticsFromTasks(job, taskInfo.getTasks());
-      updateCalls.addCall(UpdateOrStoreCall.newInstance(JOB, job));
-      auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(JOB, job)));
-
-    } else {
-      //app is not yet tracked
-      logger.trace("App " + app.getId() + " is not tracked");
-      if (!running.contains(app.getId())) {
-        // get job info directly from the conf in the staging dir
-        try {
-          JobInfo jobInfo = jobInfoCollector.getSubmittedJobInfo(app.getId(), app.getUser());
-          if (jobInfo != null) {
-            updateCalls.addCall(StoreCall.newInstance(JOB, jobInfo.getProfile()));
-            updateCalls.addCall(StoreCall.newInstance(JOB_CONF, jobInfo.getConf()));
-            updateCalls.addCall(StoreAllCall.newInstance(TASK, jobInfo.getTaskStubs()));
-            if (auditEnabled) {
-              auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(JOB, jobInfo.getProfile())));
-              auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(JOB_CONF, jobInfo.getConf())));
-              for (TaskProfile task : jobInfo.getTaskStubs()) {
-                auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(TASK, task)));
-              }
-            }
-          }
-        } catch (Exception e) {
-          logger.error("Could not get job info from staging dir!", e);
-        }
-      }
     }
+
+    updateCalls.addCall(UpdateOrStoreCall.newInstance(JOB, job));
+    auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(JOB, job)));
 
     db.execute(updateCalls);
 
-    if (auditEnabled) {
+    if (auditEnabled)
       db.execute(auditCalls);
-    }
   }
 
+  public void reset() {
+    // do nothing
+  }
 
+  void shutDown() throws InterruptedException {
+    taskInfoCollector.shutDown();
+  }
 }

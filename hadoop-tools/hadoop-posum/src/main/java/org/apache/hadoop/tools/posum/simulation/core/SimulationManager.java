@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
@@ -38,9 +39,6 @@ class SimulationManager implements Callable<SimulationResultPayload> {
   private SimulationStatistics stats;
   private static final FindByQueryCall GET_LATEST =
     FindByQueryCall.newInstance(JOB, null, "lastUpdated", true, 0, 1);
-  private Double runtime = 0.0;
-  private Double penalty = 0.0;
-  private Double cost = 0.0;
   private SimulationContext simulationContext;
 
 
@@ -60,8 +58,13 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     this.simulationContext.setTopologyProvider(topologyProvider);
   }
 
+  public String getPolicyName(){
+    return policyName;
+  }
+
   private void setUp() {
     simulationContext.setSchedulerClass(policyClass);
+    simulationContext.setStartTime(System.currentTimeMillis());
 
     sourceDb = Database.from(dataStore, DatabaseReference.getSimulation());
     simulationContext.setSourceDatabase(sourceDb);
@@ -92,15 +95,25 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     return 0;
   }
 
+  public void stop() {
+    exit = true;
+  }
+
   @Override
   public SimulationResultPayload call() throws Exception {
     setUp();
     try {
+      dataStore.execute(StoreLogCall.newInstance("Starting simulation for " + policyName), null);
       new SimulationRunner(simulationContext).run();
-      return SimulationResultPayload.newInstance(policyName, CompoundScorePayload.newInstance(runtime, penalty, cost));
+      return SimulationResultPayload.newInstance(policyName, new SimulationEvaluator(db).evaluate());
+    } catch (InterruptedException e) {
+      if (!exit)
+        // exiting was not intentional
+        logger.error("Simulation was interrupted unexpectedly", e);
+      return SimulationResultPayload.newInstance(policyName, null);
     } catch (Exception e) {
       logger.error("Error during simulation. Shutting down simulation...", e);
-      return SimulationResultPayload.newInstance(policyName, CompoundScorePayload.newInstance(0.0, 0.0, 0.0));
+      return SimulationResultPayload.newInstance(policyName, null);
     } finally {
       tearDown();
     }

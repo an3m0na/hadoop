@@ -13,19 +13,21 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler
 
 import java.util.concurrent.CountDownLatch;
 
-public class SimulationContext implements DatabaseProvider{
+public class SimulationContext implements DatabaseProvider {
 
   private volatile long currentTime = 0;
   private CountDownLatch remainingJobsCounter;
-  private DaemonQueue daemonQueue = new DaemonQueue();
+  private DaemonQueue daemonQueue;
   private Configuration conf = PosumConfiguration.newInstance();
   private Class<? extends ResourceScheduler> schedulerClass;
+  private long startTime = 0;
   private long endTime = 0;
   private TopologyProvider topologyProvider;
   private Database database;
   private Database sourceDatabase;
   private Dispatcher dispatcher = new SimpleDispatcher();
   private JobBehaviorPredictor predictor;
+  private boolean awaitingScheduler;
 
   public long getCurrentTime() {
     return currentTime;
@@ -113,5 +115,40 @@ public class SimulationContext implements DatabaseProvider{
 
   public void setPredictor(JobBehaviorPredictor predictor) {
     this.predictor = predictor;
+  }
+
+  public void setAwaitingScheduler(boolean awaitingScheduler) {
+    this.awaitingScheduler = awaitingScheduler;
+  }
+
+  public boolean isAwaitingScheduler() {
+    return awaitingScheduler;
+  }
+
+  public long getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(long startTime) {
+    this.startTime = startTime;
+  }
+
+  @Override
+  public String toString() {
+    return "SimulationContext{" +
+      "currentTime=" + currentTime +
+      ", remainingJobsCounter=" + remainingJobsCounter +
+      ", daemonQueue=" + daemonQueue +
+      ", conf=" + conf +
+      ", schedulerClass=" + schedulerClass +
+      ", startTime=" + startTime +
+      ", endTime=" + endTime +
+      ", topologyProvider=" + topologyProvider +
+      ", database=" + database +
+      ", sourceDatabase=" + sourceDatabase +
+      ", dispatcher=" + dispatcher +
+      ", predictor=" + predictor +
+      ", awaitingScheduler=" + awaitingScheduler +
+      '}';
   }
 }

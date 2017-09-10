@@ -38,6 +38,7 @@ public class MockDataStoreImpl implements LockBasedDataStore {
   private ReentrantReadWriteLock masterLock = new ReentrantReadWriteLock();
 
   private static class DBAssets {
+    final Object updateMonitor = new Object();
     ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     Map<DataEntityCollection, Map<String, ? extends GeneralDataEntity>> collections =
       new ConcurrentHashMap<>(DataEntityCollection.values().length);
@@ -261,6 +262,7 @@ public class MockDataStoreImpl implements LockBasedDataStore {
   public void clearDatabase(DatabaseReference db) {
     masterLock.readLock().lock();
     try {
+      notifyUpdate(db);
       DBAssets dbAssets = getDatabaseAssets(db);
       if (dbAssets == null)
         return;
@@ -315,6 +317,22 @@ public class MockDataStoreImpl implements LockBasedDataStore {
       }
     } finally {
       unlockForRead(sourceDB);
+    }
+  }
+
+  @Override
+  public void awaitUpdate(DatabaseReference db) throws InterruptedException {
+    Object monitor = getDatabaseAssets(db).updateMonitor;
+    synchronized (monitor) {
+      monitor.wait();
+    }
+  }
+
+  @Override
+  public void notifyUpdate(DatabaseReference db) {
+    Object monitor = getDatabaseAssets(db).updateMonitor;
+    synchronized (monitor) {
+      monitor.notify();
     }
   }
 

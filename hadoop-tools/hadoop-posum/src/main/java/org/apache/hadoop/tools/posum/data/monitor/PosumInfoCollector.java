@@ -40,6 +40,7 @@ public class PosumInfoCollector {
   private static Log logger = LogFactory.getLog(PosumInfoCollector.class);
 
   private final PosumAPIClient api;
+  private final Database logDb;
   private final DataStore dataStore;
   private final Configuration conf;
   private final Boolean fineGrained;
@@ -51,42 +52,48 @@ public class PosumInfoCollector {
   private Long schedulingStart = 0L;
   private String lastUsedPolicy;
   //TODO use only this predictor for regular experiments
-  //    private JobBehaviorPredictor predictor;
+//      private JobBehaviorPredictor predictor;
   private JobBehaviorPredictor basicPredictor;
   private JobBehaviorPredictor standardPredictor;
   private JobBehaviorPredictor detailedPredictor;
 
-
   public PosumInfoCollector(Configuration conf, DataStore dataStore) {
     this.dataStore = dataStore;
+    this.logDb = Database.from(dataStore, DatabaseReference.getLogs());
     this.conf = conf;
     fineGrained = conf.getBoolean(PosumConfiguration.FINE_GRAINED_MONITOR,
       PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
     api = new PosumAPIClient(conf);
-    Set<String> policies = new PolicyPortfolio(conf).keySet();
-    policyMap = new HashMap<>(policies.size());
-    for (String policy : policies) {
-      policyMap.put(policy, PolicyInfoPayload.newInstance());
-    }
+    policyMap = new HashMap<>();
+    initializePolicyMap();
     activeNodes = new HashSet<>();
-    Database db = Database.from(dataStore, DatabaseReference.getMain());
 //        predictor = JobBehaviorPredictor.newInstance(conf);
     basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
-    basicPredictor.train(db);
     standardPredictor = JobBehaviorPredictor.newInstance(conf, StandardPredictor.class);
-    standardPredictor.train(db);
     detailedPredictor = JobBehaviorPredictor.newInstance(conf, DetailedPredictor.class);
-    detailedPredictor.train(db);
     predictionTimeout = conf.getLong(PosumConfiguration.PREDICTOR_TIMEOUT,
       PosumConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
   }
 
-  void refresh() {
+  private void initializePolicyMap() {
+    Set<String> policies = new PolicyPortfolio(conf).keySet();
+    for (String policy : policies) {
+      policyMap.put(policy, PolicyInfoPayload.newInstance());
+    }
+  }
+
+  synchronized void collect() {
     long now = System.currentTimeMillis();
     if (fineGrained) {
       //TODO get metrics from all services and persist to database
       if (now - lastPrediction > predictionTimeout) {
         // make new predictions
+        Database db = Database.from(dataStore, DatabaseReference.getMain());
+//        predictor.train(db);
+        basicPredictor.train(db);
+        standardPredictor.train(db);
+        detailedPredictor.train(db);
+
         IdsByQueryCall getAllTasks = IdsByQueryCall.newInstance(DataEntityCollection.TASK, null);
         List<String> taskIds = dataStore.execute(getAllTasks, DatabaseReference.getMain()).getEntries();
         for (String taskId : taskIds) {
@@ -108,7 +115,7 @@ public class PosumInfoCollector {
         QueryUtils.lessThanOrEqual("lastUpdated", now)
       ));
     List<LogEntry<SimplePropertyPayload>> policyChanges =
-      dataStore.execute(findPolicyChanges, DatabaseReference.getLogs()).getEntities();
+      logDb.execute(findPolicyChanges).getEntities();
     if (policyChanges.size() > 0) {
       if (schedulingStart == 0)
         schedulingStart = policyChanges.get(0).getLastUpdated();
@@ -123,8 +130,8 @@ public class PosumInfoCollector {
         }
         info.start(change.getLastUpdated());
       }
-      dataStore.execute(CallUtils.storeStatReportCall(LogEntry.Type.POLICY_MAP,
-        PolicyInfoMapPayload.newInstance(policyMap)), null);
+      logDb.execute(CallUtils.storeStatReportCall(LogEntry.Type.POLICY_MAP,
+        PolicyInfoMapPayload.newInstance(policyMap)));
     }
 
     // aggregate node change decisions
@@ -135,7 +142,7 @@ public class PosumInfoCollector {
         QueryUtils.lessThanOrEqual("lastUpdated", now)
       ));
     List<LogEntry<SimplePropertyPayload>> nodeChanges =
-      dataStore.execute(findNodeChanges, DatabaseReference.getLogs()).getEntities();
+      logDb.execute(findNodeChanges).getEntities();
     if (nodeChanges.size() > 0) {
       for (LogEntry<SimplePropertyPayload> nodeChange : nodeChanges) {
         String hostName = (String) nodeChange.getDetails().getValue();
@@ -144,11 +151,13 @@ public class PosumInfoCollector {
         else
           activeNodes.remove(hostName);
       }
-      dataStore.execute(CallUtils.storeStatReportCall(LogEntry.Type.ACTIVE_NODES,
-        StringListPayload.newInstance(new ArrayList<>(activeNodes))), null);
+      logDb.execute(CallUtils.storeStatReportCall(LogEntry.Type.ACTIVE_NODES,
+        StringListPayload.newInstance(new ArrayList<>(activeNodes))));
     }
 
     lastCollectTime = now;
+
+    logDb.notifyUpdate();
   }
 
   private void storePredictionForTask(JobBehaviorPredictor predictor, String taskId) {
@@ -159,7 +168,7 @@ public class PosumInfoCollector {
         predictor.predictTaskBehavior(new TaskPredictionInput(taskId)).getDuration()
       );
       StoreLogCall storePrediction = CallUtils.storeStatReportCall(LogEntry.Type.TASK_PREDICTION, prediction);
-      dataStore.execute(storePrediction, null);
+      logDb.execute(storePrediction);
     } catch (Exception e) {
       if (!(e instanceof PosumException))
         logger.error("Could not predict task duration for " + taskId + " due to: ", e);
@@ -168,4 +177,24 @@ public class PosumInfoCollector {
     }
   }
 
+  public synchronized void reset() {
+    // save current active nodes data
+    logDb.execute(CallUtils.storeStatReportCall(LogEntry.Type.ACTIVE_NODES,
+      StringListPayload.newInstance(new ArrayList<>(activeNodes))));
+
+    // reinitialize predictors
+    //        predictor.clearHistory();
+    basicPredictor.clearHistory();
+    standardPredictor.clearHistory();
+    detailedPredictor.clearHistory();
+
+    // reinitialize policy map
+    initializePolicyMap();
+    long now = System.currentTimeMillis();
+    schedulingStart = now;
+    PolicyInfoPayload info = policyMap.get(lastUsedPolicy);
+    info.start(now);
+    logDb.execute(CallUtils.storeStatReportCall(LogEntry.Type.POLICY_MAP,
+      PolicyInfoMapPayload.newInstance(policyMap)));
+  }
 }

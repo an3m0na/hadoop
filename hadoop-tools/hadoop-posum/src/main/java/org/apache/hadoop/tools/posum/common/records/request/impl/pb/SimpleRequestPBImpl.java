@@ -105,6 +105,10 @@ public abstract class SimpleRequestPBImpl<T> extends SimpleRequest<T> {
 
   @Override
   public void setPayload(T payload) {
+    maybeInitBuilder();
+    if(payload == null){
+      builder.clearPayload();
+    }
     this.payload = payload;
   }
 }

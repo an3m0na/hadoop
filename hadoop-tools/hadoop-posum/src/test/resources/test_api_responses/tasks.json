@@ -6,7 +6,7 @@
         "elapsedTime" : 2768,
         "state" : "RUNNING",
         "startTime" : 1326381446541,
-        "id" : "task_1326821518301_0005_m_0",
+        "id" : "task_1326821518301_0005_m_000000",
         "type" : "MAP",
         "successfulAttempt" : "",
         "finishTime" : 0
@@ -16,7 +16,7 @@
         "elapsedTime" : 0,
         "state" : "RUNNING",
         "startTime" : 1326381446544,
-        "id" : "task_1326821518301_0005_r_0",
+        "id" : "task_1326821518301_0005_r_000000",
         "type" : "REDUCE",
         "successfulAttempt" : "",
         "finishTime" : 0

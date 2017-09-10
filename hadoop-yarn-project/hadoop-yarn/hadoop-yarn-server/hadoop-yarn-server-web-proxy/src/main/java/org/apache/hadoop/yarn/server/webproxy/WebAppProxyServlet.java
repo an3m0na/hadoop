@@ -18,6 +18,37 @@
 
 package org.apache.hadoop.yarn.server.webproxy;
 
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.params.HttpClientParams;
+import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
+import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.exceptions.ApplicationNotFoundException;
+import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.util.Apps;
+import org.apache.hadoop.yarn.util.StringHelper;
+import org.apache.hadoop.yarn.util.TrackingUriPlugin;
+import org.apache.hadoop.yarn.webapp.MimeType;
+import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
+import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.params.ClientPNames;
+import org.apache.http.client.params.CookiePolicy;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.conn.params.ConnRoutePNames;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -34,63 +65,38 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.UriBuilder;
-
-import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.ApplicationReport;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.hadoop.yarn.exceptions.ApplicationNotFoundException;
-import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.util.Apps;
-import org.apache.hadoop.yarn.util.StringHelper;
-import org.apache.hadoop.yarn.util.TrackingUriPlugin;
-import org.apache.hadoop.yarn.webapp.MimeType;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.client.params.CookiePolicy;
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.conn.params.ConnRoutePNames;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.apache.hadoop.http.HttpServer2.HTTP_MAX_THREADS;
 
 public class WebAppProxyServlet extends HttpServlet {
   private static final long serialVersionUID = 1L;
   private static final Logger LOG = LoggerFactory.getLogger(
       WebAppProxyServlet.class);
-  private static final Set<String> passThroughHeaders = 
+  private static final Set<String> passThroughHeaders =
     new HashSet<>(Arrays.asList(
         "User-Agent",
         "Accept",
         "Accept-Encoding",
         "Accept-Language",
         "Accept-Charset"));
-  
+
   public static final String PROXY_USER_COOKIE_NAME = "proxy-user";
 
   private transient List<TrackingUriPlugin> trackingUriPlugins;
   private final String rmAppPageUrlBase;
   private transient YarnConfiguration conf;
 
+  private static final MultiThreadedHttpConnectionManager CONN_MGR = new MultiThreadedHttpConnectionManager();
+  private HttpClient client;
+
   private static class _ implements Hamlet._ {
     //Empty
   }
-  
+
   private static class Page extends Hamlet {
     Page(PrintWriter out) {
       super(out, 0, false);
     }
-  
+
     public HTML<WebAppProxyServlet._> html() {
       return new HTML<>("html", null, EnumSet.of(EOpt.ENDTAG));
     }
@@ -109,17 +115,48 @@ public class WebAppProxyServlet extends HttpServlet {
         WebAppUtils.getResolvedRMWebAppURLWithScheme(conf), "cluster", "app");
   }
 
+  private synchronized HttpClient getClient() throws IOException {
+    if (client == null) {
+      HttpConnectionManagerParams mgrParams = new HttpConnectionManagerParams();
+      int maxThreads = conf.getInt(HTTP_MAX_THREADS, -1);
+      if (maxThreads > 0) {
+        // Cap at maximum number of requests that the proxy can handle
+        mgrParams.setDefaultMaxConnectionsPerHost(maxThreads);
+        mgrParams.setMaxTotalConnections(maxThreads);
+      }
+      CONN_MGR.setParams(mgrParams);
+      client = new HttpClient(CONN_MGR);
+
+      HttpClientParams httpClientParams = client.getParams();
+      httpClientParams.setParameter(ClientPNames.COOKIE_POLICY,
+        CookiePolicy.BROWSER_COMPATIBILITY);
+      httpClientParams.setBooleanParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
+
+      // Make sure we send the request from the proxy address in the config
+      // since that is what the AM filter checks against. IP aliasing or
+      // similar could cause issues otherwise.
+
+      InetAddress localAddress = InetAddress.getByName(getProxyHost());
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("local InetAddress for proxy host: {}", localAddress);
+      }
+      client.getParams()
+        .setParameter(ConnRoutePNames.LOCAL_ADDRESS, localAddress);
+    }
+    return client;
+  }
+
   /**
    * Output 404 with appropriate message.
    * @param resp the http response.
    * @param message the message to include on the page.
    * @throws IOException on any error.
    */
-  private static void notFound(HttpServletResponse resp, String message) 
+  private static void notFound(HttpServletResponse resp, String message)
     throws IOException {
     ProxyUtils.notFound(resp, message);
   }
-  
+
   /**
    * Warn the user that the link may not be safe!
    * @param resp the http response
@@ -127,7 +164,7 @@ public class WebAppProxyServlet extends HttpServlet {
    * @param user the user that owns the link.
    * @throws IOException on any error.
    */
-  private static void warnUserPage(HttpServletResponse resp, String link, 
+  private static void warnUserPage(HttpServletResponse resp, String link,
       String user, ApplicationId id) throws IOException {
     //Set the cookie when we warn which overrides the query parameter
     //This is so that if a user passes in the approved query parameter without
@@ -143,7 +180,7 @@ public class WebAppProxyServlet extends HttpServlet {
       _().
     _();
   }
-  
+
   /**
    * Download link and have it be the response.
    * @param req the http request
@@ -152,25 +189,11 @@ public class WebAppProxyServlet extends HttpServlet {
    * @param c the cookie to set if any
    * @throws IOException on any error.
    */
-  private static void proxyLink(HttpServletRequest req, 
-      HttpServletResponse resp, URI link, Cookie c, String proxyHost)
-      throws IOException {
-    DefaultHttpClient client = new DefaultHttpClient();
-    client
-        .getParams()
-        .setParameter(ClientPNames.COOKIE_POLICY,
-            CookiePolicy.BROWSER_COMPATIBILITY)
-        .setBooleanParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
-    // Make sure we send the request from the proxy address in the config
-    // since that is what the AM filter checks against. IP aliasing or
-    // similar could cause issues otherwise.
-    InetAddress localAddress = InetAddress.getByName(proxyHost);
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("local InetAddress for proxy host: {}", localAddress);
-    }
-    client.getParams()
-        .setParameter(ConnRoutePNames.LOCAL_ADDRESS, localAddress);
-    HttpGet httpGet = new HttpGet(link);
+  private static void proxyLink(HttpServletRequest req,
+                                HttpServletResponse resp, URI link, Cookie c, HttpClient client)
+    throws IOException {
+
+    GetMethod httpGet = new GetMethod(link.toString());
     @SuppressWarnings("unchecked")
     Enumeration<String> names = req.getHeaderNames();
     while(names.hasMoreElements()) {
@@ -180,26 +203,26 @@ public class WebAppProxyServlet extends HttpServlet {
         if (LOG.isDebugEnabled()) {
           LOG.debug("REQ HEADER: {} : {}", name, value);
         }
-        httpGet.setHeader(name, value);
+        httpGet.setRequestHeader(name, value);
       }
     }
 
     String user = req.getRemoteUser();
     if (user != null && !user.isEmpty()) {
-      httpGet.setHeader("Cookie",
-          PROXY_USER_COOKIE_NAME + "=" + URLEncoder.encode(user, "ASCII"));
+      httpGet.setRequestHeader("Cookie",
+        PROXY_USER_COOKIE_NAME + "=" + URLEncoder.encode(user, "ASCII"));
     }
     OutputStream out = resp.getOutputStream();
     try {
-      HttpResponse httpResp = client.execute(httpGet);
-      resp.setStatus(httpResp.getStatusLine().getStatusCode());
-      for (Header header : httpResp.getAllHeaders()) {
+      int status = client.executeMethod(httpGet);
+      resp.setStatus(status);
+      for (Header header : httpGet.getResponseHeaders()) {
         resp.setHeader(header.getName(), header.getValue());
       }
       if (c != null) {
         resp.addCookie(c);
       }
-      InputStream in = httpResp.getEntity().getContent();
+      InputStream in = httpGet.getResponseBodyAsStream();
       if (in != null) {
         IOUtils.copyBytes(in, out, 4096, true);
       }
@@ -207,40 +230,40 @@ public class WebAppProxyServlet extends HttpServlet {
       httpGet.releaseConnection();
     }
   }
-  
+
   private static String getCheckCookieName(ApplicationId id){
     return "checked_"+id;
   }
-  
+
   private static Cookie makeCheckCookie(ApplicationId id, boolean isSet) {
     Cookie c = new Cookie(getCheckCookieName(id),String.valueOf(isSet));
     c.setPath(ProxyUriUtils.getPath(id));
     c.setMaxAge(60 * 60 * 2); //2 hours in seconds
     return c;
   }
-  
+
   private boolean isSecurityEnabled() {
     Boolean b = (Boolean) getServletContext()
         .getAttribute(WebAppProxy.IS_SECURITY_ENABLED_ATTRIBUTE);
     return b != null ? b : false;
   }
-  
+
   private ApplicationReport getApplicationReport(ApplicationId id)
       throws IOException, YarnException {
     return ((AppReportFetcher) getServletContext()
         .getAttribute(WebAppProxy.FETCHER_ATTRIBUTE)).getApplicationReport(id);
   }
-  
+
   private String getProxyHost() throws IOException {
     return ((String) getServletContext()
         .getAttribute(WebAppProxy.PROXY_HOST_ATTRIBUTE));
   }
-  
+
   @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
   throws IOException{
     try {
-      String userApprovedParamS = 
+      String userApprovedParamS =
         req.getParameter(ProxyUriUtils.PROXY_APPROVAL_PARAM);
       boolean userWasWarned = false;
       boolean userApproved = Boolean.valueOf(userApprovedParamS);
@@ -264,9 +287,9 @@ public class WebAppProxyServlet extends HttpServlet {
         notFound(resp, appId + " appears to be formatted incorrectly.");
         return;
       }
-      
+
       if(securityEnabled) {
-        String cookieName = getCheckCookieName(id); 
+        String cookieName = getCheckCookieName(id);
         Cookie[] cookies = req.getCookies();
         if (cookies != null) {
           for (Cookie c : cookies) {
@@ -278,7 +301,7 @@ public class WebAppProxyServlet extends HttpServlet {
           }
         }
       }
-      
+
       boolean checkUser = securityEnabled && (!userWasWarned || !userApproved);
 
       ApplicationReport applicationReport;
@@ -307,7 +330,7 @@ public class WebAppProxyServlet extends HttpServlet {
       URI trackingUri;
       // fallback to ResourceManager's app page if no tracking URI provided
       if(original == null || original.equals("N/A")) {
-        ProxyUtils.sendRedirect(req, resp, 
+        ProxyUtils.sendRedirect(req, resp,
             StringHelper.pjoin(rmAppPageUrlBase, id.toString()));
         return;
       } else {
@@ -324,7 +347,7 @@ public class WebAppProxyServlet extends HttpServlet {
         LOG.info("Asking {} if they want to connect to the "
             + "app master GUI of {} owned by {}",
             remoteUser, appId, runningUser);
-        warnUserPage(resp, ProxyUriUtils.getPathAndQuery(id, rest, 
+        warnUserPage(resp, ProxyUriUtils.getPathAndQuery(id, rest,
             req.getQueryString(), true), runningUser, id);
         return;
       }
@@ -356,10 +379,10 @@ public class WebAppProxyServlet extends HttpServlet {
       if (userWasWarned && userApproved) {
         c = makeCheckCookie(id, true);
       }
-      proxyLink(req, resp, toFetch, c, getProxyHost());
+      proxyLink(req, resp, toFetch, c, getClient());
 
     } catch(URISyntaxException | YarnException e) {
-      throw new IOException(e); 
+      throw new IOException(e);
     }
   }
 
@@ -372,8 +395,8 @@ public class WebAppProxyServlet extends HttpServlet {
    * <p>
    * Yarn isn't currently serializing this class, but findbugs
    * complains in its absence.
-   * 
-   * 
+   *
+   *
    * @param input source
    * @throws IOException IO failure
    * @throws ClassNotFoundException classloader fun

@@ -124,7 +124,7 @@ public abstract class AMDaemon extends WorkerDaemon {
 
   @Override
   public void cleanUp() throws Exception {
-    LOG.info(MessageFormat.format("T={0}: Application {1} is shutting down.", simulationContext.getCurrentTime(), appId));
+    LOG.trace(MessageFormat.format("T={0}: Application {1} is shutting down.", simulationContext.getCurrentTime(), appId));
     // unregister application master
     final FinishApplicationMasterRequest finishAMRequest = recordFactory
       .newRecordInstance(FinishApplicationMasterRequest.class);
@@ -187,6 +187,7 @@ public abstract class AMDaemon extends WorkerDaemon {
       rm.getClientRMService().getNewApplication(newAppRequest);
     appId = newAppResponse.getApplicationId();
 
+    LOG.trace("Calling application submitted for " + oldAppId);
     simulationContext.getDispatcher().getEventHandler()
       .handle(new ApplicationEvent(APPLICATION_SUBMITTED, oldAppId, appId));
 
@@ -218,7 +219,7 @@ public abstract class AMDaemon extends WorkerDaemon {
         return null;
       }
     });
-    LOG.info(MessageFormat.format("T={0}: Submit a new application {1}", simulationContext.getCurrentTime(), appId));
+    LOG.trace(MessageFormat.format("T={0}: Submit a new application {1}", simulationContext.getCurrentTime(), appId));
 
     // waiting until application ACCEPTED
     RMApp app = rm.getRMContext().getRMApps().get(appId);
@@ -261,7 +262,7 @@ public abstract class AMDaemon extends WorkerDaemon {
         }
       });
 
-    LOG.info(MessageFormat.format(
+    LOG.trace(MessageFormat.format(
       "T={0}: Register the application master for application {1}", simulationContext.getCurrentTime(), appId));
   }
 
@@ -295,11 +296,11 @@ public abstract class AMDaemon extends WorkerDaemon {
   }
 
   private void addContainers(Map<String, ResourceRequest> requestMap, Resource resource, List<String> locations, int priority) {
-    for(String rack: locations){
+    for (String rack : locations) {
       ResourceRequest request = requestMap.get(rack);
-      if(request != null){
+      if (request != null) {
         request.setNumContainers(request.getNumContainers() + 1);
-      }else{
+      } else {
         requestMap.put(rack, createResourceRequest(resource, rack, priority, 1));
       }
     }

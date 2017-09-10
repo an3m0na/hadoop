@@ -79,6 +79,8 @@ public class Utils {
     JOB1.setTotalReduceTasks(1);
     JOB1.setStartTime(APP1.getStartTime());
     JOB1.setFinishTime(APP1.getFinishTime());
+    JOB1.setCompletedMaps(0);
+    JOB1.setCompletedReduces(0);
 
     TASK11.setId(TASK11_ID.toString());
     TASK11.setJobId(JOB1.getId());
@@ -110,6 +112,8 @@ public class Utils {
     JOB2.setTotalReduceTasks(0);
     JOB2.setStartTime(APP2.getStartTime());
     JOB2.setFinishTime(APP2.getFinishTime());
+    JOB2.setCompletedMaps(0);
+    JOB2.setCompletedReduces(0);
 
     TASK21.setId(TASK21_ID.toString());
     TASK21.setJobId(JOB2.getId());
@@ -141,6 +145,8 @@ public class Utils {
     JOB3.setTotalReduceTasks(2);
     JOB3.setStartTime(APP3.getStartTime());
     JOB3.setFinishTime(APP3.getFinishTime());
+    JOB3.setCompletedMaps(0);
+    JOB3.setCompletedReduces(0);
   }
 
   public static void loadThreeDefaultAppsAndJobs(Database db) {

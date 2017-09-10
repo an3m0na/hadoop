@@ -9,19 +9,17 @@ import java.util.concurrent.TimeUnit;
 
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE;
 import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE_DEFAULT;
+import static org.apache.hadoop.util.ShutdownThreadsHelper.shutdownExecutorService;
 
 public class DaemonPool {
   private final static Logger LOG = Logger.getLogger(DaemonPool.class);
 
-
   private final DaemonQueue queue;
   private ThreadPoolExecutor executor;
   private TimeKeeperDaemon timeKeeper;
-  private SimulationContext simulationContext;
 
   @SuppressWarnings("unchecked")
   public DaemonPool(SimulationContext simulationContext) {
-    this.simulationContext = simulationContext;
     queue = new DaemonQueue();
     simulationContext.setDaemonQueue(queue);
 
@@ -36,17 +34,12 @@ public class DaemonPool {
     queue.enqueue(timeKeeper);
   }
 
-  public void forceStop() {
-    executor.shutdownNow();
-  }
-
   public void shutDown() {
     try {
-      System.out.println("DaemonPool shutting down");
-      executor.shutdown();
-      executor.awaitTermination(1, TimeUnit.SECONDS);
+      timeKeeper.stop();
+      shutdownExecutorService(executor);
     } catch (InterruptedException e) {
-      LOG.error("Could not shut down DaemonPool", e);
+      LOG.error("Daemon pool shutdown interrupted", e);
     }
   }
 
@@ -54,7 +47,4 @@ public class DaemonPool {
     queue.enqueue(daemon);
   }
 
-  public void forget(WorkerDaemon daemon) {
-    queue.evict(daemon);
-  }
 }

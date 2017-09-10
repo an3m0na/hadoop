@@ -6,9 +6,6 @@ import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TestPredictor;
-import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictionStats;
-import org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardPredictor;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.util.List;
@@ -65,7 +62,7 @@ public class TestStandardPredictor extends TestPredictor<StandardPredictor> {
     assertThat(prediction.getDuration(), is(1500L));
 
     // check rate-based prediction
-    someJob.setTotalInputBytes(100000000L);
+    someJob.setTotalSplitSize(100000000L);
     someJob.setTotalMapTasks(10);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.MAP));
     assertThat(prediction.getDuration(), is(629L));
@@ -93,7 +90,7 @@ public class TestStandardPredictor extends TestPredictor<StandardPredictor> {
 
     // check prediction with no selectivity data -> avg historical duration
     someJob.setReducerClass("org.apache.nutch.indexer.IndexerMapReduce");
-    someJob.setTotalInputBytes(100000000L);
+    someJob.setTotalSplitSize(100000000L);
     someJob.setTotalMapTasks(10);
     someJob.setTotalReduceTasks(2);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob, TaskType.REDUCE));

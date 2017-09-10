@@ -125,6 +125,9 @@ public class LogEntryPBImpl<T extends Payload> extends GeneralDataEntityPBImpl<L
   @Override
   public void setDetails(T details) {
     maybeInitBuilder();
+    if(details == null){
+      builder.clearDetails();
+    }
     this.details = details;
   }
 

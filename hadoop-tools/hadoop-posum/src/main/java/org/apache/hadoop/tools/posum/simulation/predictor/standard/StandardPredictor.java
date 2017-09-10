@@ -7,9 +7,9 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleRateBasedPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
+import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleRateBasedPredictor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +44,7 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
 
     if (!getIntField(job, PROFILED_MAPS.getKey(), 0).equals(job.getCompletedMaps())) {
       // nothing will work if we don't have input size info
-      if (job.getTotalInputBytes() != null) {
+      if (job.getTotalSplitSize() != null) {
         long parsedInputBytes = 0L;
         double mapRate = 0.0;
         int taskNo = 0;
@@ -102,8 +102,8 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
     }
 
     double duration = 1.0 * inputPerMap / mapStats.getAvgRate();
-    logger.debug("Map duration for " + job.getId() + " should be " + inputPerMap + " / " + mapStats.getAvgRate() + " = " + duration);
-    return new TaskPredictionOutput((long)duration);
+    logger.trace("Map duration for " + job.getId() + " should be " + inputPerMap + " / " + mapStats.getAvgRate() + " = " + duration);
+    return new TaskPredictionOutput((long) duration);
   }
 
   @Override
@@ -127,7 +127,7 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
     if (avgSelectivity == null || reduceStats.getRelevance() > 1 && reduceStats.getAvgReduceDuration() != null) {
       // our selectivity or reduce rate data is unreliable
       // just return average reduce duration of historical jobs
-      logger.debug("Reduce duration calculated as simple average for " + job.getId() + " =  " + reduceStats.getAvgReduceDuration());
+      logger.trace("Reduce duration calculated as simple average for " + job.getId() + " =  " + reduceStats.getAvgReduceDuration());
       return new TaskPredictionOutput(reduceStats.getAvgReduceDuration().longValue());
     }
 
@@ -135,7 +135,7 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
     if (duration == null)
       return handleNoReduceInfo(job, avgSelectivity, getDoubleField(job, MAP_RATE.getKey(), null));
 
-    logger.debug("Reduce duration computed for " + job.getId() + " as " + duration + "from (remote) avgRate=" + reduceStats.getAvgReduceRate() + " and selectivity=" + avgSelectivity);
+    logger.trace("Reduce duration computed for " + job.getId() + " as " + duration + "from (remote) avgRate=" + reduceStats.getAvgReduceRate() + " and selectivity=" + avgSelectivity);
     return new TaskPredictionOutput(duration);
   }
 }

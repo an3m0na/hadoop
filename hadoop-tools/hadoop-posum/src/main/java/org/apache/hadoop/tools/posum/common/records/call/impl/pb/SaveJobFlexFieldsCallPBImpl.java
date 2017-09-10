@@ -101,6 +101,10 @@ public class SaveJobFlexFieldsCallPBImpl extends SaveJobFlexFieldsCall implement
 
   @Override
   public void setNewFields(Map<String, String> newFields) {
+    maybeInitBuilder();
+    if(newFields == null){
+      builder.clearNewFields();
+    }
     this.newFields = newFields;
   }
 

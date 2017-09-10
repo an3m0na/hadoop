@@ -394,7 +394,8 @@ public abstract class ExtensibleCapacityScheduler<
         updateApplicationPriorities(this.<CSQueue>readField("root"));
       }
     }
-    LOG.trace(printQueues());
+    if (LOG.isTraceEnabled())
+      LOG.trace(printQueues());
     invokeMethod("allocateContainersToNode", new Class<?>[]{FiCaSchedulerNode.class}, node);
   }
 
@@ -810,8 +811,13 @@ public abstract class ExtensibleCapacityScheduler<
   }
 
   public String printQueues() {
-    StringBuilder builder = new StringBuilder("Queues are:\n");
-    return printQueues(builder, this.<CSQueue>readField("root")).toString();
+    try {
+      StringBuilder builder = new StringBuilder("Queues are:\n");
+      return printQueues(builder, this.<CSQueue>readField("root")).toString();
+    } catch (Exception e) {
+      LOG.trace(e);
+      return "Could not print queues due to error";
+    }
   }
 
   public StringBuilder printQueues(StringBuilder builder, CSQueue queue) {

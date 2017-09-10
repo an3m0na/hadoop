@@ -37,6 +37,7 @@ enum EntityCollectionProto {
     COLL_POSUM_STATS = 11;
     COLL_PREDICTOR_LOG = 12;
     COLL_AUDIT_LOG = 13;
+    COLL_DEADLINE = 14;
 }
 
 message AppProfileProto {
@@ -84,32 +85,34 @@ message JobProfileProto {
     optional string queue = 5;
     optional int32 totalMapTasks = 6;
     optional int32 totalReduceTasks = 7;
-    optional int32 inputSplits = 8; // only from conf
-    optional int64 totalInputBytes = 9; // only from conf
-    optional int64 inputBytes = 10; // ongoing
-    optional int64 mapOutputBytes = 11;
-    optional int64 reduceInputBytes = 12;
-    optional int64 outputBytes = 13;
-    optional int64 submitTime = 14;
-    optional int64 startTime = 15;
-    optional int64 finishTime = 16;
-    optional JobStateProto state = 17;
-    optional float mapProgress = 18;
-    optional float reduceProgress = 19;
-    optional int32 completedMaps = 20;
-    optional int32 completedReduces = 21;
-    optional bool uberized = 22;
-    optional int64 avgMapDuration = 23;
-    optional int64 avgReduceDuration = 24;
-    optional int64 avgTaskDuration = 25;
-    optional int64 avgShuffleTime = 26;
-    optional int64 avgMergeTime = 27;
-    optional int64 avgReduceTime = 28;
-    optional string mapperClass = 29;
-    optional string reducerClass = 30;
-    optional StringStringMapPayloadProto flexFields = 31;
-    repeated string aggregatedSplitLocations = 32;
+    optional int64 totalSplitSize = 8; // only from conf
+    optional int64 inputBytes = 9; // ongoing
+    optional int64 mapOutputBytes = 10;
+    optional int64 reduceInputBytes = 11;
+    optional int64 outputBytes = 12;
+    optional int64 submitTime = 13;
+    optional int64 startTime = 14;
+    optional int64 finishTime = 15;
+    optional JobStateProto state = 16;
+    optional float mapProgress = 17;
+    optional float reduceProgress = 18;
+    optional int32 completedMaps = 19;
+    optional int32 completedReduces = 20;
+    optional bool uberized = 21;
+    optional int64 avgMapDuration = 22;
+    optional int64 avgReduceDuration = 23;
+    optional int64 avgTaskDuration = 24;
+    optional int64 avgShuffleTime = 25;
+    optional int64 avgMergeTime = 26;
+    optional int64 avgReduceTime = 27;
+    optional string mapperClass = 28;
+    optional string reducerClass = 29;
+    optional StringStringMapPayloadProto flexFields = 30;
+    repeated StringListPayloadProto splitLocations = 31;
+    repeated int64 splitSizes = 32;
     optional int64 lastUpdated = 33;
+    optional int64 deadline = 34;
+
 
     enum JobStateProto {
         STATE_NEW = 0;
@@ -198,6 +201,12 @@ message CountersProxyProto {
     optional int64 lastUpdated = 3;
 }
 
+message ExternalDeadlineProto {
+    required string id = 1;
+    optional int64 deadline = 2;
+    optional int64 lastUpdated = 3;
+}
+
 // --------- Requests ---------
 
 message SimpleRequestProto {
@@ -214,6 +223,9 @@ message SimpleRequestProto {
         REQ_CLEAR_DB = 6;
         REQ_COPY_DB = 7;
         REQ_COPY_COLL = 8;
+        REQ_AWAIT_UPDATE = 9;
+        REQ_NOTIFY_UPDATE = 10;
+        REQ_RESET = 11;
     }
 }
 
@@ -311,7 +323,7 @@ message SimulationResultPayloadProto {
 }
 
 message CompoundScorePayloadProto {
-    optional double runtime = 1;
+    optional double slowdown = 1;
     optional double penalty = 2;
     optional double cost = 3;
 }

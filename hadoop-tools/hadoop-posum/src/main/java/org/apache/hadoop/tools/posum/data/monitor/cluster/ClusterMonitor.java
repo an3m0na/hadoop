@@ -27,8 +27,14 @@ public class ClusterMonitor extends GeneralLooper<ClusterMonitor> {
   }
 
   @Override
+  protected void serviceStop() throws Exception {
+    context.getClusterInfoCollector().shutDown();
+    super.serviceStop();
+  }
+
+  @Override
   protected void doAction() {
     RestClient.TrackingUI.checkUpdated(context.getCommService().getSystemAddresses());
-    context.getClusterInfo().refresh();
+    context.getClusterInfoCollector().collect();
   }
 }

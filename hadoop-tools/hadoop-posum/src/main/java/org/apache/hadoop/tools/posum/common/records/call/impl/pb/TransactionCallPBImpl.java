@@ -59,9 +59,9 @@ public class TransactionCallPBImpl extends TransactionCall implements PayloadPB 
 
   private void mergeLocalToBuilder() {
     maybeInitBuilder();
-    builder.clearCalls();
     if (calls == null)
       return;
+    builder.clearCalls();
     final Iterable<PosumProtos.DatabaseCallProto> iterable =
       new Iterable<PosumProtos.DatabaseCallProto>() {
 
@@ -123,7 +123,12 @@ public class TransactionCallPBImpl extends TransactionCall implements PayloadPB 
   @Override
   public void setCallList(List<? extends ThreePhaseDatabaseCall> callList) {
     maybeInitBuilder();
-    this.calls = callList == null ? null : new ArrayList<>(callList);
+    if (callList == null) {
+      builder.clearCalls();
+      this.calls = null;
+      return;
+    }
+    this.calls = new ArrayList<>(callList);
   }
 
   @Override

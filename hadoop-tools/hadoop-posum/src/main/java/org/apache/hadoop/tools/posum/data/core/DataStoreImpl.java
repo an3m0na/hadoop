@@ -43,6 +43,7 @@ public class DataStoreImpl implements LockBasedDataStore {
   private Map<DatabaseReference, DBAssets> dbRegistry = new ConcurrentHashMap<>(DatabaseReference.Type.values().length);
 
   private static class DBAssets {
+    final Object updateMonitor = new Object();
     public ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     public Map<DataEntityCollection, JacksonDBCollection> collections = new ConcurrentHashMap<>(DataEntityCollection.values().length);
   }
@@ -317,8 +318,10 @@ public class DataStoreImpl implements LockBasedDataStore {
   public void clear() {
     lockAll();
     try {
-      for (DatabaseReference db : dbRegistry.keySet())
+      for (DatabaseReference db : dbRegistry.keySet()) {
         clearDatabase(db);
+        notifyUpdate(db);
+      }
       dbRegistry.clear();
     } finally {
       unlockAll();
@@ -390,4 +393,21 @@ public class DataStoreImpl implements LockBasedDataStore {
       unlockForRead(sourceDB);
     }
   }
+
+  @Override
+  public void awaitUpdate(DatabaseReference db) throws InterruptedException {
+    Object monitor = getDatabaseAssets(db).updateMonitor;
+    synchronized (monitor) {
+      monitor.wait();
+    }
+  }
+
+  @Override
+  public void notifyUpdate(DatabaseReference db) {
+    Object monitor = getDatabaseAssets(db).updateMonitor;
+    synchronized (monitor) {
+      monitor.notify();
+    }
+  }
+
 }

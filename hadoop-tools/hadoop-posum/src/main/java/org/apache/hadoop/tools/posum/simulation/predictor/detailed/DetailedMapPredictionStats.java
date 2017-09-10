@@ -51,12 +51,12 @@ class DetailedMapPredictionStats extends SimpleMapPredictionStats {
   public void updateStatsFromFlexFields(Map<String, String> flexFields) {
     super.updateStatsFromFlexFields(flexFields);
     avgLocalRate = addValue(
-      flexFields.get(MAP_LOCAL.getKey()),
+      flexFields == null ? null : flexFields.get(MAP_LOCAL.getKey()),
       avgLocalRate,
       localRates
     );
     avgRemoteRate = addValue(
-      flexFields.get(MAP_REMOTE.getKey()),
+      flexFields == null ? null : flexFields.get(MAP_REMOTE.getKey()),
       avgRemoteRate,
       remoteRates
     );

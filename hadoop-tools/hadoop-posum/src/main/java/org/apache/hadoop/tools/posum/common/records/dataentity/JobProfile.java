@@ -4,7 +4,6 @@ import org.apache.hadoop.mapreduce.v2.api.records.JobState;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
@@ -24,9 +23,9 @@ public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
   void setTotalReduceTasks(Integer totalReduceTasks);
 
-  Long getTotalInputBytes();
+  Long getTotalSplitSize();
 
-  void setTotalInputBytes(Long inputBytes);
+  void setTotalSplitSize(Long inputBytes);
 
   Long getInputBytes();
 
@@ -84,10 +83,6 @@ public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
   void setUberized(Boolean uberized);
 
-  Integer getInputSplits();
-
-  void setInputSplits(Integer inputSplits);
-
   Long getAvgMapDuration();
 
   void setAvgMapDuration(Long avgMapDuration);
@@ -112,7 +107,7 @@ public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
   String getQueue();
 
-  void addAll(Map<String, String> other);
+  void addAllFlexFields(Map<String, String> other);
 
   String getFlexField(String name);
 
@@ -126,7 +121,16 @@ public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
   void setReducerClass(String name);
 
-  Set<String> getAggregatedSplitLocations();
+  List<List<String>> getSplitLocations();
 
-  void setAggregatedSplitLocations(Set<String> locations);
+  void setSplitLocations(List<List<String>> splitLocations);
+
+  List<Long> getSplitSizes();
+
+  void setSplitSizes(List<Long> splitSizes);
+
+  Long getDeadline();
+
+  void setDeadline(Long deadline);
+
 }

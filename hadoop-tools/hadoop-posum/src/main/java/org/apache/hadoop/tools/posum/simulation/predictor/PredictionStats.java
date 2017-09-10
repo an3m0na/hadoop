@@ -35,12 +35,17 @@ public abstract class PredictionStats {
   public Double addValue(String valueString, Double previousAverage, Queue<Double> values) {
     if (valueString == null)
       return previousAverage;
-    double value = Double.valueOf(valueString);
-    return addValue(value, previousAverage, values);
+    return addValue(Double.valueOf(valueString), previousAverage, values);
+  }
+
+  public Double addValue(Long value, Double previousAverage, Queue<Double> values) {
+    if (value == null)
+      return previousAverage;
+    return addValue(value.doubleValue(), previousAverage, values);
   }
 
   public Double addValue(Double value, Double previousAverage, Queue<Double> values) {
-    if(value == null)
+    if (value == null)
       return previousAverage;
     double total = previousAverage == null ? 0 : previousAverage * values.size();
     total += value;

@@ -3,7 +3,6 @@ package org.apache.hadoop.tools.posum.simulation.core.daemon;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
-import org.apache.hadoop.yarn.event.AsyncDispatcher;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.Delayed;
@@ -11,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 public class TimeKeeperDaemon implements Daemon {
 
-  private static final Log LOG = LogFactory.getLog(AsyncDispatcher.class);
+  private static final Log LOG = LogFactory.getLog(TimeKeeperDaemon.class);
 
   private final DaemonQueue queue;
   private final SimulationContext simulationContext;
@@ -21,7 +20,8 @@ public class TimeKeeperDaemon implements Daemon {
 
   public TimeKeeperDaemon(SimulationContext simulationContext) {
     this.simulationContext = simulationContext;
-    this.queue = simulationContext.getDaemonQueue();
+    queue = simulationContext.getDaemonQueue();
+    queue.markUntracked(this);
   }
 
   @Override
@@ -30,24 +30,29 @@ public class TimeKeeperDaemon implements Daemon {
       long nextExpiration = getNextExpiration();
       if (nextExpiration > 0) {
         waitForRunningDaemons();
+        waitForSchedulerFinished();
         simulationContext.setCurrentTime(simulationContext.getCurrentTime() + nextExpiration);
       }
       if (!stopped) {
-        queue.add(this);
+        queue.enqueue(this);
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-      Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
+    } catch (InterruptedException e) {
+      if (!stopped)
+        LOG.error("Time keeper was interrupted", e);
+    }
+  }
+
+  private void waitForSchedulerFinished() throws InterruptedException {
+    synchronized (simulationContext) {
+      while (simulationContext.isAwaitingScheduler()) {
+        simulationContext.wait();
+      }
     }
   }
 
   private void waitForRunningDaemons() throws InterruptedException {
     // wait for currently running daemons to finish current step
-    while (queue.countRunning() > 1) {
-      synchronized (queue) {
-        queue.wait();
-      }
-    }
+    queue.awaitEmpty();
   }
 
   private long getNextExpiration() {

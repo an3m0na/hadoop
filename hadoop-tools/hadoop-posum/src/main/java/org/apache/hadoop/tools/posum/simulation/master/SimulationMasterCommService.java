@@ -84,6 +84,7 @@ public class SimulationMasterCommService extends CompositeService implements Sim
 
   @Override
   public SimpleResponse handleSimpleRequest(SimpleRequest request) {
+    logger.debug("Simulator receives request " + request.getType());
     try {
       switch (request.getType()) {
         case PING:
@@ -91,6 +92,9 @@ public class SimulationMasterCommService extends CompositeService implements Sim
           break;
         case START:
           context.getSimulator().startSimulation();
+          break;
+        case RESET:
+          context.getSimulator().reset();
           break;
         default:
           return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());

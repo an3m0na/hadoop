@@ -54,13 +54,14 @@ import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMUL
 public class SimulationRunner {
   private final static Logger LOG = Logger.getLogger(SimulationRunner.class);
   private static final String HOST_BASE = "192.168.1."; // needed because hostnames need to be resolvable
-  private static final IdsByQueryCall GET_PENDING_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, null);
+  private static final IdsByQueryCall GET_STARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.isNot("startTime", null), "startTime", false);
+  private static final IdsByQueryCall GET_NOTSTARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("startTime", null));
   private static final FindByIdCall GET_JOB = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
   private static final FindByIdCall GET_CONF = FindByIdCall.newInstance(DataEntityCollection.JOB_CONF, null);
   private static final FindByQueryCall GET_TASKS = FindByQueryCall.newInstance(DataEntityCollection.TASK, null);
 
   private ResourceManager rm;
-  private static DaemonPool daemonPool;
+  private DaemonPool daemonPool;
   private SimulationContext context;
   private Configuration conf;
   private Map<String, String> simulationHostNames;
@@ -154,19 +155,20 @@ public class SimulationRunner {
     int heartbeatInterval = conf.getInt(AM_DAEMON_HEARTBEAT_INTERVAL_MS, AM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT);
 
 
-    long baselineTime = 0;
     Map<String, Integer> queueAppNumMap = new HashMap<>();
 
     Database sourceDb = context.getSourceDatabase();
 
-    List<String> jobIds = sourceDb.execute(GET_PENDING_JOBS).getEntries();
+    List<String> jobIds = new ArrayList<>(sourceDb.execute(GET_STARTED_JOBS).getEntries());
+    jobIds.addAll(sourceDb.execute(GET_NOTSTARTED_JOBS).getEntries());
     Map<String, AMDaemon> amMap = new HashMap<>(jobIds.size());
 
+    long baselineTime = 0;
     for (String jobId : jobIds) {
       // load job information
       GET_JOB.setId(jobId);
       JobProfile job = sourceDb.execute(GET_JOB).getEntity();
-      long jobStartTime = job.getStartTime();
+      long jobStartTime = job.getStartTime() == null ? baselineTime : job.getStartTime();
       if (baselineTime == 0)
         baselineTime = jobStartTime;
       jobStartTime -= baselineTime;
@@ -206,7 +208,7 @@ public class SimulationRunner {
     for (TaskProfile task : jobTasks) {
       Long taskStart = task.getStartTime();
       Long taskFinish = task.getFinishTime();
-      Long lifeTime = taskStart != null && taskFinish != null? taskFinish - taskStart : null;
+      Long lifeTime = taskStart != null && taskFinish != null ? taskFinish - taskStart : null;
       int priority = 0;
       String type = task.getType() == MAP ? "map" : "reduce";
       ret.add(new SimulatedContainer(context, containerResource, lifeTime, priority, type, task.getId(), task.getSplitLocations()));

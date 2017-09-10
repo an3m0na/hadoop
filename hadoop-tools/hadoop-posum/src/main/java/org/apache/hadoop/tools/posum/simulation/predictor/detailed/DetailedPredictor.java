@@ -57,7 +57,7 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
 
     if (!getIntField(job, PROFILED_MAPS.getKey(), 0).equals(job.getCompletedMaps())) {
       // nothing will work if we don't have input size info
-      if (job.getTotalInputBytes() != null) {
+      if (job.getTotalSplitSize() != null) {
         Long parsedInputBytes = 0L;
 
         tasks = getJobTasks(job.getId(), fromHistory);
@@ -181,7 +181,7 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
     if (splitSize == null)
       return handleNoMapInfo(job);
     Double duration = splitSize / rate;
-    logger.debug("Map duration for " + job.getId() + " should be " + splitSize + " / " + rate + "=" + duration);
+    logger.trace("Map duration for " + job.getId() + " should be " + splitSize + " / " + rate + "=" + duration);
     return new TaskPredictionOutput(duration.longValue());
   }
 
@@ -225,7 +225,7 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
 
     // we are still missing information
     // just return average reduce duration of the current job or historical jobs
-    logger.debug("Reduce duration calculated as simple average for " + job.getId() + " =  " + jobStats.getAvgReduceDuration());
+    logger.trace("Reduce duration calculated as simple average for " + job.getId() + " =  " + jobStats.getAvgReduceDuration());
     return new TaskPredictionOutput(jobStats.getAvgReduceDuration().longValue());
   }
 
@@ -234,14 +234,14 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
       return null;
     // calculate how much input the task should have based on how much is left and how many reduces remain
     // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-    Double inputLeft = orZero(job.getTotalInputBytes()) * avgSelectivity - orZero(job.getReduceInputBytes());
+    Double inputLeft = orZero(job.getTotalSplitSize()) * avgSelectivity - orZero(job.getReduceInputBytes());
     Double inputPerTask = Math.max(inputLeft / (job.getTotalReduceTasks() - job.getCompletedReduces()), 1);
     Long shuffleTime =
       predictShuffleTime(jobStats, ObjectUtils.equals(job.getCompletedMaps(), job.getTotalMapTasks()), inputPerTask);
     if (shuffleTime == null)
       return null;
     Double duration = shuffleTime + inputPerTask / jobStats.getAvgMergeRate() + inputPerTask / jobStats.getAvgReduceRate();
-    logger.debug("Reduce duration for " + job.getId() + " should be " + shuffleTime + " + " +
+    logger.trace("Reduce duration for " + job.getId() + " should be " + shuffleTime + " + " +
       inputPerTask + " / " + jobStats.getAvgMergeRate() + " + " +
       inputPerTask + " / " + jobStats.getAvgReduceRate() + "=" + duration);
     return new TaskPredictionOutput(duration.longValue());

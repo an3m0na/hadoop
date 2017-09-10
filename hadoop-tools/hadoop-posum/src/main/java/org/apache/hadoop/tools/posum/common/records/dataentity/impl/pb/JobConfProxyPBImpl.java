@@ -11,11 +11,52 @@ import org.apache.hadoop.yarn.proto.PosumProtos.JobConfProxyProtoOrBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, JobConfProxyProto, JobConfProxyProto.Builder>
   implements JobConfProxy {
 
   public JobConfProxyPBImpl() {
+  }
+
+  public static class ConfEntry implements Map.Entry<String, String> {
+    private String key;
+    private String value;
+
+    @Override
+    public String getKey() {
+      return this.key;
+    }
+
+    @Override
+    public String getValue() {
+      return this.value;
+    }
+
+    @Override
+    public String setValue(String value) {
+      String old = this.value;
+      this.value = value;
+      return old;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      ConfEntry confEntry = (ConfEntry) o;
+
+      if (key != null ? !key.equals(confEntry.key) : confEntry.key != null) return false;
+      return value != null ? value.equals(confEntry.value) : confEntry.value == null;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = key != null ? key.hashCode() : 0;
+      result = 31 * result + (value != null ? value.hashCode() : 0);
+      return result;
+    }
   }
 
   public JobConfProxyPBImpl(JobConfProxyProto proto) {
@@ -33,8 +74,8 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
   @Override
   void buildProto() {
     maybeInitBuilder();
-    propertyMap = getPropertyMap();
-    if (propertyMap != null) {
+    if (propertyMap != null || conf != null) {
+      propertyMap = getPropertyMap();
       StringStringMapPayloadPBImpl mapPayloadPB = new StringStringMapPayloadPBImpl();
       mapPayloadPB.setEntries(propertyMap);
       builder.setProperties(mapPayloadPB.getProto());
@@ -105,6 +146,11 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
 
   @Override
   public void setConf(Configuration conf) {
+    maybeInitBuilder();
+    if (conf == null) {
+      builder.clearProperties();
+      propertyMap = null;
+    }
     this.conf = conf;
   }
 
@@ -135,7 +181,25 @@ public class JobConfProxyPBImpl extends GeneralDataEntityPBImpl<JobConfProxy, Jo
     return propertyMap;
   }
 
+  public Set<Map.Entry<String, String>> getPropertySet() {
+    return getPropertyMap().entrySet();
+  }
+
+  public void setPropertySet(Set<ConfEntry> propertySet) {
+    maybeInitBuilder();
+    Map<String, String> map = new HashMap<>(propertySet.size());
+    for (ConfEntry entry : propertySet) {
+      map.put(entry.getKey(), entry.getValue());
+    }
+    setPropertyMap(map);
+  }
+
   public void setPropertyMap(Map<String, String> propertyMap) {
+    maybeInitBuilder();
+    if (propertyMap == null) {
+      builder.clearProperties();
+      conf = null;
+    }
     this.propertyMap = propertyMap;
   }
 

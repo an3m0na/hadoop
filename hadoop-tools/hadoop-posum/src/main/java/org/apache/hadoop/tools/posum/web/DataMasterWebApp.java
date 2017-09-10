@@ -46,17 +46,18 @@ public class DataMasterWebApp extends PosumWebApp {
             // json request
             String call = target.substring("/ajax".length());
             JsonNode ret;
+            Long since = 0L;
+            String sinceParam;
             try {
               switch (call) {
                 case "/policies":
-                  Long since = 0L;
-                  String sinceParam = request.getParameter("since");
+                  sinceParam = request.getParameter("since");
                   if (sinceParam != null) {
                     try {
                       since = Long.valueOf(sinceParam);
                     } catch (Exception e) {
                       ret = wrapError("INCORRECT_PARAMETERS",
-                        "Could not parce parameter 'since'", e.getMessage());
+                        "Could not parse parameter 'since'", e.getMessage());
                       break;
                     }
                   }
@@ -64,6 +65,19 @@ public class DataMasterWebApp extends PosumWebApp {
                   break;
                 case "/system":
                   ret = getSystemMetrics();
+                  break;
+                case "/logs":
+                  sinceParam = request.getParameter("since");
+                  if (sinceParam != null) {
+                    try {
+                      since = Long.valueOf(sinceParam);
+                    } catch (Exception e) {
+                      ret = wrapError("INCORRECT_PARAMETERS",
+                        "Could not parse parameter 'since'", e.getMessage());
+                      break;
+                    }
+                  }
+                  ret = getLogs(since);
                   break;
                 default:
                   if (call.startsWith("/data/")) {
@@ -140,4 +154,23 @@ public class DataMasterWebApp extends PosumWebApp {
     }
     return new JsonObject().put("times", times).put("policies", choices);
   }
+
+  private JsonNode getLogs(Long since) {
+    JsonArray list = new JsonArray();
+    FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.GENERAL.getCollection(),
+      QueryUtils.and(
+        QueryUtils.is("type", LogEntry.Type.GENERAL),
+        QueryUtils.greaterThan("lastUpdated", since)
+      ), "lastUpdated", false);
+    List<LogEntry<SimplePropertyPayload>> logs =
+      context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
+    for (LogEntry<SimplePropertyPayload> logEntry : logs) {
+      list.add(new JsonObject()
+        .put("timestamp", logEntry.getLastUpdated())
+        .put("message", (String) logEntry.getDetails().getValue()));
+    }
+    return wrapResult(list.getNode());
+  }
+
+
 }

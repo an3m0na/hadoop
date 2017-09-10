@@ -101,10 +101,11 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     }
 
     db.execute(transaction);
-    LOG.debug(MessageFormat.format("App finished: {0}", appId));
+    LOG.trace(MessageFormat.format("App finished: {0}", appId));
   }
 
   private void applicationSubmitted(String oldAppIdString, ApplicationId appId) {
+    LOG.trace("Doing application submitted for " + oldAppIdString);
     String appIdString = appId.toString();
 
     TransactionCall transaction = TransactionCall.newInstance();
@@ -145,6 +146,6 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     }
 
     db.execute(transaction);
-    LOG.debug(MessageFormat.format("App submitted. {0} becomes {1}", oldAppId, appId));
+    LOG.trace(MessageFormat.format("App submitted. {0} becomes {1}", oldAppId, appId));
   }
 }

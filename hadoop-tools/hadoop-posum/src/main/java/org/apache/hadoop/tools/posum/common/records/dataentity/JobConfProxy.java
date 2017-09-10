@@ -19,6 +19,7 @@ public interface JobConfProxy extends GeneralDataEntity<JobConfProxy> {
 
   void setConfPath(String confPath);
 
+  @JsonIgnore
   Map<String, String> getPropertyMap();
 
   void setPropertyMap(Map<String, String> propertyMap);

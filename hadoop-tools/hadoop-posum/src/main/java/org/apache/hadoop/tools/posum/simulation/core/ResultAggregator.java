@@ -32,13 +32,26 @@ class ResultAggregator implements Runnable {
     }
   }
 
+  public void stop() {
+    for (PendingResult pendingResult : pendingResults) {
+      pendingResult.getSimulation().stop();
+    }
+    exit = true;
+  }
+
   private void awaitResult(PendingResult result) {
     try {
       finalResults.add(result.getResult().get());
-      if (finalResults.size() == pendingResults.size())
-        simulator.simulationsDone(finalResults);
+    } catch (InterruptedException e) {
+      if (!exit)
+        // exiting was not intentional
+        logger.error("Result aggregator was interrupted unexpectedly", e);
+      finalResults.add(SimulationResultPayload.newInstance(result.getSimulation().getPolicyName(), null));
     } catch (Exception e) {
-      logger.error("Error processing simulation", e);
+      logger.error("Error aggregating simulation results", e);
+      finalResults.add(SimulationResultPayload.newInstance(result.getSimulation().getPolicyName(), null));
     }
+    if (finalResults.size() == pendingResults.size())
+      simulator.simulationsDone(finalResults);
   }
 }

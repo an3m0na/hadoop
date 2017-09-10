@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.simulation.core.daemon;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 
 import javax.annotation.Nonnull;
@@ -9,12 +11,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class WorkerDaemon implements Daemon {
+  private static final Log LOG = LogFactory.getLog(WorkerDaemon.class);
+
   private long nextRun;
   private long startTime;
   private long repeatInterval;
   private static AtomicInteger nextId = new AtomicInteger(0);
   private int id = 0;
-  protected SimulationContext simulationContext;
+  protected final SimulationContext simulationContext;
 
   public WorkerDaemon(SimulationContext simulationContext) {
     this.simulationContext = simulationContext;
@@ -51,17 +55,15 @@ public abstract class WorkerDaemon implements Daemon {
       } else {
         doStep();
       }
-      if(isFinished()) {
+      if (isFinished()) {
         cleanUp();
         simulationContext.getDaemonQueue().evict(this);
-      }
-      else {
+      } else {
         nextRun += repeatInterval;
         simulationContext.getDaemonQueue().enqueue(this);
       }
     } catch (Exception e) {
-      e.printStackTrace();
-      Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
+      LOG.debug("Error running worker daemon ", e);
     }
   }
 

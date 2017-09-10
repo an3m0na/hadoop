@@ -4,14 +4,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
-import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
-import org.apache.hadoop.tools.posum.common.records.call.SaveJobFlexFieldsCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -20,8 +16,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.Capacity
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
@@ -31,8 +25,6 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
   protected Log logger;
 
   protected final String DEADLINE_QUEUE = "deadline", BATCH_QUEUE = "default";
-  protected final String DEADLINE_FLEX_KEY = EDLSPolicy.class.getSimpleName() + "::DEADLINE";
-  protected final String TYPE_FLEX_KEY = EDLSPolicy.class.getSimpleName() + "::TYPE";
   private long lastCheck = 0;
   private long maxCheck;
   protected float deadlinePriority = PosumConfiguration.DC_PRIORITY_DEFAULT;
@@ -64,13 +56,13 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
                                 boolean isAppRecovering,
                                 ReservationId reservationID) {
 
-    JobProfile job = fetchJobProfile(applicationId.toString(), user);
-    if (job == null) {
+    JobProfile job = fetchJobProfile(applicationId.toString());
+    if (job == null || job.getDeadline() == 0) {
+      logger.debug("Adding app to BC queue " + applicationId);
       return BATCH_QUEUE;
     }
-    if (EDLSAppAttempt.Type.DC.name().equals(job.getFlexField(TYPE_FLEX_KEY)))
-      return DEADLINE_QUEUE;
-    return BATCH_QUEUE;
+    logger.debug("Adding app to DC queue " + applicationId);
+    return DEADLINE_QUEUE;
   }
 
   @Override
@@ -78,32 +70,20 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
     return resolveQueue(queue, applicationId, user, false, null);
   }
 
-  protected JobProfile fetchJobProfile(String appId, String user) {
+  protected JobProfile fetchJobProfile(String appId) {
     Database db = dbProvider.getDatabase();
     if (db == null)
       // DataMaster is not connected; do nothing
       return null;
     JobProfile job = db.execute(JobForAppCall.newInstance(appId)).getEntity();
-    if (job == null) {
-      logger.error("Could not retrieve job info for " + appId);
-      return null;
-    }
-    Map<String, String> flexFields = job.getFlexFields();
-    String typeString = flexFields.get(TYPE_FLEX_KEY);
-    if (typeString == null) {
-      // first initialization
-      FindByIdCall getJobConf = FindByIdCall.newInstance(DataEntityCollection.JOB_CONF, job.getId());
-      JobConfProxy confProxy = db.execute(getJobConf).getEntity();
-      String deadlineString = confProxy.getEntry(PosumConfiguration.APP_DEADLINE);
-      Map<String, String> newFields = new HashMap<>(2);
-      if (deadlineString != null && deadlineString.length() > 0) {
-        newFields.put(DEADLINE_FLEX_KEY, deadlineString);
-        newFields.put(TYPE_FLEX_KEY, EDLSAppAttempt.Type.DC.name());
-      } else {
-        newFields.put(TYPE_FLEX_KEY, EDLSAppAttempt.Type.BC.name());
+    while (job == null || job.getDeadline() == null) {
+      try {
+        db.awaitUpdate();
+      } catch (InterruptedException e) {
+        logger.error("Could not retrieve job information for " + appId);
+        return null;
       }
-      SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), newFields, false);
-      db.execute(saveFlexFields);
+      job = db.execute(JobForAppCall.newInstance(appId)).getEntity();
     }
     return job;
   }
@@ -119,25 +99,20 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         // DataMaster is not connected; do nothing
         return;
       String appId = app.getApplicationId().toString();
-      JobProfile job = fetchJobProfile(appId, app.getUser());
+      JobProfile job = fetchJobProfile(appId);
       if (app.getType() == null) {
         if (job == null)
           // something went wrong; do nothing
           return;
         app.setJobId(job.getId());
         app.setSubmitTime(job.getSubmitTime());
-        EDLSAppAttempt.Type type =
-          EDLSAppAttempt.Type.valueOf(job.getFlexField(TYPE_FLEX_KEY));
-        app.setType(type);
-        if (EDLSAppAttempt.Type.DC.equals(type)) {
-          app.setDeadline(Long.valueOf(job.getFlexField(DEADLINE_FLEX_KEY)));
-        }
+        app.setType(job.getDeadline() == null ? EDLSAppAttempt.Type.BC : EDLSAppAttempt.Type.DC);
+        app.setDeadline(job.getDeadline());
       }
-      app.setExecutionTime(orZero(job.getAvgMapDuration()) * orZero(job.getCompletedMaps()) +
-        orZero(job.getAvgReduceDuration()) * orZero(job.getCompletedReduces()));
-      // this is a batch job; addSource its slowdown
+      app.setExecutionTime(orZero(job.getAvgMapDuration()) * job.getCompletedMaps() +
+        orZero(job.getAvgReduceDuration()) * job.getCompletedReduces());
     } catch (Exception e) {
-      logger.debug("Could not addSource app priority for : " + app.getApplicationId(), e);
+      logger.debug("Could not update app priority for : " + app.getApplicationId(), e);
     }
   }
 
