@@ -15,7 +15,7 @@ import org.apache.hadoop.tools.posum.simulation.core.appmaster.MRAMDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonPool;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.NMDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
-import org.apache.hadoop.tools.posum.simulation.core.resourcemanager.ResourceManagerWrapper;
+import org.apache.hadoop.tools.posum.simulation.core.resourcemanager.SimulationResourceManager;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.NodeState;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -97,7 +97,7 @@ public class SimulationRunner {
   }
 
   private void startRM() throws IOException, ClassNotFoundException {
-    rm = new ResourceManagerWrapper(context);
+    rm = new SimulationResourceManager(context);
     rm.init(new YarnConfiguration());
     rm.start();
   }
@@ -124,7 +124,7 @@ public class SimulationRunner {
         -random.nextInt(heartbeatInterval),
         heartbeatInterval, rm
       );
-      nmMap.put(nm.getNode().getNodeID(), nm);
+      nmMap.put(nm.getNodeId(), nm);
       daemonPool.schedule(nm);
     }
   }

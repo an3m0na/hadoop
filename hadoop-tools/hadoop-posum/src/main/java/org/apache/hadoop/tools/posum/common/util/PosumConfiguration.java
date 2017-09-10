@@ -121,7 +121,7 @@ public class PosumConfiguration {
   public static final long APP_DEADLINE_DEFAULT = 120000;
 
   public static final String DC_PRIORITY = SCHEDULER_PREFIX + "dc.priority";
-  public static final float DC_PRIORITY_DEFAULT = 0.8f;
+  public static final float DC_PRIORITY_DEFAULT = 0.7f;
 
   public static final String MIN_EXEC_TIME = SCHEDULER_PREFIX + "min-exec-time";
   public static final long MIN_EXEC_TIME_DEFAULT = 10000;

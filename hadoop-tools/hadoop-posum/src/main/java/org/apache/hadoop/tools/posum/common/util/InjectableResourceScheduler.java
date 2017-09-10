@@ -1,14 +1,9 @@
-package org.apache.hadoop.tools.posum.simulation.core.resourcemanager;
+package org.apache.hadoop.tools.posum.common.util;
 
-import org.apache.hadoop.classification.InterfaceAudience.LimitedPrivate;
-import org.apache.hadoop.classification.InterfaceAudience.Private;
-import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
-import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -36,11 +31,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicat
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNodeReport;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppRemovedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
-import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,29 +40,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Private
-@Unstable
-public class ResourceSchedulerWrapper
-  extends AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>
+public class InjectableResourceScheduler extends AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>
   implements ResourceScheduler, Configurable {
 
-  private final Logger LOG = Logger.getLogger(ResourceSchedulerWrapper.class);
-
+  private Class<? extends ResourceScheduler> schedulerClass;
   private Configuration conf;
   private ResourceScheduler scheduler;
-  private final SimulationContext simulationContext;
+  private DatabaseProvider databaseProvider;
 
-  public ResourceSchedulerWrapper(SimulationContext simulationContext) {
-    super(ResourceSchedulerWrapper.class.getName());
-    this.simulationContext = simulationContext;
+  public InjectableResourceScheduler(Class<? extends ResourceScheduler> schedulerClass,
+                                     DatabaseProvider databaseProvider) {
+    super(InjectableResourceScheduler.class.getName());
+    this.schedulerClass = schedulerClass;
+    this.databaseProvider = databaseProvider;
   }
 
   @Override
   public void setConf(Configuration conf) {
     this.conf = conf;
-    this.scheduler = ReflectionUtils.newInstance(simulationContext.getSchedulerClass(), conf);
+    this.scheduler = ReflectionUtils.newInstance(schedulerClass, conf);
     if (scheduler instanceof PluginPolicy) {
-      ((PluginPolicy) scheduler).initializePlugin(PosumConfiguration.newInstance(), simulationContext);
+      ((PluginPolicy) scheduler).initializePlugin(conf, databaseProvider);
     }
   }
 
@@ -79,26 +69,13 @@ public class ResourceSchedulerWrapper
                              List<ResourceRequest> resourceRequests,
                              List<ContainerId> containerIds,
                              List<String> strings, List<String> strings2) {
-
     return scheduler.allocate(attemptId,
       resourceRequests, containerIds, strings, strings2);
   }
 
   @Override
   public void handle(SchedulerEvent schedulerEvent) {
-    try {
-      scheduler.handle(schedulerEvent);
-
-      if (schedulerEvent.getType() == SchedulerEventType.APP_REMOVED
-        && schedulerEvent instanceof AppRemovedSchedulerEvent) {
-        simulationContext.getRemainingJobsCounter().countDown();
-      }
-    } finally {
-      synchronized (simulationContext) {
-        simulationContext.setAwaitingScheduler(false);
-        simulationContext.notify();
-      }
-    }
+    scheduler.handle(schedulerEvent);
   }
 
   @Override
@@ -109,24 +86,21 @@ public class ResourceSchedulerWrapper
   @SuppressWarnings("unchecked")
   @Override
   public void serviceInit(Configuration conf) throws Exception {
-    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>)
-      scheduler).init(conf);
+    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>) scheduler).init(conf);
     super.serviceInit(conf);
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public void serviceStart() throws Exception {
-    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>)
-      scheduler).start();
+    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>) scheduler).start();
     super.serviceStart();
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public void serviceStop() throws Exception {
-    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>)
-      scheduler).stop();
+    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>) scheduler).stop();
     super.serviceStop();
   }
 
@@ -136,8 +110,7 @@ public class ResourceSchedulerWrapper
   }
 
   @Override
-  public void reinitialize(Configuration conf, RMContext rmContext)
-    throws IOException {
+  public void reinitialize(Configuration conf, RMContext rmContext) throws IOException {
     scheduler.reinitialize(conf, rmContext);
   }
 
@@ -147,8 +120,7 @@ public class ResourceSchedulerWrapper
   }
 
   @Override
-  public QueueInfo getQueueInfo(String s, boolean b, boolean b2)
-    throws IOException {
+  public QueueInfo getQueueInfo(String s, boolean b, boolean b2) throws IOException {
     return scheduler.getQueueInfo(s, b, b2);
   }
 
@@ -183,8 +155,7 @@ public class ResourceSchedulerWrapper
   }
 
   @Override
-  public SchedulerAppReport getSchedulerAppInfo(
-    ApplicationAttemptId attemptId) {
+  public SchedulerAppReport getSchedulerAppInfo(ApplicationAttemptId attemptId) {
     return scheduler.getSchedulerAppInfo(attemptId);
   }
 
@@ -200,8 +171,7 @@ public class ResourceSchedulerWrapper
   }
 
   @Override
-  public ApplicationResourceUsageReport getAppResourceUsageReport(
-    ApplicationAttemptId appAttemptId) {
+  public ApplicationResourceUsageReport getAppResourceUsageReport(ApplicationAttemptId appAttemptId) {
     return scheduler.getAppResourceUsageReport(appAttemptId);
   }
 
@@ -212,38 +182,38 @@ public class ResourceSchedulerWrapper
 
   @Override
   public RMContainer getRMContainer(ContainerId containerId) {
-    return null;
+    return scheduler.getRMContainer(containerId);
   }
 
   @Override
-  public String moveApplication(ApplicationId appId, String newQueue)
-    throws YarnException {
+  public String moveApplication(ApplicationId appId, String newQueue) throws YarnException {
     return scheduler.moveApplication(appId, newQueue);
   }
 
-  @Override
-  @LimitedPrivate("yarn")
-  @Unstable
   public Resource getClusterResource() {
-    return null;
+    return scheduler.getClusterResource();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public synchronized List<Container> getTransferredContainers(
-    ApplicationAttemptId currentAttempt) {
+  public synchronized List<Container> getTransferredContainers(ApplicationAttemptId currentAttempt) {
+    if (scheduler instanceof PluginPolicy)
+      return ((PluginPolicy) scheduler).getTransferredContainers(currentAttempt);
     return new ArrayList<>();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>>
-  getSchedulerApplications() {
+  public Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>> getSchedulerApplications() {
+    if (scheduler instanceof PluginPolicy)
+      return ((PluginPolicy) scheduler).getSchedulerApplications();
     return new HashMap<>();
   }
 
   @Override
   protected void completedContainer(RMContainer rmContainer,
                                     ContainerStatus containerStatus, RMContainerEventType event) {
-    // do nothing
+    if (scheduler instanceof PluginPolicy)
+      ((PluginPolicy) scheduler).forwardCompletedContainer(rmContainer, containerStatus, event);
   }
 }
-

@@ -69,6 +69,7 @@ import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -209,11 +210,16 @@ public abstract class ExtensibleCapacityScheduler<
    */
   protected void updateApplicationPriorities(LeafQueue queue, String applicationSetName) {
     Set<FiCaSchedulerApp> apps = Utils.readField(queue, LeafQueue.class, applicationSetName);
+    List<A> removedApps = new ArrayList<>(apps.size());
     for (Iterator<FiCaSchedulerApp> i = apps.iterator(); i.hasNext(); ) {
       A app = (A) i.next();
-      // remove, addSource and add to resort
+      // remove, update and remember
       i.remove();
       updateAppPriority(app);
+      removedApps.add(app);
+    }
+    // add everything back in order to re-sort
+    for (A app : removedApps) {
       apps.add(app);
     }
   }

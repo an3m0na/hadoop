@@ -18,13 +18,16 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaS
 import java.util.Comparator;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.DOT;
+import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.MAXIMUM_APPLICATIONS_SUFFIX;
+import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.PREFIX;
 
 
 public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacityScheduler<EDLSAppAttempt, ExtCaSchedulerNode> {
 
   protected Log logger;
 
-  protected final String DEADLINE_QUEUE = "deadline", BATCH_QUEUE = "default";
+  protected final String DEADLINE_QUEUE = "deadline", BATCH_QUEUE = "default", ROOT_QUEUE = "root";
   private long lastCheck = 0;
   private long maxCheck;
   protected float deadlinePriority = PosumConfiguration.DC_PRIORITY_DEFAULT;
@@ -45,6 +48,11 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
   @Override
   protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf) {
     CapacitySchedulerConfiguration capacityConf = new CapacitySchedulerConfiguration(conf);
+    capacityConf.setQueues(ROOT_QUEUE, new String[]{DEADLINE_QUEUE, BATCH_QUEUE});
+    capacityConf.setMaximumCapacity(ROOT_QUEUE + DOT + DEADLINE_QUEUE, 100);
+    capacityConf.setMaximumCapacity(ROOT_QUEUE + DOT + BATCH_QUEUE, 100);
+    capacityConf.setInt(PREFIX + ROOT_QUEUE + DOT + DEADLINE_QUEUE + DOT + MAXIMUM_APPLICATIONS_SUFFIX, 10000);
+    capacityConf.setInt(PREFIX + ROOT_QUEUE + DOT + BATCH_QUEUE + DOT + MAXIMUM_APPLICATIONS_SUFFIX, 10000);
     capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, 0);
     return capacityConf;
   }
@@ -90,7 +98,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
 
   @Override
   protected void updateAppPriority(EDLSAppAttempt app) {
-    logger.debug("Updating app priority");
+    logger.trace("Updating app priority");
     try {
       if (EDLSAppAttempt.Type.DC.equals(app.getType()))
         // application should already be initialized; do nothing
