@@ -1,28 +1,24 @@
-package org.apache.hadoop.tools.posum.simulation.core.resourcemanager;
+package org.apache.hadoop.tools.posum.common.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.service.Service;
-import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
 import java.lang.reflect.Method;
 
-public class ResourceManagerWrapper extends ResourceManager {
-  private static final Log LOG = LogFactory.getLog(ResourceManagerWrapper.class);
-  private SimulationContext simulationContext;
+public class SimplifiedResourceManager extends ResourceManager {
+  private InjectableResourceScheduler injectableScheduler;
 
-  public ResourceManagerWrapper(SimulationContext simulationContext) {
-    this.simulationContext = simulationContext;
+  public SimplifiedResourceManager(InjectableResourceScheduler policy) {
+    this.injectableScheduler = policy;
   }
 
+  @Override
   protected ResourceScheduler createScheduler() {
-    ResourceSchedulerWrapper scheduler = new ResourceSchedulerWrapper(simulationContext);
-    scheduler.setConf(getConfig());
-    return scheduler;
+    injectableScheduler.setConf(getConfig());
+    return injectableScheduler;
   }
 
   @Override
@@ -44,6 +40,4 @@ public class ResourceManagerWrapper extends ResourceManager {
     removeService(rmContext.getRMAdminService());
 
   }
-
-
 }

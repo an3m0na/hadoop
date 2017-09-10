@@ -13,6 +13,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Random;
 
+import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.DOT;
+
 public class EDLSPriorityPolicy extends EDLSPolicy<EDLSPriorityPolicy> {
 
   private static Log logger = LogFactory.getLog(EDLSPriorityPolicy.class);
@@ -27,11 +29,9 @@ public class EDLSPriorityPolicy extends EDLSPolicy<EDLSPriorityPolicy> {
 
   @Override
   protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf) {
-    CapacitySchedulerConfiguration capacityConf = new CapacitySchedulerConfiguration(conf);
-    capacityConf.setInt(CapacitySchedulerConfiguration.NODE_LOCALITY_DELAY, 0);
-    capacityConf.setQueues("root", new String[]{DEADLINE_QUEUE, BATCH_QUEUE});
-    capacityConf.setCapacity("root." + DEADLINE_QUEUE, 50);
-    capacityConf.setCapacity("root." + BATCH_QUEUE, 50);
+    CapacitySchedulerConfiguration capacityConf = super.loadCustomCapacityConf(conf);
+    capacityConf.setCapacity(ROOT_QUEUE + DOT + DEADLINE_QUEUE, 50);
+    capacityConf.setCapacity(ROOT_QUEUE + DOT + BATCH_QUEUE, 50);
     return capacityConf;
   }
 
@@ -73,7 +73,7 @@ public class EDLSPriorityPolicy extends EDLSPolicy<EDLSPriorityPolicy> {
     }
     if (refresh) {
       // remove queues and add them again to refresh priority
-      ParentQueue root = readField("root");
+      ParentQueue root = readField(ROOT_QUEUE);
       for (Iterator<CSQueue> iter = root.getChildQueues().iterator(); iter.hasNext(); ) {
         CSQueue current = iter.next();
         iter.remove();

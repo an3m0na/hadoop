@@ -2,8 +2,6 @@ package org.apache.hadoop.tools.posum.simulation.core.appmaster;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEvent;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEvent;
@@ -16,13 +14,10 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.security.AMRMTokenIdentifier;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
-import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,9 +95,6 @@ public class MRAMDaemon extends AMDaemon {
   private SimulatedContainer amContainer;
   // finished
   private boolean isFinished = false;
-  // resource for AM container
-  private final static int MR_AM_CONTAINER_RESOURCE_MEMORY_MB = 1024;
-  private final static int MR_AM_CONTAINER_RESOURCE_VCORES = 1;
 
   public final Logger LOG = Logger.getLogger(MRAMDaemon.class);
   private float slowStartRatio;
@@ -114,7 +106,7 @@ public class MRAMDaemon extends AMDaemon {
   public void init(int heartbeatInterval, List<SimulatedContainer> containerList, ResourceManager rm,
                    long traceStartTime, String user, String queue, String oldAppId, float slowStartRatio) {
     super.init(heartbeatInterval, containerList, rm, traceStartTime, user, queue, oldAppId);
-    amtype = "mapreduce";
+    amType = "mapreduce";
 
     // get map/reduce tasks
     for (SimulatedContainer cs : initialContainers) {
@@ -132,46 +124,6 @@ public class MRAMDaemon extends AMDaemon {
     reduceTotal = pendingReduces.size();
     totalContainers = mapTotal + reduceTotal;
     this.slowStartRatio = slowStartRatio;
-  }
-
-  @Override
-  public void doFirstStep() throws Exception {
-    super.doFirstStep();
-
-    requestAMContainer();
-  }
-
-  /**
-   * send out request for AM container
-   */
-  protected void requestAMContainer()
-    throws YarnException, IOException, InterruptedException {
-    List<ResourceRequest> ask = new ArrayList<ResourceRequest>();
-    ResourceRequest amRequest = createResourceRequest(
-      BuilderUtils.newResource(MR_AM_CONTAINER_RESOURCE_MEMORY_MB,
-        MR_AM_CONTAINER_RESOURCE_VCORES),
-      ResourceRequest.ANY, 1, 1);
-    ask.add(amRequest);
-    LOG.trace(MessageFormat.format("T={0}: Application {1} sends out allocate " +
-      "request for its AM", simulationContext.getCurrentTime(), appId));
-    final AllocateRequest request = this.createAllocateRequest(ask);
-
-    UserGroupInformation ugi =
-      UserGroupInformation.createRemoteUser(appAttemptId.toString());
-    Token<AMRMTokenIdentifier> token = rm.getRMContext().getRMApps()
-      .get(appAttemptId.getApplicationId())
-      .getRMAppAttempt(appAttemptId).getAMRMToken();
-    ugi.addTokenIdentifier(token.decodeIdentifier());
-    AllocateResponse response = ugi.doAs(
-      new PrivilegedExceptionAction<AllocateResponse>() {
-        @Override
-        public AllocateResponse run() throws Exception {
-          return rm.getApplicationMasterService().allocate(request);
-        }
-      });
-    if (response != null) {
-      responseQueue.put(response);
-    }
   }
 
   @Override
@@ -197,7 +149,7 @@ public class MRAMDaemon extends AMDaemon {
           simulationContext.getDispatcher().getEventHandler()
             .handle(new ContainerEvent(CONTAINER_STARTED, amContainer));
           LOG.trace(MessageFormat.format("T={0}: Application {1} starts its " +
-            "AM container ({2}).", simulationContext.getCurrentTime(), appId, amContainer.getId()));
+            "AM container ({2}).", simulationContext.getCurrentTime(), core.getAppId(), amContainer.getId()));
           isAMContainerRunning = true;
         }
       }
@@ -214,7 +166,7 @@ public class MRAMDaemon extends AMDaemon {
           if (cs.getExitStatus() == ContainerExitStatus.SUCCESS) {
             if (assignedMaps.containsKey(containerId)) {
               LOG.trace(MessageFormat.format("T={0}: Application {1} has one " +
-                "mapper finished ({2}).", appId, containerId));
+                "mapper finished ({2}).", core.getAppId(), containerId));
               SimulatedContainer simulatedContainer = assignedMaps.remove(containerId);
               mapFinished++;
               finishedContainers++;
@@ -222,7 +174,7 @@ public class MRAMDaemon extends AMDaemon {
                 .handle(new ContainerEvent(CONTAINER_FINISHED, simulatedContainer));
             } else if (assignedReduces.containsKey(containerId)) {
               LOG.trace(MessageFormat.format("T={0}: Application {1} has one " +
-                "reducer finished ({2}).", simulationContext.getCurrentTime(), appId, containerId));
+                "reducer finished ({2}).", simulationContext.getCurrentTime(), core.getAppId(), containerId));
               SimulatedContainer simulatedContainer = assignedReduces.remove(containerId);
               reduceFinished++;
               finishedContainers++;
@@ -232,21 +184,21 @@ public class MRAMDaemon extends AMDaemon {
               // am container released event
               isFinished = true;
               LOG.info(MessageFormat.format("T={0}: Application {1} goes to " +
-                "cleanUp.", simulationContext.getCurrentTime(), appId));
+                "cleanUp.", simulationContext.getCurrentTime(), core.getAppId()));
             }
           } else {
             // container to be killed
             if (assignedMaps.containsKey(containerId)) {
               LOG.trace(MessageFormat.format("T={0}: Application {1} has one " +
-                "mapper killed ({2}).", appId, containerId));
+                "mapper killed ({2}).", core.getAppId(), containerId));
               pendingFailedMaps.add(assignedMaps.remove(containerId));
             } else if (assignedReduces.containsKey(containerId)) {
               LOG.trace(MessageFormat.format("T={0}: Application {1} has one " +
-                "reducer killed ({2}).", simulationContext.getCurrentTime(), appId, containerId));
+                "reducer killed ({2}).", simulationContext.getCurrentTime(), core.getAppId(), containerId));
               pendingFailedReduces.add(assignedReduces.remove(containerId));
             } else {
               LOG.info(MessageFormat.format("T={0}: Application {1}'s AM is " +
-                "going to be killed. Restarting...", simulationContext.getCurrentTime(), appId));
+                "going to be killed. Restarting...", simulationContext.getCurrentTime(), core.getAppId()));
               restart();
             }
           }
@@ -262,10 +214,10 @@ public class MRAMDaemon extends AMDaemon {
           .handle(new ContainerEvent(CONTAINER_FINISHED, amContainer));
         isAMContainerRunning = false;
         LOG.trace(MessageFormat.format("T={0}: Application {1} sends out event " +
-          "to clean up its AM container.", simulationContext.getCurrentTime(), appId));
+          "to clean up its AM container.", simulationContext.getCurrentTime(), core.getAppId()));
         isFinished = true;
         simulationContext.getDispatcher().getEventHandler()
-          .handle(new ApplicationEvent(APPLICATION_FINISHED, oldAppId, appId));
+          .handle(new ApplicationEvent(APPLICATION_FINISHED, oldAppId, core.getAppId()));
         break;
       }
 
@@ -273,14 +225,14 @@ public class MRAMDaemon extends AMDaemon {
       for (Container container : response.getAllocatedContainers()) {
         if (!scheduledMaps.isEmpty()) {
           SimulatedContainer cs = scheduledMaps.remove();
-          LOG.trace(MessageFormat.format("T={0}: Application {1} starts a mapper ({2}).", simulationContext.getCurrentTime(), appId, container.getId()));
+          LOG.trace(MessageFormat.format("T={0}: Application {1} starts a mapper ({2}).", simulationContext.getCurrentTime(), core.getAppId(), container.getId()));
           cs.setNodeId(container.getNodeId());
           cs.setId(container.getId());
           assignedMaps.put(container.getId(), cs);
           simulationContext.getDispatcher().getEventHandler().handle(new ContainerEvent(CONTAINER_STARTED, cs));
         } else if (!this.scheduledReduces.isEmpty()) {
           SimulatedContainer cs = scheduledReduces.remove();
-          LOG.trace(MessageFormat.format("T={0}: Application {1} starts a reducer ({2}).", simulationContext.getCurrentTime(), appId, container.getId()));
+          LOG.trace(MessageFormat.format("T={0}: Application {1} starts a reducer ({2}).", simulationContext.getCurrentTime(), core.getAppId(), container.getId()));
           cs.setNodeId(container.getNodeId());
           cs.setId(container.getId());
           assignedReduces.put(container.getId(), cs);
@@ -291,10 +243,8 @@ public class MRAMDaemon extends AMDaemon {
     }
   }
 
-  /**
-   * restart running because of the am container killed
-   */
-  private void restart()
+  @Override
+  void restart()
     throws YarnException, IOException, InterruptedException {
     // clear
     finishedContainers = 0;
@@ -306,11 +256,10 @@ public class MRAMDaemon extends AMDaemon {
     pendingReduces.clear();
     pendingFailedReduces.clear();
     pendingMaps.addAll(allMaps);
-    pendingReduces.addAll(pendingReduces);
+    pendingReduces.addAll(allReduces);
     isAMContainerRunning = false;
     amContainer = null;
-    // resent am container request
-    requestAMContainer();
+    super.restart();
   }
 
   @Override
@@ -328,13 +277,13 @@ public class MRAMDaemon extends AMDaemon {
         if (!pendingMaps.isEmpty()) {
           ask = packageRequests(pendingMaps, PRIORITY_MAP);
           LOG.trace(MessageFormat.format("T={0}: Application {1} sends out " +
-            "request for {2} mappers.", simulationContext.getCurrentTime(), appId, pendingMaps.size()));
+            "request for {2} mappers.", simulationContext.getCurrentTime(), core.getAppId(), pendingMaps.size()));
           scheduledMaps.addAll(pendingMaps);
           pendingMaps.clear();
         } else if (!pendingFailedMaps.isEmpty() && scheduledMaps.isEmpty()) {
           ask = packageRequests(pendingFailedMaps, PRIORITY_MAP);
           LOG.trace(MessageFormat.format("T={0}: Application {1} sends out " +
-              "requests for {2} failed mappers.", simulationContext.getCurrentTime(), appId,
+              "requests for {2} failed mappers.", simulationContext.getCurrentTime(), core.getAppId(),
             pendingFailedMaps.size()));
           scheduledMaps.addAll(pendingFailedMaps);
           pendingFailedMaps.clear();
@@ -344,14 +293,14 @@ public class MRAMDaemon extends AMDaemon {
         if (!pendingReduces.isEmpty()) {
           ask = packageRequests(pendingReduces, PRIORITY_REDUCE);
           LOG.trace(MessageFormat.format("T={0}: Application {1} sends out " +
-            "requests for {2} reducers.", simulationContext.getCurrentTime(), appId, pendingReduces.size()));
+            "requests for {2} reducers.", simulationContext.getCurrentTime(), core.getAppId(), pendingReduces.size()));
           scheduledReduces.addAll(pendingReduces);
           pendingReduces.clear();
         } else if (!pendingFailedReduces.isEmpty()
           && scheduledReduces.isEmpty()) {
           ask = packageRequests(pendingFailedReduces, PRIORITY_REDUCE);
           LOG.trace(MessageFormat.format("T={0}: Application {1} sends out " +
-              "request for {2} failed reducers.", simulationContext.getCurrentTime(), simulationContext.getCurrentTime(), appId,
+              "request for {2} failed reducers.", simulationContext.getCurrentTime(), simulationContext.getCurrentTime(), core.getAppId(),
             pendingFailedReduces.size()));
           scheduledReduces.addAll(pendingFailedReduces);
           pendingFailedReduces.clear();
@@ -359,29 +308,17 @@ public class MRAMDaemon extends AMDaemon {
       }
     }
     if (ask == null) {
-      ask = new ArrayList<ResourceRequest>();
+      ask = new ArrayList<>();
     }
 
-    final AllocateRequest request = createAllocateRequest(ask);
+    final AllocateRequest request = core.createAllocateRequest(ask);
     if (totalContainers == 0) {
       request.setProgress(1.0f);
     } else {
       request.setProgress((float) finishedContainers / totalContainers);
     }
 
-    UserGroupInformation ugi =
-      UserGroupInformation.createRemoteUser(appAttemptId.toString());
-    Token<AMRMTokenIdentifier> token = rm.getRMContext().getRMApps()
-      .get(appAttemptId.getApplicationId())
-      .getRMAppAttempt(appAttemptId).getAMRMToken();
-    ugi.addTokenIdentifier(token.decodeIdentifier());
-    AllocateResponse response = ugi.doAs(
-      new PrivilegedExceptionAction<AllocateResponse>() {
-        @Override
-        public AllocateResponse run() throws Exception {
-          return rm.getApplicationMasterService().allocate(request);
-        }
-      });
+    AllocateResponse response = core.sendAllocateRequest(request);
     if (response != null) {
       responseQueue.put(response);
     }
