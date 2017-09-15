@@ -37,6 +37,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -216,6 +217,9 @@ public class Utils {
     try {
       Field field = Utils.findField(startClass, name);
       field.setAccessible(true);
+      Field modifiersField = Field.class.getDeclaredField("modifiers");
+      modifiersField.setAccessible(true);
+      modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
       field.set(object, value);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new PosumException("Reflection error: ", e);

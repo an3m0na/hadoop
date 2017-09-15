@@ -3,7 +3,8 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
+import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
+import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.AMCore;
@@ -34,6 +35,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
 import static org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState.FINISHED;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT;
 import static org.hamcrest.Matchers.hasSize;
@@ -81,7 +84,7 @@ public class TestEDLSShare {
     }));
   }
 
-  private void startRM(){
+  private void startRM() {
     rm.init(conf);
     rm.start();
   }
@@ -111,12 +114,20 @@ public class TestEDLSShare {
     AMCore app = new AMCore(rm, "defaultUser", "default");
     app.create();
     allApps.add(app);
+    addProfileForApp(app.getAppId());
     addJobForApp(app.getAppId(), deadline);
 
     LOG.debug("Submitting app" + id);
     app.submit();
     LOG.debug("Registering app" + id);
     app.registerWithRM();
+  }
+
+  private void addProfileForApp(ApplicationId appId) {
+    AppProfile app = Records.newRecord(AppProfile.class);
+    app.setId(appId.toString());
+    app.setStartTime(System.currentTimeMillis());
+    db.execute(StoreCall.newInstance(APP, app));
   }
 
   private void addJobForApp(ApplicationId appId, long deadline) {
@@ -127,7 +138,7 @@ public class TestEDLSShare {
     job.setId(jobId.toString());
     job.setAppId(appId.toString());
     job.setDeadline(deadline);
-    db.execute(StoreCall.newInstance(DataEntityCollection.JOB, job));
+    db.execute(StoreCall.newInstance(JOB, job));
     allJobs.add(job);
   }
 
@@ -179,6 +190,10 @@ public class TestEDLSShare {
 
   private AMCore getApp(int id) {
     return allApps.get(id - 1);
+  }
+
+  private JobProfile getJobForApp(int id) {
+    return allJobs.get(id - 1);
   }
 
   @Test
@@ -267,6 +282,83 @@ public class TestEDLSShare {
     finishApp(2);
     assertTrue(waitForAMContainer(getApp(4), 0));
 
+  }
+
+  @Test
+  public void testBatchPriorities() throws YarnException, InterruptedException, IOException {
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.99f);
+    conf.setFloat(MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, 0.5f);
+    rm.init(conf);
+    rm.start();
+    registerNodes(2);
+
+    submitApp(1, 0);
+    submitApp(2, 0);
+    submitApp(3, 0);
+    submitApp(4, 0);
+
+    assertFalse(waitForAMContainer(getApp(2), 1));
+    assertFalse(waitForAMContainer(getApp(3), 1));
+    assertFalse(waitForAMContainer(getApp(4), 1));
+    assertTrue(waitForAMContainer(getApp(1), 1));
+
+    JobProfile job = getJobForApp(2);
+    job.setCompletedMaps(1);
+    job.setAvgMapDuration(50000L);
+    db.execute(UpdateOrStoreCall.newInstance(JOB, job));
+
+    job = getJobForApp(3);
+    job.setCompletedMaps(1);
+    job.setAvgMapDuration(100000L);
+    db.execute(UpdateOrStoreCall.newInstance(JOB, job));
+
+    job = getJobForApp(4);
+    job.setCompletedMaps(1);
+    job.setAvgMapDuration(10000L);
+    db.execute(UpdateOrStoreCall.newInstance(JOB, job));
+
+    // reprioritize
+    sendHeartBeat(nodeManagers.get(1));
+
+    finishApp(1);
+    assertFalse(waitForAMContainer(getApp(2), 1));
+    assertFalse(waitForAMContainer(getApp(3), 1));
+    assertTrue(waitForAMContainer(getApp(4), 1));
+
+    finishApp(4);
+    assertFalse(waitForAMContainer(getApp(3), 1));
+    assertTrue(waitForAMContainer(getApp(2), 1));
+  }
+
+
+  @Test
+  public void testDeadlinePriorities() throws YarnException, InterruptedException, IOException {
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.01f);
+    conf.setFloat(MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, 0.5f);
+    rm.init(conf);
+    rm.start();
+    registerNodes(2);
+
+    long now = System.currentTimeMillis();
+
+    submitApp(1, now + 10000);
+    submitApp(2, now + 40000);
+    submitApp(3, now + 100000);
+    submitApp(4, now + 25000);
+
+    assertFalse(waitForAMContainer(getApp(2), 1));
+    assertFalse(waitForAMContainer(getApp(3), 1));
+    assertFalse(waitForAMContainer(getApp(4), 1));
+    assertTrue(waitForAMContainer(getApp(1), 1));
+
+    finishApp(1);
+    assertFalse(waitForAMContainer(getApp(2), 1));
+    assertFalse(waitForAMContainer(getApp(3), 1));
+    assertTrue(waitForAMContainer(getApp(4), 1));
+
+    finishApp(4);
+    assertFalse(waitForAMContainer(getApp(3), 1));
+    assertTrue(waitForAMContainer(getApp(2), 1));
   }
 
 }

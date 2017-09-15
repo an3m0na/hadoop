@@ -14,8 +14,8 @@ public class EDLSSharePolicy extends EDLSPolicy<EDLSSharePolicy> {
   @Override
   protected CapacitySchedulerConfiguration loadCustomCapacityConf(Configuration conf) {
     CapacitySchedulerConfiguration capacityConf = super.loadCustomCapacityConf(conf);
-    capacityConf.setCapacity("root"+DOT + DEADLINE_QUEUE, 100 * deadlinePriority);
-    capacityConf.setCapacity("root" +DOT + BATCH_QUEUE, 100 * (1 - deadlinePriority));
+    capacityConf.setCapacity("root" + DOT + DEADLINE_QUEUE, 100 * deadlinePriority);
+    capacityConf.setCapacity("root" + DOT + BATCH_QUEUE, 100 * (1 - deadlinePriority));
     return capacityConf;
   }
 }
