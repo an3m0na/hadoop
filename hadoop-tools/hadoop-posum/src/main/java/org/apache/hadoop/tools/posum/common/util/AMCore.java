@@ -46,7 +46,6 @@ public class AMCore {
   private ApplicationAttemptId appAttemptId;
   private final static int CONTAINER_MB = 1024;
   private final static int CONTAINER_VCORES = 1;
-  private boolean amContainerRequested = false;
 
   private int RESPONSE_ID = 1;
 
@@ -143,7 +142,6 @@ public class AMCore {
       BuilderUtils.newResource(CONTAINER_MB, CONTAINER_VCORES),
       ResourceRequest.ANY, 1, 1);
     ask.add(amRequest);
-    amContainerRequested = true;
     return sendAllocateRequest(createAllocateRequest(ask));
   }
 
@@ -208,7 +206,4 @@ public class AMCore {
     return appId;
   }
 
-  public boolean isAmContainerRequested() {
-    return amContainerRequested;
-  }
 }

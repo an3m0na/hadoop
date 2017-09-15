@@ -18,16 +18,16 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 @Category(IntegrationTest.class)
-public class TestEDLSShare extends TestPolicy {
+public class TestEDLSPriority extends TestPolicy {
 
-  public TestEDLSShare() {
-    super(EDLSSharePolicy.class);
+  public TestEDLSPriority() {
+    super(EDLSPriorityPolicy.class);
   }
 
   @Test
   public void smokeTest() throws Exception {
-    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.01f); // unrestricted batch apps
-    conf.setFloat(MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, 0.75f); // max 3 apps can run from each queue
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0f); // unrestricted batches
+    conf.setFloat(MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, 1.5f); // max 3 apps can run from each queue
 
     startRM();
     registerNodes(2);
@@ -55,8 +55,8 @@ public class TestEDLSShare extends TestPolicy {
 
   @Test
   public void testDeadlinesOnly() throws Exception {
-    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.99f); // only one batch is allowed (because then usedCapacity of batch queue is 0)
-    conf.setFloat(MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, 0.5f); // max 2 apps can run from each queue
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 1f); // batches are allowed only if there are no dcs in queue
+    conf.setFloat(MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, 1.5f); // max 3 apps can run from each queue
     startRM();
     registerNodes(2);
 
@@ -77,8 +77,7 @@ public class TestEDLSShare extends TestPolicy {
     submitApp(7, 50);
     assertFalse(waitForAMContainer(getApp(4), 0));
     assertFalse(waitForAMContainer(getApp(4), 1));
-    assertFalse(waitForAMContainer(getApp(5), 0));
-    assertFalse(waitForAMContainer(getApp(5), 1));
+    assertTrue(waitForAMContainer(getApp(5), 0));
     assertFalse(waitForAMContainer(getApp(6), 0));
     assertFalse(waitForAMContainer(getApp(6), 1));
     assertFalse(waitForAMContainer(getApp(7), 0));
@@ -87,16 +86,8 @@ public class TestEDLSShare extends TestPolicy {
     finishApp(1);
     assertFalse(waitForAMContainer(getApp(4), 0));
     assertFalse(waitForAMContainer(getApp(4), 1));
-    assertTrue(waitForAMContainer(getApp(5), 0));
-    assertFalse(waitForAMContainer(getApp(6), 0));
+    assertTrue(waitForAMContainer(getApp(6), 0));
     assertFalse(waitForAMContainer(getApp(6), 1));
-    assertFalse(waitForAMContainer(getApp(7), 0));
-    assertFalse(waitForAMContainer(getApp(7), 1));
-
-    finishApp(3);
-    assertFalse(waitForAMContainer(getApp(4), 0));
-    assertFalse(waitForAMContainer(getApp(4), 1));
-    assertTrue(waitForAMContainer(getApp(6), 1));
     assertFalse(waitForAMContainer(getApp(7), 0));
     assertFalse(waitForAMContainer(getApp(7), 1));
 
@@ -111,7 +102,7 @@ public class TestEDLSShare extends TestPolicy {
 
   @Test
   public void testBatchPriorities() throws YarnException, InterruptedException, IOException {
-    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.99f); // only one batch is allowed (because then usedCapacity of batch queue is 0) => forced to be sequential
+    conf.setFloat(MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, 0.5f); // each queue is allowed 1 app => forced to be sequential
     startRM();
     registerNodes(2);
 
@@ -154,8 +145,7 @@ public class TestEDLSShare extends TestPolicy {
 
   @Test
   public void testDeadlinePriorities() throws YarnException, InterruptedException, IOException {
-    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.01f);
-    conf.setFloat(MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, 0.5f);
+    conf.setFloat(MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, 0.5f); // each queue is allowed 1 app => forced to be sequential
     startRM();
     registerNodes(2);
 
