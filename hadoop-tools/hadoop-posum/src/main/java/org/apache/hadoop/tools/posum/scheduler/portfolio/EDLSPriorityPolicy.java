@@ -1,7 +1,5 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CSQueue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
@@ -16,8 +14,6 @@ import java.util.Random;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.DOT;
 
 public class EDLSPriorityPolicy extends EDLSPolicy<EDLSPriorityPolicy> {
-
-  private static Log logger = LogFactory.getLog(EDLSPriorityPolicy.class);
 
   private String priorityQueue = DEADLINE_QUEUE;
   private Random random;
