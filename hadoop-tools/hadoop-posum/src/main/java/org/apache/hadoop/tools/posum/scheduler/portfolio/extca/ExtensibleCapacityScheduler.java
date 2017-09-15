@@ -410,7 +410,9 @@ public abstract class ExtensibleCapacityScheduler<
       writeField("conf", capacityConf);
       invokeMethod("validateConf", new Class<?>[]{Configuration.class}, capacityConf);
       writeField("calculator", capacityConf.getResourceCalculator());
-      invokeMethod("reinitializeQueues", new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
+      writeField("queueComparator", getQueueComparator());
+      writeField("applicationComparator", getApplicationComparator());
+      invokeMethod("initializeQueues", new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
       //asynchronous scheduling is disabled by default, in order to have control over the scheduling cycle
       writeField("scheduleAsynchronously", false);
       LOG.info("Overwrote CapacityScheduler with: " +
