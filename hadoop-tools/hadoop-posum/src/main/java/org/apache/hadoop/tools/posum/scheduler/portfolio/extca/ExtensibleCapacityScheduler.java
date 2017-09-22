@@ -77,7 +77,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_QUEUE_NAME;
 
 public abstract class ExtensibleCapacityScheduler<
   A extends ExtCaAppAttempt,
@@ -86,8 +89,6 @@ public abstract class ExtensibleCapacityScheduler<
 
   private static Log LOG = LogFactory.getLog(ExtensibleCapacityScheduler.class);
 
-  private static final RecordFactory recordFactory =
-    RecordFactoryProvider.getRecordFactory(null);
   private CapacitySchedulerConfiguration capacityConf;
   private final boolean customConf;
   protected final CapacityScheduler inner;
@@ -187,7 +188,7 @@ public abstract class ExtensibleCapacityScheduler<
                                     ApplicationId applicationId,
                                     String user) {
     //TODO
-    return YarnConfiguration.DEFAULT_QUEUE_NAME;
+    return DEFAULT_QUEUE_NAME;
   }
 
   /**
@@ -209,18 +210,14 @@ public abstract class ExtensibleCapacityScheduler<
    * @param applicationSetName either "pendingApplications" or "activeApplications"
    */
   protected void updateApplicationPriorities(LeafQueue queue, String applicationSetName) {
-    Set<FiCaSchedulerApp> apps = Utils.readField(queue, LeafQueue.class, applicationSetName);
-    List<A> removedApps = new ArrayList<>(apps.size());
-    for (Iterator<FiCaSchedulerApp> i = apps.iterator(); i.hasNext(); ) {
-      A app = (A) i.next();
-      // remove, update and remember
-      i.remove();
-      updateAppPriority(app);
-      removedApps.add(app);
-    }
-    // add everything back in order to re-sort
-    for (A app : removedApps) {
-      apps.add(app);
+    synchronized (queue){
+      Set<A> oldApps = Utils.readField(queue, LeafQueue.class, applicationSetName);
+      Set<A> newApps = new TreeSet<>(getApplicationComparator());
+      for (A app : oldApps) {
+        updateAppPriority(app);
+        newApps.add(app);
+      }
+      Utils.writeField(queue, LeafQueue.class, applicationSetName, newApps);
     }
   }
 
@@ -412,7 +409,9 @@ public abstract class ExtensibleCapacityScheduler<
       writeField("calculator", capacityConf.getResourceCalculator());
       writeField("queueComparator", getQueueComparator());
       writeField("applicationComparator", getApplicationComparator());
-      invokeMethod("initializeQueues", new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
+      String[] queues = capacityConf.getQueues(CapacitySchedulerConfiguration.ROOT);
+      String initializationMethod = queues.length == 1 && queues[0].equals(DEFAULT_QUEUE_NAME)? "reinitializeQueues" : "initializeQueues";
+      invokeMethod(initializationMethod, new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
       //asynchronous scheduling is disabled by default, in order to have control over the scheduling cycle
       writeField("scheduleAsynchronously", false);
       LOG.info("Overwrote CapacityScheduler with: " +

@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
+import org.apache.hadoop.mapreduce.v2.api.records.Locality;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.StoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
@@ -13,8 +14,8 @@ import org.apache.hadoop.tools.posum.common.util.NMCore;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.SimplifiedResourceManager;
 import org.apache.hadoop.tools.posum.data.mock.data.MockDataStoreImpl;
-import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -28,8 +29,9 @@ import org.junit.Before;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
@@ -55,8 +57,8 @@ public abstract class TestPolicy {
   private List<NMCore> nodeManagers;
   private List<AMCore> allApps = new ArrayList<>();
   private List<JobProfile> allJobs = new ArrayList<>();
-  private Class<?extends PluginPolicy> schedulerClass;
-  private List<ApplicationId> alreadyAllocatedAMs = new ArrayList<>();
+  private Class<? extends PluginPolicy> schedulerClass;
+  private Map<ApplicationId, List<Container>> allocatedContainers = new HashMap<>();
 
   protected TestPolicy(Class<? extends PluginPolicy> schedulerClass) {
     this.schedulerClass = schedulerClass;
@@ -89,18 +91,19 @@ public abstract class TestPolicy {
   protected void registerNodes(int n) throws IOException, YarnException, InterruptedException {
     nodeManagers = new ArrayList<>();
     for (int i = 0; i < n; i++) {
-      NMCore nm = new NMCore(rm, "defaultRack", "192.168.1." + i, MB_PER_NM, CORES_PER_NM);
+      NMCore nm = new NMCore(rm, "/rack-unknown", "192.168.1." + i, MB_PER_NM, CORES_PER_NM);
       nm.registerWithRM();
       nodeManagers.add(nm);
     }
-    waitForNMs();
+    waitForNMs(n);
+
     assertThat(rm.getResourceScheduler().getClusterResource(),
       is(BuilderUtils.newResource(n * MB_PER_NM, n * CORES_PER_NM)));
   }
 
-  private void waitForNMs() throws InterruptedException {
+  private void waitForNMs(int n) throws InterruptedException {
     long time = System.currentTimeMillis();
-    while (rm.getResourceScheduler().getNumClusterNodes() < 2) {
+    while (rm.getResourceScheduler().getNumClusterNodes() < n) {
 //      if (System.currentTimeMillis() - time > MAX_WAIT)
 //        throw new RuntimeException("Node managers were not registered in time");
       Thread.sleep(10);
@@ -108,6 +111,19 @@ public abstract class TestPolicy {
   }
 
   protected void submitApp(int id, long deadline) throws YarnException, IOException, InterruptedException {
+    submitApp(id, deadline, null, null);
+  }
+
+  protected void submitApp(int id) throws YarnException, IOException, InterruptedException {
+    submitApp(id, 0, null, null);
+  }
+
+  protected void submitAppToNode(int id, int nmIndex,  Locality locality) throws YarnException, IOException, InterruptedException {
+    NMCore nm = nodeManagers.get(nmIndex);
+    submitApp(id, 0L, nm, locality);
+  }
+
+  private void submitApp(int id, long deadline, NMCore nm, Locality locality) throws YarnException, IOException, InterruptedException {
     AMCore app = new AMCore(rm, "defaultUser", "default");
     app.create();
     allApps.add(app);
@@ -118,8 +134,7 @@ public abstract class TestPolicy {
     app.submit();
     LOG.debug("Registering app" + id);
     app.registerWithRM();
-    if(!app.requestAMContainer().getAllocatedContainers().isEmpty())
-      alreadyAllocatedAMs.add(app.getAppId());
+    allocatedContainers.put(app.getAppId(), app.requestAMContainer(nm, locality).getAllocatedContainers());
   }
 
   private void addProfileForApp(ApplicationId appId) {
@@ -142,19 +157,16 @@ public abstract class TestPolicy {
   }
 
   protected boolean waitForAMContainer(AMCore app, int nmIndex) throws IOException, InterruptedException {
-    if(alreadyAllocatedAMs.contains(app.getAppId()))
-      return true;
+
     long time = System.currentTimeMillis();
     LOG.debug("Waiting for AM container for app" + app.getAppId().getId());
-    for (AllocateResponse allocateResponse = sendHeartBeat(app);
-         allocateResponse.getAllocatedContainers().isEmpty();
-         allocateResponse = sendHeartBeat(app)) {
+    while (getOrRequestContainers(app).isEmpty()) {
       if (System.currentTimeMillis() - time > MAX_WAIT) {
         LOG.debug("AM container was not allocated for app" + app.getAppId().getId());
         return false;
       }
       // send a heartbeat
-      sendHeartBeat(nodeManagers.get(nmIndex));
+      sendNodeUpdate(nmIndex);
       Thread.sleep(100);
       // try again
     }
@@ -162,14 +174,22 @@ public abstract class TestPolicy {
     return true;
   }
 
-  private AllocateResponse sendHeartBeat(AMCore am) throws IOException, InterruptedException {
-    return am.sendAllocateRequest(am.createAllocateRequest(Collections.<ResourceRequest>emptyList()));
+  protected List<Container> getOrRequestContainers(AMCore am) throws IOException, InterruptedException {
+    List<Container> allocated = allocatedContainers.get(am.getAppId());
+    if (allocated.isEmpty())
+      return am.sendAllocateRequest().getAllocatedContainers();
+    return allocated;
   }
 
-  protected void sendHeartBeat(NMCore nm) {
-    RMNode node = rm.getRMContext().getRMNodes().get(nm.getNodeId());
-    NodeUpdateSchedulerEvent nodeUpdate = new NodeUpdateSchedulerEvent(node);
-    rm.getResourceScheduler().handle(nodeUpdate);
+  protected int getAMNodeIndex(int appId) throws IOException, InterruptedException {
+    List<Container> containers = getOrRequestContainers(getApp(appId));
+    if (containers.isEmpty())
+      return -1;
+    for (int i = 0; i < nodeManagers.size(); i++) {
+      if (nodeManagers.get(i).getNodeId().equals(containers.get(0).getNodeId()))
+        return i;
+    }
+    return -1;
   }
 
   protected boolean finishApp(int id) throws IOException, InterruptedException {
@@ -205,8 +225,9 @@ public abstract class TestPolicy {
     return rm.getRMContext().getRMApps().size();
   }
 
-  protected void updatePriorities() {
-    sendHeartBeat(nodeManagers.get(1));
+  protected void sendNodeUpdate(int index) {
+    RMNode node = rm.getRMContext().getRMNodes().get(nodeManagers.get(index).getNodeId());
+    NodeUpdateSchedulerEvent nodeUpdate = new NodeUpdateSchedulerEvent(node);
+    rm.getResourceScheduler().handle(nodeUpdate);
   }
-
 }

@@ -118,7 +118,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     }
   }
 
-  protected abstract Comparator<SchedulerApplication<A>> initQueueComparator();
+  protected abstract Comparator<SchedulerApplication<A>> getApplicationComparator();
 
   protected synchronized void initScheduler(Configuration conf) {
     validateConf(conf);
@@ -141,7 +141,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
       YarnConfiguration.DEFAULT_RM_SCHEDULER_USE_PORT_FOR_NODE_NAME);
     this.applications = new ConcurrentHashMap<>();
-    this.orderedApps = new ConcurrentSkipListSet<>(initQueueComparator());
+    this.orderedApps = new ConcurrentSkipListSet<>(getApplicationComparator());
     this.queue = SQSQueue.getInstance(qClass, DEFAULT_QUEUE_NAME, this);
 
   }
@@ -565,46 +565,6 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       usedResource));
   }
 
-  protected boolean assignToApp(N node, SchedulerApplication<A> app) {
-    A application = app.getCurrentAppAttempt();
-    if (application == null) {
-      return false;
-    }
-
-    LOG.trace("pre-assignContainers");
-    application.showRequests();
-    synchronized (application) {
-      // Check if this resource is on the blacklist
-      if (SchedulerAppUtils.isBlacklisted(application, node, LOG)) {
-        return false;
-      }
-      for (Priority priority : application.getPriorities()) {
-        int maxContainers =
-          getMaxAllocatableContainers(application, priority, node,
-            NodeType.OFF_SWITCH);
-        // Ensure the application needs containers of this priority
-        if (maxContainers > 0) {
-          int assignedContainers =
-            assignContainersOnNode(node, application, priority);
-          // Do not assign out of order w.r.t priorities
-          if (assignedContainers == 0) {
-            break;
-          }
-        }
-      }
-    }
-
-    LOG.trace("post-assignContainers");
-    application.showRequests();
-
-    // Done
-    if (Resources.lessThan(resourceCalculator, clusterResource,
-      node.getAvailableResource(), minimumAllocation)) {
-      return true;
-    }
-    return false;
-  }
-
   protected abstract void assignFromQueue(N node);
 
   /**
@@ -617,6 +577,12 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     LOG.trace("assignContainers:" +
       " node=" + node.getRMNode().getNodeAddress() +
       " #applications=" + applications.size());
+
+    if (checkIfPrioritiesExpired()) {
+      updateApplicationPriorities();
+    }
+    if (LOG.isTraceEnabled())
+      printQueue();
 
     assignFromQueue(node);
 
@@ -631,8 +597,33 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     }
   }
 
-  private int getMaxAllocatableContainers(A application,
-                                          Priority priority, N node, NodeType type) {
+  /**
+   * Override to add custom logic to whether priorities should be updated.
+   * This is called whenever NODE_UPDATE is received, before trying to allocate.
+   * By default, priorities never expire (ApplicationId is constant after app is initially added)
+   *
+   * @return true = priorities have expired and need recalculation
+   */
+  protected boolean checkIfPrioritiesExpired() {
+    return false;
+  }
+
+  /**
+   * Override this to apply priority updates to a leaf queue's application set.
+   * By default, each instance of A is passed to updateAppPriority(A) in order
+   */
+  protected synchronized void updateApplicationPriorities() {
+    ConcurrentSkipListSet<SchedulerApplication<A>> oldOrderedApps = this.orderedApps;
+    ConcurrentSkipListSet<SchedulerApplication<A>> newOrderedApps = new ConcurrentSkipListSet<>(getApplicationComparator());
+    for (SchedulerApplication<A> app : oldOrderedApps) {
+      updateAppPriority(app);
+      newOrderedApps.add(app);
+    }
+    this.orderedApps = newOrderedApps;
+  }
+
+  public int getMaxAllocatableContainers(A application,
+                                         Priority priority, N node, NodeType type) {
     int maxContainers = 0;
 
     ResourceRequest offSwitchRequest =
@@ -667,8 +658,8 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
   }
 
 
-  private int assignContainersOnNode(N node,
-                                     A application, Priority priority
+  public int assignContainersOnNode(N node,
+                                    A application, Priority priority
   ) {
     // Data-local
     int nodeLocalContainers =
@@ -694,7 +685,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     return (nodeLocalContainers + rackLocalContainers + offSwitchContainers);
   }
 
-  private int assignNodeLocalContainers(N node,
+  protected int assignNodeLocalContainers(N node,
                                         A application, Priority priority) {
     int assignedContainers = 0;
     ResourceRequest request =
@@ -720,7 +711,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     return assignedContainers;
   }
 
-  private int assignRackLocalContainers(N node,
+  protected int assignRackLocalContainers(N node,
                                         A application, Priority priority) {
     int assignedContainers = 0;
     ResourceRequest request =
@@ -745,7 +736,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     return assignedContainers;
   }
 
-  private int assignOffSwitchContainers(N node,
+  protected int assignOffSwitchContainers(N node,
                                         A application, Priority priority) {
     int assignedContainers = 0;
     ResourceRequest request =
@@ -878,19 +869,19 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
 
   protected abstract void updateAppPriority(SchedulerApplication<A> app);
 
-  protected void onAppAttemptAdded(SchedulerApplication<A> app) {
+  protected synchronized void onAppAttemptAdded(SchedulerApplication<A> app) {
     orderedApps.remove(app);
     updateAppPriority(app);
     orderedApps.add(app);
     printQueue();
   }
 
-  protected void onAppAdded(SchedulerApplication<A> app) {
+  protected synchronized void onAppAdded(SchedulerApplication<A> app) {
     orderedApps.add(app);
     printQueue();
   }
 
-  protected void onAppDone(SchedulerApplication<A> app) {
+  protected synchronized void onAppDone(SchedulerApplication<A> app) {
     orderedApps.remove(app);
     printQueue();
   }
