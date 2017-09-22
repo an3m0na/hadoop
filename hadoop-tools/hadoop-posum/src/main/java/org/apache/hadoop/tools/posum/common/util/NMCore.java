@@ -65,4 +65,11 @@ public class NMCore {
     return rm.getResourceTrackerService().nodeHeartbeat(nextRequest);
   }
 
+  public String getHostName(){
+    return node.getHostName();
+  }
+
+  public String getRackName(){
+    return node.getRackName();
+  }
 }

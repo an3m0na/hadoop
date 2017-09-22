@@ -32,16 +32,16 @@ public class TestEDLSPriority extends TestPolicy {
     startRM();
     registerNodes(2);
 
-    submitApp(1, 0);
+    submitApp(1);
     assertTrue(waitForAMContainer(getApp(1), 0));
-    submitApp(2, 0);
+    submitApp(2);
     assertTrue(waitForAMContainer(getApp(2), 0));
 
-    submitApp(3, 0);
+    submitApp(3);
     assertFalse(waitForAMContainer(getApp(3), 0));
     assertTrue(waitForAMContainer(getApp(3), 1));
 
-    submitApp(4, 0);
+    submitApp(4);
     assertFalse(waitForAMContainer(getApp(4), 0));
     assertFalse(waitForAMContainer(getApp(4), 1));
 
@@ -62,7 +62,7 @@ public class TestEDLSPriority extends TestPolicy {
 
     submitApp(1, 10);
     assertTrue(waitForAMContainer(getApp(1), 0));
-    submitApp(2, 0);
+    submitApp(2);
     assertTrue(waitForAMContainer(getApp(2), 0));
     submitApp(3, 20);
     assertFalse(waitForAMContainer(getApp(3), 0));
@@ -71,7 +71,7 @@ public class TestEDLSPriority extends TestPolicy {
     assertThat(countAppsInQueue("batch"), is(1));
     assertThat(countAppsInQueue("deadline"), is(2));
 
-    submitApp(4, 0);
+    submitApp(4);
     submitApp(5, 30);
     submitApp(6, 40);
     submitApp(7, 50);
@@ -106,10 +106,10 @@ public class TestEDLSPriority extends TestPolicy {
     startRM();
     registerNodes(2);
 
-    submitApp(1, 0);
-    submitApp(2, 0);
-    submitApp(3, 0);
-    submitApp(4, 0);
+    submitApp(1);
+    submitApp(2);
+    submitApp(3);
+    submitApp(4);
 
     assertFalse(waitForAMContainer(getApp(2), 1));
     assertFalse(waitForAMContainer(getApp(3), 1));
@@ -131,7 +131,7 @@ public class TestEDLSPriority extends TestPolicy {
     job.setAvgMapDuration(10000L);
     db.execute(UpdateOrStoreCall.newInstance(JOB, job));
 
-    updatePriorities();
+    sendNodeUpdate(1);
 
     finishApp(1);
     assertFalse(waitForAMContainer(getApp(2), 1));

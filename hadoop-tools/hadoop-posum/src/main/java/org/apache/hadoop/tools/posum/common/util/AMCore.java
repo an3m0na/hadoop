@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.util;
 
+import org.apache.hadoop.mapreduce.v2.api.records.Locality;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
@@ -24,7 +25,6 @@ import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.security.AMRMTokenIdentifier;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -46,6 +47,8 @@ public class AMCore {
   private ApplicationAttemptId appAttemptId;
   private final static int CONTAINER_MB = 1024;
   private final static int CONTAINER_VCORES = 1;
+  private final static int PRIORITY = 1;
+  private final static Resource ONE_CONTAINER = BuilderUtils.newResource(CONTAINER_MB, CONTAINER_VCORES);
 
   private int RESPONSE_ID = 1;
 
@@ -132,21 +135,32 @@ public class AMCore {
     }
   }
 
-  public RMAppState getState(){
+  public RMAppState getState() {
     return rm.getRMContext().getRMApps().get(appId).getState();
   }
 
   public AllocateResponse requestAMContainer() throws IOException, InterruptedException {
+    return requestAMContainer(null, null);
+  }
+
+  public AllocateResponse requestAMContainer(NMCore nm, Locality locality) throws IOException, InterruptedException {
+    Locality actualLocality = locality == null ? Locality.OFF_SWITCH : locality;
     List<ResourceRequest> ask = new ArrayList<>();
-    ResourceRequest amRequest = createResourceRequest(
-      BuilderUtils.newResource(CONTAINER_MB, CONTAINER_VCORES),
-      ResourceRequest.ANY, 1, 1);
-    ask.add(amRequest);
+    switch (actualLocality) {
+      case NODE_LOCAL:
+        ask.add(createResourceRequest(ONE_CONTAINER, nm.getHostName(), PRIORITY, 1));
+      case RACK_LOCAL:
+        ask.add(createResourceRequest(ONE_CONTAINER, nm.getRackName(), PRIORITY, 1));
+      default:
+        ask.add(createResourceRequest(ONE_CONTAINER, ResourceRequest.ANY, PRIORITY, 1));
+    }
     return sendAllocateRequest(createAllocateRequest(ask));
   }
 
-  public static ResourceRequest createResourceRequest(
-    Resource resource, String host, int priority, int numContainers) {
+  public static ResourceRequest createResourceRequest(Resource resource,
+                                                      String host,
+                                                      int priority,
+                                                      int numContainers) {
     ResourceRequest request = Records.newRecord(ResourceRequest.class);
     request.setCapability(resource);
     request.setResourceName(host);
@@ -168,6 +182,10 @@ public class AMCore {
 
   public AllocateRequest createAllocateRequest(List<ResourceRequest> ask) {
     return createAllocateRequest(ask, new ArrayList<ContainerId>());
+  }
+
+  public AllocateResponse sendAllocateRequest() throws IOException, InterruptedException {
+    return sendAllocateRequest(createAllocateRequest(Collections.<ResourceRequest>emptyList()));
   }
 
   public AllocateResponse sendAllocateRequest(final AllocateRequest request) throws IOException, InterruptedException {

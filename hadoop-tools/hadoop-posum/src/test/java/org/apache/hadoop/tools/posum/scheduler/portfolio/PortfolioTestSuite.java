@@ -8,6 +8,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
   TestEDLSShare.class,
   TestEDLSPriority.class,
+  TestLocalityFirst.class,
 })
 
 public class PortfolioTestSuite {

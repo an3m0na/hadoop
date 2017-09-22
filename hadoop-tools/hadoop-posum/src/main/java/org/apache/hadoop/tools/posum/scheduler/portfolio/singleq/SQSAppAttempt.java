@@ -634,4 +634,11 @@ public class SQSAppAttempt extends SchedulerApplicationAttempt {
     }
     super.setApplicationHeadroomForMetrics(headroom);
   }
+
+  @Override
+  public String toString() {
+    return "SQSAppAttempt{" +
+      "id=" + getApplicationAttemptId() +
+      '}';
+  }
 }

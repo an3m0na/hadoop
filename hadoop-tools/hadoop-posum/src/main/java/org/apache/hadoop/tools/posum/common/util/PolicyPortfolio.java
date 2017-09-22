@@ -8,12 +8,10 @@ import org.apache.hadoop.tools.posum.scheduler.portfolio.EDLSSharePolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.FifoPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.LocalityFirstPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.ShortestRTFirstPolicy;
 
 import java.util.HashMap;
 
 public class PolicyPortfolio extends HashMap<String, Class<? extends PluginPolicy>> {
-  private static Log logger = LogFactory.getLog(PolicyPortfolio.class);
 
   public enum StandardPolicy {
     FIFO(FifoPolicy.class),
