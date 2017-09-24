@@ -6,6 +6,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
@@ -23,10 +25,7 @@ import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceOption;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.factories.RecordFactory;
-import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
 import org.apache.hadoop.yarn.proto.YarnServiceProtos;
 import org.apache.hadoop.yarn.security.YarnAuthorizationProvider;
 import org.apache.hadoop.yarn.server.api.protocolrecords.NMContainerStatus;
@@ -69,11 +68,9 @@ import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,6 +78,7 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_QUEUE_NAME;
+import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT;
 
 public abstract class ExtensibleCapacityScheduler<
   A extends ExtCaAppAttempt,
@@ -100,6 +98,13 @@ public abstract class ExtensibleCapacityScheduler<
     super(aClass, nClass, policyName);
     this.inner = new CapacityScheduler();
     this.customConf = customConf;
+  }
+
+  @Override
+  public void initializePlugin(Configuration conf, DatabaseProvider dbProvider) {
+    super.initializePlugin(conf, dbProvider);
+    float maxAMRatio = conf.getFloat(PosumConfiguration.MAX_AM_RATIO, PosumConfiguration.MAX_AM_RATIO_DEFAULT);
+    getConf().setFloat(MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT, maxAMRatio);
   }
 
   //
@@ -210,7 +215,7 @@ public abstract class ExtensibleCapacityScheduler<
    * @param applicationSetName either "pendingApplications" or "activeApplications"
    */
   protected void updateApplicationPriorities(LeafQueue queue, String applicationSetName) {
-    synchronized (queue){
+    synchronized (queue) {
       Set<A> oldApps = Utils.readField(queue, LeafQueue.class, applicationSetName);
       Set<A> newApps = new TreeSet<>(getApplicationComparator());
       for (A app : oldApps) {
@@ -282,8 +287,7 @@ public abstract class ExtensibleCapacityScheduler<
         inner.getSchedulerApplications().get(applicationAttemptId.getApplicationId());
       CSQueue queue = (CSQueue) application.getQueue();
 
-      A attempt =
-        ExtCaAppAttempt.getInstance(aClass, pluginConf, applicationAttemptId, application.getUser(),
+      A attempt = ExtCaAppAttempt.getInstance(aClass, pluginConf, applicationAttemptId, application.getUser(),
           queue, queue.getActiveUsersManager(), inner.getRMContext());
       if (transferStateFromPreviousAttempt) {
         attempt.transferStateFromPreviousAttempt(application
@@ -410,7 +414,7 @@ public abstract class ExtensibleCapacityScheduler<
       writeField("queueComparator", getQueueComparator());
       writeField("applicationComparator", getApplicationComparator());
       String[] queues = capacityConf.getQueues(CapacitySchedulerConfiguration.ROOT);
-      String initializationMethod = queues.length == 1 && queues[0].equals(DEFAULT_QUEUE_NAME)? "reinitializeQueues" : "initializeQueues";
+      String initializationMethod = queues.length == 1 && queues[0].equals(DEFAULT_QUEUE_NAME) ? "reinitializeQueues" : "initializeQueues";
       invokeMethod(initializationMethod, new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
       //asynchronous scheduling is disabled by default, in order to have control over the scheduling cycle
       writeField("scheduleAsynchronously", false);

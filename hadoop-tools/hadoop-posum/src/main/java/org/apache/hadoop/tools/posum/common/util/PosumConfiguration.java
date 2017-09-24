@@ -79,6 +79,8 @@ public class PosumConfiguration {
   public static final String SCHEDULER_ADDRESS_DEFAULT = "0.0.0.0:" + SCHEDULER_PORT_DEFAULT;
   public static final String SCHEDULER_SERVICE_THREAD_COUNT = SCHEDULER_PREFIX + "conn.thread-count";
   public static final int SCHEDULER_SERVICE_THREAD_COUNT_DEFAULT = 10;
+  public static final String MAX_AM_RATIO = SCHEDULER_PREFIX + "max.am-ratio";
+  public static final float MAX_AM_RATIO_DEFAULT = 0.5f;
 
   //should be a comma separated list of NAME=CLASS groups
   public static final String SCHEDULER_POLICY_MAP = SCHEDULER_PREFIX + "policies";

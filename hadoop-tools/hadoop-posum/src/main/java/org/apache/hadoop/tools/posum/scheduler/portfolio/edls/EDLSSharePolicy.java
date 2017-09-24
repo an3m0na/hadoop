@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.scheduler.portfolio;
+package org.apache.hadoop.tools.posum.scheduler.portfolio.edls;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;

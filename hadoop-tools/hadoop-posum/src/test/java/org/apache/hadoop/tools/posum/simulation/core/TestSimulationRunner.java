@@ -8,15 +8,12 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.util.TopologyProvider;
 import org.apache.hadoop.tools.posum.data.mock.data.MockDataStoreImpl;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.ShortestRTFirstPolicy;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.xml.crypto.Data;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
