@@ -16,7 +16,6 @@ import org.apache.hadoop.tools.posum.common.util.SimplifiedResourceManager;
 import org.apache.hadoop.tools.posum.data.mock.data.MockDataStoreImpl;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.Container;
-import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
@@ -37,10 +36,12 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
 import static org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState.FINISHED;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 
-public abstract class TestPolicy {
+public abstract class TestPolicy<T extends PluginPolicy> {
   private final Logger LOG = Logger.getLogger(TestPolicy.class);
 
   private final int SLOT_MB = 1024;
@@ -51,7 +52,6 @@ public abstract class TestPolicy {
   private final long MAX_WAIT = 1000L;
 
   private ResourceManager rm = null;
-  private MockDataStoreImpl mockDataStore;
   protected Database db;
   protected YarnConfiguration conf;
   private List<NMCore> nodeManagers;
@@ -60,14 +60,13 @@ public abstract class TestPolicy {
   private Class<? extends PluginPolicy> schedulerClass;
   private Map<ApplicationId, List<Container>> allocatedContainers = new HashMap<>();
 
-  protected TestPolicy(Class<? extends PluginPolicy> schedulerClass) {
+  protected TestPolicy(Class<T> schedulerClass) {
     this.schedulerClass = schedulerClass;
   }
 
   @Before
   public void setUp() throws Exception {
-    mockDataStore = new MockDataStoreImpl();
-    db = Database.from(mockDataStore, DatabaseReference.getMain());
+    db = Database.from(new MockDataStoreImpl(), DatabaseReference.getMain());
     conf = new YarnConfiguration(PosumConfiguration.newInstance());
     conf.setInt("yarn.nodemanager.resource.cpu-vcores", CORES_PER_NM);
     conf.setInt("yarn.nodemanager.resource.memory-mb", MB_PER_NM);
@@ -118,7 +117,7 @@ public abstract class TestPolicy {
     submitApp(id, 0, null, null);
   }
 
-  protected void submitAppToNode(int id, int nmIndex,  Locality locality) throws YarnException, IOException, InterruptedException {
+  protected void submitAppToNode(int id, int nmIndex, Locality locality) throws YarnException, IOException, InterruptedException {
     NMCore nm = nodeManagers.get(nmIndex);
     submitApp(id, 0L, nm, locality);
   }
@@ -229,5 +228,36 @@ public abstract class TestPolicy {
     RMNode node = rm.getRMContext().getRMNodes().get(nodeManagers.get(index).getNodeId());
     NodeUpdateSchedulerEvent nodeUpdate = new NodeUpdateSchedulerEvent(node);
     rm.getResourceScheduler().handle(nodeUpdate);
+  }
+
+  protected void defaultSmokeTest() throws Exception {
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1f); // all apps can run
+
+    startRM();
+    registerNodes(2);
+
+    submitApp(1);
+    assertTrue(waitForAMContainer(getApp(1), 0));
+    submitApp(2);
+    assertTrue(waitForAMContainer(getApp(2), 0));
+
+    submitApp(3);
+    assertFalse(waitForAMContainer(getApp(3), 0));
+    assertTrue(waitForAMContainer(getApp(3), 1));
+
+    submitApp(4);
+    assertFalse(waitForAMContainer(getApp(4), 0));
+    assertTrue(waitForAMContainer(getApp(4), 1));
+
+    submitApp(5);
+    assertFalse(waitForAMContainer(getApp(5), 0));
+    assertFalse(waitForAMContainer(getApp(5), 1));
+
+    assertThat(countAppsInQueue("default"), is(5));
+    assertThat(countRMApps(), is(5));
+
+    finishApp(4);
+    assertFalse(waitForAMContainer(getApp(5), 0));
+    assertTrue(waitForAMContainer(getApp(5), 1));
   }
 }

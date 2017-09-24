@@ -1,13 +1,12 @@
 package org.apache.hadoop.tools.posum.common.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.EDLSPriorityPolicy;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.EDLSSharePolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.edls.EDLSPriorityPolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.edls.EDLSSharePolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.FifoPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.LocalityFirstPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.srtf.ShortestRTFirstPolicy;
 
 import java.util.HashMap;
 
@@ -17,8 +16,8 @@ public class PolicyPortfolio extends HashMap<String, Class<? extends PluginPolic
     FIFO(FifoPolicy.class),
     EDLS_SH(EDLSSharePolicy.class),
     EDLS_PR(EDLSPriorityPolicy.class),
-    LOCF(LocalityFirstPolicy.class);//,
-    //SRTF(ShortestRTFirstPolicy.class);
+    LOCF(LocalityFirstPolicy.class),
+    SRTF(ShortestRTFirstPolicy.class);
 
     Class<? extends PluginPolicy> implClass;
 

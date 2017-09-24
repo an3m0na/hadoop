@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.singleq;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -27,6 +28,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 import java.lang.reflect.Constructor;
@@ -36,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class SQSAppAttempt extends SchedulerApplicationAttempt {
+public class SQSAppAttempt extends FiCaSchedulerApp {
 
   private static Log logger = LogFactory.getLog(SQSAppAttempt.class);
 
@@ -47,7 +49,7 @@ public class SQSAppAttempt extends SchedulerApplicationAttempt {
     new HashSet<ContainerId>();
 
 
-  public SQSAppAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+  public SQSAppAttempt(Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
     super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
     this.inner = this;
     this.viaInner = false;
@@ -59,10 +61,10 @@ public class SQSAppAttempt extends SchedulerApplicationAttempt {
     this.viaInner = true;
   }
 
-  static <A extends SQSAppAttempt> A getInstance(Class<A> aClass, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+  static <A extends SQSAppAttempt> A getInstance(Class<A> aClass, Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
     try {
-      Constructor<A> constructor = aClass.getConstructor(ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
-      return constructor.newInstance(applicationAttemptId, user, queue, activeUsersManager, rmContext);
+      Constructor<A> constructor = aClass.getConstructor(Configuration.class, ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
+      return constructor.newInstance(posumConf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
     } catch (Exception e) {
       throw new PosumException("Failed to instantiate app attempt via default constructor" + e);
     }

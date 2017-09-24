@@ -4,6 +4,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
@@ -85,7 +87,9 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
 
   protected Q queue;
   private Class<Q> qClass;
-  protected ConcurrentSkipListSet<SchedulerApplication<A>> orderedApps;
+  protected ConcurrentSkipListSet<A> orderedApps;
+  protected Resource usedAMResource = Resource.newInstance(0, 0);
+  protected float maxAMRatio;
 
   public SingleQueuePolicy(Class<A> aClass, Class<N> nClass, Class<Q> qClass, Class<S> sClass) {
     super(aClass, nClass, sClass.getName());
@@ -118,7 +122,18 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     }
   }
 
-  protected abstract Comparator<SchedulerApplication<A>> getApplicationComparator();
+  /**
+   * Override to change the order of applications in the orderedApps collection.
+   * By default, FIFO is applied.
+   */
+  protected Comparator<A> getApplicationComparator() {
+    return new Comparator<A>() {
+      @Override
+      public int compare(A o1, A o2) {
+        return o1.getApplicationId().compareTo(o2.getApplicationId());
+      }
+    };
+  }
 
   protected synchronized void initScheduler(Configuration conf) {
     validateConf(conf);
@@ -143,7 +158,12 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     this.applications = new ConcurrentHashMap<>();
     this.orderedApps = new ConcurrentSkipListSet<>(getApplicationComparator());
     this.queue = SQSQueue.getInstance(qClass, DEFAULT_QUEUE_NAME, this);
+  }
 
+  @Override
+  public void initializePlugin(Configuration conf, DatabaseProvider dbProvider) {
+    super.initializePlugin(conf, dbProvider);
+    this.maxAMRatio = conf.getFloat(PosumConfiguration.MAX_AM_RATIO, PosumConfiguration.MAX_AM_RATIO_DEFAULT);
   }
 
   @Override
@@ -437,6 +457,9 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       throw new IOException("Unknown application " + appAttemptId +
         " has completed!");
     }
+
+    onAppAttemptDone(attempt);
+
     // Kill all 'live' containers
     for (RMContainer container : attempt.getLiveContainers()) {
       if (keepContainers
@@ -462,7 +485,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       applications.get(appAttemptId.getApplicationId());
     String user = application.getUser();
     // TODO: Fix store
-    A schedulerAppAttempt = SQSAppAttempt.getInstance(aClass, appAttemptId, user, queue,
+    A schedulerAppAttempt = SQSAppAttempt.getInstance(aClass, pluginConf, appAttemptId, user, queue,
       new ActiveUsersManager(queue.getMetrics()), this.rmContext);
 
     if (transferStateFromPreviousAttempt) {
@@ -471,8 +494,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     }
 
     application.setCurrentAppAttempt(schedulerAppAttempt);
-
-    onAppAttemptAdded(application);
+    onAppAttemptAdded(schedulerAppAttempt);
 
     queue.getMetrics().submitAppAttempt(user);
     LOG.info("Added Application Attempt " + appAttemptId
@@ -502,14 +524,12 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       applicationId);
     application.stop(finalState);
     applications.remove(applicationId);
-    onAppDone(application);
   }
 
   private void addApplication(ApplicationId applicationId, String user, boolean isAppRecovering) {
     SchedulerApplication<A> application =
       new SchedulerApplication<>(queue, user);
     applications.put(applicationId, application);
-    onAppAdded(application);
 
     queue.getMetrics().submitApp(user);
     LOG.info("Accepted application " + applicationId + " from user: " + user
@@ -565,7 +585,67 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       usedResource));
   }
 
-  protected abstract void assignFromQueue(N node);
+  /**
+   * Override to add custom logic for parsing the application queue and assigning containers.
+   *
+   * @param node node on which resources are available to be allocated
+   */
+  protected void assignFromQueue(N node) {
+
+    // Just like FIFO
+
+    for (A app : orderedApps) {
+      LOG.trace("pre-assignContainers");
+      app.showRequests();
+      synchronized (app) {
+        // Check if this resource is on the blacklist
+        if (SchedulerAppUtils.isBlacklisted(app, node, LOG)) {
+          continue;
+        }
+
+        boolean amNotStarted = !hasAMResources(app);
+        if (amNotStarted && !canAMStart(app)) {
+          continue;
+        }
+
+        for (Priority priority : app.getPriorities()) {
+          int maxContainers =
+            getMaxAllocatableContainers(app, priority, node,
+              NodeType.OFF_SWITCH);
+          // Ensure the app needs containers of this priority
+          if (maxContainers > 0) {
+            int assignedContainers =
+              assignContainersOnNode(node, app, priority);
+            // Do not assign out of order w.r.t priorities
+            if (assignedContainers == 0)
+              break;
+            else if (amNotStarted && hasAMResources(app))
+              Resources.addTo(usedAMResource, app.getAMResource());
+          }
+        }
+      }
+
+      LOG.trace("post-assignContainers");
+      app.showRequests();
+
+      // Done
+      if (Resources.lessThan(getResourceCalculator(), clusterResource,
+        node.getAvailableResource(), minimumAllocation)) {
+        break;
+      }
+    }
+  }
+
+  protected boolean hasAMResources(A app) {
+    return Resources.greaterThanOrEqual(getResourceCalculator(), clusterResource,
+      app.getCurrentConsumption(), app.getAMResource());
+  }
+
+  protected boolean canAMStart(A app) {
+    Resource amIfStarted = Resources.add(usedAMResource, app.getAMResource());
+    float ratioIfStarted = Resources.divide(resourceCalculator, clusterResource, amIfStarted, clusterResource);
+    return ratioIfStarted <= maxAMRatio;
+  }
 
   /**
    * Heart of the scheduler...
@@ -609,13 +689,13 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
   }
 
   /**
-   * Override this to apply priority updates to a leaf queue's application set.
+   * Override this to apply priority updates to queue's application set.
    * By default, each instance of A is passed to updateAppPriority(A) in order
    */
   protected synchronized void updateApplicationPriorities() {
-    ConcurrentSkipListSet<SchedulerApplication<A>> oldOrderedApps = this.orderedApps;
-    ConcurrentSkipListSet<SchedulerApplication<A>> newOrderedApps = new ConcurrentSkipListSet<>(getApplicationComparator());
-    for (SchedulerApplication<A> app : oldOrderedApps) {
+    ConcurrentSkipListSet<A> oldOrderedApps = this.orderedApps;
+    ConcurrentSkipListSet<A> newOrderedApps = new ConcurrentSkipListSet<>(getApplicationComparator());
+    for (A app : oldOrderedApps) {
       updateAppPriority(app);
       newOrderedApps.add(app);
     }
@@ -686,7 +766,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
   }
 
   protected int assignNodeLocalContainers(N node,
-                                        A application, Priority priority) {
+                                          A application, Priority priority) {
     int assignedContainers = 0;
     ResourceRequest request =
       application.getResourceRequest(priority, node.getNodeName());
@@ -712,7 +792,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
   }
 
   protected int assignRackLocalContainers(N node,
-                                        A application, Priority priority) {
+                                          A application, Priority priority) {
     int assignedContainers = 0;
     ResourceRequest request =
       application.getResourceRequest(priority, node.getRMNode().getRackName());
@@ -737,7 +817,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
   }
 
   protected int assignOffSwitchContainers(N node,
-                                        A application, Priority priority) {
+                                          A application, Priority priority) {
     int assignedContainers = 0;
     ResourceRequest request =
       application.getResourceRequest(priority, ResourceRequest.ANY);
@@ -855,33 +935,24 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
 
   protected void printQueue() {
     StringBuilder builder = new StringBuilder("Apps are now [ ");
-    for (SchedulerApplication<A> orderedApp : orderedApps) {
-      A attempt = orderedApp.getCurrentAppAttempt();
-      if (attempt != null)
-        builder.append(attempt.toString());
-      else
-        builder.append("unknown");
-      builder.append(" ");
+    for (A app : orderedApps) {
+      builder.append(app.toString()).append(" ");
     }
     builder.append("]");
     LOG.debug(builder.toString());
   }
 
-  protected abstract void updateAppPriority(SchedulerApplication<A> app);
+  protected abstract void updateAppPriority(A app);
 
-  protected synchronized void onAppAttemptAdded(SchedulerApplication<A> app) {
+  protected synchronized void onAppAttemptAdded(A app) {
     orderedApps.remove(app);
     updateAppPriority(app);
     orderedApps.add(app);
     printQueue();
   }
 
-  protected synchronized void onAppAdded(SchedulerApplication<A> app) {
-    orderedApps.add(app);
-    printQueue();
-  }
-
-  protected synchronized void onAppDone(SchedulerApplication<A> app) {
+  protected synchronized void onAppAttemptDone(A app) {
+    Resources.subtractFrom(usedAMResource, app.getAMResource());
     orderedApps.remove(app);
     printQueue();
   }
@@ -904,12 +975,11 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       SchedulerApplication<A> newApp = new SchedulerApplication<>(app.getQueue(), app.getUser());
       this.applications.put(appEntry.getKey(), newApp);
       queue.getMetrics().submitApp(app.getUser());
-      onAppAdded(newApp);
-      SQSAppAttempt attempt = app.getCurrentAppAttempt();
+      A attempt = newApp.getCurrentAppAttempt();
       if (attempt != null) {
         newApp.setCurrentAppAttempt(SQSAppAttempt.getInstance(aClass, attempt));
         queue.getMetrics().submitAppAttempt(app.getUser());
-        onAppAttemptAdded(newApp);
+        onAppAttemptAdded(newApp.getCurrentAppAttempt());
       }
     }
     printQueue();

@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
 import org.apache.hadoop.mapreduce.v2.api.records.Locality;
+import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -19,6 +20,12 @@ public class TestLocalityFirst extends TestPolicy {
 
   @Test
   public void smokeTest() throws Exception {
+    defaultSmokeTest();
+  }
+
+  @Test
+  public void testAMLimit() throws Exception {
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 0.5f); // max 3 apps can run
     startRM();
     registerNodes(2);
 
@@ -28,23 +35,11 @@ public class TestLocalityFirst extends TestPolicy {
     assertTrue(waitForAMContainer(getApp(2), 0));
 
     submitApp(3);
-    assertFalse(waitForAMContainer(getApp(3), 0));
-    assertTrue(waitForAMContainer(getApp(3), 1));
+    assertFalse(waitForAMContainer(getApp(3), 0)); // would exceed am limit
+    assertFalse(waitForAMContainer(getApp(3), 1)); // would exceed am limit
 
-    submitApp(4);
-    assertFalse(waitForAMContainer(getApp(4), 0));
-    assertTrue(waitForAMContainer(getApp(4), 1));
-
-    submitApp(5);
-    assertFalse(waitForAMContainer(getApp(5), 0));
-    assertFalse(waitForAMContainer(getApp(5), 1));
-
-    assertThat(countAppsInQueue("default"), is(5));
-    assertThat(countRMApps(), is(5));
-
-    finishApp(4);
-    assertFalse(waitForAMContainer(getApp(5), 0));
-    assertTrue(waitForAMContainer(getApp(5), 1));
+    finishApp(2);
+    assertTrue(waitForAMContainer(getApp(3), 0));
   }
 
   @Test
@@ -70,7 +65,7 @@ public class TestLocalityFirst extends TestPolicy {
     assertThat(getAMNodeIndex(2), is(5));
     assertThat(getAMNodeIndex(3), is(8));
     assertThat(getAMNodeIndex(4), is(0));
-    assertThat(getAMNodeIndex(5), is(-1));
+    assertThat(getAMNodeIndex(5), is(-1)); //
     assertThat(getAMNodeIndex(6), is(1));
 
     finishApp(4);
@@ -84,5 +79,4 @@ public class TestLocalityFirst extends TestPolicy {
     assertThat(getAMNodeIndex(5), is(0));
     assertThat(getAMNodeIndex(7), is(1));
   }
-
 }

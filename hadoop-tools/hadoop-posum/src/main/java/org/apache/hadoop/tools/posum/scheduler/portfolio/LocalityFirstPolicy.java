@@ -10,31 +10,13 @@ import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppUtils;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplication;
 import org.apache.hadoop.yarn.util.resource.Resources;
-
-import java.util.Comparator;
 
 public class LocalityFirstPolicy extends SingleQueuePolicy<SQSAppAttempt, SQSchedulerNode, SQSQueue, LocalityFirstPolicy> {
   private static Log LOG = LogFactory.getLog(LocalityFirstPolicy.class);
 
   public LocalityFirstPolicy() {
     super(SQSAppAttempt.class, SQSchedulerNode.class, SQSQueue.class, LocalityFirstPolicy.class);
-  }
-
-  @Override
-  protected Comparator<SchedulerApplication<SQSAppAttempt>> getApplicationComparator() {
-    // must be defined but is not used
-    return new Comparator<SchedulerApplication<SQSAppAttempt>>() {
-      @Override
-      public int compare(SchedulerApplication<SQSAppAttempt> o1, SchedulerApplication<SQSAppAttempt> o2) {
-        if (o1 == null || o1.getCurrentAppAttempt() == null)
-          return 1;
-        if (o2 == null || o2.getCurrentAppAttempt() == null)
-          return -1;
-        return o1.getCurrentAppAttempt().getApplicationId().compareTo(o2.getCurrentAppAttempt().getApplicationId());
-      }
-    };
   }
 
   @Override
@@ -54,46 +36,49 @@ public class LocalityFirstPolicy extends SingleQueuePolicy<SQSAppAttempt, SQSche
   }
 
   private void assignByLocality(SQSchedulerNode node, NodeType localityLevel) {
-    for (SchedulerApplication<SQSAppAttempt> app : orderedApps) {
-      SQSAppAttempt application = app.getCurrentAppAttempt();
-      if (application == null) {
-        continue;
-      }
-
-      LOG.trace("pre-assignContainers-" + localityLevel + " for " + application.getApplicationAttemptId());
-      application.showRequests();
-      synchronized (application) {
+    for (SQSAppAttempt app : orderedApps) {
+      LOG.trace("pre-assignContainers-" + localityLevel + " for " + app.getApplicationAttemptId());
+      app.showRequests();
+      synchronized (app) {
         // Check if this resource is on the blacklist
-        if (SchedulerAppUtils.isBlacklisted(application, node, LOG)) {
+        if (SchedulerAppUtils.isBlacklisted(app, node, LOG)) {
           continue;
         }
 
-        for (Priority priority : application.getPriorities()) {
-          int maxContainers = getMaxAllocatableContainers(application, priority, node, localityLevel);
+        boolean amNotStarted = !hasAMResources(app);
+        if (amNotStarted && !canAMStart(app)) {
+          continue;
+        }
+
+        for (Priority priority : app.getPriorities()) {
+          int maxContainers = getMaxAllocatableContainers(app, priority, node, localityLevel);
           if (maxContainers > 0) {
             int numContainers = 0;
             switch (localityLevel) {
               case NODE_LOCAL:
-                application.addSchedulingOpportunity(priority);
-                numContainers = assignNodeLocalContainers(node, application, priority);
+                app.addSchedulingOpportunity(priority);
+                numContainers = assignNodeLocalContainers(node, app, priority);
                 break;
               case RACK_LOCAL:
-                if (!hasNodeLocalRequests(application, priority) || application.getSchedulingOpportunities(priority) >= getNumClusterNodes())
-                  numContainers = assignRackLocalContainers(node, application, priority);
+                if (!hasNodeLocalRequests(app, priority) || app.getSchedulingOpportunities(priority) >= getNumClusterNodes())
+                  numContainers = assignRackLocalContainers(node, app, priority);
                 break;
               case OFF_SWITCH:
-                if (!hasRackLocalRequests(application, priority) || application.getSchedulingOpportunities(priority) >= getNumClusterNodes())
-                  numContainers = assignOffSwitchContainers(node, application, priority);
+                if (!hasRackLocalRequests(app, priority) || app.getSchedulingOpportunities(priority) >= getNumClusterNodes())
+                  numContainers = assignOffSwitchContainers(node, app, priority);
             }
             if (numContainers == 0)
               break; // do not assign out of order w.r.t priorities
-            else
-              application.resetSchedulingOpportunities(priority);
+            else {
+              app.resetSchedulingOpportunities(priority);
+              if (amNotStarted && hasAMResources(app))
+                Resources.addTo(usedAMResource, app.getAMResource());
+            }
           }
         }
       }
-      LOG.trace("post-assignContainers-" + localityLevel + " for " + application.getApplicationAttemptId());
-      application.showRequests();
+      LOG.trace("post-assignContainers-" + localityLevel + " for " + app.getApplicationAttemptId());
+      app.showRequests();
 
       if (outOfResources(node)) {
         break;
@@ -120,7 +105,7 @@ public class LocalityFirstPolicy extends SingleQueuePolicy<SQSAppAttempt, SQSche
   }
 
   @Override
-  protected void updateAppPriority(SchedulerApplication<SQSAppAttempt> app) {
+  protected void updateAppPriority(SQSAppAttempt app) {
 
   }
 }
