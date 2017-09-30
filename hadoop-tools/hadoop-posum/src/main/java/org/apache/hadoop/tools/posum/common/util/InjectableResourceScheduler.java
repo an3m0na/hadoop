@@ -40,27 +40,34 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class InjectableResourceScheduler extends AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>
+public class InjectableResourceScheduler<T extends ResourceScheduler> extends AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>
   implements ResourceScheduler, Configurable {
 
-  private Class<? extends ResourceScheduler> schedulerClass;
+  private Class<T> schedulerClass;
   private Configuration conf;
-  private ResourceScheduler scheduler;
+  private T scheduler;
   private DatabaseProvider databaseProvider;
 
-  public InjectableResourceScheduler(Class<? extends ResourceScheduler> schedulerClass,
+  public InjectableResourceScheduler(Class<T> schedulerClass,
                                      DatabaseProvider databaseProvider) {
     super(InjectableResourceScheduler.class.getName());
     this.schedulerClass = schedulerClass;
     this.databaseProvider = databaseProvider;
   }
 
+  public InjectableResourceScheduler(T scheduler) {
+    super(InjectableResourceScheduler.class.getName());
+    this.scheduler = scheduler;
+  }
+
   @Override
   public void setConf(Configuration conf) {
     this.conf = conf;
-    this.scheduler = ReflectionUtils.newInstance(schedulerClass, conf);
-    if (scheduler instanceof PluginPolicy) {
-      ((PluginPolicy) scheduler).initializePlugin(conf, databaseProvider);
+    if (scheduler == null) {
+      this.scheduler = ReflectionUtils.newInstance(schedulerClass, conf);
+      if (scheduler instanceof PluginPolicy) {
+        ((PluginPolicy) scheduler).initializePlugin(conf, databaseProvider);
+      }
     }
   }
 

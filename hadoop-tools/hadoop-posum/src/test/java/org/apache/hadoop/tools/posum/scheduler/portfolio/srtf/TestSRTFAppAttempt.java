@@ -54,7 +54,7 @@ public class TestSRTFAppAttempt {
 
   @Test
   public void test() {
-    SRTFAppAttempt subject = new SRTFAppAttempt(null, ATTEMPT_ID, "user", QUEUE, USERS_MANAGER, RM_CONTEXT);
+    SRTFAppAttempt subject = new SRTFAppAttempt(ATTEMPT_ID, "user", QUEUE, USERS_MANAGER, RM_CONTEXT);
     assertThat(subject.getRemainingTime(MINIMUM_ALLOCATION), nullValue()); // not yet initialized
     assertThat(subject.getResourceDeficit(), nullValue()); // default for not yet running apps
     long submitTime = System.currentTimeMillis();

@@ -43,8 +43,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
   @Override
   public void initializePlugin(Configuration conf, DatabaseProvider dbProvider) {
     super.initializePlugin(conf, dbProvider);
-    maxCheck = conf.getLong(PosumConfiguration.REPRIORITIZE_INTERVAL,
-      PosumConfiguration.REPRIORITIZE_INTERVAL_DEFAULT);
+    maxCheck = conf.getLong(PosumConfiguration.REPRIORITIZE_INTERVAL, PosumConfiguration.REPRIORITIZE_INTERVAL_DEFAULT);
     deadlinePriority = conf.getFloat(PosumConfiguration.DC_PRIORITY, PosumConfiguration.DC_PRIORITY_DEFAULT);
   }
 

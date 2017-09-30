@@ -29,8 +29,7 @@ public class ShortestRTFirstPolicy extends SingleQueuePolicy<SRTFAppAttempt, SQS
   public void initializePlugin(Configuration conf, DatabaseProvider dbProvider) {
     super.initializePlugin(conf, dbProvider);
     appWorkCalculator = new AppWorkCalculator(dbProvider);
-    maxCheck = conf.getLong(PosumConfiguration.REPRIORITIZE_INTERVAL,
-      PosumConfiguration.REPRIORITIZE_INTERVAL_DEFAULT);
+    maxCheck = conf.getLong(PosumConfiguration.REPRIORITIZE_INTERVAL, PosumConfiguration.REPRIORITIZE_INTERVAL_DEFAULT);
   }
 
   @Override

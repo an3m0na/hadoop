@@ -2,7 +2,6 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.srtf;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSAppAttempt;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -26,8 +25,8 @@ public class SRTFAppAttempt extends SQSAppAttempt {
   private Double resourceDeficit;
   private Double desiredResource;
 
-  public SRTFAppAttempt(Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
-    super(posumConf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
+  public SRTFAppAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+    super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
   }
 
   public SRTFAppAttempt(SQSAppAttempt inner) {

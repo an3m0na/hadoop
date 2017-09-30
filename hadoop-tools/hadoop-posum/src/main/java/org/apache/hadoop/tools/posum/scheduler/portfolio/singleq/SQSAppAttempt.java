@@ -49,7 +49,7 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
     new HashSet<ContainerId>();
 
 
-  public SQSAppAttempt(Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+  public SQSAppAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
     super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
     this.inner = this;
     this.viaInner = false;
@@ -61,10 +61,10 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
     this.viaInner = true;
   }
 
-  static <A extends SQSAppAttempt> A getInstance(Class<A> aClass, Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+  static <A extends SQSAppAttempt> A getInstance(Class<A> aClass, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
     try {
-      Constructor<A> constructor = aClass.getConstructor(Configuration.class, ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
-      return constructor.newInstance(posumConf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
+      Constructor<A> constructor = aClass.getConstructor(ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
+      return constructor.newInstance(applicationAttemptId, user, queue, activeUsersManager, rmContext);
     } catch (Exception e) {
       throw new PosumException("Failed to instantiate app attempt via default constructor" + e);
     }
