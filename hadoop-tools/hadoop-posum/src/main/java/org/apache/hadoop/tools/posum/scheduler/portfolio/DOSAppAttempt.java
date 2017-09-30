@@ -2,7 +2,6 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaAppAttempt;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
@@ -16,8 +15,8 @@ public class DOSAppAttempt extends ExtCaAppAttempt {
   private Long totalInputSize;
   private Integer inputSplits;
 
-  public DOSAppAttempt(Configuration conf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
-    super(conf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
+  public DOSAppAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+    super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
   }
 
   public DOSAppAttempt(ExtCaAppAttempt inner) {

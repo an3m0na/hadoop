@@ -93,6 +93,13 @@ public class PortfolioMetaScheduler extends
     super(PortfolioMetaScheduler.class.getName());
   }
 
+  // for testing purposes
+  PortfolioMetaScheduler(Configuration posumConf, MetaSchedulerCommService commService) {
+    this();
+    this.posumConf = posumConf;
+    this.commService = commService;
+  }
+
   private void initPolicy() {
     try {
       currentPolicy = currentPolicyClass.newInstance();
@@ -170,12 +177,15 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public void serviceInit(Configuration conf) throws Exception {
-    this.posumConf = PosumConfiguration.newInstance();
     setConf(conf);
+    if (posumConf == null)
+      posumConf = PosumConfiguration.newInstance();
     policies = new PolicyPortfolio(posumConf);
     currentPolicyClass = policies.get(policies.getDefaultPolicyName());
-    commService = new MetaSchedulerCommService(this, conf.get(YarnConfiguration.RM_ADDRESS));
-    commService.init(posumConf);
+    if (commService == null) {
+      commService = new MetaSchedulerCommServiceImpl(this, conf.get(YarnConfiguration.RM_ADDRESS));
+      commService.init(posumConf);
+    }
     initPolicy();
 
     //initialize  metrics
@@ -194,11 +204,11 @@ public class PortfolioMetaScheduler extends
         Timer timer = new Timer(new SlidingTimeWindowReservoir(windowSize, TimeUnit.MILLISECONDS));
         handleByTypeTimers.put(e, timer);
       }
-    }
 
-    //initialize statistics service
-    webApp = new MetaSchedulerWebApp(this,
-      posumConf.getInt(PosumConfiguration.SCHEDULER_WEBAPP_PORT, PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT));
+      //initialize statistics service
+      webApp = new MetaSchedulerWebApp(this,
+        posumConf.getInt(PosumConfiguration.SCHEDULER_WEBAPP_PORT, PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT));
+    }
   }
 
   @Override
@@ -213,7 +223,8 @@ public class PortfolioMetaScheduler extends
     } finally {
       readLock.unlock();
     }
-    webApp.start();
+    if (webApp != null)
+      webApp.start();
   }
 
   @Override

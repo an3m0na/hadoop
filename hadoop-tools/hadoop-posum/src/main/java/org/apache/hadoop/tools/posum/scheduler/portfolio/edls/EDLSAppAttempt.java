@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.edls;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaAppAttempt;
@@ -11,7 +12,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManage
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
-public class EDLSAppAttempt extends ExtCaAppAttempt {
+public class EDLSAppAttempt extends ExtCaAppAttempt implements Configurable {
   private static final Log logger = LogFactory.getLog(EDLSAppAttempt.class);
 
   public enum Type {
@@ -25,16 +26,25 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
   private Long minExecTime = 1L;
   private String jobId;
   private Type type;
+  private Configuration conf;
 
-  public EDLSAppAttempt(Configuration posumConf, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
-    super(posumConf, applicationAttemptId, user, queue, activeUsersManager, rmContext);
-    if (posumConf != null)
-      minExecTime = posumConf.getLong(PosumConfiguration.MIN_EXEC_TIME,
-        PosumConfiguration.MIN_EXEC_TIME_DEFAULT);
+  public EDLSAppAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+    super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
   }
 
   public EDLSAppAttempt(ExtCaAppAttempt inner) {
     super(inner);
+  }
+
+  @Override
+  public Configuration getConf() {
+    return conf;
+  }
+
+  @Override
+  public void setConf(Configuration conf) {
+    this.conf = conf;
+    minExecTime = conf.getLong(PosumConfiguration.MIN_EXEC_TIME, PosumConfiguration.MIN_EXEC_TIME_DEFAULT);
   }
 
   @Override
@@ -50,7 +60,7 @@ public class EDLSAppAttempt extends ExtCaAppAttempt {
 
   @Override
   public synchronized void transferStateFromPreviousAttempt(SchedulerApplicationAttempt appAttempt) {
-    logger.debug("Transfering state from previous attempt " + appAttempt.getApplicationAttemptId());
+    logger.debug("Transferring state from previous attempt " + appAttempt.getApplicationAttemptId());
     super.transferStateFromPreviousAttempt(appAttempt);
     if (appAttempt instanceof EDLSAppAttempt) {
       EDLSAppAttempt edlsApp = (EDLSAppAttempt) appAttempt;

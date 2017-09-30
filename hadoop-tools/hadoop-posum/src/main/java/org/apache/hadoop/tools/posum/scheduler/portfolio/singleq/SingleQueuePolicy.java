@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.singleq;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
@@ -485,8 +486,9 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       applications.get(appAttemptId.getApplicationId());
     String user = application.getUser();
     // TODO: Fix store
-    A schedulerAppAttempt = SQSAppAttempt.getInstance(aClass, pluginConf, appAttemptId, user, queue,
-      new ActiveUsersManager(queue.getMetrics()), this.rmContext);
+    A schedulerAppAttempt = SQSAppAttempt.getInstance(aClass, appAttemptId, user, queue, new ActiveUsersManager(queue.getMetrics()), this.rmContext);
+    if(schedulerAppAttempt instanceof Configurable)
+      ((Configurable)schedulerAppAttempt).setConf(conf);
 
     if (transferStateFromPreviousAttempt) {
       schedulerAppAttempt.transferStateFromPreviousAttempt(application

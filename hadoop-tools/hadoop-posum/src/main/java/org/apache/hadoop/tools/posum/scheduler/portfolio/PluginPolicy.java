@@ -33,7 +33,6 @@ public abstract class PluginPolicy<
 
   protected Class<A> aClass;
   protected Class<N> nClass;
-  protected Configuration pluginConf;
   protected DatabaseProvider dbProvider;
 
   public PluginPolicy(Class<A> aClass, Class<N> nClass, String policyName) {
@@ -68,7 +67,7 @@ public abstract class PluginPolicy<
   }
 
   public void initializePlugin(Configuration conf, DatabaseProvider dbProvider) {
-    this.pluginConf = conf;
+    setConf(conf);
     this.dbProvider = dbProvider;
   }
 

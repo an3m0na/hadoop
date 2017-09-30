@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.extca;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -287,8 +288,11 @@ public abstract class ExtensibleCapacityScheduler<
         inner.getSchedulerApplications().get(applicationAttemptId.getApplicationId());
       CSQueue queue = (CSQueue) application.getQueue();
 
-      A attempt = ExtCaAppAttempt.getInstance(aClass, pluginConf, applicationAttemptId, application.getUser(),
-          queue, queue.getActiveUsersManager(), inner.getRMContext());
+      A attempt = ExtCaAppAttempt.getInstance(aClass, applicationAttemptId, application.getUser(),
+        queue, queue.getActiveUsersManager(), inner.getRMContext());
+      if(attempt instanceof Configurable)
+        ((Configurable)attempt).setConf(getConf());
+
       if (transferStateFromPreviousAttempt) {
         attempt.transferStateFromPreviousAttempt(application
           .getCurrentAppAttempt());
