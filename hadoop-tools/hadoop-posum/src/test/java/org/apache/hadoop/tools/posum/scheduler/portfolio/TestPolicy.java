@@ -4,6 +4,9 @@ import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.InjectableResourceScheduler;
 import org.apache.hadoop.tools.posum.scheduler.TestScheduler;
+import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
 
 public abstract class TestPolicy<T extends PluginPolicy> extends TestScheduler {

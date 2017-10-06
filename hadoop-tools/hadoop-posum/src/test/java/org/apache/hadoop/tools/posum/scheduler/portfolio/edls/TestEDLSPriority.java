@@ -27,7 +27,7 @@ public class TestEDLSPriority extends TestPolicy {
   @Test
   public void smokeTest() throws Exception {
     conf.setFloat(PosumConfiguration.DC_PRIORITY, 0f); // unrestricted batches
-    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1.5f); // max 3 apps can run from each queue
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1.5f); // max 3 apps can be active from each queue (needed because they already have 50% each)
 
     startRM();
     registerNodes(2);
@@ -49,14 +49,14 @@ public class TestEDLSPriority extends TestPolicy {
     assertThat(countAppsInQueue("deadline"), is(0));
     assertThat(countRMApps(), is(4));
 
-    finishApp(1);
+    assertTrue(finishApp(1));
     assertTrue(waitForAMContainer(getApp(4), 0));
   }
 
   @Test
   public void testDeadlinesOnly() throws Exception {
-    conf.setFloat(PosumConfiguration.DC_PRIORITY, 1f); // batches are allowed only if there are no dcs in queue
-    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1.5f); // max 3 apps can run from each queue
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 1f); // batches are allowed only if no dcs can be scheduled
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1.5f); // max 3 apps can be active from each queue (needed because they already have 50% each)
     startRM();
     registerNodes(2);
 
@@ -77,32 +77,41 @@ public class TestEDLSPriority extends TestPolicy {
     submitApp(7, 50);
     assertFalse(waitForAMContainer(getApp(4), 0));
     assertFalse(waitForAMContainer(getApp(4), 1));
-    assertTrue(waitForAMContainer(getApp(5), 0));
+    assertFalse(waitForAMContainer(getApp(5), 0));
+    assertTrue(waitForAMContainer(getApp(5), 1));
     assertFalse(waitForAMContainer(getApp(6), 0));
     assertFalse(waitForAMContainer(getApp(6), 1));
     assertFalse(waitForAMContainer(getApp(7), 0));
     assertFalse(waitForAMContainer(getApp(7), 1));
 
-    finishApp(1);
+    assertTrue(finishApp(1));
+    // app 4 should not be allocated because there are still dc jobs waiting
     assertFalse(waitForAMContainer(getApp(4), 0));
     assertFalse(waitForAMContainer(getApp(4), 1));
     assertTrue(waitForAMContainer(getApp(6), 0));
-    assertFalse(waitForAMContainer(getApp(6), 1));
     assertFalse(waitForAMContainer(getApp(7), 0));
     assertFalse(waitForAMContainer(getApp(7), 1));
 
-    finishApp(6);
+    assertTrue(finishApp(3));
+    // app 4 should not be allocated because there are still dc jobs have priority over the only slot available
     assertFalse(waitForAMContainer(getApp(4), 0));
     assertFalse(waitForAMContainer(getApp(4), 1));
+    assertFalse(waitForAMContainer(getApp(7), 0));
     assertTrue(waitForAMContainer(getApp(7), 1));
 
-    finishApp(2);
+    assertTrue(finishApp(6));
+    // app 4 can now run
+    assertFalse(waitForAMContainer(getApp(4), 1));
     assertTrue(waitForAMContainer(getApp(4), 0));
+
+    assertThat(countRMApps(), is(7));
+    assertThat(countAppsInQueue("batch"), is(2));
+    assertThat(countAppsInQueue("deadline"), is(2));
   }
 
   @Test
   public void testBatchPriorities() throws YarnException, InterruptedException, IOException {
-    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 0.5f); // each queue is allowed 1 app => forced to be sequential
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 0.5f); // each queue is allowed 1 active app (because they already have 50% each) => forced to be sequential
     startRM();
     registerNodes(2);
 
@@ -133,19 +142,19 @@ public class TestEDLSPriority extends TestPolicy {
 
     sendNodeUpdate(1);
 
-    finishApp(1);
+    assertTrue(finishApp(1));
     assertFalse(waitForAMContainer(getApp(2), 1));
     assertFalse(waitForAMContainer(getApp(3), 1));
     assertTrue(waitForAMContainer(getApp(4), 1));
 
-    finishApp(4);
+    assertTrue(finishApp(4));
     assertFalse(waitForAMContainer(getApp(3), 1));
     assertTrue(waitForAMContainer(getApp(2), 1));
   }
 
   @Test
   public void testDeadlinePriorities() throws YarnException, InterruptedException, IOException {
-    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 0.5f); // each queue is allowed 1 app => forced to be sequential
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 0.5f); // each queue is allowed 1 active app (because they already have 50% each) => forced to be sequential
     startRM();
     registerNodes(2);
 
@@ -161,14 +170,13 @@ public class TestEDLSPriority extends TestPolicy {
     assertFalse(waitForAMContainer(getApp(4), 1));
     assertTrue(waitForAMContainer(getApp(1), 1));
 
-    finishApp(1);
+    assertTrue(finishApp(1));
     assertFalse(waitForAMContainer(getApp(2), 1));
     assertFalse(waitForAMContainer(getApp(3), 1));
     assertTrue(waitForAMContainer(getApp(4), 1));
 
-    finishApp(4);
+    assertTrue(finishApp(4));
     assertFalse(waitForAMContainer(getApp(3), 1));
     assertTrue(waitForAMContainer(getApp(2), 1));
   }
-
 }

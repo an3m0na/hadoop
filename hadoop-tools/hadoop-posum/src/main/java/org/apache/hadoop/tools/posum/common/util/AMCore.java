@@ -139,11 +139,11 @@ public class AMCore {
     return rm.getRMContext().getRMApps().get(appId).getState();
   }
 
-  public AllocateResponse requestAMContainer() throws IOException, InterruptedException {
-    return requestAMContainer(null, null);
+  public AllocateResponse requestContainer() throws IOException, InterruptedException {
+    return requestContainer(null, null);
   }
 
-  public AllocateResponse requestAMContainer(NMCore nm, Locality locality) throws IOException, InterruptedException {
+  public AllocateResponse requestContainer(NMCore nm, Locality locality) throws IOException, InterruptedException {
     Locality actualLocality = locality == null ? Locality.OFF_SWITCH : locality;
     List<ResourceRequest> ask = new ArrayList<>();
     switch (actualLocality) {

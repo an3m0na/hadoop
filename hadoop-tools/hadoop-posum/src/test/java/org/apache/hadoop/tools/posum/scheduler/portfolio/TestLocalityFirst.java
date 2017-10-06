@@ -38,7 +38,7 @@ public class TestLocalityFirst extends TestPolicy {
     assertFalse(waitForAMContainer(getApp(3), 0)); // would exceed am limit
     assertFalse(waitForAMContainer(getApp(3), 1)); // would exceed am limit
 
-    finishApp(2);
+    assertTrue(finishApp(2));
     assertTrue(waitForAMContainer(getApp(3), 0));
   }
 
@@ -65,10 +65,10 @@ public class TestLocalityFirst extends TestPolicy {
     assertThat(getAMNodeIndex(2), is(5));
     assertThat(getAMNodeIndex(3), is(8));
     assertThat(getAMNodeIndex(4), is(0));
-    assertThat(getAMNodeIndex(5), is(-1)); //
+    assertThat(getAMNodeIndex(5), is(-1));
     assertThat(getAMNodeIndex(6), is(1));
 
-    finishApp(4);
+    assertTrue(finishApp(4));
 
     Thread.sleep(1000);
 

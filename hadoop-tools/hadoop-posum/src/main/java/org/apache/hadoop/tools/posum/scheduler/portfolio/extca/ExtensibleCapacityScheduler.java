@@ -12,6 +12,7 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicyState;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationResourceUsageReport;
@@ -919,6 +920,16 @@ public abstract class ExtensibleCapacityScheduler<
     }
     //TODO
     throw new PosumException("Cannot transfer state from unknown policy " + other.getClass().getName());
+  }
+
+  @Override
+  protected PluginPolicyState exportState() {
+    return null;
+  }
+
+  @Override
+  protected void importState(PluginPolicyState state) {
+
   }
 
   //

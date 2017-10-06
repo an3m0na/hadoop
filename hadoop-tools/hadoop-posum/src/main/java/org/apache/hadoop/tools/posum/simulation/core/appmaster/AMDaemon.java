@@ -71,7 +71,7 @@ public abstract class AMDaemon extends WorkerDaemon {
 
   private void requestAMContainer() throws YarnException, IOException, InterruptedException {
     LOG.trace(MessageFormat.format("T={0}: Application {1} sends out allocate request for its AM", simulationContext.getCurrentTime(), core.getAppId()));
-    AllocateResponse response = core.requestAMContainer();
+    AllocateResponse response = core.requestContainer();
     if (response != null) {
       responseQueue.put(response);
     }
