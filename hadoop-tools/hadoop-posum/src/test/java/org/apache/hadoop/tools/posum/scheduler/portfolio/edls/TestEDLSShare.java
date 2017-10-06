@@ -26,8 +26,8 @@ public class TestEDLSShare extends TestPolicy {
 
   @Test
   public void smokeTest() throws Exception {
-    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.01f); // unrestricted batch apps
-    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 0.75f); // max 3 apps can run from each queue
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.001f); // unrestricted batch apps
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 0.75f); // max 3 apps can be active from each queue
 
     startRM();
     registerNodes(2);
@@ -45,18 +45,23 @@ public class TestEDLSShare extends TestPolicy {
     assertFalse(waitForAMContainer(getApp(4), 0));
     assertFalse(waitForAMContainer(getApp(4), 1));
 
+    assertThat(countRMApps(), is(4));
     assertThat(countAppsInQueue("batch"), is(4));
     assertThat(countAppsInQueue("deadline"), is(0));
     assertThat(countRMApps(), is(4));
 
-    finishApp(1);
+    assertTrue(finishApp(1));
     assertTrue(waitForAMContainer(getApp(4), 0));
+
+    assertThat(countRMApps(), is(4));
+    assertThat(countAppsInQueue("batch"), is(3));
+    assertThat(countAppsInQueue("deadline"), is(0));
   }
 
   @Test
   public void testDeadlinesOnly() throws Exception {
-    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.99f); // only one batch is allowed (because then usedCapacity of batch queue is 0)
-    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 0.5f); // max 2 apps can run from each queue
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.999f); // only one batch is allowed (because then usedCapacity of batch queue is 0 and it is allowed one AM allocation over its capacity)
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1f); // unlimited apps can  be active from each queue
     startRM();
     registerNodes(2);
 
@@ -67,6 +72,7 @@ public class TestEDLSShare extends TestPolicy {
     submitApp(3, 20);
     assertFalse(waitForAMContainer(getApp(3), 0));
     assertTrue(waitForAMContainer(getApp(3), 1));
+
     assertThat(countRMApps(), is(3));
     assertThat(countAppsInQueue("batch"), is(1));
     assertThat(countAppsInQueue("deadline"), is(2));
@@ -78,40 +84,53 @@ public class TestEDLSShare extends TestPolicy {
     assertFalse(waitForAMContainer(getApp(4), 0));
     assertFalse(waitForAMContainer(getApp(4), 1));
     assertFalse(waitForAMContainer(getApp(5), 0));
-    assertFalse(waitForAMContainer(getApp(5), 1));
+    assertFalse(waitForAMContainer(getApp(5), 0));
+    assertTrue(waitForAMContainer(getApp(5), 1));
     assertFalse(waitForAMContainer(getApp(6), 0));
     assertFalse(waitForAMContainer(getApp(6), 1));
     assertFalse(waitForAMContainer(getApp(7), 0));
     assertFalse(waitForAMContainer(getApp(7), 1));
 
-    finishApp(1);
+    assertTrue(finishApp(1));
     assertFalse(waitForAMContainer(getApp(4), 0));
     assertFalse(waitForAMContainer(getApp(4), 1));
-    assertTrue(waitForAMContainer(getApp(5), 0));
-    assertFalse(waitForAMContainer(getApp(6), 0));
-    assertFalse(waitForAMContainer(getApp(6), 1));
+    assertTrue(waitForAMContainer(getApp(6), 0));
     assertFalse(waitForAMContainer(getApp(7), 0));
     assertFalse(waitForAMContainer(getApp(7), 1));
 
-    finishApp(3);
-    assertFalse(waitForAMContainer(getApp(4), 0));
-    assertFalse(waitForAMContainer(getApp(4), 1));
-    assertTrue(waitForAMContainer(getApp(6), 1));
-    assertFalse(waitForAMContainer(getApp(7), 0));
-    assertFalse(waitForAMContainer(getApp(7), 1));
+    assertThat(countRMApps(), is(7));
+    assertThat(countAppsInQueue("batch"), is(2));
+    assertThat(countAppsInQueue("deadline"), is(4));
 
-    finishApp(6);
+    assertTrue(finishApp(3));
     assertFalse(waitForAMContainer(getApp(4), 0));
     assertFalse(waitForAMContainer(getApp(4), 1));
+    assertFalse(waitForAMContainer(getApp(7), 0));
     assertTrue(waitForAMContainer(getApp(7), 1));
 
-    finishApp(2);
+    // app 4 should still not run because it would exceed its capacity by more than one allocation
+    assertTrue(finishApp(6));
+    assertFalse(waitForAMContainer(getApp(4), 0));
+    assertFalse(waitForAMContainer(getApp(4), 1));
+    assertTrue(finishApp(5));
+    assertFalse(waitForAMContainer(getApp(4), 0));
+    assertFalse(waitForAMContainer(getApp(4), 1));
+    assertTrue(finishApp(7));
+    assertFalse(waitForAMContainer(getApp(4), 0));
+    assertFalse(waitForAMContainer(getApp(4), 1));
+
+    // app 4 should now run
+    assertTrue(finishApp(2));
     assertTrue(waitForAMContainer(getApp(4), 0));
+
+    assertThat(countRMApps(), is(7));
+    assertThat(countAppsInQueue("batch"), is(1));
+    assertThat(countAppsInQueue("deadline"), is(0));
   }
 
   @Test
   public void testBatchPriorities() throws YarnException, InterruptedException, IOException {
-    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.99f); // only one batch is allowed (because then usedCapacity of batch queue is 0) => forced to be sequential
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.999f); // only one batch is allowed (because then usedCapacity of batch queue is 0) => forced to be sequential
     startRM();
     registerNodes(2);
 
@@ -142,19 +161,19 @@ public class TestEDLSShare extends TestPolicy {
 
     sendNodeUpdate(0);
 
-    finishApp(1);
+    assertTrue(finishApp(1));
     assertFalse(waitForAMContainer(getApp(2), 1));
     assertFalse(waitForAMContainer(getApp(3), 1));
     assertTrue(waitForAMContainer(getApp(4), 1));
 
-    finishApp(4);
+    assertTrue(finishApp(4));
     assertFalse(waitForAMContainer(getApp(3), 1));
     assertTrue(waitForAMContainer(getApp(2), 1));
   }
 
   @Test
   public void testDeadlinePriorities() throws YarnException, InterruptedException, IOException {
-    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.01f);
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.001f);
     conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 0.5f);
     startRM();
     registerNodes(2);
@@ -171,14 +190,13 @@ public class TestEDLSShare extends TestPolicy {
     assertFalse(waitForAMContainer(getApp(4), 1));
     assertTrue(waitForAMContainer(getApp(1), 1));
 
-    finishApp(1);
+    assertTrue(finishApp(1));
     assertFalse(waitForAMContainer(getApp(2), 1));
     assertFalse(waitForAMContainer(getApp(3), 1));
     assertTrue(waitForAMContainer(getApp(4), 1));
 
-    finishApp(4);
+    assertTrue(finishApp(4));
     assertFalse(waitForAMContainer(getApp(3), 1));
     assertTrue(waitForAMContainer(getApp(2), 1));
   }
-
 }

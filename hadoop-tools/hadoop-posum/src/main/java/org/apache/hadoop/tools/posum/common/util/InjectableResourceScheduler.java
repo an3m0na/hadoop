@@ -35,12 +35,10 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEv
 import org.apache.hadoop.yarn.util.resource.ResourceCalculator;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class InjectableResourceScheduler<T extends ResourceScheduler> extends AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>
+public class InjectableResourceScheduler<T extends AbstractYarnScheduler> extends AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>
   implements ResourceScheduler, Configurable {
 
   private Class<T> schedulerClass;
@@ -93,21 +91,21 @@ public class InjectableResourceScheduler<T extends ResourceScheduler> extends Ab
   @SuppressWarnings("unchecked")
   @Override
   public void serviceInit(Configuration conf) throws Exception {
-    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>) scheduler).init(conf);
+    scheduler.init(conf);
     super.serviceInit(conf);
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public void serviceStart() throws Exception {
-    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>) scheduler).start();
+    scheduler.start();
     super.serviceStart();
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public void serviceStop() throws Exception {
-    ((AbstractYarnScheduler<SchedulerApplicationAttempt, SchedulerNode>) scheduler).stop();
+    scheduler.stop();
     super.serviceStop();
   }
 
@@ -204,17 +202,13 @@ public class InjectableResourceScheduler<T extends ResourceScheduler> extends Ab
   @SuppressWarnings("unchecked")
   @Override
   public synchronized List<Container> getTransferredContainers(ApplicationAttemptId currentAttempt) {
-    if (scheduler instanceof PluginPolicy)
-      return ((PluginPolicy) scheduler).getTransferredContainers(currentAttempt);
-    return new ArrayList<>();
+    return scheduler.getTransferredContainers(currentAttempt);
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>> getSchedulerApplications() {
-    if (scheduler instanceof PluginPolicy)
-      return ((PluginPolicy) scheduler).getSchedulerApplications();
-    return new HashMap<>();
+    return scheduler.getSchedulerApplications();
   }
 
   @Override
@@ -222,5 +216,10 @@ public class InjectableResourceScheduler<T extends ResourceScheduler> extends Ab
                                     ContainerStatus containerStatus, RMContainerEventType event) {
     if (scheduler instanceof PluginPolicy)
       ((PluginPolicy) scheduler).forwardCompletedContainer(rmContainer, containerStatus, event);
+  }
+
+  @Override
+  public SchedulerApplicationAttempt getApplicationAttempt(ApplicationAttemptId applicationAttemptId) {
+    return scheduler.getApplicationAttempt(applicationAttemptId);
   }
 }

@@ -7,8 +7,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicyState;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.Container;
@@ -487,8 +487,8 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     String user = application.getUser();
     // TODO: Fix store
     A schedulerAppAttempt = SQSAppAttempt.getInstance(aClass, appAttemptId, user, queue, new ActiveUsersManager(queue.getMetrics()), this.rmContext);
-    if(schedulerAppAttempt instanceof Configurable)
-      ((Configurable)schedulerAppAttempt).setConf(conf);
+    if (schedulerAppAttempt instanceof Configurable)
+      ((Configurable) schedulerAppAttempt).setConf(conf);
 
     if (transferStateFromPreviousAttempt) {
       schedulerAppAttempt.transferStateFromPreviousAttempt(application
@@ -959,25 +959,38 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     printQueue();
   }
 
+  @Override
+  protected PluginPolicyState exportState() {
+    return PluginPolicyState.builder()
+      .usedResource(usedResource)
+      .queue(queue)
+      .nodes(nodes)
+      .applications(applications)
+      .clusterResource(clusterResource)
+      .maxAllocation(getMaximumResourceCapability())
+      .usePortForNodeName(usePortForNodeName)
+      .build();
+  }
 
-  public void assumeState(PluginPolicyState state) {
-    this.usedResource = state.usedResource;
-    this.clusterResource = state.clusterResource;
-    this.usePortForNodeName = state.usePortForNodeName;
+  @Override
+  protected void importState(PluginPolicyState state) {
+    this.usedResource = state.getUsedResource();
+    this.clusterResource = state.getClusterResource();
+    this.usePortForNodeName = state.isUsePortForNodeName();
     this.nodes = new ConcurrentHashMap<>();
-    for (SQSchedulerNode node : state.nodes.values()) {
+    for (SQSchedulerNode node : state.getNodes().values()) {
       this.nodes.put(node.getNodeID(), SQSchedulerNode.getInstance(nClass, node));
       updateMaximumAllocation(node, true);
     }
     queue.setAvailableResourcesToQueue(Resources.subtract(clusterResource,
       usedResource));
-    for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> appEntry :
-      state.applications.entrySet()) {
-      SchedulerApplication<? extends SQSAppAttempt> app = appEntry.getValue();
+    for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> appEntry :
+      state.getApplications().entrySet()) {
+      SchedulerApplication<? extends SchedulerApplicationAttempt> app = appEntry.getValue();
       SchedulerApplication<A> newApp = new SchedulerApplication<>(app.getQueue(), app.getUser());
-      this.applications.put(appEntry.getKey(), newApp);
+      applications.put(appEntry.getKey(), newApp);
       queue.getMetrics().submitApp(app.getUser());
-      A attempt = newApp.getCurrentAppAttempt();
+      SchedulerApplicationAttempt attempt = app.getCurrentAppAttempt();
       if (attempt != null) {
         newApp.setCurrentAppAttempt(SQSAppAttempt.getInstance(aClass, attempt));
         queue.getMetrics().submitAppAttempt(app.getUser());
@@ -985,24 +998,6 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       }
     }
     printQueue();
-  }
-
-  public PluginPolicyState exportState() {
-    return new PluginPolicyState(this.usedResource, this.queue, this.nodes, this.applications, this.clusterResource, getMaximumResourceCapability(), this.usePortForNodeName);
-  }
-
-  public void transferStateFromPolicy(SingleQueuePolicy other) {
-    assumeState(other.exportState());
-  }
-
-  @Override
-  public void transferStateFromPolicy(PluginPolicy other) {
-    if (PluginPolicy.class.isAssignableFrom(SingleQueuePolicy.class)) {
-      transferStateFromPolicy((SingleQueuePolicy) other);
-      return;
-    }
-    //TODO
-    throw new PosumException("Cannot transfer state from unknown policy " + other.getClass().getName());
   }
 }
 

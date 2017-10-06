@@ -14,11 +14,15 @@ import org.apache.hadoop.tools.posum.common.util.NMCore;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.SimplifiedResourceManager;
 import org.apache.hadoop.tools.posum.data.mock.data.MockDataStoreImpl;
+import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
+import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeUpdateSchedulerEvent;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.hadoop.yarn.util.Records;
@@ -98,26 +102,25 @@ public abstract class TestScheduler {
   private void waitForNMs(int n) throws InterruptedException {
     long time = System.currentTimeMillis();
     while (rm.getResourceScheduler().getNumClusterNodes() < n) {
-      if (System.currentTimeMillis() - time > MAX_WAIT)
-        throw new RuntimeException("Node managers were not registered in time");
+//      if (System.currentTimeMillis() - time > MAX_WAIT)
+//        throw new RuntimeException("Node managers were not registered in time");
       Thread.sleep(10);
     }
   }
 
   protected void submitApp(int id, long deadline) throws YarnException, IOException, InterruptedException {
-    submitApp(id, deadline, null, null);
+    submitApp(id, deadline, -1, null);
   }
 
   protected void submitApp(int id) throws YarnException, IOException, InterruptedException {
-    submitApp(id, 0, null, null);
+    submitApp(id, 0, -1, null);
   }
 
   protected void submitAppToNode(int id, int nmIndex, Locality locality) throws YarnException, IOException, InterruptedException {
-    NMCore nm = nodeManagers.get(nmIndex);
-    submitApp(id, 0L, nm, locality);
+    submitApp(id, 0L, nmIndex, locality);
   }
 
-  private void submitApp(int id, long deadline, NMCore nm, Locality locality) throws YarnException, IOException, InterruptedException {
+  private void submitApp(int id, long deadline, int nmIndex, Locality locality) throws YarnException, IOException, InterruptedException {
     AMCore app = new AMCore(rm, "defaultUser", "default");
     app.create();
     allApps.add(app);
@@ -128,7 +131,7 @@ public abstract class TestScheduler {
     app.submit();
     LOG.debug("Registering app" + id);
     app.registerWithRM();
-    allocatedContainers.put(app.getAppId(), app.requestAMContainer(nm, locality).getAllocatedContainers());
+    requestAllocation(id, nmIndex, locality);
   }
 
   private void addProfileForApp(ApplicationId appId) {
@@ -151,10 +154,11 @@ public abstract class TestScheduler {
   }
 
   protected boolean waitForAMContainer(AMCore app, int nmIndex) throws IOException, InterruptedException {
-
     long time = System.currentTimeMillis();
     LOG.debug("Waiting for AM container for app" + app.getAppId().getId());
-    while (getOrRequestContainers(app).isEmpty()) {
+    List<Container> containers = allocatedContainers.get(app.getAppId());
+    Container container = (containers == null || containers.isEmpty()) ? checkAllocation(app) : containers.get(0);
+    while (container == null) {
       if (System.currentTimeMillis() - time > MAX_WAIT) {
         LOG.debug("AM container was not allocated for app" + app.getAppId().getId());
         return false;
@@ -163,27 +167,61 @@ public abstract class TestScheduler {
       sendNodeUpdate(nmIndex);
       Thread.sleep(100);
       // try again
+      container = checkAllocation(app);
+    }
+    int actualNmIndex = getNmIndex(container);
+    if (actualNmIndex != nmIndex) {
+      LOG.debug("AM container for app" + app.getAppId().getId() + " was allocated on node " + actualNmIndex + " instead of " + nmIndex);
+      return false;
     }
     LOG.debug("AM is now running for app" + app.getAppId().getId());
     return true;
   }
 
-  protected List<Container> getOrRequestContainers(AMCore am) throws IOException, InterruptedException {
-    List<Container> allocated = allocatedContainers.get(am.getAppId());
-    if (allocated.isEmpty())
-      return am.sendAllocateRequest().getAllocatedContainers();
-    return allocated;
+  protected Container checkAllocation(AMCore am) throws IOException, InterruptedException {
+    return extractResponse(am, am.sendAllocateRequest());
   }
 
-  protected int getAMNodeIndex(int appId) throws IOException, InterruptedException {
-    List<Container> containers = getOrRequestContainers(getApp(appId));
-    if (containers.isEmpty())
+  private Container extractResponse(AMCore am, AllocateResponse response) {
+    List<Container> allocated = response.getAllocatedContainers();
+    if (!allocated.isEmpty()) {
+      List<Container> previous = allocatedContainers.get(am.getAppId());
+      if (previous == null)
+        allocatedContainers.put(am.getAppId(), new ArrayList<>(allocated));
+      else
+        previous.addAll(allocated);
+      if (allocated.size() > 1)
+        throw new RuntimeException("Unexpected number of containers for " + am + ": " + allocated);
+      return allocated.get(0);
+    }
+    return null;
+  }
+
+  protected Container requestAllocation(int appId, int nmIndex, Locality locality) throws IOException, InterruptedException {
+    AMCore app = getApp(appId);
+    return extractResponse(app, app.requestContainer(nmIndex >= 0 ? nodeManagers.get(nmIndex) : null, locality));
+  }
+
+  protected Container requestAllocation(int appId) throws IOException, InterruptedException {
+    AMCore app = getApp(appId);
+    return extractResponse(app, app.requestContainer(null, null));
+  }
+
+  protected int getNmIndex(Container container) throws IOException, InterruptedException {
+    if (container == null)
       return -1;
     for (int i = 0; i < nodeManagers.size(); i++) {
-      if (nodeManagers.get(i).getNodeId().equals(containers.get(0).getNodeId()))
+      if (nodeManagers.get(i).getNodeId().equals(container.getNodeId()))
         return i;
     }
     return -1;
+  }
+
+  protected int getAMNodeIndex(int appId) throws IOException, InterruptedException {
+    AMCore app = getApp(appId);
+    List<Container> containers = allocatedContainers.get(app.getAppId());
+    Container container = containers == null ? checkAllocation(app) : containers.get(0);
+    return getNmIndex(container);
   }
 
   protected boolean finishApp(int id) throws IOException, InterruptedException {
@@ -251,8 +289,13 @@ public abstract class TestScheduler {
     assertThat(countAppsInQueue("default"), is(5));
     assertThat(countRMApps(), is(5));
 
-    finishApp(4);
+    assertTrue(finishApp(4));
     assertFalse(waitForAMContainer(getApp(5), 0));
     assertTrue(waitForAMContainer(getApp(5), 1));
+  }
+
+  protected SchedulerApplicationAttempt getAttempt(int id) {
+    AbstractYarnScheduler scheduler = (AbstractYarnScheduler) rm.getResourceScheduler();
+    return scheduler.getApplicationAttempt(ApplicationAttemptId.newInstance(getApp(id).getAppId(), 1));
   }
 }

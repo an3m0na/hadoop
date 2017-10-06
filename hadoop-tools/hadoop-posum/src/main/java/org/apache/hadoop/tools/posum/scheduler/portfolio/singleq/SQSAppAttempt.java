@@ -2,7 +2,6 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.singleq;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -42,7 +41,7 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
 
   private static Log logger = LogFactory.getLog(SQSAppAttempt.class);
 
-  private final SQSAppAttempt inner;
+  private final SchedulerApplicationAttempt inner;
   private final boolean viaInner;
 
   private final Set<ContainerId> containersToPreempt =
@@ -61,6 +60,10 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
     this.viaInner = true;
   }
 
+  public SQSAppAttempt(SchedulerApplicationAttempt inner) {
+    this(inner.getApplicationAttemptId(), inner.getUser(), inner.getQueue(), null, null);
+  }
+
   static <A extends SQSAppAttempt> A getInstance(Class<A> aClass, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
     try {
       Constructor<A> constructor = aClass.getConstructor(ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
@@ -70,10 +73,15 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
     }
   }
 
-  static <A extends SQSAppAttempt> A getInstance(Class<A> aClass, SQSAppAttempt attempt) {
+  static <A extends SQSAppAttempt> A getInstance(Class<A> aClass, SchedulerApplicationAttempt attempt) {
     try {
-      Constructor<A> constructor = aClass.getConstructor(SQSAppAttempt.class);
-      return constructor.newInstance(attempt);
+      if (attempt instanceof SQSAppAttempt) {
+        Constructor<A> constructor = aClass.getConstructor(SQSAppAttempt.class);
+        return constructor.newInstance((SQSAppAttempt) attempt);
+      } else {
+        Constructor<A> constructor = aClass.getConstructor(SchedulerApplicationAttempt.class);
+        return constructor.newInstance(attempt);
+      }
     } catch (Exception e) {
       throw new PosumException("Failed to instantiate app attempt via default constructor" + e);
     }
@@ -83,7 +91,9 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
                                                  ContainerStatus containerStatus, RMContainerEventType event) {
 
     if (viaInner) {
-      return inner.containerCompleted(rmContainer, containerStatus, event);
+      if (inner instanceof SQSAppAttempt)
+        return ((SQSAppAttempt) inner).containerCompleted(rmContainer, containerStatus, event);
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
 
     // Remove from the list of containers
@@ -129,7 +139,9 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
                                            Container container) {
 
     if (viaInner) {
-      return inner.allocate(type, node, priority, request, container);
+      if (inner instanceof SQSAppAttempt)
+        return ((SQSAppAttempt) inner).allocate(type, node, priority, request, container);
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
 
     if (isStopped) {
@@ -342,8 +354,9 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
   @Override
   protected synchronized void resetReReservations(Priority priority) {
     if (viaInner) {
-      inner.resetReReservations(priority);
-      return;
+      if (inner instanceof SQSAppAttempt)
+        ((SQSAppAttempt) inner).resetReReservations(priority);
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     super.resetReReservations(priority);
   }
@@ -351,8 +364,9 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
   @Override
   protected synchronized void addReReservation(Priority priority) {
     if (viaInner) {
-      inner.addReReservation(priority);
-      return;
+      if (inner instanceof SQSAppAttempt)
+        ((SQSAppAttempt) inner).addReReservation(priority);
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     super.addReReservation(priority);
   }
