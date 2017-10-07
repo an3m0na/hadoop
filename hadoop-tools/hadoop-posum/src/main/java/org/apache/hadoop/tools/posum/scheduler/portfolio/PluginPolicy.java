@@ -94,5 +94,5 @@ public abstract class PluginPolicy<
 
   protected abstract PluginPolicyState exportState();
 
-  protected abstract void importState(PluginPolicyState state);
+  protected abstract <T extends SchedulerNode & PluginSchedulerNode> void importState(PluginPolicyState<T> state);
 }

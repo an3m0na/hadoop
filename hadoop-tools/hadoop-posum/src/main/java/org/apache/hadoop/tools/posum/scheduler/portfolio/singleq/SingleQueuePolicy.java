@@ -9,6 +9,8 @@ import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicyState;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginSchedulerNode;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.Container;
@@ -45,6 +47,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplication;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAddedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAttemptAddedSchedulerEvent;
@@ -70,14 +73,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
-  N extends SQSchedulerNode,
+  N extends FiCaPluginSchedulerNode,
   Q extends SQSQueue,
   S extends SingleQueuePolicy<A, N, Q, S>>
   extends PluginPolicy<A, N> {
 
   private static Log LOG = LogFactory.getLog(SingleQueuePolicy.class);
 
-  Configuration conf;
+  private Configuration conf;
   private static final String DEFAULT_QUEUE_NAME = "default";
   private static final RecordFactory recordFactory =
     RecordFactoryProvider.getRecordFactory(null);
@@ -883,7 +886,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
   }
 
   protected void addNode(RMNode rmNode) {
-    N schedulerNode = SQSchedulerNode.getInstance(nClass, rmNode, usePortForNodeName);
+    N schedulerNode = FiCaPluginSchedulerNode.getInstance(nClass, rmNode, usePortForNodeName, rmNode.getNodeLabels());
     this.nodes.put(rmNode.getNodeID(), schedulerNode);
     Resources.addTo(clusterResource, rmNode.getTotalCapability());
     updateMaximumAllocation(schedulerNode, true);
@@ -961,29 +964,21 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
 
   @Override
   protected PluginPolicyState exportState() {
-    return PluginPolicyState.builder()
-      .usedResource(usedResource)
-      .queue(queue)
-      .nodes(nodes)
-      .applications(applications)
-      .clusterResource(clusterResource)
-      .maxAllocation(getMaximumResourceCapability())
-      .usePortForNodeName(usePortForNodeName)
-      .build();
+    return new PluginPolicyState<>(clusterResource, nodes, applications);
   }
 
   @Override
-  protected void importState(PluginPolicyState state) {
-    this.usedResource = state.getUsedResource();
-    this.clusterResource = state.getClusterResource();
-    this.usePortForNodeName = state.isUsePortForNodeName();
-    this.nodes = new ConcurrentHashMap<>();
-    for (SQSchedulerNode node : state.getNodes().values()) {
-      this.nodes.put(node.getNodeID(), SQSchedulerNode.getInstance(nClass, node));
+  protected <T extends SchedulerNode & PluginSchedulerNode> void importState(PluginPolicyState<T> state) {
+    clusterResource = state.getClusterResource();
+    usedResource = Resource.newInstance(0, 0);
+    usedAMResource = Resource.newInstance(0, 0);
+    nodes = new ConcurrentHashMap<>();
+    for (T node : state.getNodes().values()) {
+      this.nodes.put(node.getNodeID(), FiCaPluginSchedulerNode.getInstance(nClass, node));
       updateMaximumAllocation(node, true);
+      Resources.addTo(usedAMResource, node.getUsedResource());
     }
-    queue.setAvailableResourcesToQueue(Resources.subtract(clusterResource,
-      usedResource));
+    queue.setAvailableResourcesToQueue(Resources.subtract(clusterResource, usedResource));
     for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> appEntry :
       state.getApplications().entrySet()) {
       SchedulerApplication<? extends SchedulerApplicationAttempt> app = appEntry.getValue();
@@ -992,6 +987,8 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       queue.getMetrics().submitApp(app.getUser());
       SchedulerApplicationAttempt attempt = app.getCurrentAppAttempt();
       if (attempt != null) {
+        Resources.addTo(usedAMResource, Resources.min(getResourceCalculator(), clusterResource,
+          attempt.getCurrentConsumption(), attempt.getAMResource()));
         newApp.setCurrentAppAttempt(SQSAppAttempt.getInstance(aClass, attempt));
         queue.getMetrics().submitAppAttempt(app.getUser());
         onAppAttemptAdded(newApp.getCurrentAppAttempt());

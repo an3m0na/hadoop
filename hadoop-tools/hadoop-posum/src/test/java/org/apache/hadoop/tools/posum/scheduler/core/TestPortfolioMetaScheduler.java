@@ -47,7 +47,7 @@ public class TestPortfolioMetaScheduler extends TestScheduler {
   public void changeEdlsPriorityToShareAndBack() throws Exception {
     conf.set(PosumConfiguration.DEFAULT_POLICY, EDLS_PR.name());
     conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.999f); // batches are allowed only if there are no dcs in queue
-    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1f); // max 2 apps can be active from each queue (because they already have 50% each)
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1f); // max 2 apps can be active from each queue for EDLS_PR(because they already have 50% each), unlimited (max slots) apps for EDLS_SH
     startRM();
     registerNodes(2);
 
@@ -68,7 +68,6 @@ public class TestPortfolioMetaScheduler extends TestScheduler {
     submitApp(6, 40);
     submitApp(7, 50);
     // dc apps cannot not run because of exceeding AM quota, so app 4 can start
-    assertFalse(waitForAMContainer(getApp(5), 0));
     assertFalse(waitForAMContainer(getApp(5), 0));
     assertFalse(waitForAMContainer(getApp(5), 1));
     assertFalse(waitForAMContainer(getApp(6), 0));
@@ -92,66 +91,61 @@ public class TestPortfolioMetaScheduler extends TestScheduler {
 
     scheduler.changeToPolicy(EDLS_SH.name());
 
+    assertTrue(finishApp(4));
+
     submitApp(8);
     submitApp(9, 10);
 
     assertThat(countRMApps(), is(9));
-    assertThat(countAppsInQueue("batch"), is(3));
+    assertThat(countAppsInQueue("batch"), is(2));
     assertThat(countAppsInQueue("deadline"), is(5));
 
-    // now app 8 cannot run before at least one batch app is done
+    // now app 8 cannot run before all batch apps are done
+    // but now dc apps no longer have a quota
+    // app 9 cannot should take precedence
     assertFalse(waitForAMContainer(getApp(6), 0));
     assertFalse(waitForAMContainer(getApp(6), 1));
     assertFalse(waitForAMContainer(getApp(7), 0));
     assertFalse(waitForAMContainer(getApp(7), 1));
     assertFalse(waitForAMContainer(getApp(8), 1));
     assertFalse(waitForAMContainer(getApp(8), 0));
-    assertFalse(waitForAMContainer(getApp(9), 0));
-    assertFalse(waitForAMContainer(getApp(9), 1));
-
-    assertTrue(finishApp(3));
-
-    // app 9 should take precedence
-    assertFalse(waitForAMContainer(getApp(8), 1));
-    assertFalse(waitForAMContainer(getApp(8), 0));
-    assertFalse(waitForAMContainer(getApp(6), 0));
-    assertFalse(waitForAMContainer(getApp(6), 1));
-    assertFalse(waitForAMContainer(getApp(7), 0));
-    assertFalse(waitForAMContainer(getApp(7), 1));
     assertFalse(waitForAMContainer(getApp(9), 0));
     assertTrue(waitForAMContainer(getApp(9), 1));
 
-    assertTrue(finishApp(5));
-    assertFalse(waitForAMContainer(getApp(8), 1));
+    assertTrue(finishApp(3));
+
+    // app 8 cannot run before all batch apps are done
     assertFalse(waitForAMContainer(getApp(8), 0));
-    assertFalse(waitForAMContainer(getApp(6), 1));
-    assertTrue(waitForAMContainer(getApp(6), 0));
+    assertFalse(waitForAMContainer(getApp(8), 1));
+    assertFalse(waitForAMContainer(getApp(6), 0));
+    assertTrue(waitForAMContainer(getApp(6), 1));
     assertFalse(waitForAMContainer(getApp(7), 0));
     assertFalse(waitForAMContainer(getApp(7), 1));
 
-    assertTrue(finishApp(9));
-    assertFalse(waitForAMContainer(getApp(8), 1));
-    assertFalse(waitForAMContainer(getApp(8), 0));
-    assertFalse(waitForAMContainer(getApp(7), 0));
-    assertTrue(waitForAMContainer(getApp(7), 1));
-
-    assertTrue(finishApp(6));
-    assertFalse(waitForAMContainer(getApp(8), 1));
-    assertFalse(waitForAMContainer(getApp(8), 0));
+    assertTrue(finishApp(5));
 
     scheduler.changeToPolicy(EDLS_PR.name());
 
     assertThat(countRMApps(), is(9));
-    assertThat(countAppsInQueue("batch"), is(3));
-    assertThat(countAppsInQueue("deadline"), is(1));
+    assertThat(countAppsInQueue("batch"), is(2));
+    assertThat(countAppsInQueue("deadline"), is(3));
 
-    // now app 8 can run because there are no dcs left
+    // now app 8 can run because 7 would exceed dc quota
+    assertFalse(waitForAMContainer(getApp(7), 0));
+    assertFalse(waitForAMContainer(getApp(7), 1));
     assertFalse(waitForAMContainer(getApp(8), 1));
     assertTrue(waitForAMContainer(getApp(8), 0));
 
+    // 7 would still exceed quota
     assertTrue(finishApp(2));
+    assertFalse(waitForAMContainer(getApp(7), 0));
+    assertFalse(waitForAMContainer(getApp(7), 1));
+
+    assertTrue(finishApp(9));
+    assertTrue(waitForAMContainer(getApp(7), 0));
+
+    assertTrue(finishApp(6));
     assertTrue(finishApp(8));
-    assertTrue(finishApp(4));
     assertTrue(finishApp(7));
 
     assertThat(countRMApps(), is(9));
@@ -171,7 +165,6 @@ public class TestPortfolioMetaScheduler extends TestScheduler {
     submitApp(1);
     submitApp(2);
     submitApp(3);
-
 
     JobProfile job1 = getJobForApp(1);
     JobProfile job2 = getJobForApp(2);
@@ -250,6 +243,7 @@ public class TestPortfolioMetaScheduler extends TestScheduler {
     scheduler.changeToPolicy(SRTF.name());
 
     sendNodeUpdate(3);
+    sendNodeUpdate(1); // is full so should not matter
 
     Thread.sleep(1000);
 

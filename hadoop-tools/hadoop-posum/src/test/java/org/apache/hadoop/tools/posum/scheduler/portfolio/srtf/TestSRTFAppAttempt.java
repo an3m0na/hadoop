@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio.srtf;
 
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSchedulerNode;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -34,7 +34,7 @@ public class TestSRTFAppAttempt {
   private static final Resource CLUSTER_RESOURCE = Resource.newInstance(10, 10);
   private static final Priority PRIORITY = Priority.newInstance(1);
   private static final ResourceRequest AM_REQUEST = ResourceRequest.newInstance(PRIORITY, "*", MINIMUM_ALLOCATION, 1);
-  private static final SQSchedulerNode NODE = mock(SQSchedulerNode.class);
+  private static final FiCaPluginSchedulerNode NODE = mock(FiCaPluginSchedulerNode.class);
   private static final Container CONTAINER = mock(Container.class, RETURNS_DEEP_STUBS);
   private static final RMContext RM_CONTEXT = mock(RMContext.class, RETURNS_DEEP_STUBS);
   private static final Queue QUEUE = mock(Queue.class);

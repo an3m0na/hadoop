@@ -1,15 +1,15 @@
-package org.apache.hadoop.tools.posum.scheduler.portfolio;
+package org.apache.hadoop.tools.posum.scheduler.portfolio.locf;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaAppAttempt;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaSchedulerNode;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
 
-public class LocalityFirstBasedOnCapacityPolicy extends ExtensibleCapacityScheduler<ExtCaAppAttempt, ExtCaSchedulerNode> {
+public class LocalityFirstBasedOnCapacityPolicy extends ExtensibleCapacityScheduler<ExtCaAppAttempt, FiCaPluginSchedulerNode> {
 
   public LocalityFirstBasedOnCapacityPolicy() {
-    super(ExtCaAppAttempt.class, ExtCaSchedulerNode.class, LocalityFirstBasedOnCapacityPolicy.class.getName(), true);
+    super(ExtCaAppAttempt.class, FiCaPluginSchedulerNode.class, LocalityFirstBasedOnCapacityPolicy.class.getName(), true);
   }
 
   @Override

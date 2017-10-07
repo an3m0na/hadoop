@@ -1,20 +1,20 @@
-package org.apache.hadoop.tools.posum.scheduler.portfolio;
+package org.apache.hadoop.tools.posum.scheduler.portfolio.fifo;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaAppAttempt;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaSchedulerNode;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
 
-public class FifoPolicy extends ExtensibleCapacityScheduler<ExtCaAppAttempt, ExtCaSchedulerNode> {
+public class FifoPolicy extends ExtensibleCapacityScheduler<ExtCaAppAttempt, FiCaPluginSchedulerNode> {
 
 
   private static Log logger = LogFactory.getLog(FifoPolicy.class);
 
   public FifoPolicy() {
-    super(ExtCaAppAttempt.class, ExtCaSchedulerNode.class, FifoPolicy.class.getName(), true);
+    super(ExtCaAppAttempt.class, FiCaPluginSchedulerNode.class, FifoPolicy.class.getName(), true);
   }
 
   @Override

@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.scheduler.portfolio;
+package org.apache.hadoop.tools.posum.scheduler.portfolio.dos;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

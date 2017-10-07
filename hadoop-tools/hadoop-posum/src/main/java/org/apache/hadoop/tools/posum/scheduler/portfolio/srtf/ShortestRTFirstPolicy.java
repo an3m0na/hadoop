@@ -5,8 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSQueue;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SingleQueuePolicy;
 
 import java.util.Comparator;
@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
-public class ShortestRTFirstPolicy extends SingleQueuePolicy<SRTFAppAttempt, SQSchedulerNode, SQSQueue, ShortestRTFirstPolicy> {
+public class ShortestRTFirstPolicy extends SingleQueuePolicy<SRTFAppAttempt, FiCaPluginSchedulerNode, SQSQueue, ShortestRTFirstPolicy> {
   private static Log logger = LogFactory.getLog(ShortestRTFirstPolicy.class);
 
   private long lastCheck = 0;
@@ -22,7 +22,7 @@ public class ShortestRTFirstPolicy extends SingleQueuePolicy<SRTFAppAttempt, SQS
   private AppWorkCalculator appWorkCalculator;
 
   public ShortestRTFirstPolicy() {
-    super(SRTFAppAttempt.class, SQSchedulerNode.class, SQSQueue.class, ShortestRTFirstPolicy.class);
+    super(SRTFAppAttempt.class, FiCaPluginSchedulerNode.class, SQSQueue.class, ShortestRTFirstPolicy.class);
   }
 
   @Override

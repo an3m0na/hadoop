@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.singleq;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationResourceUsageReport;
@@ -134,7 +135,7 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
     return true;
   }
 
-  synchronized public RMContainer allocate(NodeType type, SQSchedulerNode node,
+  synchronized public RMContainer allocate(NodeType type, FiCaPluginSchedulerNode node,
                                            Priority priority, ResourceRequest request,
                                            Container container) {
 
@@ -354,8 +355,10 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
   @Override
   protected synchronized void resetReReservations(Priority priority) {
     if (viaInner) {
-      if (inner instanceof SQSAppAttempt)
+      if (inner instanceof SQSAppAttempt) {
         ((SQSAppAttempt) inner).resetReReservations(priority);
+        return;
+      }
       throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     super.resetReReservations(priority);
@@ -364,8 +367,10 @@ public class SQSAppAttempt extends FiCaSchedulerApp {
   @Override
   protected synchronized void addReReservation(Priority priority) {
     if (viaInner) {
-      if (inner instanceof SQSAppAttempt)
+      if (inner instanceof SQSAppAttempt) {
         ((SQSAppAttempt) inner).addReReservation(priority);
+        return;
+      }
       throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     super.addReReservation(priority);
