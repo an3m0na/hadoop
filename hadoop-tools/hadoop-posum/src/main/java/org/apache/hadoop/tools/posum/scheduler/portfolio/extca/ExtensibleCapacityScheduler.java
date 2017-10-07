@@ -13,6 +13,8 @@ import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicyState;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginSchedulerNode;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationResourceUsageReport;
@@ -84,7 +86,7 @@ import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.C
 
 public abstract class ExtensibleCapacityScheduler<
   A extends ExtCaAppAttempt,
-  N extends ExtCaSchedulerNode>
+  N extends FiCaPluginSchedulerNode>
   extends PluginPolicy<A, N> implements PreemptableResourceScheduler, CapacitySchedulerContext {
 
   private static Log LOG = LogFactory.getLog(ExtensibleCapacityScheduler.class);
@@ -210,25 +212,6 @@ public abstract class ExtensibleCapacityScheduler<
   }
 
   /**
-   * Override this to apply priority updates to a leaf queue's application set.
-   * By default, each instance of A is passed to updateAppPriority(A) in order
-   *
-   * @param queue              target leaf queue
-   * @param applicationSetName either "pendingApplications" or "activeApplications"
-   */
-  protected void updateApplicationPriorities(LeafQueue queue, String applicationSetName) {
-    synchronized (queue) {
-      Set<A> oldApps = Utils.readField(queue, LeafQueue.class, applicationSetName);
-      Set<A> newApps = new TreeSet<>(getApplicationComparator());
-      for (A app : oldApps) {
-        updateAppPriority(app);
-        newApps.add(app);
-      }
-      Utils.writeField(queue, LeafQueue.class, applicationSetName, newApps);
-    }
-  }
-
-  /**
    * Override this to apply priority updates to queues recursively.
    * By default, the queues are parsed RLF and in each leaf queue
    * updateApplicationPriorities(LeafQueue, String) is applied
@@ -236,15 +219,58 @@ public abstract class ExtensibleCapacityScheduler<
    * @param queue current queue (starting with root)
    */
   protected void updateApplicationPriorities(CSQueue queue) {
-
     if (queue instanceof LeafQueue) {
-      LeafQueue leaf = (LeafQueue) queue;
-      updateApplicationPriorities(leaf, "pendingApplications");
-      updateApplicationPriorities(leaf, "activeApplications");
+      updateApplicationPriorities((LeafQueue) queue);
     } else {
       for (CSQueue csQueue : queue.getChildQueues()) {
         updateApplicationPriorities(csQueue);
       }
+    }
+  }
+
+  /**
+   * Override this to apply priority updates to a leaf queue's application sets.
+   * By default, each instance of A is passed to updateAppPriority(A) in order
+   *
+   * @param queue target leaf queue
+   */
+  protected void updateApplicationPriorities(LeafQueue queue) {
+    Set<A> oldActiveApps = Utils.readField(queue, LeafQueue.class, "activeApplications");
+    Set<A> oldApps = Utils.readField(queue, LeafQueue.class, "pendingApplications");
+    boolean appsPending = !oldApps.isEmpty();
+    oldApps.addAll(oldActiveApps);
+    if (oldApps.isEmpty())
+      return;
+    Set<A> activeApps = new TreeSet<>(getApplicationComparator());
+    Set<A> extraApps = new TreeSet<>(getApplicationComparator());
+    for (A app : oldApps) {
+      updateAppPriority(app);
+      if (!appsPending || (isRunning(app) && oldActiveApps.contains(app)))
+        activeApps.add(app); // app was active and already started; should have priority
+      else
+        extraApps.add(app);
+    }
+    oldActiveApps.removeAll(activeApps);
+    // deactivate apps that were not yet running; maybe other pending apps have priority now
+    deactivateApps(queue, oldActiveApps);
+    Utils.writeField(queue, LeafQueue.class, "activeApplications", activeApps);
+    // add the rest of the apps to pending
+    Utils.writeField(queue, LeafQueue.class, "pendingApplications", extraApps);
+    if (appsPending) // not all apps were active, so retry activation
+      Utils.invokeMethod(queue, LeafQueue.class, "activateApplications", new Class[]{});
+  }
+
+  private boolean isRunning(A app) {
+    return Resources.greaterThanOrEqual(getResourceCalculator(), getClusterResource(),
+      app.getCurrentConsumption(), app.getAMResource());
+  }
+
+  protected void deactivateApps(LeafQueue queue, Set<A> oldApps) {
+    for (A oldApp : oldApps) {
+      LeafQueue.User user = queue.getUser(oldApp.getUser());
+      user.finishApplication(true);
+      user.getResourceUsage().decAMUsed(oldApp.getAMResource());
+      queue.getQueueResourceUsage().decAMUsed(oldApp.getAMResource());
     }
   }
 
@@ -291,8 +317,8 @@ public abstract class ExtensibleCapacityScheduler<
 
       A attempt = ExtCaAppAttempt.getInstance(aClass, applicationAttemptId, application.getUser(),
         queue, queue.getActiveUsersManager(), inner.getRMContext());
-      if(attempt instanceof Configurable)
-        ((Configurable)attempt).setConf(getConf());
+      if (attempt instanceof Configurable)
+        ((Configurable) attempt).setConf(getConf());
 
       if (transferStateFromPreviousAttempt) {
         attempt.transferStateFromPreviousAttempt(application
@@ -323,7 +349,7 @@ public abstract class ExtensibleCapacityScheduler<
 
   protected void addNode(RMNode nodeManager) {
     synchronized (inner) {
-      N schedulerNode = ExtCaSchedulerNode.getInstance(nClass, nodeManager,
+      N schedulerNode = FiCaPluginSchedulerNode.getInstance(nClass, nodeManager,
         capacityConf.getUsePortForNodeName(), nodeManager.getNodeLabels());
       Map<NodeId, FiCaSchedulerNode> nodes = readField("nodes");
       nodes.put(nodeManager.getNodeID(), schedulerNode);
@@ -353,10 +379,10 @@ public abstract class ExtensibleCapacityScheduler<
   }
 
   public SchedulerApplication<A> moveApplicationReference(ApplicationId appId,
-                                                          SchedulerApplication<? extends ExtCaAppAttempt> app,
+                                                          SchedulerApplication<? extends SchedulerApplicationAttempt> app,
                                                           LeafQueue source,
                                                           String targetQueueName) throws YarnException {
-    ExtCaAppAttempt appAttempt = app.getCurrentAppAttempt();
+    SchedulerApplicationAttempt appAttempt = app.getCurrentAppAttempt();
     String destQueueName = invokeMethod("handleMoveToPlanQueue", new Class<?>[]{String.class}, targetQueueName);
     LeafQueue dest = invokeMethod("getAndCheckLeafQueue", new Class<?>[]{String.class}, destQueueName);
 
@@ -869,35 +895,37 @@ public abstract class ExtensibleCapacityScheduler<
   // <------ Plugin Policy requirements ------>
   //
 
+  @Override
+  protected PluginPolicyState exportState() {
+    return new PluginPolicyState<>(getClusterResource(), getNodes(), getSchedulerApplications());
+  }
 
-  public void transferStateFromPolicy(ExtensibleCapacityScheduler<ExtCaAppAttempt, ExtCaSchedulerNode> otherExtCa) {
+  @Override
+  protected <T extends SchedulerNode & PluginSchedulerNode> void importState(PluginPolicyState<T> state) {
     synchronized (inner) {
       //transfer total resource
-      writeField("clusterResource", otherExtCa.getClusterResource());
+      writeField("clusterResource", state.getClusterResource());
       CSQueue root = readField("root");
       root.updateClusterResource(getClusterResource(), new ResourceLimits(getClusterResource()));
 
       //transfer nodes
       Map<NodeId, N> newNodes = readField("nodes");
-      for (Map.Entry<NodeId, ExtCaSchedulerNode> nodeEntry : otherExtCa.getNodes().entrySet()) {
-        ExtCaSchedulerNode node = nodeEntry.getValue();
-        newNodes.put(nodeEntry.getKey(), ExtCaSchedulerNode.getInstance(nClass, node));
+      for (Map.Entry<NodeId, T> nodeEntry : state.getNodes().entrySet()) {
+        T node = nodeEntry.getValue();
+        newNodes.put(nodeEntry.getKey(), FiCaPluginSchedulerNode.getInstance(nClass, node));
         updateMaximumAllocation(node, true);
       }
 
       //transfer node-related properties
-      writeField("labelManager", otherExtCa.getLabelManager());
       AtomicInteger numNodeManagers = readField("numNodeManagers");
-      numNodeManagers.set(otherExtCa.getNumClusterNodes());
+      numNodeManagers.set(newNodes.size());
 
       //transfer applications
       Map<ApplicationId, SchedulerApplication<A>> myApps = getSchedulerApplications();
-      Map<ApplicationId, ? extends SchedulerApplication<? extends ExtCaAppAttempt>> othersApps =
-        otherExtCa.getSchedulerApplications();
-      for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends ExtCaAppAttempt>> appEntry :
-        othersApps.entrySet()) {
+      for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> appEntry :
+        state.getApplications().entrySet()) {
         ApplicationId appId = appEntry.getKey();
-        SchedulerApplication<? extends ExtCaAppAttempt> app = appEntry.getValue();
+        SchedulerApplication<? extends SchedulerApplicationAttempt> app = appEntry.getValue();
         LeafQueue oldQueue = (LeafQueue) app.getQueue();
         String newQueueName = resolveMoveQueue(oldQueue.getQueuePath(), appId, app.getUser());
         try {
@@ -909,27 +937,6 @@ public abstract class ExtensibleCapacityScheduler<
         }
       }
     }
-
-  }
-
-  @Override
-  public void transferStateFromPolicy(PluginPolicy other) {
-    if (PluginPolicy.class.isAssignableFrom(ExtensibleCapacityScheduler.class)) {
-      transferStateFromPolicy((ExtensibleCapacityScheduler) other);
-      return;
-    }
-    //TODO
-    throw new PosumException("Cannot transfer state from unknown policy " + other.getClass().getName());
-  }
-
-  @Override
-  protected PluginPolicyState exportState() {
-    return null;
-  }
-
-  @Override
-  protected void importState(PluginPolicyState state) {
-
   }
 
   //

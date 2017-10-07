@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class ExtCaAppAttempt extends FiCaSchedulerApp {
-  protected final FiCaSchedulerApp inner;
+  protected final SchedulerApplicationAttempt inner;
   protected final boolean viaInner;
 
   public ExtCaAppAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
@@ -52,6 +52,12 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
     this.viaInner = true;
   }
 
+  public ExtCaAppAttempt(SchedulerApplicationAttempt oldAttempt) {
+    super(oldAttempt.getApplicationAttemptId(), oldAttempt.getUser(), oldAttempt.getQueue(), oldAttempt.getQueue().getActiveUsersManager(), null);
+    this.inner = oldAttempt;
+    this.viaInner = true;
+  }
+
   static <A extends ExtCaAppAttempt> A getInstance(Class<A> aClass, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
     try {
       Constructor<A> constructor = aClass.getConstructor(ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
@@ -61,10 +67,15 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
     }
   }
 
-  static <A extends ExtCaAppAttempt> A getInstance(Class<A> aClass, ExtCaAppAttempt attempt) {
+  static <A extends ExtCaAppAttempt> A getInstance(Class<A> aClass, SchedulerApplicationAttempt attempt) {
     try {
-      Constructor<A> constructor = aClass.getConstructor(ExtCaAppAttempt.class);
-      return constructor.newInstance(attempt);
+      if (attempt instanceof ExtCaAppAttempt) {
+        Constructor<A> constructor = aClass.getConstructor(ExtCaAppAttempt.class);
+        return constructor.newInstance((ExtCaAppAttempt) attempt);
+      } else {
+        Constructor<A> constructor = aClass.getConstructor(SchedulerApplicationAttempt.class);
+        return constructor.newInstance(attempt);
+      }
     } catch (Exception e) {
       throw new PosumException("Failed to instantiate app attempt via default constructor", e);
     }
@@ -73,7 +84,10 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
   @Override
   public boolean containerCompleted(RMContainer rmContainer, ContainerStatus containerStatus, RMContainerEventType event) {
     if (viaInner) {
-      return inner.containerCompleted(rmContainer, containerStatus, event);
+      if (inner instanceof ExtCaAppAttempt) {
+        return ((ExtCaAppAttempt) inner).containerCompleted(rmContainer, containerStatus, event);
+      }
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     return super.containerCompleted(rmContainer, containerStatus, event);
   }
@@ -81,7 +95,10 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
   @Override
   public RMContainer allocate(NodeType type, FiCaSchedulerNode node, Priority priority, ResourceRequest request, Container container) {
     if (viaInner) {
-      return inner.allocate(type, node, priority, request, container);
+      if (inner instanceof ExtCaAppAttempt) {
+        return ((ExtCaAppAttempt) inner).allocate(type, node, priority, request, container);
+      }
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     return super.allocate(type, node, priority, request, container);
   }
@@ -89,7 +106,10 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
   @Override
   public boolean unreserve(FiCaSchedulerNode node, Priority priority) {
     if (viaInner) {
-      return inner.unreserve(node, priority);
+      if (inner instanceof ExtCaAppAttempt) {
+        return ((ExtCaAppAttempt) inner).unreserve(node, priority);
+      }
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     return super.unreserve(node, priority);
   }
@@ -97,7 +117,10 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
   @Override
   public float getLocalityWaitFactor(Priority priority, int clusterNodes) {
     if (viaInner) {
-      return inner.getLocalityWaitFactor(priority, clusterNodes);
+      if (inner instanceof ExtCaAppAttempt) {
+        return ((ExtCaAppAttempt) inner).getLocalityWaitFactor(priority, clusterNodes);
+      }
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     return super.getLocalityWaitFactor(priority, clusterNodes);
   }
@@ -105,7 +128,10 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
   @Override
   public Resource getTotalPendingRequests() {
     if (viaInner) {
-      return inner.getTotalPendingRequests();
+      if (inner instanceof ExtCaAppAttempt) {
+        return ((ExtCaAppAttempt) inner).getTotalPendingRequests();
+      }
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     return super.getTotalPendingRequests();
   }
@@ -113,8 +139,11 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
   @Override
   public void addPreemptContainer(ContainerId cont) {
     if (viaInner) {
-      inner.addPreemptContainer(cont);
-      return;
+      if (inner instanceof ExtCaAppAttempt) {
+        ((ExtCaAppAttempt) inner).addPreemptContainer(cont);
+        return;
+      }
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     super.addPreemptContainer(cont);
   }
@@ -122,7 +151,10 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
   @Override
   public Allocation getAllocation(ResourceCalculator rc, Resource clusterResource, Resource minimumAllocation) {
     if (viaInner) {
-      return inner.getAllocation(rc, clusterResource, minimumAllocation);
+      if (inner instanceof ExtCaAppAttempt) {
+        return ((ExtCaAppAttempt) inner).getAllocation(rc, clusterResource, minimumAllocation);
+      }
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     return super.getAllocation(rc, clusterResource, minimumAllocation);
   }
@@ -130,7 +162,10 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
   @Override
   public NodeId getNodeIdToUnreserve(Priority priority, Resource resourceNeedUnreserve, ResourceCalculator rc, Resource clusterResource) {
     if (viaInner) {
-      return inner.getNodeIdToUnreserve(priority, resourceNeedUnreserve, rc, clusterResource);
+      if (inner instanceof ExtCaAppAttempt) {
+        return ((ExtCaAppAttempt) inner).getNodeIdToUnreserve(priority, resourceNeedUnreserve, rc, clusterResource);
+      }
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     return super.getNodeIdToUnreserve(priority, resourceNeedUnreserve, rc, clusterResource);
   }
@@ -138,8 +173,11 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
   @Override
   public void setHeadroomProvider(CapacityHeadroomProvider headroomProvider) {
     if (viaInner) {
-      inner.setHeadroomProvider(headroomProvider);
-      return;
+      if (inner instanceof ExtCaAppAttempt) {
+        ((ExtCaAppAttempt) inner).setHeadroomProvider(headroomProvider);
+        return;
+      }
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     super.setHeadroomProvider(headroomProvider);
   }
@@ -147,7 +185,10 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
   @Override
   public CapacityHeadroomProvider getHeadroomProvider() {
     if (viaInner) {
-      return inner.getHeadroomProvider();
+      if (inner instanceof ExtCaAppAttempt) {
+        return ((ExtCaAppAttempt) inner).getHeadroomProvider();
+      }
+      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
     }
     return super.getHeadroomProvider();
   }
@@ -327,7 +368,7 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
   @Override
   protected synchronized void addReReservation(Priority priority) {
     if (viaInner) {
-      Utils.invokeMethod(inner, FiCaSchedulerApp.class,"addReReservation", new Class<?>[]{Priority.class}, priority);
+      Utils.invokeMethod(inner, FiCaSchedulerApp.class, "addReReservation", new Class<?>[]{Priority.class}, priority);
       return;
     }
     super.addReReservation(priority);

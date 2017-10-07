@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.scheduler.portfolio;
+package org.apache.hadoop.tools.posum.scheduler.portfolio.dos;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -6,19 +6,19 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaSchedulerNode;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaSchedulerApp;
 
 import java.util.Comparator;
 
-public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttempt, ExtCaSchedulerNode> {
+public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttempt, FiCaPluginSchedulerNode> {
 
   private static Log logger = LogFactory.getLog(DataOrientedPolicy.class);
 
   public DataOrientedPolicy() {
-    super(DOSAppAttempt.class, ExtCaSchedulerNode.class, DataOrientedPolicy.class.getName(), true);
+    super(DOSAppAttempt.class, FiCaPluginSchedulerNode.class, DataOrientedPolicy.class.getName(), true);
   }
 
   @Override

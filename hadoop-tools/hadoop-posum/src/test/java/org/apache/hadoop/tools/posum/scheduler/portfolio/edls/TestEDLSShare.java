@@ -61,7 +61,7 @@ public class TestEDLSShare extends TestPolicy {
   @Test
   public void testDeadlinesOnly() throws Exception {
     conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.999f); // only one batch is allowed (because then usedCapacity of batch queue is 0 and it is allowed one AM allocation over its capacity)
-    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1f); // unlimited apps can  be active from each queue
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1f); // unlimited (max slots) apps can  be active from each queue
     startRM();
     registerNodes(2);
 

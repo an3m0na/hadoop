@@ -3,8 +3,8 @@ package org.apache.hadoop.tools.posum.common.util;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.edls.EDLSPriorityPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.edls.EDLSSharePolicy;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.FifoPolicy;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.LocalityFirstPolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.fifo.FifoPolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.locf.LocalityFirstPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.srtf.ShortestRTFirstPolicy;
 
