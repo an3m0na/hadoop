@@ -177,13 +177,13 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public void serviceInit(Configuration conf) throws Exception {
-    setConf(conf);
     if (posumConf == null)
-      posumConf = PosumConfiguration.newInstance();
+      posumConf = PosumConfiguration.newInstance(conf);
+    setConf(posumConf);
     policies = new PolicyPortfolio(posumConf);
     currentPolicyClass = policies.get(policies.getDefaultPolicyName());
     if (commService == null) {
-      commService = new MetaSchedulerCommServiceImpl(this, conf.get(YarnConfiguration.RM_ADDRESS));
+      commService = new MetaSchedulerCommServiceImpl(this, posumConf.get(YarnConfiguration.RM_ADDRESS));
       commService.init(posumConf);
     }
     initPolicy();

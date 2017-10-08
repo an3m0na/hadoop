@@ -5,14 +5,15 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaAppAttempt;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginApplicationAttempt;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginApplicationAttempt;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
-public class EDLSAppAttempt extends ExtCaAppAttempt implements Configurable {
+public class EDLSAppAttempt extends FiCaPluginApplicationAttempt implements Configurable {
   private static final Log logger = LogFactory.getLog(EDLSAppAttempt.class);
 
   public enum Type {
@@ -28,12 +29,18 @@ public class EDLSAppAttempt extends ExtCaAppAttempt implements Configurable {
   private Type type;
   private Configuration conf;
 
-  public EDLSAppAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+  public EDLSAppAttempt(ApplicationAttemptId applicationAttemptId,
+                        String user,
+                        Queue queue,
+                        ActiveUsersManager activeUsersManager,
+                        RMContext rmContext) {
     super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
   }
 
-  public EDLSAppAttempt(ExtCaAppAttempt inner) {
-    super(inner);
+  public <T extends SchedulerApplicationAttempt & PluginApplicationAttempt> EDLSAppAttempt(T predecessor,
+                                                                                           ActiveUsersManager activeUsersManager,
+                                                                                           RMContext rmContext) {
+    super(predecessor, activeUsersManager, rmContext);
   }
 
   @Override

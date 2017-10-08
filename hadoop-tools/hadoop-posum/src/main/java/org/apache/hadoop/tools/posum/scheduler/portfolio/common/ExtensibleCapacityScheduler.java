@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.scheduler.portfolio.extca;
+package org.apache.hadoop.tools.posum.scheduler.portfolio.common;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.logging.Log;
@@ -14,7 +14,6 @@ import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicyState;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginSchedulerNode;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationResourceUsageReport;
@@ -85,23 +84,20 @@ import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_QUEUE_NAME;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT;
 
 public abstract class ExtensibleCapacityScheduler<
-  A extends ExtCaAppAttempt,
+  A extends FiCaPluginApplicationAttempt,
   N extends FiCaPluginSchedulerNode>
   extends PluginPolicy<A, N> implements PreemptableResourceScheduler, CapacitySchedulerContext {
 
   private static Log LOG = LogFactory.getLog(ExtensibleCapacityScheduler.class);
 
   private CapacitySchedulerConfiguration capacityConf;
-  private final boolean customConf;
   protected final CapacityScheduler inner;
 
   public ExtensibleCapacityScheduler(Class<A> aClass,
                                      Class<N> nClass,
-                                     String policyName,
-                                     boolean customConf) {
+                                     String policyName) {
     super(aClass, nClass, policyName);
     this.inner = new CapacityScheduler();
-    this.customConf = customConf;
   }
 
   @Override
@@ -315,7 +311,7 @@ public abstract class ExtensibleCapacityScheduler<
         inner.getSchedulerApplications().get(applicationAttemptId.getApplicationId());
       CSQueue queue = (CSQueue) application.getQueue();
 
-      A attempt = ExtCaAppAttempt.getInstance(aClass, applicationAttemptId, application.getUser(),
+      A attempt = FiCaPluginApplicationAttempt.getInstance(aClass, applicationAttemptId, application.getUser(),
         queue, queue.getActiveUsersManager(), inner.getRMContext());
       if (attempt instanceof Configurable)
         ((Configurable) attempt).setConf(getConf());
@@ -391,7 +387,9 @@ public abstract class ExtensibleCapacityScheduler<
     if (appAttempt != null) {
       //wrap attempt in appropriate implementation
 
-      A newAppAttempt = ExtCaAppAttempt.getInstance(aClass, appAttempt);
+      A newAppAttempt = FiCaPluginApplicationAttempt.getInstance(aClass, appAttempt, dest.getActiveUsersManager(), inner.getRMContext());
+      if (newAppAttempt instanceof Configurable)
+        ((Configurable) newAppAttempt).setConf(getConf());
       String sourceQueueName = newAppAttempt.getQueue().getQueueName();
 
       //the rest is basically standard moveApplication code from CapacityScheduler
@@ -469,27 +467,19 @@ public abstract class ExtensibleCapacityScheduler<
     // this call will use default capacity configurations in capacity-scheduler.xml
     setConf(conf);
     inner.init(conf);
-    if (customConf) {
-      // reinitialize with the given capacity scheduler configuration
-      capacityConf = loadCustomCapacityConf(conf);
-      initializeWithModifiedConf();
-    } else {
-      capacityConf = getConfiguration();
-    }
+    // reinitialize with the given capacity scheduler configuration
+    capacityConf = loadCustomCapacityConf(conf);
+    initializeWithModifiedConf();
   }
 
   @Override
   public void reinitialize(Configuration conf, RMContext rmContext) throws IOException {
     // this will reinitialize with default capacity scheduler configuration found in capacity-scheduler.xml
     inner.reinitialize(conf, rmContext);
-    if (customConf) {
-      // reinitialize with the given capacity scheduler configuration
-      capacityConf = loadCustomCapacityConf(conf);
-      writeField("conf", capacityConf);
-      reinitializeWithModifiedConf();
-    } else {
-      capacityConf = getConfiguration();
-    }
+    // reinitialize with the given capacity scheduler configuration
+    capacityConf = loadCustomCapacityConf(conf);
+    writeField("conf", capacityConf);
+    reinitializeWithModifiedConf();
   }
 
   @Override
@@ -601,7 +591,7 @@ public abstract class ExtensibleCapacityScheduler<
   @VisibleForTesting
   @Override
   public A getApplicationAttempt(ApplicationAttemptId applicationAttemptId) {
-    return ExtCaAppAttempt.getInstance(aClass, (ExtCaAppAttempt) inner.getApplicationAttempt(applicationAttemptId));
+    return (A) inner.getApplicationAttempt(applicationAttemptId);
   }
 
   @Override

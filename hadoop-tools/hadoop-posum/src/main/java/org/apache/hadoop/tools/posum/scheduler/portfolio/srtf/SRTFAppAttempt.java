@@ -2,7 +2,8 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.srtf;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSAppAttempt;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginApplicationAttempt;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginApplicationAttempt;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
@@ -14,7 +15,7 @@ import java.text.MessageFormat;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
-public class SRTFAppAttempt extends SQSAppAttempt {
+public class SRTFAppAttempt extends FiCaPluginApplicationAttempt {
   private static final Log logger = LogFactory.getLog(SRTFAppAttempt.class);
 
   private Long submitTime;
@@ -25,12 +26,18 @@ public class SRTFAppAttempt extends SQSAppAttempt {
   private Double resourceDeficit;
   private Double desiredResource;
 
-  public SRTFAppAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+  public SRTFAppAttempt(ApplicationAttemptId applicationAttemptId,
+                        String user,
+                        Queue queue,
+                        ActiveUsersManager activeUsersManager,
+                        RMContext rmContext) {
     super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
   }
 
-  public SRTFAppAttempt(SQSAppAttempt inner) {
-    super(inner);
+  public <T extends SchedulerApplicationAttempt & PluginApplicationAttempt> SRTFAppAttempt(T predecessor,
+                                                                                           ActiveUsersManager activeUsersManager,
+                                                                                           RMContext rmContext) {
+    super(predecessor, activeUsersManager, rmContext);
   }
 
   @Override

@@ -1,9 +1,10 @@
-package org.apache.hadoop.tools.posum.scheduler.portfolio.extca;
+package org.apache.hadoop.tools.posum.scheduler.portfolio.common;
 
-import org.apache.hadoop.classification.InterfaceAudience;
-import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginApplicationAttempt;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationResourceUsageReport;
@@ -36,330 +37,149 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ExtCaAppAttempt extends FiCaSchedulerApp {
-  protected final SchedulerApplicationAttempt inner;
-  protected final boolean viaInner;
+public class FiCaPluginApplicationAttempt extends FiCaSchedulerApp implements PluginApplicationAttempt {
+  private static Log LOG = LogFactory.getLog(FiCaPluginApplicationAttempt.class);
+  private FiCaSchedulerApp core;
 
-  public ExtCaAppAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
+  public FiCaPluginApplicationAttempt(ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
     super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
-    this.inner = this;
-    this.viaInner = false;
+    this.core = null;
   }
 
-  public ExtCaAppAttempt(ExtCaAppAttempt oldAttempt) {
-    super(oldAttempt.getApplicationAttemptId(), oldAttempt.getUser(), oldAttempt.getQueue(), oldAttempt.getQueue().getActiveUsersManager(), oldAttempt.rmContext);
-    this.inner = oldAttempt.inner;
-    this.viaInner = true;
-  }
-
-  public ExtCaAppAttempt(SchedulerApplicationAttempt oldAttempt) {
-    super(oldAttempt.getApplicationAttemptId(), oldAttempt.getUser(), oldAttempt.getQueue(), oldAttempt.getQueue().getActiveUsersManager(), null);
-    this.inner = oldAttempt;
-    this.viaInner = true;
-  }
-
-  static <A extends ExtCaAppAttempt> A getInstance(Class<A> aClass, ApplicationAttemptId applicationAttemptId, String user, Queue queue, ActiveUsersManager activeUsersManager, RMContext rmContext) {
-    try {
-      Constructor<A> constructor = aClass.getConstructor(ApplicationAttemptId.class, String.class, Queue.class, ActiveUsersManager.class, RMContext.class);
-      return constructor.newInstance(applicationAttemptId, user, queue, activeUsersManager, rmContext);
-    } catch (Exception e) {
-      throw new PosumException("Failed to instantiate app attempt via default constructor", e);
-    }
-  }
-
-  static <A extends ExtCaAppAttempt> A getInstance(Class<A> aClass, SchedulerApplicationAttempt attempt) {
-    try {
-      if (attempt instanceof ExtCaAppAttempt) {
-        Constructor<A> constructor = aClass.getConstructor(ExtCaAppAttempt.class);
-        return constructor.newInstance((ExtCaAppAttempt) attempt);
-      } else {
-        Constructor<A> constructor = aClass.getConstructor(SchedulerApplicationAttempt.class);
-        return constructor.newInstance(attempt);
-      }
-    } catch (Exception e) {
-      throw new PosumException("Failed to instantiate app attempt via default constructor", e);
+  public <T extends SchedulerApplicationAttempt & PluginApplicationAttempt> FiCaPluginApplicationAttempt(T predecessor,
+                                                                                                         ActiveUsersManager activeUsersManager,
+                                                                                                         RMContext rmContext) {
+    super(predecessor.getApplicationAttemptId(), predecessor.getUser(), predecessor.getQueue(), activeUsersManager, rmContext); // not used
+    SchedulerApplicationAttempt coreCandidate = predecessor.getCoreApp();
+    if (coreCandidate != null && coreCandidate instanceof FiCaSchedulerApp)
+      this.core = ((FiCaSchedulerApp) coreCandidate);
+    else if (predecessor instanceof FiCaSchedulerApp)
+      this.core = (FiCaSchedulerApp) predecessor;
+    else {
+      LOG.error("Cannot safely create instance of " + getClass() + " from type " + predecessor.getClass() + ". Runtime issues may arise");
+      this.core = null;
     }
   }
 
   @Override
-  public boolean containerCompleted(RMContainer rmContainer, ContainerStatus containerStatus, RMContainerEventType event) {
-    if (viaInner) {
-      if (inner instanceof ExtCaAppAttempt) {
-        return ((ExtCaAppAttempt) inner).containerCompleted(rmContainer, containerStatus, event);
-      }
-      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
+  public SchedulerApplicationAttempt getCoreApp() {
+    return core;
+  }
+
+  public static <A extends FiCaPluginApplicationAttempt> A getInstance(Class<A> aClass,
+                                                                       ApplicationAttemptId applicationAttemptId,
+                                                                       String user,
+                                                                       Queue queue,
+                                                                       ActiveUsersManager activeUsersManager,
+                                                                       RMContext rmContext) {
+    try {
+      Constructor<A> constructor = aClass.getConstructor(ApplicationAttemptId.class, String.class, Queue.class,
+        ActiveUsersManager.class, RMContext.class);
+      return constructor.newInstance(applicationAttemptId, user, queue, activeUsersManager, rmContext);
+    } catch (Exception e) {
+      throw new PosumException("Failed to instantiate app attempt via default constructor" + e);
+    }
+  }
+
+  public static <A extends FiCaPluginApplicationAttempt> A getInstance(Class<A> aClass,
+                                                                       SchedulerApplicationAttempt attempt,
+                                                                       ActiveUsersManager activeUsersManager,
+                                                                       RMContext rmContext) {
+    try {
+      Constructor<A> constructor = aClass.getConstructor(SchedulerApplicationAttempt.class, ActiveUsersManager.class, RMContext.class);
+      return constructor.newInstance(attempt, activeUsersManager, rmContext);
+    } catch (Exception e) {
+      throw new PosumException("Failed to instantiate app attempt via default constructor" + e);
+    }
+  }
+
+  @Override
+  public boolean containerCompleted(RMContainer rmContainer,
+                                    ContainerStatus containerStatus, RMContainerEventType event) {
+    if (core != null) {
+      return core.containerCompleted(rmContainer, containerStatus, event);
     }
     return super.containerCompleted(rmContainer, containerStatus, event);
   }
 
   @Override
-  public RMContainer allocate(NodeType type, FiCaSchedulerNode node, Priority priority, ResourceRequest request, Container container) {
-    if (viaInner) {
-      if (inner instanceof ExtCaAppAttempt) {
-        return ((ExtCaAppAttempt) inner).allocate(type, node, priority, request, container);
-      }
-      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
+  public synchronized RMContainer allocate(NodeType type, FiCaSchedulerNode node, Priority priority, ResourceRequest request, Container container) {
+    if (core != null) {
+      return core.allocate(type, node, priority, request, container);
     }
     return super.allocate(type, node, priority, request, container);
   }
 
   @Override
-  public boolean unreserve(FiCaSchedulerNode node, Priority priority) {
-    if (viaInner) {
-      if (inner instanceof ExtCaAppAttempt) {
-        return ((ExtCaAppAttempt) inner).unreserve(node, priority);
-      }
-      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
+  public synchronized boolean unreserve(FiCaSchedulerNode node, Priority priority) {
+    if (core != null) {
+      return core.unreserve(node, priority);
     }
     return super.unreserve(node, priority);
   }
 
   @Override
-  public float getLocalityWaitFactor(Priority priority, int clusterNodes) {
-    if (viaInner) {
-      if (inner instanceof ExtCaAppAttempt) {
-        return ((ExtCaAppAttempt) inner).getLocalityWaitFactor(priority, clusterNodes);
-      }
-      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
+  public synchronized float getLocalityWaitFactor(Priority priority, int clusterNodes) {
+    if (core != null) {
+      return core.getLocalityWaitFactor(priority, clusterNodes);
     }
     return super.getLocalityWaitFactor(priority, clusterNodes);
   }
 
   @Override
-  public Resource getTotalPendingRequests() {
-    if (viaInner) {
-      if (inner instanceof ExtCaAppAttempt) {
-        return ((ExtCaAppAttempt) inner).getTotalPendingRequests();
-      }
-      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
+  public synchronized Resource getTotalPendingRequests() {
+    if (core != null) {
+      return core.getTotalPendingRequests();
     }
     return super.getTotalPendingRequests();
   }
 
   @Override
-  public void addPreemptContainer(ContainerId cont) {
-    if (viaInner) {
-      if (inner instanceof ExtCaAppAttempt) {
-        ((ExtCaAppAttempt) inner).addPreemptContainer(cont);
-        return;
-      }
-      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
+  public synchronized void addPreemptContainer(ContainerId cont) {
+    if (core != null) {
+      Utils.invokeMethod(core, FiCaSchedulerApp.class, "addPreemptContainer", new Class<?>[]{ContainerId.class}, cont);
+      return;
     }
     super.addPreemptContainer(cont);
   }
 
   @Override
-  public Allocation getAllocation(ResourceCalculator rc, Resource clusterResource, Resource minimumAllocation) {
-    if (viaInner) {
-      if (inner instanceof ExtCaAppAttempt) {
-        return ((ExtCaAppAttempt) inner).getAllocation(rc, clusterResource, minimumAllocation);
-      }
-      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
+  public synchronized Allocation getAllocation(ResourceCalculator rc, Resource clusterResource, Resource minimumAllocation) {
+    if (core != null) {
+      return core.getAllocation(rc, clusterResource, minimumAllocation);
     }
     return super.getAllocation(rc, clusterResource, minimumAllocation);
   }
 
   @Override
-  public NodeId getNodeIdToUnreserve(Priority priority, Resource resourceNeedUnreserve, ResourceCalculator rc, Resource clusterResource) {
-    if (viaInner) {
-      if (inner instanceof ExtCaAppAttempt) {
-        return ((ExtCaAppAttempt) inner).getNodeIdToUnreserve(priority, resourceNeedUnreserve, rc, clusterResource);
-      }
-      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
+  public synchronized NodeId getNodeIdToUnreserve(Priority priority, Resource resourceNeedUnreserve, ResourceCalculator rc, Resource clusterResource) {
+    if (core != null) {
+      return core.getNodeIdToUnreserve(priority, resourceNeedUnreserve, rc, clusterResource);
     }
     return super.getNodeIdToUnreserve(priority, resourceNeedUnreserve, rc, clusterResource);
   }
 
   @Override
-  public void setHeadroomProvider(CapacityHeadroomProvider headroomProvider) {
-    if (viaInner) {
-      if (inner instanceof ExtCaAppAttempt) {
-        ((ExtCaAppAttempt) inner).setHeadroomProvider(headroomProvider);
-        return;
-      }
-      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
+  public synchronized void setHeadroomProvider(CapacityHeadroomProvider headroomProvider) {
+    if (core != null) {
+      Utils.writeField(core, FiCaSchedulerApp.class, "headroomProvider", headroomProvider);
+      return;
     }
     super.setHeadroomProvider(headroomProvider);
   }
 
   @Override
-  public CapacityHeadroomProvider getHeadroomProvider() {
-    if (viaInner) {
-      if (inner instanceof ExtCaAppAttempt) {
-        return ((ExtCaAppAttempt) inner).getHeadroomProvider();
-      }
-      throw new UnsupportedOperationException("Implementation unknown for inner type " + inner.getClass());
+  public synchronized CapacityHeadroomProvider getHeadroomProvider() {
+    if (core != null) {
+      return super.getHeadroomProvider();
     }
     return super.getHeadroomProvider();
   }
 
   @Override
-  public synchronized Collection<RMContainer> getLiveContainers() {
-    if (viaInner) {
-      return inner.getLiveContainers();
-    }
-    return super.getLiveContainers();
-  }
-
-  @Override
-  public AppSchedulingInfo getAppSchedulingInfo() {
-    if (viaInner) {
-      return inner.getAppSchedulingInfo();
-    }
-    return super.getAppSchedulingInfo();
-  }
-
-  @Override
-  public boolean isPending() {
-    if (viaInner) {
-      return inner.isPending();
-    }
-    return super.isPending();
-  }
-
-  @Override
-  public ApplicationAttemptId getApplicationAttemptId() {
-    if (viaInner) {
-      return inner.getApplicationAttemptId();
-    }
-    return super.getApplicationAttemptId();
-  }
-
-  @Override
-  public ApplicationId getApplicationId() {
-    if (viaInner) {
-      return inner.getApplicationId();
-    }
-    return super.getApplicationId();
-  }
-
-  @Override
-  public String getUser() {
-    if (viaInner) {
-      return inner.getUser();
-    }
-    return super.getUser();
-  }
-
-  @Override
-  public Map<String, ResourceRequest> getResourceRequests(Priority priority) {
-    if (viaInner) {
-      return inner.getResourceRequests(priority);
-    }
-    return super.getResourceRequests(priority);
-  }
-
-  @Override
-  public Set<ContainerId> getPendingRelease() {
-    if (viaInner) {
-      return inner.getPendingRelease();
-    }
-    return super.getPendingRelease();
-  }
-
-  @Override
-  public long getNewContainerId() {
-    if (viaInner) {
-      return inner.getNewContainerId();
-    }
-    return super.getNewContainerId();
-  }
-
-  @Override
-  public Collection<Priority> getPriorities() {
-
-    if (viaInner) {
-      return inner.getPriorities();
-    }
-    return super.getPriorities();
-  }
-
-  @Override
-  public synchronized ResourceRequest getResourceRequest(Priority priority, String resourceName) {
-    if (viaInner) {
-      return inner.getResourceRequest(priority, resourceName);
-    }
-    return super.getResourceRequest(priority, resourceName);
-  }
-
-  @Override
-  public synchronized int getTotalRequiredResources(Priority priority) {
-    if (viaInner) {
-      return inner.getTotalRequiredResources(priority);
-    }
-    return super.getTotalRequiredResources(priority);
-  }
-
-  @Override
-  public synchronized Resource getResource(Priority priority) {
-    if (viaInner) {
-      return inner.getResource(priority);
-    }
-    return super.getResource(priority);
-  }
-
-  @Override
-  public String getQueueName() {
-    if (viaInner) {
-      return inner.getQueueName();
-    }
-    return super.getQueueName();
-  }
-
-  @Override
-  public Resource getAMResource() {
-    if (viaInner) {
-      return inner.getAMResource();
-    }
-    return super.getAMResource();
-  }
-
-  @Override
-  public void setAMResource(Resource amResource) {
-    if (viaInner) {
-      inner.setAMResource(amResource);
-      return;
-    }
-    super.setAMResource(amResource);
-  }
-
-  @Override
-  public boolean isAmRunning() {
-    if (viaInner) {
-      return inner.isAmRunning();
-    }
-    return super.isAmRunning();
-  }
-
-  @Override
-  public void setAmRunning(boolean bool) {
-    if (viaInner) {
-      inner.setAmRunning(bool);
-      return;
-    }
-    super.setAmRunning(bool);
-  }
-
-  @Override
-  public boolean getUnmanagedAM() {
-    if (viaInner) {
-      return inner.getUnmanagedAM();
-    }
-    return super.getUnmanagedAM();
-  }
-
-  @Override
-  public synchronized RMContainer getRMContainer(ContainerId id) {
-    if (viaInner) {
-      return inner.getRMContainer(id);
-    }
-    return super.getRMContainer(id);
-  }
-
-  @Override
   protected synchronized void resetReReservations(Priority priority) {
-    if (viaInner) {
-      Utils.invokeMethod(inner, FiCaSchedulerApp.class, "resetReReservations", new Class<?>[]{Priority.class}, priority);
+    if (core != null) {
+      Utils.invokeMethod(core, SchedulerApplicationAttempt.class, "resetReReservations", new Class<?>[]{Priority.class}, priority);
       return;
     }
     super.resetReReservations(priority);
@@ -367,43 +187,204 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   protected synchronized void addReReservation(Priority priority) {
-    if (viaInner) {
-      Utils.invokeMethod(inner, FiCaSchedulerApp.class, "addReReservation", new Class<?>[]{Priority.class}, priority);
+    if (core != null) {
+      Utils.invokeMethod(core, SchedulerApplicationAttempt.class, "addReReservation", new Class<?>[]{Priority.class}, priority);
       return;
     }
     super.addReReservation(priority);
   }
 
   @Override
+  public synchronized Collection<RMContainer> getLiveContainers() {
+    if (core != null) {
+      return core.getLiveContainers();
+    }
+    return super.getLiveContainers();
+  }
+
+  @Override
+  public AppSchedulingInfo getAppSchedulingInfo() {
+    if (core != null) {
+      return core.getAppSchedulingInfo();
+    }
+    return super.getAppSchedulingInfo();
+  }
+
+  @Override
+  public boolean isPending() {
+    if (core != null) {
+      return core.isPending();
+    }
+    return super.isPending();
+  }
+
+  @Override
+  public ApplicationAttemptId getApplicationAttemptId() {
+    if (core != null) {
+      return core.getApplicationAttemptId();
+    }
+    return super.getApplicationAttemptId();
+  }
+
+  @Override
+  public ApplicationId getApplicationId() {
+    if (core != null) {
+      return core.getApplicationId();
+    }
+    return super.getApplicationId();
+  }
+
+  @Override
+  public String getUser() {
+    if (core != null) {
+      return core.getUser();
+    }
+    return super.getUser();
+  }
+
+  @Override
+  public Map<String, ResourceRequest> getResourceRequests(Priority priority) {
+    if (core != null) {
+      return core.getResourceRequests(priority);
+    }
+    return super.getResourceRequests(priority);
+  }
+
+  @Override
+  public Set<ContainerId> getPendingRelease() {
+    if (core != null) {
+      return core.getPendingRelease();
+    }
+    return super.getPendingRelease();
+  }
+
+  @Override
+  public long getNewContainerId() {
+    if (core != null) {
+      return core.getNewContainerId();
+    }
+    return super.getNewContainerId();
+  }
+
+  @Override
+  public Collection<Priority> getPriorities() {
+
+    if (core != null) {
+      return core.getPriorities();
+    }
+    return super.getPriorities();
+  }
+
+  @Override
+  public synchronized ResourceRequest getResourceRequest(Priority priority, String resourceName) {
+    if (core != null) {
+      return core.getResourceRequest(priority, resourceName);
+    }
+    return super.getResourceRequest(priority, resourceName);
+  }
+
+  @Override
+  public synchronized int getTotalRequiredResources(Priority priority) {
+    if (core != null) {
+      return core.getTotalRequiredResources(priority);
+    }
+    return super.getTotalRequiredResources(priority);
+  }
+
+  @Override
+  public synchronized Resource getResource(Priority priority) {
+    if (core != null) {
+      return core.getResource(priority);
+    }
+    return super.getResource(priority);
+  }
+
+  @Override
+  public String getQueueName() {
+    if (core != null) {
+      return core.getQueueName();
+    }
+    return super.getQueueName();
+  }
+
+  @Override
+  public Resource getAMResource() {
+    if (core != null) {
+      return core.getAMResource();
+    }
+    return super.getAMResource();
+  }
+
+  @Override
+  public void setAMResource(Resource amResource) {
+    if (core != null) {
+      core.setAMResource(amResource);
+      return;
+    }
+    super.setAMResource(amResource);
+  }
+
+  @Override
+  public boolean isAmRunning() {
+    if (core != null) {
+      return core.isAmRunning();
+    }
+    return super.isAmRunning();
+  }
+
+  @Override
+  public void setAmRunning(boolean bool) {
+    if (core != null) {
+      core.setAmRunning(bool);
+      return;
+    }
+    super.setAmRunning(bool);
+  }
+
+  @Override
+  public boolean getUnmanagedAM() {
+    if (core != null) {
+      return core.getUnmanagedAM();
+    }
+    return super.getUnmanagedAM();
+  }
+
+  @Override
+  public synchronized RMContainer getRMContainer(ContainerId id) {
+    if (core != null) {
+      return core.getRMContainer(id);
+    }
+    return super.getRMContainer(id);
+  }
+
+  @Override
   public synchronized int getReReservations(Priority priority) {
-    if (viaInner) {
-      return inner.getReReservations(priority);
+    if (core != null) {
+      return core.getReReservations(priority);
     }
     return super.getReReservations(priority);
   }
 
-  @InterfaceStability.Stable
-  @InterfaceAudience.Private
   @Override
   public synchronized Resource getCurrentReservation() {
-    if (viaInner) {
-      return inner.getCurrentReservation();
+    if (core != null) {
+      return core.getCurrentReservation();
     }
     return super.getCurrentReservation();
   }
 
   @Override
   public Queue getQueue() {
-    if (viaInner) {
-      return inner.getQueue();
+    if (core != null) {
+      return core.getQueue();
     }
     return super.getQueue();
   }
 
   @Override
   public synchronized void updateResourceRequests(List<ResourceRequest> requests) {
-    if (viaInner) {
-      inner.updateResourceRequests(requests);
+    if (core != null) {
+      core.updateResourceRequests(requests);
       return;
     }
     super.updateResourceRequests(requests);
@@ -411,8 +392,8 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public synchronized void recoverResourceRequests(List<ResourceRequest> requests) {
-    if (viaInner) {
-      inner.recoverResourceRequests(requests);
+    if (core != null) {
+      core.recoverResourceRequests(requests);
       return;
     }
     super.recoverResourceRequests(requests);
@@ -420,8 +401,8 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public synchronized void stop(RMAppAttemptState rmAppAttemptFinalState) {
-    if (viaInner) {
-      inner.stop(rmAppAttemptFinalState);
+    if (core != null) {
+      core.stop(rmAppAttemptFinalState);
       return;
     }
     super.stop(rmAppAttemptFinalState);
@@ -429,40 +410,40 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public synchronized boolean isStopped() {
-    if (viaInner) {
-      return inner.isStopped();
+    if (core != null) {
+      return core.isStopped();
     }
     return super.isStopped();
   }
 
   @Override
   public synchronized List<RMContainer> getReservedContainers() {
-    if (viaInner) {
-      return inner.getReservedContainers();
+    if (core != null) {
+      return core.getReservedContainers();
     }
     return super.getReservedContainers();
   }
 
   @Override
   public synchronized RMContainer reserve(SchedulerNode node, Priority priority, RMContainer rmContainer, Container container) {
-    if (viaInner) {
-      return inner.reserve(node, priority, rmContainer, container);
+    if (core != null) {
+      return core.reserve(node, priority, rmContainer, container);
     }
     return super.reserve(node, priority, rmContainer, container);
   }
 
   @Override
   public synchronized boolean isReserved(SchedulerNode node, Priority priority) {
-    if (viaInner) {
-      return inner.isReserved(node, priority);
+    if (core != null) {
+      return core.isReserved(node, priority);
     }
     return super.isReserved(node, priority);
   }
 
   @Override
   public synchronized void setHeadroom(Resource globalLimit) {
-    if (viaInner) {
-      inner.setHeadroom(globalLimit);
+    if (core != null) {
+      core.setHeadroom(globalLimit);
       return;
     }
     super.setHeadroom(globalLimit);
@@ -470,24 +451,24 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public synchronized Resource getHeadroom() {
-    if (viaInner) {
-      return inner.getHeadroom();
+    if (core != null) {
+      return core.getHeadroom();
     }
     return super.getHeadroom();
   }
 
   @Override
   public synchronized int getNumReservedContainers(Priority priority) {
-    if (viaInner) {
-      return inner.getNumReservedContainers(priority);
+    if (core != null) {
+      return core.getNumReservedContainers(priority);
     }
     return super.getNumReservedContainers(priority);
   }
 
   @Override
   public synchronized void containerLaunchedOnNode(ContainerId containerId, NodeId nodeId) {
-    if (viaInner) {
-      inner.containerLaunchedOnNode(containerId, nodeId);
+    if (core != null) {
+      core.containerLaunchedOnNode(containerId, nodeId);
       return;
     }
     super.containerLaunchedOnNode(containerId, nodeId);
@@ -495,8 +476,8 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public synchronized void showRequests() {
-    if (viaInner) {
-      inner.showRequests();
+    if (core != null) {
+      core.showRequests();
       return;
     }
     super.showRequests();
@@ -504,24 +485,24 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public Resource getCurrentConsumption() {
-    if (viaInner) {
-      return inner.getCurrentConsumption();
+    if (core != null) {
+      return core.getCurrentConsumption();
     }
     return super.getCurrentConsumption();
   }
 
   @Override
   public synchronized ContainersAndNMTokensAllocation pullNewlyAllocatedContainersAndNMTokens() {
-    if (viaInner) {
-      return inner.pullNewlyAllocatedContainersAndNMTokens();
+    if (core != null) {
+      return core.pullNewlyAllocatedContainersAndNMTokens();
     }
     return super.pullNewlyAllocatedContainersAndNMTokens();
   }
 
   @Override
   public synchronized void updateBlacklist(List<String> blacklistAdditions, List<String> blacklistRemovals) {
-    if (viaInner) {
-      inner.updateBlacklist(blacklistAdditions, blacklistRemovals);
+    if (core != null) {
+      core.updateBlacklist(blacklistAdditions, blacklistRemovals);
       return;
     }
     super.updateBlacklist(blacklistAdditions, blacklistRemovals);
@@ -529,16 +510,16 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public boolean isBlacklisted(String resourceName) {
-    if (viaInner) {
-      return inner.isBlacklisted(resourceName);
+    if (core != null) {
+      return core.isBlacklisted(resourceName);
     }
     return super.isBlacklisted(resourceName);
   }
 
   @Override
   public synchronized void addSchedulingOpportunity(Priority priority) {
-    if (viaInner) {
-      inner.addSchedulingOpportunity(priority);
+    if (core != null) {
+      core.addSchedulingOpportunity(priority);
       return;
     }
     super.addSchedulingOpportunity(priority);
@@ -546,8 +527,8 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public synchronized void subtractSchedulingOpportunity(Priority priority) {
-    if (viaInner) {
-      inner.subtractSchedulingOpportunity(priority);
+    if (core != null) {
+      core.subtractSchedulingOpportunity(priority);
       return;
     }
     super.subtractSchedulingOpportunity(priority);
@@ -555,16 +536,16 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public synchronized int getSchedulingOpportunities(Priority priority) {
-    if (viaInner) {
-      return inner.getSchedulingOpportunities(priority);
+    if (core != null) {
+      return core.getSchedulingOpportunities(priority);
     }
     return super.getSchedulingOpportunities(priority);
   }
 
   @Override
   public synchronized void resetSchedulingOpportunities(Priority priority) {
-    if (viaInner) {
-      inner.resetSchedulingOpportunities(priority);
+    if (core != null) {
+      core.resetSchedulingOpportunities(priority);
       return;
     }
     super.resetSchedulingOpportunities(priority);
@@ -572,8 +553,8 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public synchronized void resetSchedulingOpportunities(Priority priority, long currentTimeMs) {
-    if (viaInner) {
-      inner.resetSchedulingOpportunities(priority, currentTimeMs);
+    if (core != null) {
+      core.resetSchedulingOpportunities(priority, currentTimeMs);
       return;
     }
     super.resetSchedulingOpportunities(priority, currentTimeMs);
@@ -581,40 +562,40 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public synchronized ApplicationResourceUsageReport getResourceUsageReport() {
-    if (viaInner) {
-      return inner.getResourceUsageReport();
+    if (core != null) {
+      return core.getResourceUsageReport();
     }
     return super.getResourceUsageReport();
   }
 
   @Override
   public synchronized Map<ContainerId, RMContainer> getLiveContainersMap() {
-    if (viaInner) {
-      return inner.getLiveContainersMap();
+    if (core != null) {
+      return core.getLiveContainersMap();
     }
     return super.getLiveContainersMap();
   }
 
   @Override
   public synchronized Resource getResourceLimit() {
-    if (viaInner) {
-      return inner.getResourceLimit();
+    if (core != null) {
+      return core.getResourceLimit();
     }
     return super.getResourceLimit();
   }
 
   @Override
   public synchronized Map<Priority, Long> getLastScheduledContainer() {
-    if (viaInner) {
-      return inner.getLastScheduledContainer();
+    if (core != null) {
+      return core.getLastScheduledContainer();
     }
     return super.getLastScheduledContainer();
   }
 
   @Override
   public synchronized void transferStateFromPreviousAttempt(SchedulerApplicationAttempt appAttempt) {
-    if (viaInner) {
-      inner.transferStateFromPreviousAttempt(appAttempt);
+    if (core != null) {
+      core.transferStateFromPreviousAttempt(appAttempt);
       return;
     }
     super.transferStateFromPreviousAttempt(appAttempt);
@@ -622,8 +603,8 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public synchronized void move(Queue newQueue) {
-    if (viaInner) {
-      inner.move(newQueue);
+    if (core != null) {
+      core.move(newQueue);
       return;
     }
     super.move(newQueue);
@@ -631,8 +612,8 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public synchronized void recoverContainer(RMContainer rmContainer) {
-    if (viaInner) {
-      inner.recoverContainer(rmContainer);
+    if (core != null) {
+      core.recoverContainer(rmContainer);
       return;
     }
     super.recoverContainer(rmContainer);
@@ -640,8 +621,8 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public void incNumAllocatedContainers(NodeType containerType, NodeType requestType) {
-    if (viaInner) {
-      inner.incNumAllocatedContainers(containerType, requestType);
+    if (core != null) {
+      core.incNumAllocatedContainers(containerType, requestType);
       return;
     }
     super.incNumAllocatedContainers(containerType, requestType);
@@ -649,8 +630,8 @@ public class ExtCaAppAttempt extends FiCaSchedulerApp {
 
   @Override
   public void setApplicationHeadroomForMetrics(Resource headroom) {
-    if (viaInner) {
-      inner.setApplicationHeadroomForMetrics(headroom);
+    if (core != null) {
+      core.setApplicationHeadroomForMetrics(headroom);
       return;
     }
     super.setApplicationHeadroomForMetrics(headroom);

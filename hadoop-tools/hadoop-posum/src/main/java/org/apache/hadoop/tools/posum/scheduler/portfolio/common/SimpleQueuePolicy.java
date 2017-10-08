@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.scheduler.portfolio.singleq;
+package org.apache.hadoop.tools.posum.scheduler.portfolio.common;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -10,7 +10,6 @@ import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicyState;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginSchedulerNode;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.Container;
@@ -72,13 +71,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
+public abstract class SimpleQueuePolicy<
+  A extends FiCaPluginApplicationAttempt,
   N extends FiCaPluginSchedulerNode,
-  Q extends SQSQueue,
-  S extends SingleQueuePolicy<A, N, Q, S>>
+  Q extends SimpleQueue,
+  S extends SimpleQueuePolicy<A, N, Q, S>>
   extends PluginPolicy<A, N> {
 
-  private static Log LOG = LogFactory.getLog(SingleQueuePolicy.class);
+  private static Log LOG = LogFactory.getLog(SimpleQueuePolicy.class);
 
   private Configuration conf;
   private static final String DEFAULT_QUEUE_NAME = "default";
@@ -95,7 +95,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
   protected Resource usedAMResource = Resource.newInstance(0, 0);
   protected float maxAMRatio;
 
-  public SingleQueuePolicy(Class<A> aClass, Class<N> nClass, Class<Q> qClass, Class<S> sClass) {
+  public SimpleQueuePolicy(Class<A> aClass, Class<N> nClass, Class<Q> qClass, Class<S> sClass) {
     super(aClass, nClass, sClass.getName());
     this.qClass = qClass;
   }
@@ -161,7 +161,7 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       YarnConfiguration.DEFAULT_RM_SCHEDULER_USE_PORT_FOR_NODE_NAME);
     this.applications = new ConcurrentHashMap<>();
     this.orderedApps = new ConcurrentSkipListSet<>(getApplicationComparator());
-    this.queue = SQSQueue.getInstance(qClass, DEFAULT_QUEUE_NAME, this);
+    this.queue = SimpleQueue.getInstance(qClass, DEFAULT_QUEUE_NAME, this);
   }
 
   @Override
@@ -488,14 +488,12 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
     SchedulerApplication<A> application =
       applications.get(appAttemptId.getApplicationId());
     String user = application.getUser();
-    // TODO: Fix store
-    A schedulerAppAttempt = SQSAppAttempt.getInstance(aClass, appAttemptId, user, queue, new ActiveUsersManager(queue.getMetrics()), this.rmContext);
+    A schedulerAppAttempt = FiCaPluginApplicationAttempt.getInstance(aClass, appAttemptId, user, queue, new ActiveUsersManager(queue.getMetrics()), this.rmContext);
     if (schedulerAppAttempt instanceof Configurable)
       ((Configurable) schedulerAppAttempt).setConf(conf);
 
     if (transferStateFromPreviousAttempt) {
-      schedulerAppAttempt.transferStateFromPreviousAttempt(application
-        .getCurrentAppAttempt());
+      schedulerAppAttempt.transferStateFromPreviousAttempt(application.getCurrentAppAttempt());
     }
 
     application.setCurrentAppAttempt(schedulerAppAttempt);
@@ -989,7 +987,10 @@ public abstract class SingleQueuePolicy<A extends SQSAppAttempt,
       if (attempt != null) {
         Resources.addTo(usedAMResource, Resources.min(getResourceCalculator(), clusterResource,
           attempt.getCurrentConsumption(), attempt.getAMResource()));
-        newApp.setCurrentAppAttempt(SQSAppAttempt.getInstance(aClass, attempt));
+        A newAttempt = FiCaPluginApplicationAttempt.getInstance(aClass, attempt, queue.getActiveUsersManager(), rmContext);
+        if (newAttempt instanceof Configurable)
+          ((Configurable) newAttempt).setConf(conf);
+        newApp.setCurrentAppAttempt(newAttempt);
         queue.getMetrics().submitAppAttempt(app.getUser());
         onAppAttemptAdded(newApp.getCurrentAppAttempt());
       }

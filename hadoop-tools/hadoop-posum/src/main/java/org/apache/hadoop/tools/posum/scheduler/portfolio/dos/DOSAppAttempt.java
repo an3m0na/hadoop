@@ -2,14 +2,15 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.dos;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtCaAppAttempt;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginApplicationAttempt;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginApplicationAttempt;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.server.resourcemanager.RMContext;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ActiveUsersManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 
-public class DOSAppAttempt extends ExtCaAppAttempt {
+public class DOSAppAttempt extends FiCaPluginApplicationAttempt {
   private static final Log logger = LogFactory.getLog(DOSAppAttempt.class);
 
   private Long totalInputSize;
@@ -19,8 +20,10 @@ public class DOSAppAttempt extends ExtCaAppAttempt {
     super(applicationAttemptId, user, queue, activeUsersManager, rmContext);
   }
 
-  public DOSAppAttempt(ExtCaAppAttempt inner) {
-    super(inner);
+  public <T extends SchedulerApplicationAttempt & PluginApplicationAttempt> DOSAppAttempt(T predecessor,
+                                                                                          ActiveUsersManager activeUsersManager,
+                                                                                          RMContext rmContext) {
+    super(predecessor, activeUsersManager, rmContext);
   }
 
   public Long getTotalInputSize() {
@@ -46,7 +49,7 @@ public class DOSAppAttempt extends ExtCaAppAttempt {
 
   @Override
   public synchronized void transferStateFromPreviousAttempt(SchedulerApplicationAttempt appAttempt) {
-    logger.debug("Transfering state from previous attempt " + appAttempt.getApplicationAttemptId());
+    logger.debug("Transferring state from previous attempt " + appAttempt.getApplicationAttemptId());
     super.transferStateFromPreviousAttempt(appAttempt);
     if (appAttempt instanceof DOSAppAttempt) {
       DOSAppAttempt dosApp = (DOSAppAttempt) appAttempt;

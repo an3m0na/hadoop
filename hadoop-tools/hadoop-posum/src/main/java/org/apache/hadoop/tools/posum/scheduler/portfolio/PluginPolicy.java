@@ -20,8 +20,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEv
 import java.util.List;
 
 public abstract class PluginPolicy<
-  A extends SchedulerApplicationAttempt,
-  N extends SchedulerNode>
+  A extends SchedulerApplicationAttempt & PluginApplicationAttempt,
+  N extends SchedulerNode & PluginSchedulerNode>
   extends AbstractYarnScheduler<A, N> implements Configurable {
 
   protected Class<A> aClass;

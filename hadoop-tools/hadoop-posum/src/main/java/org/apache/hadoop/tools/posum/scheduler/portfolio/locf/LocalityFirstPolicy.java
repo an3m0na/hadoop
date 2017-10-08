@@ -3,20 +3,20 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.locf;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSAppAttempt;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSQueue;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SingleQueuePolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginApplicationAttempt;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.SimpleQueue;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.SimpleQueuePolicy;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppUtils;
 import org.apache.hadoop.yarn.util.resource.Resources;
 
-public class LocalityFirstPolicy extends SingleQueuePolicy<SQSAppAttempt, FiCaPluginSchedulerNode, SQSQueue, LocalityFirstPolicy> {
+public class LocalityFirstPolicy extends SimpleQueuePolicy<FiCaPluginApplicationAttempt, FiCaPluginSchedulerNode, SimpleQueue, LocalityFirstPolicy> {
   private static Log LOG = LogFactory.getLog(LocalityFirstPolicy.class);
 
   public LocalityFirstPolicy() {
-    super(SQSAppAttempt.class, FiCaPluginSchedulerNode.class, SQSQueue.class, LocalityFirstPolicy.class);
+    super(FiCaPluginApplicationAttempt.class, FiCaPluginSchedulerNode.class, SimpleQueue.class, LocalityFirstPolicy.class);
   }
 
   @Override
@@ -36,7 +36,7 @@ public class LocalityFirstPolicy extends SingleQueuePolicy<SQSAppAttempt, FiCaPl
   }
 
   private void assignByLocality(FiCaPluginSchedulerNode node, NodeType localityLevel) {
-    for (SQSAppAttempt app : orderedApps) {
+    for (FiCaPluginApplicationAttempt app : orderedApps) {
       LOG.trace("pre-assignContainers-" + localityLevel + " for " + app.getApplicationAttemptId());
       app.showRequests();
       synchronized (app) {
@@ -86,7 +86,7 @@ public class LocalityFirstPolicy extends SingleQueuePolicy<SQSAppAttempt, FiCaPl
     }
   }
 
-  private boolean hasRackLocalRequests(SQSAppAttempt application, Priority priority) {
+  private boolean hasRackLocalRequests(FiCaPluginApplicationAttempt application, Priority priority) {
     for (FiCaPluginSchedulerNode node : nodes.values()) {
       ResourceRequest request = application.getResourceRequest(priority, node.getRackName());
       if (request != null && request.getNumContainers() > 0)
@@ -95,7 +95,7 @@ public class LocalityFirstPolicy extends SingleQueuePolicy<SQSAppAttempt, FiCaPl
     return false;
   }
 
-  private boolean hasNodeLocalRequests(SQSAppAttempt application, Priority priority) {
+  private boolean hasNodeLocalRequests(FiCaPluginApplicationAttempt application, Priority priority) {
     for (FiCaPluginSchedulerNode node : nodes.values()) {
       ResourceRequest request = application.getResourceRequest(priority, node.getNodeName());
       if (request != null && request.getNumContainers() > 0)
@@ -105,7 +105,7 @@ public class LocalityFirstPolicy extends SingleQueuePolicy<SQSAppAttempt, FiCaPl
   }
 
   @Override
-  protected void updateAppPriority(SQSAppAttempt app) {
+  protected void updateAppPriority(FiCaPluginApplicationAttempt app) {
 
   }
 }

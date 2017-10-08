@@ -11,7 +11,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.extca.ExtensibleCapacityScheduler;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.ExtensibleCapacityScheduler;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
@@ -36,7 +36,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
   protected float deadlinePriority = PosumConfiguration.DC_PRIORITY_DEFAULT;
 
   public EDLSPolicy(Class<E> eClass) {
-    super(EDLSAppAttempt.class, FiCaPluginSchedulerNode.class, eClass.getName(), true);
+    super(EDLSAppAttempt.class, FiCaPluginSchedulerNode.class, eClass.getName());
     logger = LogFactory.getLog(eClass);
   }
 

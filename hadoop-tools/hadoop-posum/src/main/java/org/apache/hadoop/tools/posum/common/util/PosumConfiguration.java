@@ -14,6 +14,12 @@ public class PosumConfiguration {
     return conf;
   }
 
+  public static Configuration newInstance(Configuration originalConf) {
+    Configuration conf = new Configuration(originalConf);
+    conf.addResource("posum-core.xml");
+    return conf;
+  }
+
   public static int DEFAULT_BUFFER_SIZE = 1024;
 
   public static final String PREFIX = "tools.posum.";
