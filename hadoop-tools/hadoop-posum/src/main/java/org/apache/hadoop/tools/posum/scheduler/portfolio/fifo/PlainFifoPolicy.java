@@ -1,18 +1,18 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio.fifo;
 
 import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSAppAttempt;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSQueue;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SingleQueuePolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginApplicationAttempt;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.SimpleQueue;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.SimpleQueuePolicy;
 
-public class PlainFifoPolicy extends SingleQueuePolicy<SQSAppAttempt, FiCaPluginSchedulerNode, SQSQueue, PlainFifoPolicy> {
+public class PlainFifoPolicy extends SimpleQueuePolicy<FiCaPluginApplicationAttempt, FiCaPluginSchedulerNode, SimpleQueue, PlainFifoPolicy> {
 
   public PlainFifoPolicy() {
-    super(SQSAppAttempt.class, FiCaPluginSchedulerNode.class, SQSQueue.class, PlainFifoPolicy.class);
+    super(FiCaPluginApplicationAttempt.class, FiCaPluginSchedulerNode.class, SimpleQueue.class, PlainFifoPolicy.class);
   }
 
   @Override
-  protected void updateAppPriority(SQSAppAttempt app) {
+  protected void updateAppPriority(FiCaPluginApplicationAttempt app) {
 
   }
 }

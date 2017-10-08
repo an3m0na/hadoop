@@ -20,7 +20,7 @@ import java.util.Set;
 
 public class FiCaPluginSchedulerNode extends FiCaSchedulerNode implements PluginSchedulerNode {
 
-  private final SchedulerNode core;
+  private SchedulerNode core;
 
   public FiCaPluginSchedulerNode(RMNode node, boolean usePortForNodeName, Set<String> nodeLabels) {
     super(node, usePortForNodeName, nodeLabels);

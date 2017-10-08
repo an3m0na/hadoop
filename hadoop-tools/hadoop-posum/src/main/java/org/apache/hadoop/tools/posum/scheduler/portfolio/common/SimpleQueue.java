@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.scheduler.portfolio.singleq;
+package org.apache.hadoop.tools.posum.scheduler.portfolio.common;
 
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
@@ -24,37 +24,25 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class SQSQueue implements Queue {
-
-  private final List<SQSAppAttempt> apps = new ArrayList<>();
-  // get a lockDatabase with fair distribution for app list updates
-  private final ReadWriteLock rwl = new ReentrantReadWriteLock(true);
-  private final Lock readLock = rwl.readLock();
-  private final Lock writeLock = rwl.writeLock();
-
-  private static final RecordFactory recordFactory =
-    RecordFactoryProvider.getRecordFactory(null);
-
+public class SimpleQueue implements Queue {
+  private static final RecordFactory recordFactory = RecordFactoryProvider.getRecordFactory(null);
 
   private final String name;
   private QueueMetrics metrics;
-  private SingleQueuePolicy scheduler;
+  private SimpleQueuePolicy scheduler;
   private ActiveUsersManager activeUsersManager;
 
-  public SQSQueue(String name, SingleQueuePolicy scheduler) {
+  public SimpleQueue(String name, SimpleQueuePolicy scheduler) {
     this.name = name;
     this.scheduler = scheduler;
     this.metrics = QueueMetrics.forQueue(this.name, null, false, scheduler.getConf());
     this.activeUsersManager = new ActiveUsersManager(metrics);
   }
 
-  static <Q extends SQSQueue> Q getInstance(Class<Q> qClass, String name, SingleQueuePolicy scheduler) {
+  static <Q extends SimpleQueue> Q getInstance(Class<Q> qClass, String name, SimpleQueuePolicy scheduler) {
     try {
-      Constructor<Q> constructor = qClass.getConstructor(String.class, SingleQueuePolicy.class);
+      Constructor<Q> constructor = qClass.getConstructor(String.class, SimpleQueuePolicy.class);
       return constructor.newInstance(name, scheduler);
     } catch (Exception e) {
       throw new PosumException("Failed to instantiate scheduler queue via default constructor" + e);
