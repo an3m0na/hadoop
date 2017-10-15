@@ -43,7 +43,6 @@ public class PosumInfoCollector {
   private final Database logDb;
   private final DataStore dataStore;
   private final Configuration conf;
-  private final Boolean fineGrained;
   private final Map<String, PolicyInfoPayload> policyMap;
   private final Set<String> activeNodes;
   private Long lastCollectTime = 0L;
@@ -51,8 +50,7 @@ public class PosumInfoCollector {
   private Long predictionTimeout = 0L;
   private Long schedulingStart = 0L;
   private String lastUsedPolicy;
-  //TODO use only this predictor for regular experiments
-//      private JobBehaviorPredictor predictor;
+  private boolean continuousPrediction = false;
   private JobBehaviorPredictor basicPredictor;
   private JobBehaviorPredictor standardPredictor;
   private JobBehaviorPredictor detailedPredictor;
@@ -61,13 +59,12 @@ public class PosumInfoCollector {
     this.dataStore = dataStore;
     this.logDb = Database.from(dataStore, DatabaseReference.getLogs());
     this.conf = conf;
-    fineGrained = conf.getBoolean(PosumConfiguration.FINE_GRAINED_MONITOR,
-      PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
+    continuousPrediction = conf.getBoolean(PosumConfiguration.CONTINUOUS_PREDICTION,
+      PosumConfiguration.CONTINUOUS_PREDICTION_DEFAULT);
     api = new PosumAPIClient(conf);
     policyMap = new HashMap<>();
     initializePolicyMap();
     activeNodes = new HashSet<>();
-//        predictor = JobBehaviorPredictor.newInstance(conf);
     basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
     standardPredictor = JobBehaviorPredictor.newInstance(conf, StandardPredictor.class);
     detailedPredictor = JobBehaviorPredictor.newInstance(conf, DetailedPredictor.class);
@@ -84,12 +81,14 @@ public class PosumInfoCollector {
 
   synchronized void collect() {
     long now = System.currentTimeMillis();
-    if (fineGrained) {
-      //TODO get metrics from all services and persist to database
+    // get system metrics for pm, dm, sm, ps
+    // store them
+    // get num container, num apps, timecosts from ps
+    // store them
+    if (continuousPrediction) {
       if (now - lastPrediction > predictionTimeout) {
         // make new predictions
         Database db = Database.from(dataStore, DatabaseReference.getMain());
-//        predictor.train(db);
         basicPredictor.train(db);
         standardPredictor.train(db);
         detailedPredictor.train(db);
@@ -98,7 +97,6 @@ public class PosumInfoCollector {
         List<String> taskIds = dataStore.execute(getAllTasks, DatabaseReference.getMain()).getEntries();
         for (String taskId : taskIds) {
           // prediction can throw exception if data model changes state during calculation
-//                    storePredictionForTask(predictor, taskId);
           storePredictionForTask(basicPredictor, taskId);
           storePredictionForTask(standardPredictor, taskId);
           storePredictionForTask(detailedPredictor, taskId);

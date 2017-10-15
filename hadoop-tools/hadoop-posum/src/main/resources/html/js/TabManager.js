@@ -58,7 +58,7 @@ function TabManager(env) {
   self.time = 0;
   self.load = function (tab) {
     var path, traces, layout;
-    if (tab.id == "scheduler") {
+    if (tab.id === "scheduler") {
       path = env.isTest ? "js/dmmetrics_policies.json" : env.comm.dmPath + "/policies";
       env.comm.requestData(path, function (data) {
 
@@ -132,7 +132,7 @@ function TabManager(env) {
           {title: "Cost (MS)"}
         );
       });
-    } else if (tab.id == "system") {
+    } else if (tab.id === "system") {
       path = env.isTest ? "js/metrics_system.json" : env.comm.psPath + "/system";
       self.updateTimeSeries(tab,
         "plot_ps_jvm",
@@ -156,7 +156,7 @@ function TabManager(env) {
           return traceObject
         },
         "CPU Load for Portfolio Scheduler",
-        {title: "Fraction (%)", tickmode: "linear", dtick: 0.25}
+        {title: "Fraction (%)", tickmode: "auto", nticks: 10}
       );
       self.updateTimeSeries(tab,
         "plot_ps_threads",
@@ -193,7 +193,7 @@ function TabManager(env) {
           return traceObject
         },
         "CPU Load for POSUM Master",
-        {title: "Fraction (%)", tickmode: "linear", dtick: 0.25}
+        {title: "Fraction (%)", tickmode: "auto", nticks: 10}
       );
       self.updateTimeSeries(tab,
         "plot_pm_threads",
@@ -230,7 +230,7 @@ function TabManager(env) {
           return traceObject
         },
         "CPU Load for Data Master",
-        {title: "Fraction (%)", tickmode: "linear", dtick: 0.25}
+        {title: "Fraction (%)", tickmode: "auto", nticks: 10}
       );
       self.updateTimeSeries(tab,
         "plot_dm_threads",
@@ -267,7 +267,7 @@ function TabManager(env) {
           return traceObject
         },
         "CPU Load for Simulation Master",
-        {title: "Fraction (%)", tickmode: "linear", dtick: 0.25}
+        {title: "Fraction (%)", tickmode: "auto", nticks: 10}
       );
       self.updateTimeSeries(tab,
         "plot_sm_threads",
@@ -281,7 +281,7 @@ function TabManager(env) {
         "Active Threads for Simulation Master",
         {title: "Total Number", tickmode: "linear", dtick: 0.25}
       );
-    } else if (tab.id == "cluster") {
+    } else if (tab.id === "cluster") {
       path = env.isTest ? "js/psmetrics_cluster.json" : env.comm.psPath + "/cluster";
       env.comm.requestData(path, function (data) {
 
@@ -311,11 +311,11 @@ function TabManager(env) {
           {title: "Number", tickmode: "linear"}
         );
       });
-    } else if (tab.id == "logs") {
+    } else if (tab.id === "logs") {
       path = env.isTest ? "js/logs.json" : env.comm.dmPath + "/logs";
       const lastRefreshed = tab.lastRefreshed;
       env.comm.requestData(path + "?since=" + lastRefreshed, function (data) {
-        if (!data || data.length == 0)
+        if (!data || data.length === 0)
           return;
         data.forEach(function (log) {
           const timestamp = moment.unix(log.timestamp / 1000);
