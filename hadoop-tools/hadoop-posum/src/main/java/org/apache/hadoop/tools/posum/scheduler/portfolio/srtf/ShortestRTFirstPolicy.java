@@ -5,9 +5,12 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicyState;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.common.SimpleQueue;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.common.SimpleQueuePolicy;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -87,6 +90,12 @@ public class ShortestRTFirstPolicy extends SimpleQueuePolicy<SRTFAppAttempt, FiC
       newOrderedApps.add(app);
     }
     this.orderedApps = newOrderedApps;
+  }
+
+  @Override
+  protected <T extends SchedulerNode & PluginSchedulerNode> void importState(PluginPolicyState<T> state) {
+    super.importState(state);
+    updateApplicationPriorities();
   }
 }
 
