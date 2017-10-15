@@ -1,8 +1,8 @@
-package org.apache.hadoop.tools.posum.scheduler.portfolio;
+package org.apache.hadoop.tools.posum.scheduler.portfolio.locf;
 
 import org.apache.hadoop.mapreduce.v2.api.records.Locality;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.locf.LocalityFirstPolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.TestPolicy;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

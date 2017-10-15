@@ -35,12 +35,11 @@ public class TestShortestRTFirstPolicy extends TestPolicy<ShortestRTFirstPolicy>
     conf.setLong(PosumConfiguration.REPRIORITIZE_INTERVAL, 0); // unlimited active apps
 
     startRM();
-    registerNodes(10);
+    registerNodes(3);
 
     submitApp(1);
     submitApp(2);
     submitApp(3);
-
 
     JobProfile job1 = getJobForApp(1);
     JobProfile job2 = getJobForApp(2);

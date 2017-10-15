@@ -46,7 +46,7 @@ public class TestPortfolioMetaScheduler extends TestScheduler {
   @Test
   public void changeEdlsPriorityToShareAndBack() throws Exception {
     conf.set(PosumConfiguration.DEFAULT_POLICY, EDLS_PR.name());
-    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.999f); // batches are allowed only if there are no dcs in queue
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.999f); // deadlines always have priority
     conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1f); // max 2 apps can be active from each queue for EDLS_PR(because they already have 50% each), unlimited (max slots) apps for EDLS_SH
     startRM();
     registerNodes(2);
@@ -155,9 +155,9 @@ public class TestPortfolioMetaScheduler extends TestScheduler {
 
   @Test
   public void changeSrtfToLocfAndBack() throws YarnException, InterruptedException, IOException {
-    conf.set(PosumConfiguration.DEFAULT_POLICY, SRTF.name());
-    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1f); // unlimited active apps
-    conf.setLong(PosumConfiguration.REPRIORITIZE_INTERVAL, 0); // unlimited active apps
+    conf.set(PosumConfiguration.DEFAULT_POLICY, LOCF.name());
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1f); // max 2 apps can be active from each queue for EDLS_PR(because they already have 50% each), unlimited (max slots) apps for EDLS_SH
+    conf.setLong(PosumConfiguration.REPRIORITIZE_INTERVAL, 0); // always re-evaluate priorities
 
     startRM();
     registerNodes(10);
@@ -272,5 +272,151 @@ public class TestPortfolioMetaScheduler extends TestScheduler {
     Thread.sleep(1000);
 
     assertThat(getNmIndex(checkAllocation(getApp(2))), is(1));
+  }
+
+  @Test
+  public void testFullCircle() throws YarnException, InterruptedException, IOException {
+    conf.set(PosumConfiguration.DEFAULT_POLICY, EDLS_PR.name());
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.999f); // deadlines always have priority
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 0.75f); // max 3 active apps per queue (or only 1 if EDLS_PR)
+    conf.setLong(PosumConfiguration.REPRIORITIZE_INTERVAL, 0); // always re-evaluate priorities
+
+    startRM();
+    registerNodes(3);
+
+    submitApp(1, 40);
+    submitAppToNode(2, 2, Locality.NODE_LOCAL);
+    submitApp(3, 10);
+    submitAppToNode(4, 0, Locality.NODE_LOCAL);
+
+    JobProfile job1 = getJobForApp(1);
+    JobProfile job2 = getJobForApp(2);
+    JobProfile job3 = getJobForApp(3);
+
+    job1.setTotalMapTasks(1);
+    job1.setTotalReduceTasks(1);
+    job1.setCompletedMaps(1);
+    job1.setAvgMapDuration(20000L);
+    job1.setTotalSplitSize(10000000L);
+    job1.setMapOutputBytes(50000L);
+
+    job2.setTotalMapTasks(2);
+    job2.setCompletedMaps(1);
+    job2.setAvgMapDuration(16000000L);
+    job2.setTotalSplitSize(50000000L);
+    job2.setMapOutputBytes(2000L);
+
+    job3.setTotalMapTasks(2);
+    job3.setTotalReduceTasks(3);
+    job3.setCompletedMaps(1);
+    job3.setAvgMapDuration(300L);
+    job3.setTotalSplitSize(9000L);
+    job3.setMapOutputBytes(1200000L);
+
+    db.execute(UpdateOrStoreCall.newInstance(JOB, job1));
+    db.execute(UpdateOrStoreCall.newInstance(JOB, job2));
+    db.execute(UpdateOrStoreCall.newInstance(JOB, job3));
+
+    sendNodeUpdate(0);
+    sendNodeUpdate(1);
+
+    Thread.sleep(1000);
+
+    assertThat(getAMNodeIndex(3), is(0)); // both dc and low deadline; should go first
+    assertThat(getAMNodeIndex(1), is(1)); // would exceed dc limit
+    assertThat(getAMNodeIndex(2), is(-1)); // not 0 because it was already assigned one off-switch container
+    assertThat(getAMNodeIndex(4), is(-1)); // would exceed bc limit
+
+    assertThat(countAppsInQueue("batch"), is(2));
+    assertThat(countAppsInQueue("deadline"), is(2));
+    assertThat(countRMApps(), is(4));
+
+    scheduler.changeToPolicy(LOCF.name());
+
+    assertThat(countAppsInQueue("default"), is(4));
+    assertThat(countRMApps(), is(4));
+
+    sendNodeUpdate(0);
+    sendNodeUpdate(1);
+
+    Thread.sleep(1000);
+
+    assertThat(getAMNodeIndex(4), is(0)); // node local, so it has priority
+    assertThat(getAMNodeIndex(2), is(-1)); // still waiting for node update of 2
+
+    Container container1 = requestAllocation(1);
+    Container container2 = checkAllocation(getApp(2));
+    Container container3 = requestAllocation(3);
+
+    scheduler.changeToPolicy(SRTF.name());
+
+    assertThat(countAppsInQueue("default"), is(4));
+    assertThat(countRMApps(), is(4));
+
+    double deficit1 = ((SRTFAppAttempt) getAttempt(1)).getResourceDeficit();
+    double deficit2 = ((SRTFAppAttempt) getAttempt(2)).getResourceDeficit();
+    double deficit3 = ((SRTFAppAttempt) getAttempt(3)).getResourceDeficit();
+
+    assertThat(deficit2, is(-1024.0));
+    assertThat(deficit1, lessThan(deficit3));
+
+    sendNodeUpdate(0);
+    sendNodeUpdate(1);
+    sendNodeUpdate(2);
+
+    Thread.sleep(1000);
+
+    if (container1 == null)
+      container1 = checkAllocation(getApp(1));
+    if (container2 == null)
+      container2 = checkAllocation(getApp(2));
+    if (container3 == null)
+      container3 = checkAllocation(getApp(3));
+
+    assertThat(getNmIndex(container1), is(1));
+    assertThat(getNmIndex(container2), is(2));
+    assertThat(getNmIndex(container3), is(2));
+
+    scheduler.changeToPolicy(EDLS_SH.name());
+
+    submitAppToNode(5, 2, Locality.NODE_LOCAL);
+
+    assertThat(countAppsInQueue("batch"), is(3));
+    assertThat(countAppsInQueue("deadline"), is(2));
+    assertThat(countRMApps(), is(5));
+
+    sendNodeUpdate(0);
+    sendNodeUpdate(1);
+    sendNodeUpdate(2);
+
+    Thread.sleep(1000);
+
+    assertThat(getAMNodeIndex(5), is(-1)); // every node is full
+
+    finishApp(2);
+    finishApp(1);
+
+    Thread.sleep(1000);
+
+    sendNodeUpdate(0);
+    sendNodeUpdate(1);
+    sendNodeUpdate(2);
+
+    assertThat(countAppsInQueue("batch"), is(2));
+    assertThat(countAppsInQueue("deadline"), is(1));
+
+    assertThat(getAMNodeIndex(5), is(-1)); // locality doesn't matter bc limit would be exceeded
+
+    scheduler.changeToPolicy(EDLS_PR.name());
+
+    sendNodeUpdate(0);
+    sendNodeUpdate(1);
+    sendNodeUpdate(2);
+
+    assertThat(getAMNodeIndex(5), is(1)); // now it can finally run
+
+    assertThat(countAppsInQueue("batch"), is(2));
+    assertThat(countAppsInQueue("deadline"), is(1));
+    assertThat(countRMApps(), is(5));
   }
 }

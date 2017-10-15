@@ -974,7 +974,7 @@ public abstract class SimpleQueuePolicy<
     for (T node : state.getNodes().values()) {
       this.nodes.put(node.getNodeID(), FiCaPluginSchedulerNode.getInstance(nClass, node));
       updateMaximumAllocation(node, true);
-      Resources.addTo(usedAMResource, node.getUsedResource());
+      Resources.addTo(usedResource, node.getUsedResource());
     }
     queue.setAvailableResourcesToQueue(Resources.subtract(clusterResource, usedResource));
     for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> appEntry :
