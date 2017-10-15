@@ -44,8 +44,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 
-public abstract class TestScheduler {
-  private final Logger LOG = Logger.getLogger(TestScheduler.class);
+public abstract class TestSchedulerBase {
+  private final Logger LOG = Logger.getLogger(TestSchedulerBase.class);
 
   private final int SLOT_MB = 1024;
   private final int SLOT_CORES = 1;

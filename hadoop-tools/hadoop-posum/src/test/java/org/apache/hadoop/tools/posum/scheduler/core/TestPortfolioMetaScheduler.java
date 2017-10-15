@@ -5,11 +5,13 @@ import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.InjectableResourceScheduler;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.scheduler.TestScheduler;
+import org.apache.hadoop.tools.posum.scheduler.TestSchedulerBase;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.srtf.SRTFAppAttempt;
+import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -20,13 +22,15 @@ import static org.apache.hadoop.tools.posum.common.util.PolicyPortfolio.Standard
 import static org.apache.hadoop.tools.posum.common.util.PolicyPortfolio.StandardPolicy.LOCF;
 import static org.apache.hadoop.tools.posum.common.util.PolicyPortfolio.StandardPolicy.SRTF;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
-public class TestPortfolioMetaScheduler extends TestScheduler {
+@Category(IntegrationTest.class)
+public class TestPortfolioMetaScheduler extends TestSchedulerBase {
   private PortfolioMetaScheduler scheduler;
 
   @Override
@@ -155,7 +159,7 @@ public class TestPortfolioMetaScheduler extends TestScheduler {
 
   @Test
   public void changeSrtfToLocfAndBack() throws YarnException, InterruptedException, IOException {
-    conf.set(PosumConfiguration.DEFAULT_POLICY, LOCF.name());
+    conf.set(PosumConfiguration.DEFAULT_POLICY, SRTF.name());
     conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 1f); // max 2 apps can be active from each queue for EDLS_PR(because they already have 50% each), unlimited (max slots) apps for EDLS_SH
     conf.setLong(PosumConfiguration.REPRIORITIZE_INTERVAL, 0); // always re-evaluate priorities
 

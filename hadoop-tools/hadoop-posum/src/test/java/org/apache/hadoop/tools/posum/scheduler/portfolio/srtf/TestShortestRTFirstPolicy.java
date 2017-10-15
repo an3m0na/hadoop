@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.srtf;
 import org.apache.hadoop.tools.posum.common.records.call.UpdateOrStoreCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.TestPolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.TestPolicyBase;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -18,7 +18,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 @Category(IntegrationTest.class)
-public class TestShortestRTFirstPolicy extends TestPolicy<ShortestRTFirstPolicy> {
+public class TestShortestRTFirstPolicy extends TestPolicyBase<ShortestRTFirstPolicy> {
 
   public TestShortestRTFirstPolicy() {
     super(ShortestRTFirstPolicy.class);
