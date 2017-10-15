@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio.locf;
 
 import org.apache.hadoop.mapreduce.v2.api.records.Locality;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.TestPolicyBase;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.junit.Test;

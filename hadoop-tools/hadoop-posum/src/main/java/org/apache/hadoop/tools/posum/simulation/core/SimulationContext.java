@@ -2,9 +2,9 @@ package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
-import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
-import org.apache.hadoop.tools.posum.common.util.TopologyProvider;
+import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.cluster.TopologyProvider;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonQueue;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.SimpleDispatcher;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;

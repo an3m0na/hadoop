@@ -7,8 +7,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE;
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE_DEFAULT;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE_DEFAULT;
 import static org.apache.hadoop.util.ShutdownThreadsHelper.shutdownExecutorService;
 
 public class DaemonPool {

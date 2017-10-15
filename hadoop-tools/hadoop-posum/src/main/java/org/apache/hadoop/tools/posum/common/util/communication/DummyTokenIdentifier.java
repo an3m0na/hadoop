@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.util;
+package org.apache.hadoop.tools.posum.common.util.communication;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;

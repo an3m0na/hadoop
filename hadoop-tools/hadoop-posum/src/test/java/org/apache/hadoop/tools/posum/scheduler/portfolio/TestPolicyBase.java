@@ -1,8 +1,8 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
 import org.apache.hadoop.tools.posum.client.data.Database;
-import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
-import org.apache.hadoop.tools.posum.common.util.InjectableResourceScheduler;
+import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
+import org.apache.hadoop.tools.posum.common.util.cluster.InjectableResourceScheduler;
 import org.apache.hadoop.tools.posum.scheduler.TestSchedulerBase;
 
 

@@ -16,14 +16,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.COST_SCALE_FACTOR;
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.COST_SCALE_FACTOR_DEFAULT;
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.PENALTY_SCALE_FACTOR;
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.PENALTY_SCALE_FACTOR_DEFAULT;
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.POLICY_SWITCH_ENABLED;
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.POLICY_SWITCH_ENABLED_DEFAULT;
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SLOWDOWN_SCALE_FACTOR;
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SLOWDOWN_SCALE_FACTOR_DEFAULT;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.COST_SCALE_FACTOR;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.COST_SCALE_FACTOR_DEFAULT;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.PENALTY_SCALE_FACTOR;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.PENALTY_SCALE_FACTOR_DEFAULT;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.POLICY_SWITCH_ENABLED;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.POLICY_SWITCH_ENABLED_DEFAULT;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SLOWDOWN_SCALE_FACTOR;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SLOWDOWN_SCALE_FACTOR_DEFAULT;
 
 public class Orchestrator extends CompositeService implements EventHandler<PosumEvent> {
 

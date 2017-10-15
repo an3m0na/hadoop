@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.util;
+package org.apache.hadoop.tools.posum.common.util.cluster;
 
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.NodeInfo;
 import org.apache.hadoop.yarn.api.records.ApplicationId;

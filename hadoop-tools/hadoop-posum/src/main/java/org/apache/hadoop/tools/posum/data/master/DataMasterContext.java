@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.data.master;
 
 import org.apache.hadoop.tools.posum.client.data.DataStore;
-import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.common.util.communication.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.data.monitor.PosumInfoCollector;
 import org.apache.hadoop.tools.posum.data.monitor.cluster.AppInfoCollector;
 

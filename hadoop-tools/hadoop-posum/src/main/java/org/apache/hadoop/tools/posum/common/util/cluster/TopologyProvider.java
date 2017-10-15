@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.util;
+package org.apache.hadoop.tools.posum.common.util.cluster;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
@@ -6,6 +6,7 @@ import org.apache.hadoop.tools.posum.common.records.call.CallUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.util.RackResolver;
 
 import java.util.ArrayList;

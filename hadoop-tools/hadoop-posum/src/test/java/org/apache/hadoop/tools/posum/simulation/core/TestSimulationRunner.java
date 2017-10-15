@@ -6,7 +6,7 @@ import org.apache.hadoop.tools.posum.common.records.call.StoreAllCall;
 import org.apache.hadoop.tools.posum.common.records.call.TransactionCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
-import org.apache.hadoop.tools.posum.common.util.TopologyProvider;
+import org.apache.hadoop.tools.posum.common.util.cluster.TopologyProvider;
 import org.apache.hadoop.tools.posum.data.mock.data.MockDataStoreImpl;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler;

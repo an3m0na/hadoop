@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.orchestration.master;
 
-import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.common.util.communication.DummyTokenSecretManager;
 import org.apache.hadoop.yarn.event.Dispatcher;
 
 public class OrchestrationMasterContext {

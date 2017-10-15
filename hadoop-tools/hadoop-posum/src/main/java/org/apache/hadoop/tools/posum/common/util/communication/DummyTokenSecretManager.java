@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.util;
+package org.apache.hadoop.tools.posum.common.util.communication;
 
 import org.apache.hadoop.security.token.SecretManager;
 import org.apache.hadoop.yarn.server.security.MasterKeyData;
