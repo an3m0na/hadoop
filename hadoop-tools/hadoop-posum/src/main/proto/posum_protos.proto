@@ -329,7 +329,20 @@ message CompoundScorePayloadProto {
 }
 
 message StringStringMapPayloadProto {
-    repeated StringStringMapProto entries = 1;
+     repeated StringStringMapProto entries = 1;
+}
+
+message PropertyMapPayloadProto {
+    repeated SimplePropertyPayloadProto entries = 1;
+}
+
+message PropertyGroupProto {
+    optional string key = 1;
+    optional PropertyMapPayloadProto value = 2;
+}
+
+message PropertyGroupsPayloadProto {
+    repeated PropertyGroupProto groups = 1;
 }
 
 message StringListPayloadProto {

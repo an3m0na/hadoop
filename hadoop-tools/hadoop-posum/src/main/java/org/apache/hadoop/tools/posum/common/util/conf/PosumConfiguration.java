@@ -122,8 +122,8 @@ public class PosumConfiguration {
   public static final String SCHEDULER_METRICS_ON = SCHEDULER_PREFIX + "metrics.on";
   public static final boolean SCHEDULER_METRICS_ON_DEFAULT = true;
 
-  public static final String FINE_GRAINED_MONITOR = MONITOR_PREFIX + "fine-grained";
-  public static final boolean FINE_GRAINED_MONITOR_DEFAULT = true;
+  public static final String CONTINUOUS_PREDICTION = MONITOR_PREFIX + "continuous-prediction";
+  public static final boolean CONTINUOUS_PREDICTION_DEFAULT = false;
 
   public static final String APP_DEADLINE = YarnConfiguration.YARN_PREFIX + "application.deadline";
   public static final long APP_DEADLINE_DEFAULT = 120000;
