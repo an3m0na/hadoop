@@ -3,16 +3,13 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.InjectableResourceScheduler;
-import org.apache.hadoop.tools.posum.scheduler.TestScheduler;
-import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
+import org.apache.hadoop.tools.posum.scheduler.TestSchedulerBase;
 
 
-public abstract class TestPolicy<T extends PluginPolicy> extends TestScheduler {
+public abstract class TestPolicyBase<T extends PluginPolicy> extends TestSchedulerBase {
   private Class<? extends PluginPolicy> schedulerClass;
 
-  protected TestPolicy(Class<T> schedulerClass) {
+  protected TestPolicyBase(Class<T> schedulerClass) {
     this.schedulerClass = schedulerClass;
   }
 
