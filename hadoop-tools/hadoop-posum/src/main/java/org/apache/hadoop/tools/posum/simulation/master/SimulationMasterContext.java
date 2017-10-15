@@ -6,7 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.DataMasterClient;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.simulation.Simulator;
-import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.common.util.communication.DummyTokenSecretManager;
 
 public class SimulationMasterContext {
   private static Log logger = LogFactory.getLog(SimulationMasterContext.class);

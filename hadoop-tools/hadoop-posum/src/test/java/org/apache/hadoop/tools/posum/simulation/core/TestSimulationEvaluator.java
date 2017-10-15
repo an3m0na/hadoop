@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.APP_DEADLINE;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.APP_DEADLINE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;

@@ -1,6 +1,7 @@
-package org.apache.hadoop.tools.posum.common.util;
+package org.apache.hadoop.tools.posum.common.util.conf;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.edls.EDLSPriorityPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.edls.EDLSSharePolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.fifo.FifoPolicy;

@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.util;
+package org.apache.hadoop.tools.posum.common.util.cluster;
 
 import org.apache.hadoop.mapreduce.v2.api.records.Locality;
 import org.apache.hadoop.security.UserGroupInformation;

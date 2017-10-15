@@ -7,7 +7,7 @@ import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
+import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 
 import java.text.MessageFormat;
 

@@ -1,6 +1,6 @@
 package org.apache.hadoop.tools.posum.client.data;
 
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.data.master.DataMaster;
 import org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMaster;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;

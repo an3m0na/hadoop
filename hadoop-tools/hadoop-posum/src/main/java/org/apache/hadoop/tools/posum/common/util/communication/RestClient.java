@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.common.util;
+package org.apache.hadoop.tools.posum.common.util.communication;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -9,6 +9,9 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.jobhistory.JHAdminConfig;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 import javax.ws.rs.core.MediaType;

@@ -19,9 +19,9 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.ExternalDeadline;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.RestClient;
+import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
@@ -31,8 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.DATABASE_DEADLINES;
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.DATABASE_DEADLINES_DEFAULT;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.DATABASE_DEADLINES;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.DATABASE_DEADLINES_DEFAULT;
 
 class JobInfoCollector {
   private static Log logger = LogFactory.getLog(JobInfoCollector.class);

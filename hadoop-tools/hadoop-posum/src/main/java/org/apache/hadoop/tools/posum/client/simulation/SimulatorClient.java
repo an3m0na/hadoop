@@ -8,9 +8,9 @@ import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.StandardClientProxyFactory;
+import org.apache.hadoop.tools.posum.common.util.communication.StandardClientProxyFactory;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
