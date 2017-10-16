@@ -101,12 +101,12 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
           throw new PosumException("Could not handle event of type " + event.getType());
       }
     } catch (Exception e) {
-      throw new PosumException("Could not handle event of type " + event.getType());
+      throw new PosumException("Could not handle event of type " + event.getType(), e);
     }
   }
 
   private void decidePolicyChange(List<SimulationResultPayload> results) {
-    if (!switchEnabled)
+    if (!switchEnabled || results == null || results.isEmpty())
       return;
     MetaScheduler scheduler = orchestrationContext.getCommService().getScheduler();
     Collections.sort(results, simulationScoreComparator);

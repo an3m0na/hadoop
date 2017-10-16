@@ -69,9 +69,11 @@ public class OrchestratorWebApp extends PosumWebApp {
 
   private JsonNode getConfiguration() {
     return wrapResult(new JsonObject()
-      .put("dmAddress", context.getCommService().getDMAddress())
-      .put("psAddress", context.getCommService().getPSAddress())
-      .put("smAddress", context.getCommService().getSMAddress())
+      .put("addresses", new JsonObject()
+        .put("DM", context.getCommService().getDMAddress())
+        .put("PS", context.getCommService().getPSAddress())
+        .put("SM", context.getCommService().getSMAddress())
+      )
       .getNode());
   }
 }
