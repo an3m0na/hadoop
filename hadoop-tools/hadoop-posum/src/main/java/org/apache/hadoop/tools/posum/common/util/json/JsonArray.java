@@ -10,6 +10,10 @@ public class JsonArray extends JsonElement {
     inner = (ArrayNode) innerElement;
   }
 
+  public JsonArray(ArrayNode inner) {
+    this.inner = inner;
+  }
+
   public JsonArray(JsonElement... items) {
     this();
     for (JsonElement item : items) {

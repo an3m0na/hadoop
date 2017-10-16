@@ -16,7 +16,7 @@ $(document).ready(function () {
   var path = env.isTest ? "js/conf.json" : env.comm.masterPath + "/conf";
   env.comm.requestData(path, function (data) {
     if (window.location.hostname !== "localhost") {
-      var address = data.psAddress;
+      var address = data.addresses.PS;
       if (address) {
         env.comm.psPath = "http://" + address + "/ajax";
       } else {
@@ -24,7 +24,7 @@ $(document).ready(function () {
           "POSUM not yet ready. Please refresh.");
         return;
       }
-      address = data.dmAddress;
+      address = data.addresses.DM;
       if (address) {
         env.comm.dmPath = "http://" + address + "/ajax";
       } else {
@@ -32,7 +32,7 @@ $(document).ready(function () {
           "POSUM not yet ready. Please refresh.");
         return;
       }
-      address = data.smAddress;
+      address = data.addresses.SM;
       if (address) {
         env.comm.smPath = "http://" + address + "/ajax";
       } else {

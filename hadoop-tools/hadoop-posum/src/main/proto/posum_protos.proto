@@ -192,6 +192,8 @@ message LogEntryProto {
         LG_ACTIVE_NODES = 5;
         LG_NODE_ADD = 6;
         LG_NODE_REMOVE = 7;
+        LG_SYSTEM_METRICS = 8;
+        LG_CLUSTER_METRICS = 9;
     }
 }
 
@@ -240,8 +242,8 @@ message RegistrationRequestProto {
     enum PosumProcessProto {
         PROCESS_PM = 0;
         PROCESS_DM = 1;
-        PROCESS_SIMULATOR = 2;
-        PROCESS_SCHEDULER = 3;
+        PROCESS_SM = 2;
+        PROCESS_PS = 3;
     }
 }
 
@@ -271,6 +273,7 @@ enum PayloadTypeProto {
     PLD_SIMPLE_PROPERTY = 5;
     PLD_COLLECTION_MAP = 6;
     PLD_POLICY_INFO_MAP = 7;
+    PLD_PROPERTY_MAP = 8;
 }
 
 message SimplePropertyPayloadProto {
@@ -334,15 +337,6 @@ message StringStringMapPayloadProto {
 
 message PropertyMapPayloadProto {
     repeated SimplePropertyPayloadProto entries = 1;
-}
-
-message PropertyGroupProto {
-    optional string key = 1;
-    optional PropertyMapPayloadProto value = 2;
-}
-
-message PropertyGroupsPayloadProto {
-    repeated PropertyGroupProto groups = 1;
 }
 
 message StringListPayloadProto {

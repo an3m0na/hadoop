@@ -54,7 +54,7 @@ public class HadoopAPIClient {
 
   List<AppProfile> getAppsInfo() {
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.RM, "cluster/apps", new String[]{});
+      RestClient.TrackingUI.RM, "cluster/apps");
     JsonNode rawApps = getRawNode(rawString, "apps", "app");
     if (rawApps == null)
       return Collections.emptyList();
@@ -98,7 +98,7 @@ public class HadoopAPIClient {
 
   boolean checkAppFinished(AppProfile app) {
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.RM, "cluster/apps/%s", new String[]{app.getId()});
+      RestClient.TrackingUI.RM, "cluster/apps/%s", app.getId());
     JsonNode rawApp = getRawNode(rawString, "app");
     if (rawApp == null)
       return false;
@@ -119,7 +119,7 @@ public class HadoopAPIClient {
     String expectedJobId = expectedRealJobId.toString();
 
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.HISTORY, "jobs", new String[]{});
+      RestClient.TrackingUI.HISTORY, "jobs");
     JsonNode rawJobs = getRawNode(rawString, "jobs", "job");
     if (rawJobs == null)
       return null;
@@ -142,7 +142,7 @@ public class HadoopAPIClient {
 
   JobProfile getFinishedJobInfo(String appId, String jobId, JobProfile previousJob) {
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.HISTORY, "jobs/%s", new String[]{jobId});
+      RestClient.TrackingUI.HISTORY, "jobs/%s", jobId);
     JsonNode rawJob = getRawNode(rawString, "job");
     if (rawJob == null)
       return null;
@@ -174,7 +174,7 @@ public class HadoopAPIClient {
 
   JobProfile getRunningJobInfo(String appId, String queue, JobProfile previousJob) {
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.AM, "jobs", new String[]{appId});
+      RestClient.TrackingUI.AM, "jobs", appId);
     JsonNode rawJobs = getRawNode(rawString, "jobs", "job");
     if (rawJobs == null)
       return null;
@@ -203,7 +203,7 @@ public class HadoopAPIClient {
 
   List<TaskProfile> getFinishedTasksInfo(String jobId, List<TaskProfile> previousTasks) {
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.HISTORY, "jobs/%s/tasks", new String[]{jobId});
+      RestClient.TrackingUI.HISTORY, "jobs/%s/tasks", jobId);
     JsonNode rawTasks = getRawNode(rawString, "tasks", "task");
     if (rawTasks == null)
       return Collections.emptyList();
@@ -233,7 +233,7 @@ public class HadoopAPIClient {
 
   List<TaskProfile> getRunningTasksInfo(JobProfile job, List<TaskProfile> previousTasks) {
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.AM, "jobs/%s/tasks", new String[]{job.getAppId(), job.getId()});
+      RestClient.TrackingUI.AM, "jobs/%s/tasks", job.getAppId(), job.getId());
     JsonNode rawTasks = getRawNode(rawString, "tasks", "task");
     if (rawTasks == null)
       return Collections.emptyList();
@@ -263,7 +263,7 @@ public class HadoopAPIClient {
 
   boolean addRunningAttemptInfo(TaskProfile task) {
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.AM, "jobs/%s/tasks/%s/attempts", new String[]{task.getAppId(), task.getJobId(), task.getId()});
+      RestClient.TrackingUI.AM, "jobs/%s/tasks/%s/attempts", task.getAppId(), task.getJobId(), task.getId());
     JsonNode rawAttempts = getRawNode(rawString, "taskAttempts", "taskAttempt");
     if (rawAttempts == null)
       return false;
@@ -290,7 +290,7 @@ public class HadoopAPIClient {
 
   void addFinishedAttemptInfo(TaskProfile task) {
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/attempts", new String[]{task.getJobId(), task.getId()});
+      RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/attempts", task.getJobId(), task.getId());
     JsonNode rawAttempts = getRawNode(rawString, "taskAttempts", "taskAttempt");
     if (rawAttempts == null)
       return;
@@ -315,7 +315,7 @@ public class HadoopAPIClient {
 
   JobConfProxy getFinishedJobConf(String jobId) {
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.HISTORY, "jobs/%s/conf", new String[]{jobId});
+      RestClient.TrackingUI.HISTORY, "jobs/%s/conf", jobId);
     JsonNode rawConf = getRawNode(rawString, "conf");
     if (rawConf == null)
       return null;
@@ -336,7 +336,7 @@ public class HadoopAPIClient {
   CountersProxy getRunningJobCounters(String appId, String jobId) {
     try {
       JobCountersWrapper wrapper = restClient.getInfo(JobCountersWrapper.class,
-        RestClient.TrackingUI.AM, "jobs/%s/counters", new String[]{appId, jobId});
+        RestClient.TrackingUI.AM, "jobs/%s/counters", appId, jobId);
       if (wrapper == null)
         return null;
       wrapper.jobCounters.setLastUpdated(System.currentTimeMillis());
@@ -350,7 +350,7 @@ public class HadoopAPIClient {
   CountersProxy getRunningTaskCounters(String appId, String jobId, String taskId) {
     try {
       TaskCountersWrapper wrapper = restClient.getInfo(TaskCountersWrapper.class,
-        RestClient.TrackingUI.AM, "jobs/%s/tasks/%s/counters", new String[]{appId, jobId, taskId});
+        RestClient.TrackingUI.AM, "jobs/%s/tasks/%s/counters", appId, jobId, taskId);
       if (wrapper == null)
         return null;
       wrapper.jobTaskCounters.setLastUpdated(System.currentTimeMillis());
@@ -365,7 +365,7 @@ public class HadoopAPIClient {
   CountersProxy getFinishedJobCounters(String jobId) {
     try {
       JobCountersWrapper wrapper = restClient.getInfo(JobCountersWrapper.class,
-        RestClient.TrackingUI.HISTORY, "jobs/%s/counters", new String[]{jobId});
+        RestClient.TrackingUI.HISTORY, "jobs/%s/counters", jobId);
       if (wrapper == null)
         return null;
       wrapper.jobCounters.setLastUpdated(System.currentTimeMillis());
@@ -379,7 +379,7 @@ public class HadoopAPIClient {
   CountersProxy getFinishedTaskCounters(String jobId, String taskId) {
     try {
       TaskCountersWrapper wrapper = restClient.getInfo(TaskCountersWrapper.class,
-        RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/counters", new String[]{jobId, taskId});
+        RestClient.TrackingUI.HISTORY, "jobs/%s/tasks/%s/counters", jobId, taskId);
       if (wrapper == null)
         return null;
       wrapper.jobTaskCounters.setLastUpdated(System.currentTimeMillis());

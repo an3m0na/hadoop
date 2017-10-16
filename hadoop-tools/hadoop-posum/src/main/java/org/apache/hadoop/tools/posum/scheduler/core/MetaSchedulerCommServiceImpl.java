@@ -68,7 +68,7 @@ public class MetaSchedulerCommServiceImpl extends CompositeService implements Me
     String connectAddress =
       NetUtils.getConnectAddress(this.metaServer.getListenerAddress()).toString();
     logger.info("Connect address is " + connectAddress);
-    String dmAddress = masterClient.register(Utils.PosumProcess.SCHEDULER,
+    String dmAddress = masterClient.register(Utils.PosumProcess.PS,
       connectAddress.substring(connectAddress.indexOf("/") + 1));
     dataClient = new DataMasterClient(dmAddress);
     dataClient.init(getConfig());

@@ -22,7 +22,7 @@ public class SimulationMasterCommService extends CompositeService implements Sim
 
   private static Log logger = LogFactory.getLog(SimulationMasterCommService.class);
 
-  SimulationMasterContext context;
+  private SimulationMasterContext context;
   private Server simulatorServer;
   private OrchestrationMasterClient masterClient;
   private DataMasterClient dataClient;
@@ -63,7 +63,7 @@ public class SimulationMasterCommService extends CompositeService implements Sim
     String fullAddress =
       NetUtils.getConnectAddress(this.simulatorServer.getListenerAddress()).toString();
     connectAddress = fullAddress.substring(fullAddress.indexOf("/") + 1);
-    String dmAddress = masterClient.register(Utils.PosumProcess.SIMULATOR, connectAddress);
+    String dmAddress = masterClient.register(Utils.PosumProcess.SM, connectAddress);
     dataClient = new DataMasterClient(dmAddress);
     dataClient.init(getConfig());
     addIfService(dataClient);

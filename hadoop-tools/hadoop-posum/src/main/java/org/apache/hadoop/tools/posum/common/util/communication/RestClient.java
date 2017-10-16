@@ -9,9 +9,9 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.jobhistory.JHAdminConfig;
-import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 import javax.ws.rs.core.MediaType;
@@ -34,7 +34,7 @@ public class RestClient {
     RM("ResourceManager", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, "ws/v1/"),
     HISTORY("History", JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_ADDRESS, "ws/v1/history/mapreduce/"),
     AM("ApplicationMaster", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, "proxy/%s/ws/v1/mapreduce/"),
-    PS("PortfolioScheduler", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS + PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT, "/ajax/"),
+    PS("PortfolioScheduler", getHostnameOnly(YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS) + ":" + PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT, "/ajax/"),
     OM("OrchestrationMaster", "http://localhost:" + PosumConfiguration.MASTER_WEBAPP_PORT_DEFAULT, "/ajax/"),
     SM("SimulationMaster", "http://localhost:" + PosumConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT, "/ajax/"),
     DM("DataMaster", "http://localhost:" + PosumConfiguration.DM_WEBAPP_PORT_DEFAULT, "/ajax/");
@@ -66,7 +66,7 @@ public class RestClient {
     public synchronized static boolean checkUpdated(Map<Utils.PosumProcess, String> addresses) {
       if (updated)
         return true;
-      String psAddress = addresses.get(Utils.PosumProcess.SCHEDULER);
+      String psAddress = addresses.get(Utils.PosumProcess.PS);
       if (psAddress == null)
         return false;
       String pmAddress = addresses.get(Utils.PosumProcess.OM);
@@ -75,24 +75,30 @@ public class RestClient {
       String dmAddress = addresses.get(Utils.PosumProcess.DM);
       if (dmAddress == null)
         return false;
-      String smAddress = addresses.get(Utils.PosumProcess.SIMULATOR);
+      String smAddress = addresses.get(Utils.PosumProcess.SM);
       if (smAddress == null)
         return false;
+      String rmAddress = getHostnameOnly(psAddress);
       PS.address = "http://" + psAddress;
       OM.address = "http://" + pmAddress;
       SM.address = "http://" + smAddress;
       DM.address = "http://" + dmAddress;
       //FIXME assuming that the scheduler, the AM proxy and the history server are all on the same node
-      String rmAddress = psAddress.substring(0, psAddress.indexOf(":"));
       RM.address = "http://" + rmAddress + RM.address.substring(RM.address.indexOf(":"));
       HISTORY.address = "http://" + rmAddress + HISTORY.address.substring(HISTORY.address.indexOf(":"));
       AM.address = RM.address;
       updated = true;
       return true;
     }
+
+    private static String getHostnameOnly(String address) {
+      if (address.contains(":"))
+        return address.substring(0, address.indexOf(":"));
+      return address;
+    }
   }
 
-  public <T> T getInfo(Class<T> tClass, TrackingUI trackingUI, String path, String[] args) {
+  public <T> T getInfo(Class<T> tClass, TrackingUI trackingUI, String path, String... args) {
     ClientResponse response;
     String destination = String.format(trackingUI.root + path, (Object[]) args);
     try {
@@ -105,8 +111,8 @@ public class RestClient {
 
       response = resource.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
 
-      if (response.getStatus() != 200 || !response.getType().equals(MediaType.APPLICATION_JSON_TYPE)) {
-        throw new PosumException("Error during request to server: " + resource);
+      if (response.getStatus() != 200 || !response.getType().toString().contains(MediaType.APPLICATION_JSON)) {
+        throw new PosumException("Error during request to server: " + resource + " " + response.getType());
       }
 
       try {

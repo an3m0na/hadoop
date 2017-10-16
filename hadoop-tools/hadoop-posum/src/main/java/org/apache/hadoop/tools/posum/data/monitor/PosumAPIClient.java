@@ -5,9 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.Utils.PosumProcess;
 import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.hadoop.tools.posum.common.util.communication.RestClient.TrackingUI;
 
 public class PosumAPIClient {
 
@@ -21,10 +19,11 @@ public class PosumAPIClient {
     this.conf = conf;
   }
 
-  public Map<String, Object> getSystemMetrics(PosumProcess process){
-    Map<String, Object> map = new HashMap<>();
-
-    return map;
+  public String getSystemMetrics(PosumProcess process){
+    return restClient.getInfo(String.class, TrackingUI.valueOf(process.name()), "system");
   }
 
+  public String getClusterMetrics(){
+    return restClient.getInfo(String.class, TrackingUI.PS, "cluster");
+  }
 }

@@ -148,10 +148,10 @@ public class Utils {
     DM("DataMaster",
       PosumConfiguration.DM_ADDRESS_DEFAULT + ":" + PosumConfiguration.DM_PORT_DEFAULT,
       DataMasterProtocol.class),
-    SIMULATOR("SimulationMaster",
+    SM("SimulationMaster",
       PosumConfiguration.SIMULATOR_ADDRESS_DEFAULT + ":" + PosumConfiguration.SIMULATOR_PORT_DEFAULT,
       SimulatorMasterProtocol.class),
-    SCHEDULER("PortfolioMetaScheduler",
+    PS("PortfolioMetaScheduler",
       PosumConfiguration.SCHEDULER_ADDRESS_DEFAULT + ":" + PosumConfiguration.SCHEDULER_PORT_DEFAULT,
       MetaSchedulerProtocol.class);
 
