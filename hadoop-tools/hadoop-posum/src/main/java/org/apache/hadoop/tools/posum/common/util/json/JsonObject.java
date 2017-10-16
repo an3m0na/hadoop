@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.util.json;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JsonObject extends JsonElement {
@@ -9,6 +10,10 @@ public class JsonObject extends JsonElement {
   public JsonObject() {
     innerElement = mapper.createObjectNode();
     inner = (ObjectNode) innerElement;
+  }
+
+  public JsonObject(ObjectNode node) {
+    inner = node;
   }
 
   public JsonObject put(String property, JsonElement value) {
@@ -45,4 +50,16 @@ public class JsonObject extends JsonElement {
     inner.put(s, aBoolean);
     return this;
   }
+
+  public JsonElement get(String key) {
+    return new JsonElement(inner.get(key));
+  }
+
+  public JsonArray getAsArray(String key) {
+    ArrayNode array = (ArrayNode) inner.get(key);
+    if (array == null)
+      return null;
+    return new JsonArray(array);
+  }
+
 }

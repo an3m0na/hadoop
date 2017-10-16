@@ -13,8 +13,10 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.StringStringMapPayload;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.util.json.JsonArray;
+import org.apache.hadoop.tools.posum.common.util.json.JsonElement;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
 import org.apache.hadoop.tools.posum.data.master.DataMasterContext;
 import org.mortbay.jetty.Handler;
@@ -66,6 +68,12 @@ public class DataMasterWebApp extends PosumWebApp {
                 case "/system":
                   ret = getSystemMetrics();
                   break;
+                case "/system-history":
+                  ret = getHistoricalSystemMetrics();
+                  break;
+                case "/cluster-history":
+                  ret = getHistoricalClusterMetrics();
+                  break;
                 case "/logs":
                   sinceParam = request.getParameter("since");
                   if (sinceParam != null) {
@@ -97,7 +105,7 @@ public class DataMasterWebApp extends PosumWebApp {
                       DatabaseReference.fromName(db)));
                     break;
                   }
-                  ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
+                  ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", call);
               }
             } catch (Exception e) {
               ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), Utils.getErrorTrace(e));
@@ -113,6 +121,48 @@ public class DataMasterWebApp extends PosumWebApp {
         }
       }
     };
+  }
+
+  private JsonNode getHistoricalSystemMetrics() {
+    FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.SYSTEM_METRICS.getCollection(),
+      QueryUtils.is("type", LogEntry.Type.SYSTEM_METRICS), "lastUpdated", false);
+    List<LogEntry<StringStringMapPayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
+    JsonObject ret = new JsonObject();
+    for (LogEntry<StringStringMapPayload> log : logs) {
+      for (Map.Entry<String, String> entry : log.getDetails().getEntries().entrySet()) {
+        JsonArray list = ret.getAsArray(entry.getKey());
+        if (list == null) {
+          list = new JsonArray();
+          ret.put(entry.getKey(), list);
+        }
+        try {
+          JsonNode result = JsonElement.read(entry.getValue()).getNode();
+          if (result != null && result.get("successful").asBoolean())
+            list.add(new JsonElement(result.get("result")));
+        } catch (Exception e) {
+          logger.error("Could not deserialize metrics json " + entry.getValue(), e);
+        }
+      }
+    }
+    return ret.getNode();
+  }
+
+  private JsonNode getHistoricalClusterMetrics() {
+    FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.CLUSTER_METRICS.getCollection(),
+      QueryUtils.is("type", LogEntry.Type.CLUSTER_METRICS), "lastUpdated", false);
+    List<LogEntry<SimplePropertyPayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
+    JsonArray ret = new JsonArray();
+    for (LogEntry<SimplePropertyPayload> log : logs) {
+      String stringResult = (String) log.getDetails().getValue();
+      try {
+        JsonNode result = JsonElement.read(stringResult).getNode();
+        if (result != null && result.get("successful").asBoolean())
+          ret.add(new JsonElement(result.get("result")));
+      } catch (Exception e) {
+        logger.error("Could not deserialize metrics json " + stringResult, e);
+      }
+    }
+    return ret.getNode();
   }
 
   private JsonNode getPolicyMetrics(Long since) {

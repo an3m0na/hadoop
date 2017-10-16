@@ -16,8 +16,8 @@ public interface LogEntry<T extends Payload> extends GeneralDataEntity<LogEntry<
     TASK_PREDICTION(PayloadType.TASK_PREDICTION, DataEntityCollection.PREDICTOR_LOG),
     POLICY_MAP(PayloadType.POLICY_INFO_MAP, DataEntityCollection.POSUM_STATS),
     ACTIVE_NODES(PayloadType.STRING_LIST, DataEntityCollection.POSUM_STATS),
-    SYSTEM_METRICS(PayloadType.STRING_LIST, DataEntityCollection.POSUM_STATS),
-    CLUSTER_METRICS(PayloadType.STRING_LIST, DataEntityCollection.POSUM_STATS);
+    SYSTEM_METRICS(PayloadType.STRING_STRING_MAP, DataEntityCollection.AUDIT_LOG),
+    CLUSTER_METRICS(PayloadType.SIMPLE_PROPERTY, DataEntityCollection.AUDIT_LOG);
 
     @JsonIgnore
     private DataEntityCollection collection;

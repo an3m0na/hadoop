@@ -17,10 +17,12 @@ import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.StringStringMapPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.TaskPredictionPayload;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.util.conf.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
@@ -34,6 +36,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.CLUSTER_METRICS;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.SYSTEM_METRICS;
 
 public class PosumInfoCollector {
 
@@ -82,9 +87,22 @@ public class PosumInfoCollector {
   synchronized void collect() {
     long now = System.currentTimeMillis();
     // get system metrics for pm, dm, sm, ps
-    // store them
-    // get num container, num apps, timecosts from ps
-    // store them
+    Map<String, String> systemMetrics = new HashMap<>(4);
+    for (Utils.PosumProcess posumProcess : Utils.PosumProcess.values()) {
+      String response = api.getSystemMetrics(posumProcess);
+      if (response != null)
+        systemMetrics.put(posumProcess.name(), response);
+    }
+    if (!systemMetrics.isEmpty()) {
+      LogEntry systemMetricsLog = CallUtils.newLogEntry(SYSTEM_METRICS, StringStringMapPayload.newInstance(systemMetrics));
+      logDb.execute(StoreLogCall.newInstance(systemMetricsLog));
+    }
+    String response = api.getClusterMetrics();
+    if (response != null) {
+      LogEntry clusterMetricsLog = CallUtils.newLogEntry(CLUSTER_METRICS, SimplePropertyPayload.newInstance("", response));
+      logDb.execute(StoreLogCall.newInstance(clusterMetricsLog));
+    }
+
     if (continuousPrediction) {
       if (now - lastPrediction > predictionTimeout) {
         // make new predictions

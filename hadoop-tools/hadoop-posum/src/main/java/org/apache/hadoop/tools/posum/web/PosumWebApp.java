@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 
@@ -99,7 +100,7 @@ public class PosumWebApp extends HttpServlet {
   protected void sendResult(HttpServletRequest request,
                             HttpServletResponse response, JsonNode result)
     throws IOException {
-    response.setContentType("text/json");
+    response.setContentType(MediaType.APPLICATION_JSON);
     response.setStatus(HttpServletResponse.SC_OK);
     response.setHeader("Access-Control-Allow-Origin", "*");
     response.setHeader("Access-Control-Allow-Methods", "OPTIONS, GET, POST");
