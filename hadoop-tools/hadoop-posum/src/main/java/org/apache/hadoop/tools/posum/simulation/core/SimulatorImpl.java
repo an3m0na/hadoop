@@ -74,13 +74,11 @@ public class SimulatorImpl extends CompositeService implements Simulator {
 
     List<PendingResult> simulations = new ArrayList<>(policies.size());
     for (Map.Entry<String, Class<? extends PluginPolicy>> policy : policies.entrySet()) {
-      if(policy.getKey().equals("EDLS_SH")) {
-        logger.debug("Starting simulation for " + policy.getKey());
-        Class<? extends PluginPolicy> policyClass = policy.getValue();
-        // TODO add topology
-        SimulationManager simulation = new SimulationManager(predictor, policy.getKey(), policyClass, dataStore, null);
-        simulations.add(new PendingResult(simulation, executor.submit(simulation)));
-      }
+      logger.debug("Starting simulation for " + policy.getKey());
+      Class<? extends PluginPolicy> policyClass = policy.getValue();
+      // TODO add topology
+      SimulationManager simulation = new SimulationManager(predictor, policy.getKey(), policyClass, dataStore, null);
+      simulations.add(new PendingResult(simulation, executor.submit(simulation)));
     }
     resultAggregator = new ResultAggregator(simulations, this);
     executor.execute(resultAggregator);
