@@ -13,7 +13,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.data.mock.data.MockDataStoreImpl;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.fifo.FifoPolicy;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.edls.EDLSSharePolicy;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
@@ -61,8 +61,8 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TestSimulationManager {
-  private static final Class<? extends ResourceScheduler> SCHEDULER_CLASS = FifoPolicy.class;
-  private static final String SCHEDULER_NAME = "FIFO";
+  private static final Class<? extends ResourceScheduler> SCHEDULER_CLASS = EDLSSharePolicy.class;
+  private static final String SCHEDULER_NAME = "EDLS_SH";
   private static final Map<String, String> TOPOLOGY;
 
   static {
@@ -82,18 +82,23 @@ public class TestSimulationManager {
     dataStoreMock = new MockDataStoreImpl();
     Database sourceDb = Database.from(dataStoreMock, DatabaseReference.getSimulation());
 
+    JobProfile job1 = JOB1.copy();
+    job1.setDeadline(0L);
+    JobProfile job2 = JOB2.copy();
+    job2.setDeadline(0L);
+
     JobConfProxy jobConf1 = Records.newRecord(JobConfProxy.class);
-    jobConf1.setId(JOB1.getId());
+    jobConf1.setId(job1.getId());
     Configuration innerConf = new Configuration();
     innerConf.setFloat(MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART, 0.8f);
     jobConf1.setConf(innerConf);
 
     JobConfProxy jobConf2 = jobConf1.copy();
-    jobConf2.setId(JOB2.getId());
+    jobConf2.setId(job2.getId());
 
     TransactionCall transaction = TransactionCall.newInstance()
       .addCall(StoreAllCall.newInstance(APP, Arrays.asList(APP1, APP2)))
-      .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(JOB1, JOB2)))
+      .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(job1, job2)))
       .addCall(StoreAllCall.newInstance(JOB_CONF, Arrays.asList(jobConf1, jobConf2)))
       .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(TASK11, TASK12, TASK21, TASK22)));
     sourceDb.execute(transaction);
@@ -141,14 +146,19 @@ public class TestSimulationManager {
     when(predictorMock.predictTaskBehavior(any(TaskPredictionInput.class)))
       .thenReturn(new TaskPredictionOutput(DURATION_UNIT * 2));
 
+    JobProfile job1 = JOB1.copy();
+    job1.setDeadline(0L);
+    JobProfile job2 = JOB2.copy();
+    job2.setDeadline(0L);
+
     JobConfProxy jobConf1 = Records.newRecord(JobConfProxy.class);
-    jobConf1.setId(JOB1.getId());
+    jobConf1.setId(job1.getId());
     Configuration innerConf = new Configuration();
     innerConf.setFloat(MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART, 0.8f);
     jobConf1.setConf(innerConf);
 
     JobConfProxy jobConf2 = jobConf1.copy();
-    jobConf2.setId(JOB2.getId());
+    jobConf2.setId(job2.getId());
 
     TaskProfile task11 = TASK11.copy(), task12 = TASK12.copy(), task21 = TASK21.copy(), task22 = TASK22.copy();
     task11.setStartTime(null);
@@ -161,7 +171,7 @@ public class TestSimulationManager {
     task22.setFinishTime(null);
 
     TransactionCall transaction = TransactionCall.newInstance()
-      .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(JOB1, JOB2)))
+      .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(job1, job2)))
       .addCall(StoreAllCall.newInstance(JOB_CONF, Arrays.asList(jobConf1, jobConf2)))
       .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(task11, task12)))
       .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(task21, task22)));

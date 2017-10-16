@@ -146,6 +146,7 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     }
 
     db.execute(transaction);
+    db.notifyUpdate();
     LOG.trace(MessageFormat.format("App submitted. {0} becomes {1}", oldAppId, appId));
   }
 }
