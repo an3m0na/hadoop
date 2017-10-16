@@ -55,7 +55,8 @@ public class PosumInfoCollector {
   private Long predictionTimeout = 0L;
   private Long schedulingStart = 0L;
   private String lastUsedPolicy;
-  private boolean continuousPrediction = false;
+  private boolean fineGrained;
+  private boolean continuousPrediction;
   private JobBehaviorPredictor basicPredictor;
   private JobBehaviorPredictor standardPredictor;
   private JobBehaviorPredictor detailedPredictor;
@@ -64,6 +65,8 @@ public class PosumInfoCollector {
     this.dataStore = dataStore;
     this.logDb = Database.from(dataStore, DatabaseReference.getLogs());
     this.conf = conf;
+    fineGrained = conf.getBoolean(PosumConfiguration.FINE_GRAINED_MONITOR,
+      PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
     continuousPrediction = conf.getBoolean(PosumConfiguration.CONTINUOUS_PREDICTION,
       PosumConfiguration.CONTINUOUS_PREDICTION_DEFAULT);
     api = new PosumAPIClient(conf);
@@ -86,21 +89,23 @@ public class PosumInfoCollector {
 
   synchronized void collect() {
     long now = System.currentTimeMillis();
-    // get system metrics for pm, dm, sm, ps
-    Map<String, String> systemMetrics = new HashMap<>(4);
-    for (Utils.PosumProcess posumProcess : Utils.PosumProcess.values()) {
-      String response = api.getSystemMetrics(posumProcess);
-      if (response != null)
-        systemMetrics.put(posumProcess.name(), response);
-    }
-    if (!systemMetrics.isEmpty()) {
-      LogEntry systemMetricsLog = CallUtils.newLogEntry(SYSTEM_METRICS, StringStringMapPayload.newInstance(systemMetrics));
-      logDb.execute(StoreLogCall.newInstance(systemMetricsLog));
-    }
-    String response = api.getClusterMetrics();
-    if (response != null) {
-      LogEntry clusterMetricsLog = CallUtils.newLogEntry(CLUSTER_METRICS, SimplePropertyPayload.newInstance("", response));
-      logDb.execute(StoreLogCall.newInstance(clusterMetricsLog));
+
+    if(fineGrained) {
+      Map<String, String> systemMetrics = new HashMap<>(4);
+      for (Utils.PosumProcess posumProcess : Utils.PosumProcess.values()) {
+        String response = api.getSystemMetrics(posumProcess);
+        if (response != null)
+          systemMetrics.put(posumProcess.name(), response);
+      }
+      if (!systemMetrics.isEmpty()) {
+        LogEntry systemMetricsLog = CallUtils.newLogEntry(SYSTEM_METRICS, StringStringMapPayload.newInstance(systemMetrics));
+        logDb.execute(StoreLogCall.newInstance(systemMetricsLog));
+      }
+      String response = api.getClusterMetrics();
+      if (response != null) {
+        LogEntry clusterMetricsLog = CallUtils.newLogEntry(CLUSTER_METRICS, SimplePropertyPayload.newInstance("", response));
+        logDb.execute(StoreLogCall.newInstance(clusterMetricsLog));
+      }
     }
 
     if (continuousPrediction) {

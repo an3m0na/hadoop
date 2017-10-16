@@ -122,6 +122,9 @@ public class PosumConfiguration {
   public static final String SCHEDULER_METRICS_ON = SCHEDULER_PREFIX + "metrics.on";
   public static final boolean SCHEDULER_METRICS_ON_DEFAULT = true;
 
+  public static final String FINE_GRAINED_MONITOR = MONITOR_PREFIX + "fine-grained";
+  public static final boolean FINE_GRAINED_MONITOR_DEFAULT = true;
+
   public static final String CONTINUOUS_PREDICTION = MONITOR_PREFIX + "continuous-prediction";
   public static final boolean CONTINUOUS_PREDICTION_DEFAULT = false;
 
