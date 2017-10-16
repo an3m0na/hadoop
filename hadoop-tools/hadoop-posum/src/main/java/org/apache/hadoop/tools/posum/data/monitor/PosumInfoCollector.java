@@ -162,8 +162,7 @@ public class PosumInfoCollector {
         QueryUtils.greaterThan("lastUpdated", lastCollectTime),
         QueryUtils.lessThanOrEqual("lastUpdated", now)
       ));
-    List<LogEntry<SimplePropertyPayload>> nodeChanges =
-      logDb.execute(findNodeChanges).getEntities();
+    List<LogEntry<SimplePropertyPayload>> nodeChanges = logDb.execute(findNodeChanges).getEntities();
     if (nodeChanges.size() > 0) {
       for (LogEntry<SimplePropertyPayload> nodeChange : nodeChanges) {
         String hostName = (String) nodeChange.getDetails().getValue();

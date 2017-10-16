@@ -351,6 +351,7 @@ public abstract class SimpleQueuePolicy<
 
   @Override
   public void handle(SchedulerEvent event) {
+    super.handle(event);
     switch (event.getType()) {
       case NODE_ADDED:
         if (!(event instanceof NodeAddedSchedulerEvent)) {

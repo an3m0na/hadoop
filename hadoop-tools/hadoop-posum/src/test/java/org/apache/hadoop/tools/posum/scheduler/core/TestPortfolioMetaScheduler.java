@@ -22,7 +22,6 @@ import static org.apache.hadoop.tools.posum.common.util.conf.PolicyPortfolio.Sta
 import static org.apache.hadoop.tools.posum.common.util.conf.PolicyPortfolio.StandardPolicy.LOCF;
 import static org.apache.hadoop.tools.posum.common.util.conf.PolicyPortfolio.StandardPolicy.SRTF;
 import static org.hamcrest.Matchers.lessThan;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -279,6 +278,52 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
   }
 
   @Test
+  public void testSimpleToCapacity() throws YarnException, InterruptedException, IOException {
+    conf.set(PosumConfiguration.DEFAULT_POLICY, LOCF.name());
+    conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.999f); // deadlines always have priority
+    conf.setFloat(PosumConfiguration.MAX_AM_RATIO, 0.75f); // max 3 active apps per queue (or only 1 if EDLS_PR)
+    conf.setLong(PosumConfiguration.REPRIORITIZE_INTERVAL, 0); // always re-evaluate priorities
+
+    startRM();
+    registerNodes(3);
+
+    submitApp(1, 40);
+    submitAppToNode(2, 2, Locality.NODE_LOCAL);
+    submitApp(3, 10);
+    submitAppToNode(4, 0, Locality.NODE_LOCAL);
+
+    Thread.sleep(1000);
+
+    sendNodeUpdate(0);
+    sendNodeUpdate(1);
+
+    assertThat(getAMNodeIndex(1), is(0));
+    assertThat(getAMNodeIndex(2), is(-1));
+    assertThat(getAMNodeIndex(3), is(1));
+    assertThat(getAMNodeIndex(4), is(0));
+
+    assertThat(countAppsInQueue("default"), is(4));
+    assertThat(countRMApps(), is(4));
+
+    scheduler.changeToPolicy(EDLS_SH.name());
+
+    assertThat(countAppsInQueue("batch"), is(2));
+    assertThat(countAppsInQueue("deadline"), is(2));
+    assertThat(countRMApps(), is(4));
+
+    sendNodeUpdate(2);
+
+    assertThat(getAMNodeIndex(2), is(-1)); // would exceed batch limit
+
+    finishApp(4);
+    Thread.sleep(1000);
+
+    sendNodeUpdate(1);
+
+    assertThat(getAMNodeIndex(2), is(1)); // now it can run
+  }
+
+  @Test
   public void testFullCircle() throws YarnException, InterruptedException, IOException {
     conf.set(PosumConfiguration.DEFAULT_POLICY, EDLS_PR.name());
     conf.setFloat(PosumConfiguration.DC_PRIORITY, 0.999f); // deadlines always have priority
@@ -321,10 +366,10 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     db.execute(UpdateOrStoreCall.newInstance(JOB, job2));
     db.execute(UpdateOrStoreCall.newInstance(JOB, job3));
 
+    Thread.sleep(1000);
+
     sendNodeUpdate(0);
     sendNodeUpdate(1);
-
-    Thread.sleep(1000);
 
     assertThat(getAMNodeIndex(3), is(0)); // both dc and low deadline; should go first
     assertThat(getAMNodeIndex(1), is(1)); // would exceed dc limit
@@ -342,8 +387,6 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
 
     sendNodeUpdate(0);
     sendNodeUpdate(1);
-
-    Thread.sleep(1000);
 
     assertThat(getAMNodeIndex(4), is(0)); // node local, so it has priority
     assertThat(getAMNodeIndex(2), is(-1)); // still waiting for node update of 2
@@ -368,8 +411,6 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     sendNodeUpdate(1);
     sendNodeUpdate(2);
 
-    Thread.sleep(1000);
-
     if (container1 == null)
       container1 = checkAllocation(getApp(1));
     if (container2 == null)
@@ -385,6 +426,8 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
 
     submitAppToNode(5, 2, Locality.NODE_LOCAL);
 
+    Thread.sleep(1000);
+
     assertThat(countAppsInQueue("batch"), is(3));
     assertThat(countAppsInQueue("deadline"), is(2));
     assertThat(countRMApps(), is(5));
@@ -392,8 +435,6 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     sendNodeUpdate(0);
     sendNodeUpdate(1);
     sendNodeUpdate(2);
-
-    Thread.sleep(1000);
 
     assertThat(getAMNodeIndex(5), is(-1)); // every node is full
 

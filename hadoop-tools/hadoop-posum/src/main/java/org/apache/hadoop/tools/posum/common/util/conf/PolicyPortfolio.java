@@ -45,7 +45,7 @@ public class PolicyPortfolio extends HashMap<String, Class<? extends PluginPolic
           put(entryParts[0], resolveImplClass(conf, entryParts[1]));
         }
       } catch (Exception e) {
-        throw new PosumException("Could not parse policy map");
+        throw new PosumException("Could not parse policy map", e);
       }
     } else {
       for (StandardPolicy policy : StandardPolicy.values()) {

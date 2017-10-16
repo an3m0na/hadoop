@@ -7,10 +7,10 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
-import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicyState;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginSchedulerNode;
@@ -376,7 +376,6 @@ public abstract class ExtensibleCapacityScheduler<
 
   public SchedulerApplication<A> moveApplicationReference(ApplicationId appId,
                                                           SchedulerApplication<? extends SchedulerApplicationAttempt> app,
-                                                          LeafQueue source,
                                                           String targetQueueName) throws YarnException {
     SchedulerApplicationAttempt appAttempt = app.getCurrentAppAttempt();
     String destQueueName = invokeMethod("handleMoveToPlanQueue", new Class<?>[]{String.class}, targetQueueName);
@@ -403,14 +402,10 @@ public abstract class ExtensibleCapacityScheduler<
       }
       // Move all live containers
       for (RMContainer rmContainer : newAppAttempt.getLiveContainers()) {
-        source.detachContainer(getClusterResource(), newAppAttempt, rmContainer);
         // attach the Container to another queue
         dest.attachContainer(getClusterResource(), newAppAttempt, rmContainer);
       }
-      // Detach the application..
-      source.finishApplicationAttempt(newAppAttempt, sourceQueueName);
-      source.getParent().finishApplication(appId, newAppAttempt.getUser());
-      // Finish app & addSource metrics
+      // Update metrics
       newAppAttempt.move(dest);
       // Calculate its priority given the new scheduler
       updateAppPriority(newAppAttempt);
@@ -903,6 +898,12 @@ public abstract class ExtensibleCapacityScheduler<
       for (Map.Entry<NodeId, T> nodeEntry : state.getNodes().entrySet()) {
         T node = nodeEntry.getValue();
         newNodes.put(nodeEntry.getKey(), FiCaPluginSchedulerNode.getInstance(nClass, node));
+        // update this node to node label manager
+        RMNodeLabelsManager labelManager = getLabelManager();
+        if (labelManager != null) {
+          labelManager.activateNode(node.getNodeID(),
+            node.getTotalResource());
+        }
         updateMaximumAllocation(node, true);
       }
 
@@ -916,14 +917,14 @@ public abstract class ExtensibleCapacityScheduler<
         state.getApplications().entrySet()) {
         ApplicationId appId = appEntry.getKey();
         SchedulerApplication<? extends SchedulerApplicationAttempt> app = appEntry.getValue();
-        LeafQueue oldQueue = (LeafQueue) app.getQueue();
-        String newQueueName = resolveMoveQueue(oldQueue.getQueuePath(), appId, app.getUser());
+        Queue oldQueue = app.getQueue();
+        String newQueueName = resolveMoveQueue(oldQueue.getQueueName(), appId, app.getUser());
         try {
           //build a new scheduler application based on the old one
-          myApps.put(appId, moveApplicationReference(appId, app, oldQueue, newQueueName));
+          myApps.put(appId, moveApplicationReference(appId, app, newQueueName));
         } catch (Exception e) {
           throw new PosumException("Could not move " + appId.toString() +
-            " from " + oldQueue.getQueuePath() + " to " + newQueueName, e);
+            " from " + oldQueue.getQueueName() + " to " + newQueueName, e);
         }
       }
     }
