@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.simulation.core.daemon;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 
 import javax.annotation.Nonnull;
@@ -51,19 +52,22 @@ public abstract class WorkerDaemon implements Daemon {
   public final void run() {
     try {
       if (nextRun == startTime) {
+        LOG.debug("Worker doing first step " + this);
         doFirstStep();
       } else {
+        LOG.debug("Worker doing step " + this);
         doStep();
       }
       if (isFinished()) {
+        LOG.debug("Worker finished " + this);
         cleanUp();
         simulationContext.getDaemonQueue().evict(this);
       } else {
-        nextRun += repeatInterval;
+        nextRun = Math.max(simulationContext.getCurrentTime(), nextRun + repeatInterval);
         simulationContext.getDaemonQueue().enqueue(this);
       }
     } catch (Exception e) {
-      LOG.debug("Error running worker daemon ", e);
+      throw new PosumException("Error running worker daemon " + this, e);
     }
   }
 

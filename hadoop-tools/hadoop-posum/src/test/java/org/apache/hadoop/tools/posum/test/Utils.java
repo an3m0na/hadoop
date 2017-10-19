@@ -74,11 +74,13 @@ public class Utils {
     JOB1.setAppId(APP1.getId());
     JOB1.setName(APP1.getName());
     JOB1.setUser(APP1.getUser());
+    JOB1.setSubmitTime(APP1.getStartTime());
     JOB1.setQueue(QUEUE);
     JOB1.setTotalMapTasks(1);
     JOB1.setTotalReduceTasks(1);
     JOB1.setStartTime(APP1.getStartTime());
     JOB1.setFinishTime(APP1.getFinishTime());
+    JOB1.setLastUpdated(APP1.getStartTime());
 
     TASK11.setId(TASK11_ID.toString());
     TASK11.setJobId(JOB1.getId());
@@ -105,11 +107,13 @@ public class Utils {
     JOB2.setAppId(APP2.getId());
     JOB2.setName(APP2.getName());
     JOB2.setUser(APP2.getUser());
+    JOB2.setSubmitTime(APP2.getStartTime());
     JOB2.setQueue(QUEUE);
     JOB2.setTotalMapTasks(2);
     JOB2.setTotalReduceTasks(0);
     JOB2.setStartTime(APP2.getStartTime());
     JOB2.setFinishTime(APP2.getFinishTime());
+    JOB2.setLastUpdated(APP2.getStartTime());
 
     TASK21.setId(TASK21_ID.toString());
     TASK21.setJobId(JOB2.getId());
@@ -136,11 +140,13 @@ public class Utils {
     JOB3.setAppId(APP3.getId());
     JOB3.setName(APP3.getName());
     JOB3.setUser(APP3.getUser());
+    JOB3.setSubmitTime(APP3.getStartTime());
     JOB3.setQueue(QUEUE);
     JOB3.setTotalMapTasks(3);
     JOB3.setTotalReduceTasks(2);
     JOB3.setStartTime(APP3.getStartTime());
     JOB3.setFinishTime(APP3.getFinishTime());
+    JOB3.setLastUpdated(APP3.getStartTime());
   }
 
   public static void loadThreeDefaultAppsAndJobs(Database db) {

@@ -4,9 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
-import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
@@ -19,7 +17,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaS
 
 import java.util.Comparator;
 
-import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.DOT;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.MAXIMUM_APPLICATIONS_SUFFIX;
@@ -116,13 +113,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
           // something went wrong; do nothing
           return;
         app.setJobId(job.getId());
-        Long submitTime = job.getSubmitTime();
-        if (submitTime == null) {
-          AppProfile appProfile = dbProvider.getDatabase().execute(FindByIdCall.newInstance(APP, appId)).getEntity();
-          if (appProfile != null)
-            submitTime = appProfile.getStartTime();
-        }
-        app.setSubmitTime(submitTime);
+        app.setSubmitTime(job.getSubmitTime());
         app.setType(orZero(job.getDeadline()) == 0 ? EDLSAppAttempt.Type.BC : EDLSAppAttempt.Type.DC);
         app.setDeadline(job.getDeadline());
       }
