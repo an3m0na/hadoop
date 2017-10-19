@@ -20,14 +20,14 @@ public class SimulationContext implements DatabaseProvider {
   private DaemonQueue daemonQueue;
   private Configuration conf = PosumConfiguration.newInstance();
   private Class<? extends ResourceScheduler> schedulerClass;
-  private long startTime = 0;
-  private long endTime = 0;
   private TopologyProvider topologyProvider;
   private Database database;
   private Database sourceDatabase;
   private Dispatcher dispatcher = new SimpleDispatcher();
   private JobBehaviorPredictor predictor;
   private boolean awaitingScheduler;
+  private boolean onlineSimulation;
+  private long clusterTimeAtStart;
 
   public long getCurrentTime() {
     return currentTime;
@@ -77,14 +77,6 @@ public class SimulationContext implements DatabaseProvider {
     this.schedulerClass = schedulerClass;
   }
 
-  public long getEndTime() {
-    return endTime;
-  }
-
-  public void setEndTime(long endTime) {
-    this.endTime = endTime;
-  }
-
   public void setDatabase(Database database) {
     this.database = database;
   }
@@ -125,12 +117,20 @@ public class SimulationContext implements DatabaseProvider {
     return awaitingScheduler;
   }
 
-  public long getStartTime() {
-    return startTime;
+  public boolean isOnlineSimulation() {
+    return onlineSimulation;
   }
 
-  public void setStartTime(long startTime) {
-    this.startTime = startTime;
+  public void setOnlineSimulation(boolean onlineSimulation) {
+    this.onlineSimulation = onlineSimulation;
+  }
+
+  public long getClusterTimeAtStart() {
+    return clusterTimeAtStart;
+  }
+
+  public void setClusterTimeAtStart(long clusterTimeAtStart) {
+    this.clusterTimeAtStart = clusterTimeAtStart;
   }
 
   @Override
@@ -141,14 +141,14 @@ public class SimulationContext implements DatabaseProvider {
       ", daemonQueue=" + daemonQueue +
       ", conf=" + conf +
       ", schedulerClass=" + schedulerClass +
-      ", startTime=" + startTime +
-      ", endTime=" + endTime +
       ", topologyProvider=" + topologyProvider +
       ", database=" + database +
       ", sourceDatabase=" + sourceDatabase +
       ", dispatcher=" + dispatcher +
       ", predictor=" + predictor +
       ", awaitingScheduler=" + awaitingScheduler +
+      ", onlineSimulation=" + onlineSimulation +
+      ", clusterTimeAtStart=" + clusterTimeAtStart +
       '}';
   }
 }

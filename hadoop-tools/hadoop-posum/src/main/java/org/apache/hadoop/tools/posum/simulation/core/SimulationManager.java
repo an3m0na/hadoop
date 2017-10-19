@@ -40,30 +40,30 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     FindByQueryCall.newInstance(JOB, null, "lastUpdated", true, 0, 1);
   private SimulationContext simulationContext;
 
-
   SimulationManager(JobBehaviorPredictor predictor,
                     String policyName,
                     Class<? extends ResourceScheduler> policyClass,
                     DataStore dataStore,
-                    Map<String, String> topology) {
+                    Map<String, String> topology,
+                    boolean onlineSimulation) {
     this.predictor = predictor;
     this.policyName = policyName;
     this.policyClass = policyClass;
     this.dataStore = dataStore;
-    this.stats = new SimulationStatistics();
-    this.simulationContext = new SimulationContext();
+    stats = new SimulationStatistics();
+    simulationContext = new SimulationContext();
     TopologyProvider topologyProvider = topology == null ? new TopologyProvider(simulationContext.getConf(), dataStore) :
       new TopologyProvider(topology);
-    this.simulationContext.setTopologyProvider(topologyProvider);
+    simulationContext.setTopologyProvider(topologyProvider);
+    simulationContext.setOnlineSimulation(onlineSimulation);
   }
 
-  public String getPolicyName(){
+  public String getPolicyName() {
     return policyName;
   }
 
   private void setUp() {
     simulationContext.setSchedulerClass(policyClass);
-    simulationContext.setStartTime(System.currentTimeMillis());
 
     sourceDb = Database.from(dataStore, DatabaseReference.getSimulation());
     simulationContext.setSourceDatabase(sourceDb);
@@ -75,6 +75,7 @@ class SimulationManager implements Callable<SimulationResultPayload> {
 
     simulationContext.setPredictor(predictor);
     stats.setStartTimeCluster(getLastUpdated());
+    simulationContext.setCurrentTime(stats.getStartTimeCluster());
     stats.setStartTimePhysical(System.currentTimeMillis());
 
     simulationContext.getDispatcher().register(ContainerEventType.class, new ContainerMonitor(simulationContext, db));
@@ -82,7 +83,7 @@ class SimulationManager implements Callable<SimulationResultPayload> {
   }
 
   private void tearDown() {
-    stats.setEndTimeCluster(stats.getStartTimeCluster() + simulationContext.getEndTime());
+    stats.setEndTimeCluster(stats.getStartTimeCluster() + simulationContext.getCurrentTime());
     stats.setEndTimePhysical(System.currentTimeMillis());
     //TODO log stats
   }
@@ -108,10 +109,10 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     } catch (InterruptedException e) {
       if (!exit)
         // exiting was not intentional
-        logger.error("Simulation was interrupted unexpectedly", e);
+        logger.error("Simulation for " + policyName + "was interrupted unexpectedly", e);
       return SimulationResultPayload.newInstance(policyName, null);
     } catch (Exception e) {
-      logger.error("Error during simulation. Shutting down simulation...", e);
+      logger.error("Error during simulation for " + policyName + ". Shutting down simulation...", e);
       return SimulationResultPayload.newInstance(policyName, null);
     } finally {
       tearDown();

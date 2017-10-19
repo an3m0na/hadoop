@@ -89,6 +89,8 @@ class JobInfoCollector {
     }
     if (profile == null)
       throw new RuntimeException("Profile data could not be retrieved at all for " + app.getId());
+    if(profile.getSubmitTime() == null)
+      profile.setSubmitTime(app.getStartTime());
     if (databaseDeadlines && profile.getDeadline() == null) {
       setDatabaseDeadline(profile);
     }

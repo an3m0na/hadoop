@@ -21,12 +21,12 @@ import org.apache.hadoop.yarn.api.records.NodeState;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,19 +54,20 @@ import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.
 public class SimulationRunner {
   private final static Logger LOG = Logger.getLogger(SimulationRunner.class);
   private static final String HOST_BASE = "192.168.1."; // needed because hostnames need to be resolvable
-  private static final IdsByQueryCall GET_STARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.isNot("startTime", null), "startTime", false);
-  private static final IdsByQueryCall GET_NOTSTARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("startTime", null));
-  private static final FindByIdCall GET_JOB = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
-  private static final FindByIdCall GET_CONF = FindByIdCall.newInstance(DataEntityCollection.JOB_CONF, null);
-  private static final FindByQueryCall GET_TASKS = FindByQueryCall.newInstance(DataEntityCollection.TASK, null);
+  private final IdsByQueryCall GET_STARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.isNot("startTime", null), "submitTime", false);
+  private final IdsByQueryCall GET_NOTSTARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("startTime", null));
+  private final FindByIdCall GET_JOB = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
+  private final FindByIdCall GET_CONF = FindByIdCall.newInstance(DataEntityCollection.JOB_CONF, null);
+  private final FindByQueryCall GET_TASKS = FindByQueryCall.newInstance(DataEntityCollection.TASK, null);
 
-  private ResourceManager rm;
+  private SimulationResourceManager rm;
   private DaemonPool daemonPool;
   private SimulationContext context;
   private Configuration conf;
   private Map<String, String> simulationHostNames;
   private Resource containerResource;
   private Map<NodeId, NMDaemon> nmMap;
+  private Map<String, AMDaemon> amMap;
 
 
   public SimulationRunner(SimulationContext context) throws IOException, ClassNotFoundException {
@@ -82,6 +83,7 @@ public class SimulationRunner {
     LOG.info("SimulationRunner starting for " + context.getSchedulerClass().getSimpleName());
 
     startRM();
+    prepareAMs();
     queueNMs();
     queueAMs();
 
@@ -90,11 +92,78 @@ public class SimulationRunner {
 
     daemonPool.start();
     context.getRemainingJobsCounter().await();
-    context.setEndTime(context.getCurrentTime());
     daemonPool.shutDown();
 
     LOG.info("SimulationRunner finished for " + context.getSchedulerClass().getSimpleName());
   }
+
+  private void prepareAMs() throws YarnException, IOException {
+    int heartbeatInterval = conf.getInt(AM_DAEMON_HEARTBEAT_INTERVAL_MS, AM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT);
+
+    Map<String, Integer> queueAppNumMap = new HashMap<>();
+
+    Database sourceDb = context.getSourceDatabase();
+
+    List<String> jobIds = new ArrayList<>(sourceDb.execute(GET_STARTED_JOBS).getEntries());
+    jobIds.addAll(sourceDb.execute(GET_NOTSTARTED_JOBS).getEntries());
+    amMap = new HashMap<>(jobIds.size());
+
+    LOG.trace(MessageFormat.format("Sim={0}: Adding AMs for jobs {1}", context.getSchedulerClass().getSimpleName(), jobIds));
+    for (String jobId : jobIds) {
+      GET_JOB.setId(jobId);
+      JobProfile job = sourceDb.execute(GET_JOB).getEntity();
+      long jobSubmitTime = job.getSubmitTime();
+      if (context.getClusterTimeAtStart() == 0) {
+        context.setClusterTimeAtStart(jobSubmitTime);
+        context.setCurrentTime(context.isOnlineSimulation() ? context.getCurrentTime() - jobSubmitTime : 0);
+      }
+      jobSubmitTime -= context.getClusterTimeAtStart();
+      if (jobSubmitTime < 0) {
+        LOG.warn(MessageFormat.format("Sim={0}: Warning: reset job {1} start time to 0", job.getId()));
+        jobSubmitTime = 0;
+      }
+
+      String user = job.getUser();
+      String queue = job.getQueue();
+      String appId = job.getAppId();
+      int queueSize = queueAppNumMap.containsKey(queue) ? queueAppNumMap.get(queue) : 0;
+      queueSize++;
+      queueAppNumMap.put(queue, queueSize);
+
+      GET_CONF.setId(job.getId());
+      JobConfProxy jobConf = sourceDb.execute(GET_CONF).getEntity();
+      float slowStartRatio = jobConf.getConf().getFloat(COMPLETED_MAPS_FOR_REDUCE_SLOWSTART,
+        DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART);
+
+      MRAMDaemon amSim = new MRAMDaemon(context);
+      amSim.init(heartbeatInterval, createContainers(jobId), rm, jobSubmitTime, user, queue, appId, slowStartRatio);
+      amMap.put(appId, amSim);
+    }
+
+    LOG.trace(MessageFormat.format("Sim={0}: Cluster time at start is {1}", context.getSchedulerClass().getSimpleName(), context.getClusterTimeAtStart()));
+    LOG.trace(MessageFormat.format("Sim={0}: Simulation start time is {1}", context.getSchedulerClass().getSimpleName(), context.getCurrentTime()));
+    context.setRemainingJobsCounter(new CountDownLatch(amMap.size()));
+  }
+
+  private List<SimulatedContainer> createContainers(String jobId) {
+    List<SimulatedContainer> ret = new ArrayList<>();
+
+    GET_TASKS.setQuery(QueryUtils.is("jobId", jobId));
+    List<TaskProfile> jobTasks = context.getSourceDatabase().execute(GET_TASKS).getEntities();
+
+    for (TaskProfile task : jobTasks) {
+      if (!context.isOnlineSimulation() || task.getFinishTime() == null) { // only schedule unfinished tasks if simulating online
+        Long taskStart = task.getStartTime();
+        Long taskFinish = task.getFinishTime();
+        Long lifeTime = taskStart != null && taskFinish != null ? taskFinish - taskStart : null;
+        int priority = 0;
+        String type = task.getType() == MAP ? "map" : "reduce";
+        ret.add(new SimulatedContainer(context, containerResource, lifeTime, priority, type, task.getId(), task.getSplitLocations()));
+      }
+    }
+    return ret;
+  }
+
 
   private void startRM() throws IOException, ClassNotFoundException {
     rm = new SimulationResourceManager(context);
@@ -135,6 +204,12 @@ public class SimulationRunner {
     return newHostname;
   }
 
+  private void queueAMs() {
+    for (AMDaemon amDaemon : amMap.values()) {
+      daemonPool.schedule(amDaemon);
+    }
+  }
+
   private void waitForNodesRunning() throws InterruptedException {
     while (true) {
       int numRunningNodes = 0;
@@ -149,71 +224,4 @@ public class SimulationRunner {
       Thread.sleep(100);
     }
   }
-
-  private void queueAMs() throws YarnException, IOException {
-    // application/container configuration
-    int heartbeatInterval = conf.getInt(AM_DAEMON_HEARTBEAT_INTERVAL_MS, AM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT);
-
-
-    Map<String, Integer> queueAppNumMap = new HashMap<>();
-
-    Database sourceDb = context.getSourceDatabase();
-
-    List<String> jobIds = new ArrayList<>(sourceDb.execute(GET_STARTED_JOBS).getEntries());
-    jobIds.addAll(sourceDb.execute(GET_NOTSTARTED_JOBS).getEntries());
-    Map<String, AMDaemon> amMap = new HashMap<>(jobIds.size());
-
-    long baselineTime = 0;
-    for (String jobId : jobIds) {
-      // load job information
-      GET_JOB.setId(jobId);
-      JobProfile job = sourceDb.execute(GET_JOB).getEntity();
-      long jobStartTime = job.getStartTime() == null ? baselineTime : job.getStartTime();
-      if (baselineTime == 0)
-        baselineTime = jobStartTime;
-      jobStartTime -= baselineTime;
-      if (jobStartTime < 0) {
-        LOG.warn("Warning: reset job " + job.getId() + " start time to 0.");
-        jobStartTime = 0;
-      }
-
-      String user = job.getUser();
-      String queue = job.getQueue();
-      String appId = job.getAppId();
-      int queueSize = queueAppNumMap.containsKey(queue) ? queueAppNumMap.get(queue) : 0;
-      queueSize++;
-      queueAppNumMap.put(queue, queueSize);
-
-      GET_CONF.setId(job.getId());
-      JobConfProxy jobConf = sourceDb.execute(GET_CONF).getEntity();
-      float slowStartRatio = jobConf.getConf().getFloat(COMPLETED_MAPS_FOR_REDUCE_SLOWSTART,
-        DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART);
-
-      // create a new AM
-      MRAMDaemon amSim = new MRAMDaemon(context);
-      amSim.init(heartbeatInterval, createContainers(jobId), rm, jobStartTime, user, queue, appId, slowStartRatio);
-      daemonPool.schedule(amSim);
-      amMap.put(appId, amSim);
-    }
-
-    context.setRemainingJobsCounter(new CountDownLatch(amMap.size()));
-  }
-
-  private List<SimulatedContainer> createContainers(String jobId) {
-    List<SimulatedContainer> ret = new ArrayList<>();
-
-    GET_TASKS.setQuery(QueryUtils.is("jobId", jobId));
-    List<TaskProfile> jobTasks = context.getSourceDatabase().execute(GET_TASKS).getEntities();
-
-    for (TaskProfile task : jobTasks) {
-      Long taskStart = task.getStartTime();
-      Long taskFinish = task.getFinishTime();
-      Long lifeTime = taskStart != null && taskFinish != null ? taskFinish - taskStart : null;
-      int priority = 0;
-      String type = task.getType() == MAP ? "map" : "reduce";
-      ret.add(new SimulatedContainer(context, containerResource, lifeTime, priority, type, task.getId(), task.getSplitLocations()));
-    }
-    return ret;
-  }
-
 }

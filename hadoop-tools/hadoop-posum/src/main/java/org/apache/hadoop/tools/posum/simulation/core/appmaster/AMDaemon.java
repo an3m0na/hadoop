@@ -57,20 +57,20 @@ public abstract class AMDaemon extends WorkerDaemon {
    */
   @Override
   public void doFirstStep() throws Exception {
-    LOG.trace("Submitting app for " + oldAppId);
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: Submitting app for {2}", simulationContext.getSchedulerClass().getSimpleName(), oldAppId));
     core.submit();
     simulationContext.getDispatcher().getEventHandler()
       .handle(new ApplicationEvent(APPLICATION_SUBMITTED, oldAppId, core.getAppId()));
 
-    LOG.trace(MessageFormat.format("T={0}: Registering a new application {1}", simulationContext.getCurrentTime(), core.getAppId()));
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: Registering a new application {2}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
     core.registerWithRM();
-    LOG.trace(MessageFormat.format("T={0}: Application {1} is registered", simulationContext.getCurrentTime(), core.getAppId()));
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} is registered", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
 
     requestAMContainer();
   }
 
   private void requestAMContainer() throws YarnException, IOException, InterruptedException {
-    LOG.trace(MessageFormat.format("T={0}: Application {1} sends out allocate request for its AM", simulationContext.getCurrentTime(), core.getAppId()));
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for its AM", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
     AllocateResponse response = core.requestContainer();
     if (response != null) {
       responseQueue.put(response);
@@ -88,7 +88,7 @@ public abstract class AMDaemon extends WorkerDaemon {
 
   @Override
   public void cleanUp() throws Exception {
-    LOG.trace(MessageFormat.format("T={0}: Application {1} is shutting down.", simulationContext.getCurrentTime(), core.getAppId()));
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} is shutting down.", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
     core.unregister();
   }
 

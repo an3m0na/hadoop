@@ -7,4 +7,8 @@ public class SimulationResourceManager extends SimplifiedResourceManager {
   public SimulationResourceManager(SimulationContext simulationContext) {
     super(new SimulationResourceScheduler(simulationContext));
   }
+
+  public long getClusterTimestamp() {
+    return getClusterTimeStamp();
+  }
 }

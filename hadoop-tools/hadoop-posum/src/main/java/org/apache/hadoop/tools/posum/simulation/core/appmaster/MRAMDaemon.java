@@ -3,7 +3,6 @@ package org.apache.hadoop.tools.posum.simulation.core.appmaster;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
-import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEvent;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEvent;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
@@ -25,7 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEventType.APPLICATION_FINISHED;
 import static org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEventType.CONTAINER_FINISHED;
 import static org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEventType.CONTAINER_STARTED;
 import static org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer.AM_TYPE;
@@ -216,9 +214,6 @@ public class MRAMDaemon extends AMDaemon {
         LOG.trace(MessageFormat.format("T={0}: Application {1} sends out event " +
           "to clean up its AM container.", simulationContext.getCurrentTime(), core.getAppId()));
         isFinished = true;
-        simulationContext.getDispatcher().getEventHandler()
-          .handle(new ApplicationEvent(APPLICATION_FINISHED, oldAppId, core.getAppId()));
-        break;
       }
 
       // check allocated containers
@@ -325,7 +320,7 @@ public class MRAMDaemon extends AMDaemon {
   }
 
   private boolean reduceStarted() {
-    return 1.0 * mapFinished / mapTotal >= slowStartRatio;
+    return mapTotal == 0 || 1.0 * mapFinished / mapTotal >= slowStartRatio;
   }
 
   @Override

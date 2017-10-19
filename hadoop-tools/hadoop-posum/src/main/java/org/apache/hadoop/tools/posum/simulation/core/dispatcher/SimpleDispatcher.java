@@ -1,9 +1,9 @@
 package org.apache.hadoop.tools.posum.simulation.core.dispatcher;
 
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.event.Dispatcher;
 import org.apache.hadoop.yarn.event.Event;
 import org.apache.hadoop.yarn.event.EventHandler;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 public class SimpleDispatcher implements Dispatcher {
-  private final Logger LOG = Logger.getLogger(SimpleDispatcher.class);
   private final Map<Class<? extends Enum>, EventHandler> eventDispatchers = new HashMap<>();
   private EventHandler handlerInstance;
 
@@ -53,7 +52,7 @@ public class SimpleDispatcher implements Dispatcher {
           throw new Exception("No handler for registered for " + type);
         }
       } catch (Throwable t) {
-        LOG.error("Error encountered while handling event: " + event, t);
+        throw new PosumException("Error encountered while handling event: " + event, t);
       }
     }
   }
@@ -68,7 +67,7 @@ public class SimpleDispatcher implements Dispatcher {
     List<EventHandler<T>> listofHandlers;
 
     public MultiListenerHandler() {
-      listofHandlers = new ArrayList<EventHandler<T>>();
+      listofHandlers = new ArrayList<>();
     }
 
     @Override

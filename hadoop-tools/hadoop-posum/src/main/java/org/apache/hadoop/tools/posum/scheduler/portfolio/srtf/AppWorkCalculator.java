@@ -3,15 +3,12 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.srtf;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.client.data.Database;
-import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 
 import java.text.MessageFormat;
 
-import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
 public class AppWorkCalculator {
@@ -32,13 +29,7 @@ public class AppWorkCalculator {
     }
     if (app.getJobId() == null) {
       app.setJobId(job.getId());
-      Long submitTime = job.getSubmitTime();
-      if (submitTime == null) {
-        AppProfile appProfile = dbProvider.getDatabase().execute(FindByIdCall.newInstance(APP, appId)).getEntity();
-        if (appProfile != null)
-          submitTime = appProfile.getStartTime();
-      }
-      app.setSubmitTime(submitTime);
+      app.setSubmitTime(job.getSubmitTime());
     }
     Long avgMapDuration = job.getAvgMapDuration();
     int totalMaps = job.getTotalMapTasks();
