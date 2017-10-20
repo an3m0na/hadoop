@@ -10,12 +10,12 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.util.cluster.TopologyProvider;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEventType;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationMonitor;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEventType;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerMonitor;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
 import java.util.List;
 import java.util.Map;
@@ -30,7 +30,6 @@ class SimulationManager implements Callable<SimulationResultPayload> {
 
   private volatile boolean exit = false;
   private String policyName;
-  private Class<? extends ResourceScheduler> policyClass;
   private JobBehaviorPredictor predictor;
   private DataStore dataStore;
   private Database db;
@@ -42,16 +41,15 @@ class SimulationManager implements Callable<SimulationResultPayload> {
 
   SimulationManager(JobBehaviorPredictor predictor,
                     String policyName,
-                    Class<? extends ResourceScheduler> policyClass,
+                    Class<? extends PluginPolicy> policyClass,
                     DataStore dataStore,
                     Map<String, String> topology,
                     boolean onlineSimulation) {
     this.predictor = predictor;
     this.policyName = policyName;
-    this.policyClass = policyClass;
     this.dataStore = dataStore;
     stats = new SimulationStatistics();
-    simulationContext = new SimulationContext();
+    simulationContext = new SimulationContext<>(policyClass);
     TopologyProvider topologyProvider = topology == null ? new TopologyProvider(simulationContext.getConf(), dataStore) :
       new TopologyProvider(topology);
     simulationContext.setTopologyProvider(topologyProvider);
@@ -63,8 +61,6 @@ class SimulationManager implements Callable<SimulationResultPayload> {
   }
 
   private void setUp() {
-    simulationContext.setSchedulerClass(policyClass);
-
     sourceDb = Database.from(dataStore, DatabaseReference.getSimulation());
     simulationContext.setSourceDatabase(sourceDb);
 

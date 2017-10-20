@@ -34,6 +34,8 @@ public class Utils {
   private static int viewCount = 0;
   private static boolean mongoStarted = false;
   private static int mongoTestsRunning = 0;
+  public static final String HOST_BASE = "192.168.1."; // needed because hostNames need to be resolvable
+
 
   public static final Long CLUSTER_TIMESTAMP = 1483890116284L;
   public static final ApplicationId APP1_ID = ApplicationId.newInstance(CLUSTER_TIMESTAMP, 1);
@@ -53,14 +55,12 @@ public class Utils {
   public static final TaskProfile TASK21 = Records.newRecord(TaskProfile.class);
   public static final TaskProfile TASK22 = Records.newRecord(TaskProfile.class);
   public static final TaskId TASK11_ID = MRBuilderUtils.newTaskId(JOB1_ID, 1, TaskType.MAP);
-  public static final TaskId TASK12_ID =MRBuilderUtils.newTaskId(JOB1_ID, 2, TaskType.REDUCE);
+  public static final TaskId TASK12_ID = MRBuilderUtils.newTaskId(JOB1_ID, 2, TaskType.REDUCE);
   public static final TaskId TASK21_ID = MRBuilderUtils.newTaskId(JOB2_ID, 1, TaskType.MAP);
   public static final TaskId TASK22_ID = MRBuilderUtils.newTaskId(JOB2_ID, 2, TaskType.MAP);
 
-  public static final String RACK1 = "firstRack";
-  public static final String RACK2 = "secondRack";
-  public static final String NODE1 = "firstNode";
-  public static final String NODE2 = "secondNode";
+  public static final String NODE1 = HOST_BASE + "1";
+  public static final String NODE2 = HOST_BASE + "2";
 
   static {
     APP1.setId(APP1_ID.toString());
@@ -81,20 +81,21 @@ public class Utils {
     JOB1.setStartTime(APP1.getStartTime());
     JOB1.setFinishTime(APP1.getFinishTime());
     JOB1.setLastUpdated(APP1.getStartTime());
+    JOB1.setHostName(NODE1);
 
     TASK11.setId(TASK11_ID.toString());
     TASK11.setJobId(JOB1.getId());
     TASK11.setType(TaskType.MAP);
     TASK11.setStartTime(JOB1.getStartTime());
     TASK11.setFinishTime(TASK11.getStartTime() + DURATION_UNIT * 3);
-    TASK11.setHttpAddress(NODE1);
+    TASK11.setHostName(NODE1);
 
     TASK12.setId(TASK12_ID.toString());
     TASK12.setJobId(JOB1.getId());
     TASK12.setType(TaskType.REDUCE);
     TASK12.setStartTime(TASK11.getFinishTime());
     TASK12.setFinishTime(JOB1.getFinishTime());
-    TASK12.setHttpAddress(NODE1);
+    TASK12.setHostName(NODE1);
 
     APP2.setId(APP2_ID.toString());
     APP2.setName(JOB_NAME_ROOT + " 2");
@@ -114,20 +115,21 @@ public class Utils {
     JOB2.setStartTime(APP2.getStartTime());
     JOB2.setFinishTime(APP2.getFinishTime());
     JOB2.setLastUpdated(APP2.getStartTime());
+    JOB1.setHostName(NODE2);
 
     TASK21.setId(TASK21_ID.toString());
     TASK21.setJobId(JOB2.getId());
     TASK21.setType(TaskType.MAP);
     TASK21.setStartTime(JOB2.getStartTime());
     TASK21.setFinishTime(TASK21.getStartTime() + DURATION_UNIT);
-    TASK21.setHttpAddress(NODE2);
+    TASK21.setHostName(NODE2);
 
     TASK22.setId(TASK22_ID.toString());
     TASK22.setJobId(JOB2.getId());
     TASK22.setType(TaskType.MAP);
     TASK22.setStartTime(TASK21.getFinishTime());
     TASK22.setFinishTime(JOB2.getFinishTime());
-    TASK22.setHttpAddress(NODE2);
+    TASK22.setHostName(NODE2);
 
     APP3.setId(APP3_ID.toString());
     APP3.setName(JOB_NAME_ROOT + " 3");
@@ -147,6 +149,7 @@ public class Utils {
     JOB3.setStartTime(APP3.getStartTime());
     JOB3.setFinishTime(APP3.getFinishTime());
     JOB3.setLastUpdated(APP3.getStartTime());
+    JOB3.setHostName(NODE1);
   }
 
   public static void loadThreeDefaultAppsAndJobs(Database db) {
@@ -194,7 +197,8 @@ public class Utils {
 
   public static String runProcess(String command) throws IOException, InterruptedException {
     Process process = Runtime.getRuntime().exec(command);
-    String s;StringBuilder output = new StringBuilder();
+    String s;
+    StringBuilder output = new StringBuilder();
     BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
     process.waitFor();
     while ((s = reader.readLine()) != null)

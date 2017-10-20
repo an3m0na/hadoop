@@ -350,13 +350,21 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
   }
 
   @Override
-  public void setHttpAddress(String address) {
+  public String getHostName() {
+    TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasHostName())
+      return null;
+    return p.getHostName();
+  }
+
+  @Override
+  public void setHostName(String hostName) {
     maybeInitBuilder();
-    if (address == null) {
-      builder.clearHttpAddress();
+    if (hostName == null) {
+      builder.clearHostName();
       return;
     }
-    builder.setHttpAddress(address);
+    builder.setHostName(hostName);
   }
 
   @Override
@@ -391,14 +399,6 @@ public class TaskProfilePBImpl extends GeneralDataEntityPBImpl<TaskProfile, Task
       return;
     }
     builder.setSplitSize(splitSize);
-  }
-
-  @Override
-  public String getHttpAddress() {
-    TaskProfileProtoOrBuilder p = viaProto ? proto : builder;
-    if (!p.hasHttpAddress())
-      return null;
-    return p.getHttpAddress();
   }
 
   @Override

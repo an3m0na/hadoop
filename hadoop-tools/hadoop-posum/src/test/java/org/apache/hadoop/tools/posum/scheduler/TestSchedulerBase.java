@@ -35,8 +35,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.hadoop.net.NetworkTopology.DEFAULT_RACK;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
+import static org.apache.hadoop.tools.posum.test.Utils.HOST_BASE;
 import static org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState.FINISHED;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
@@ -89,7 +91,7 @@ public abstract class TestSchedulerBase {
   protected void registerNodes(int n) throws IOException, YarnException, InterruptedException {
     nodeManagers = new ArrayList<>();
     for (int i = 0; i < n; i++) {
-      NMCore nm = new NMCore(rm, "/rack-unknown", "192.168.1." + i, MB_PER_NM, CORES_PER_NM);
+      NMCore nm = new NMCore(rm, DEFAULT_RACK, HOST_BASE + i, MB_PER_NM, CORES_PER_NM);
       nm.registerWithRM();
       nodeManagers.add(nm);
     }

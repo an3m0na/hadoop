@@ -718,4 +718,22 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
     }
     builder.setDeadline(deadline);
   }
+
+  @Override
+  public String getHostName() {
+    JobProfileProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasHostName())
+      return null;
+    return p.getHostName();
+  }
+
+  @Override
+  public void setHostName(String hostName) {
+    maybeInitBuilder();
+    if (hostName == null) {
+      builder.clearHostName();
+      return;
+    }
+    builder.setHostName(hostName);
+  }
 }

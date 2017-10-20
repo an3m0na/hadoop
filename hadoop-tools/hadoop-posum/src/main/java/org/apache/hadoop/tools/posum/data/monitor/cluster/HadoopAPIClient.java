@@ -17,8 +17,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.CountersProxyPBImpl;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
 import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
@@ -215,8 +215,8 @@ public class HadoopAPIClient {
     for (int i = 0; i < rawTasks.size(); i++) {
       JsonNode rawTask = rawTasks.get(i);
       String taskId = rawTask.get("id").asText();
-      TaskProfile previousTask =  previousTasksById.get(taskId);
-      TaskProfile task = previousTask!= null ? previousTask : Records.newRecord(TaskProfile.class);
+      TaskProfile previousTask = previousTasksById.get(taskId);
+      TaskProfile task = previousTask != null ? previousTask : Records.newRecord(TaskProfile.class);
       task.setId(taskId);
       task.setJobId(jobId);
       task.setType(TaskType.valueOf(rawTask.get("type").asText()));
@@ -245,8 +245,8 @@ public class HadoopAPIClient {
     for (int i = 0; i < rawTasks.size(); i++) {
       JsonNode rawTask = rawTasks.get(i);
       String taskId = rawTask.get("id").asText();
-      TaskProfile previousTask =  previousTasksById.get(taskId);
-      TaskProfile task = previousTask!= null ? previousTask : Records.newRecord(TaskProfile.class);
+      TaskProfile previousTask = previousTasksById.get(taskId);
+      TaskProfile task = previousTask != null ? previousTask : Records.newRecord(TaskProfile.class);
       task.setId(taskId);
       task.setAppId(job.getAppId());
       task.setJobId(job.getId());
@@ -259,6 +259,20 @@ public class HadoopAPIClient {
       tasks.add(task);
     }
     return tasks;
+  }
+
+  boolean addRunningAttemptInfo(JobProfile job) {
+    String rawString = restClient.getInfo(String.class,
+      RestClient.TrackingUI.RM, "apps/%s/appattempts", job.getAppId());
+    JsonNode rawAttempt = getRawNode(rawString, "appAttempts", "appAttempt");
+    if (rawAttempt == null)
+      return false;
+    if (rawAttempt.has("nodeHttpAddress")) {
+      String[] addressParts = rawAttempt.get("nodeHttpAddress").asText().split(":");
+      String host = addressParts.length > 2 ? addressParts[1] : addressParts[0];
+      job.setHostName(host.trim());
+    }
+    return true;
   }
 
   boolean addRunningAttemptInfo(TaskProfile task) {
@@ -280,12 +294,25 @@ public class HadoopAPIClient {
         if (rawAttempt.has("nodeHttpAddress")) {
           String[] addressParts = rawAttempt.get("nodeHttpAddress").asText().split(":");
           String host = addressParts.length > 2 ? addressParts[1] : addressParts[0];
-          task.setHttpAddress(host.trim());
+          task.setHostName(host.trim());
         }
         return true;
       }
     }
     return true;
+  }
+
+  void addFinishedAttemptInfo(JobProfile job) {
+    String rawString = restClient.getInfo(String.class,
+      RestClient.TrackingUI.HISTORY, "jobs/%s/jobattempts", job.getId());
+    JsonNode rawAttempt = getRawNode(rawString, "jobAttempts", "jobAttempt");
+    if (rawAttempt == null)
+      return;
+    if (rawAttempt.has("nodeHttpAddress")) {
+      String[] addressParts = rawAttempt.get("nodeHttpAddress").asText().split(":");
+      String host = addressParts.length > 2 ? addressParts[1] : addressParts[0];
+      job.setHostName(host.trim());
+    }
   }
 
   void addFinishedAttemptInfo(TaskProfile task) {
@@ -306,7 +333,7 @@ public class HadoopAPIClient {
         if (rawAttempt.has("nodeHttpAddress")) {
           String[] addressParts = rawAttempt.get("nodeHttpAddress").asText().split(":");
           String host = addressParts.length > 2 ? addressParts[1] : addressParts[0];
-          task.setHttpAddress(host.trim());
+          task.setHostName(host.trim());
         }
         return;
       }

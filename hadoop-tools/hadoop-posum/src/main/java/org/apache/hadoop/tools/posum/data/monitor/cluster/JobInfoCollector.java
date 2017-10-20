@@ -80,6 +80,9 @@ class JobInfoCollector {
         // job might have finished; return
         return null;
       profile = newProfile;
+      if (!api.addRunningAttemptInfo(profile)) {
+        return null;
+      }
       // get counters
       CountersProxy counters = api.getRunningJobCounters(app.getId(), profile.getId());
       if (counters == null)
@@ -103,6 +106,7 @@ class JobInfoCollector {
 
     JobProfile profile = getFinishedJobProfile(app);
     info.setProfile(profile);
+    api.addFinishedAttemptInfo(profile);
 
     JobConfProxy jobConf = api.getFinishedJobConf(profile.getId());
     setClassNames(profile, jobConf);

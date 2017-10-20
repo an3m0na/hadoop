@@ -5,6 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
@@ -70,6 +72,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+
+import static org.apache.hadoop.tools.posum.common.util.Utils.DEFAULT_PRIORITY;
 
 public abstract class SimpleQueuePolicy<
   A extends FiCaPluginApplicationAttempt,
@@ -997,6 +1001,19 @@ public abstract class SimpleQueuePolicy<
       }
     }
     printQueue();
+  }
+
+  @Override
+  public void forceContainerAssignment(ApplicationId appId, String hostName) {
+    N node = null;
+    for (Map.Entry<NodeId, N> nodeEntry : nodes.entrySet()) {
+      if (nodeEntry.getKey().getHost().equals(hostName))
+        node = nodeEntry.getValue();
+    }
+    if (node == null)
+      throw new PosumException("Node could not be found for " + hostName);
+    assignContainer(node, applications.get(appId).getCurrentAppAttempt(), DEFAULT_PRIORITY, 1,
+      Utils.createResourceRequest(minimumAllocation, hostName, 1), NodeType.NODE_LOCAL);
   }
 }
 

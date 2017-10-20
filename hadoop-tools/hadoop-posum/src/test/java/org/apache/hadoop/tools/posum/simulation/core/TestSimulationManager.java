@@ -13,12 +13,12 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.data.mock.data.MockDataStoreImpl;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.edls.EDLSSharePolicy;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 import org.apache.hadoop.yarn.util.Records;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.hadoop.net.NetworkTopology.DEFAULT_RACK;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP_HISTORY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.COUNTER;
@@ -49,7 +50,6 @@ import static org.apache.hadoop.tools.posum.test.Utils.JOB1;
 import static org.apache.hadoop.tools.posum.test.Utils.JOB2;
 import static org.apache.hadoop.tools.posum.test.Utils.NODE1;
 import static org.apache.hadoop.tools.posum.test.Utils.NODE2;
-import static org.apache.hadoop.tools.posum.test.Utils.RACK1;
 import static org.apache.hadoop.tools.posum.test.Utils.TASK11;
 import static org.apache.hadoop.tools.posum.test.Utils.TASK12;
 import static org.apache.hadoop.tools.posum.test.Utils.TASK21;
@@ -64,14 +64,14 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 @Category(IntegrationTest.class)
 public class TestSimulationManager {
-  private static final Class<? extends ResourceScheduler> SCHEDULER_CLASS = EDLSSharePolicy.class;
+  private static final Class<? extends PluginPolicy> SCHEDULER_CLASS = EDLSSharePolicy.class;
   private static final String SCHEDULER_NAME = "EDLS_SH";
   private static final Map<String, String> TOPOLOGY;
 
   static {
     TOPOLOGY = new HashMap<>(2);
-    TOPOLOGY.put(NODE1, RACK1);
-    TOPOLOGY.put(NODE2, RACK1);
+    TOPOLOGY.put(NODE1, DEFAULT_RACK);
+    TOPOLOGY.put(NODE2, DEFAULT_RACK);
   }
 
   private SimulationManager testSubject;
@@ -153,11 +153,13 @@ public class TestSimulationManager {
     job1.setDeadline(0L);
     job1.setFinishTime(null);
     job1.setCompletedMaps(1);
+
     JobProfile job2 = JOB2.copy();
     job2.setSubmitTime(job1.getStartTime());
     job2.setDeadline(0L);
     job2.setStartTime(null);
     job2.setFinishTime(null);
+    job2.setHostName(null);
 
     JobConfProxy jobConf1 = Records.newRecord(JobConfProxy.class);
     jobConf1.setId(job1.getId());
@@ -208,7 +210,7 @@ public class TestSimulationManager {
     assertThat(jobs.get(0).getFinishTime().doubleValue(), closeTo(186000, 2001));
     assertThat(jobs.get(0).getCompletedMaps(), is(1));
     assertThat(jobs.get(0).getCompletedReduces(), is(1));
-    assertThat(jobs.get(1).getStartTime().doubleValue(), closeTo(64000, 1001));
+    assertThat(jobs.get(1).getStartTime().doubleValue(), closeTo(62000, 1001));
     assertThat(jobs.get(1).getFinishTime().doubleValue(), closeTo(186000, 2001));
     assertThat(jobs.get(1).getCompletedMaps(), is(2));
     assertThat(jobs.get(1).getCompletedReduces(), is(0));

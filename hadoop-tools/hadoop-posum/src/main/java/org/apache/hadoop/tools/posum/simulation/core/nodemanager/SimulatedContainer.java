@@ -21,12 +21,14 @@ public class SimulatedContainer implements Delayed {
   private Long endTime;
   private Long lifeTime;
   private List<String> preferredLocations;
+  private Long originalStartTime;
   private int priority;
   private String type;
 
   private SimulationContext simulationContext;
   private NodeId nodeId;
   private String taskId;
+  private String hostName;
 
   /**
    * invoked when AM schedules its container
@@ -52,7 +54,9 @@ public class SimulatedContainer implements Delayed {
                             int priority,
                             String type,
                             String taskId,
-                            List<String> preferredLocations) {
+                            List<String> preferredLocations,
+                            Long originalStartTime,
+                            String hostName) {
     this.simulationContext = simulationContext;
     this.resource = resource;
     this.lifeTime = lifeTime;
@@ -60,6 +64,8 @@ public class SimulatedContainer implements Delayed {
     this.type = type;
     this.taskId = taskId;
     this.preferredLocations = preferredLocations;
+    this.originalStartTime = originalStartTime;
+    this.hostName = hostName;
   }
 
   public Resource getResource() {
@@ -117,10 +123,6 @@ public class SimulatedContainer implements Delayed {
     return taskId;
   }
 
-  public void setTaskId(String taskId) {
-    this.taskId = taskId;
-  }
-
   public void setEndTime(long endTime) {
     this.endTime = endTime;
   }
@@ -129,7 +131,15 @@ public class SimulatedContainer implements Delayed {
     return preferredLocations;
   }
 
-  public void setPreferredLocations(List<String> preferredLocations) {
-    this.preferredLocations = preferredLocations;
+  public Long getOriginalStartTime() {
+    return originalStartTime;
+  }
+
+  public String getHostName() {
+    return hostName;
+  }
+
+  public void setHostName(String hostName) {
+    this.hostName = hostName;
   }
 }

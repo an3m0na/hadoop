@@ -70,6 +70,10 @@ public class InjectableResourceScheduler<T extends AbstractYarnScheduler> extend
     }
   }
 
+  public T getInjectedScheduler(){
+    return scheduler;
+  }
+
   @Override
   public Allocation allocate(ApplicationAttemptId attemptId,
                              List<ResourceRequest> resourceRequests,

@@ -45,43 +45,16 @@ public class MRAMDaemon extends AMDaemon {
   private static final int PRIORITY_REDUCE = 10;
   private static final int PRIORITY_MAP = 20;
 
-  // pending maps
-  private LinkedList<SimulatedContainer> pendingMaps =
-    new LinkedList<SimulatedContainer>();
-
-  // pending failed maps
-  private LinkedList<SimulatedContainer> pendingFailedMaps =
-    new LinkedList<SimulatedContainer>();
-
-  // scheduled maps
-  private LinkedList<SimulatedContainer> scheduledMaps =
-    new LinkedList<SimulatedContainer>();
-
-  // assigned maps
-  private Map<ContainerId, SimulatedContainer> assignedMaps =
-    new HashMap<ContainerId, SimulatedContainer>();
-
-  // reduces which are not yet scheduled
-  private LinkedList<SimulatedContainer> pendingReduces =
-    new LinkedList<SimulatedContainer>();
-
-  // pending failed reduces
-  private LinkedList<SimulatedContainer> pendingFailedReduces =
-    new LinkedList<SimulatedContainer>();
-
-  // scheduled reduces
-  private LinkedList<SimulatedContainer> scheduledReduces =
-    new LinkedList<SimulatedContainer>();
-
-  // assigned reduces
-  private Map<ContainerId, SimulatedContainer> assignedReduces =
-    new HashMap<ContainerId, SimulatedContainer>();
-
-  // all maps & reduces
-  private LinkedList<SimulatedContainer> allMaps =
-    new LinkedList<SimulatedContainer>();
-  private LinkedList<SimulatedContainer> allReduces =
-    new LinkedList<SimulatedContainer>();
+  private LinkedList<SimulatedContainer> pendingMaps = new LinkedList<>();
+  private LinkedList<SimulatedContainer> pendingFailedMaps = new LinkedList<>();
+  private LinkedList<SimulatedContainer> scheduledMaps = new LinkedList<>();
+  private Map<ContainerId, SimulatedContainer> assignedMaps = new HashMap<>();
+  private LinkedList<SimulatedContainer> pendingReduces = new LinkedList<>();
+  private LinkedList<SimulatedContainer> pendingFailedReduces = new LinkedList<>();
+  private LinkedList<SimulatedContainer> scheduledReduces = new LinkedList<>();
+  private Map<ContainerId, SimulatedContainer> assignedReduces = new HashMap<>();
+  private LinkedList<SimulatedContainer> allMaps = new LinkedList<>();
+  private LinkedList<SimulatedContainer> allReduces = new LinkedList<>();
 
   // counters
   private int mapFinished = 0;
@@ -102,8 +75,8 @@ public class MRAMDaemon extends AMDaemon {
   }
 
   public void init(int heartbeatInterval, List<SimulatedContainer> containerList, ResourceManager rm,
-                   long traceStartTime, String user, String queue, String oldAppId, float slowStartRatio) {
-    super.init(heartbeatInterval, containerList, rm, traceStartTime, user, queue, oldAppId);
+                   long traceStartTime, String user, String queue, String oldAppId, String originalHostName, float slowStartRatio) {
+    super.init(heartbeatInterval, containerList, rm, traceStartTime, user, queue, oldAppId, originalHostName);
     amType = "mapreduce";
 
     // get map/reduce tasks

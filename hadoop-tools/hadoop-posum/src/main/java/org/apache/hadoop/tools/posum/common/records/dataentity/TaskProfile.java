@@ -71,9 +71,9 @@ public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
 
   void setLocal(Boolean local);
 
-  String getHttpAddress();
+  String getHostName();
 
-  void setHttpAddress(String address);
+  void setHostName(String hostName);
 
   List<String> getSplitLocations();
 

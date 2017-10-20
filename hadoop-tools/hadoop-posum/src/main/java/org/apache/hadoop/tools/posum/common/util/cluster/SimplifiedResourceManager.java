@@ -4,14 +4,15 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.service.Service;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
 import java.lang.reflect.Method;
 
-public class SimplifiedResourceManager extends ResourceManager {
-  private InjectableResourceScheduler injectableScheduler;
+public class SimplifiedResourceManager<T extends AbstractYarnScheduler> extends ResourceManager {
+  private InjectableResourceScheduler<T> injectableScheduler;
 
-  public SimplifiedResourceManager(InjectableResourceScheduler policy) {
+  public SimplifiedResourceManager(InjectableResourceScheduler<T> policy) {
     this.injectableScheduler = policy;
   }
 
@@ -38,6 +39,9 @@ public class SimplifiedResourceManager extends ResourceManager {
     removeService.invoke(activeServices, rmContext.getClientRMService());
 
     removeService(rmContext.getRMAdminService());
+  }
 
+  public InjectableResourceScheduler<T> getInjectableScheduler() {
+    return injectableScheduler;
   }
 }

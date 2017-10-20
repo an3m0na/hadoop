@@ -5,6 +5,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -95,4 +96,6 @@ public abstract class PluginPolicy<
   protected abstract PluginPolicyState exportState();
 
   protected abstract <T extends SchedulerNode & PluginSchedulerNode> void importState(PluginPolicyState<T> state);
+
+  public abstract void forceContainerAssignment(ApplicationId appId, String hostName);
 }
