@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio.common;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang.mutable.MutableObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
@@ -21,6 +22,7 @@ import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.api.records.NodeId;
+import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.QueueACL;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
 import org.apache.hadoop.yarn.api.records.QueueUserACLInfo;
@@ -41,6 +43,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Allocation;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.NodeType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.PreemptableResourceScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
@@ -80,6 +83,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.DEFAULT_PRIORITY;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_QUEUE_NAME;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT;
 
@@ -928,6 +932,40 @@ public abstract class ExtensibleCapacityScheduler<
         }
       }
     }
+  }
+
+  @Override
+  public void forceContainerAssignment(ApplicationId appId, String hostName) {
+    N node = null;
+    for (Map.Entry<NodeId, N> nodeEntry : getNodes().entrySet()) {
+      if (nodeEntry.getKey().getHost().equals(hostName))
+        node = nodeEntry.getValue();
+    }
+    if (node == null)
+      throw new PosumException("Node could not be found for " + hostName);
+
+    SchedulerApplication<A> app = getSchedulerApplications().get(appId);
+    Utils.invokeMethod(app.getQueue(), LeafQueue.class, "assignContainer",
+      new Class[]{
+        Resource.class,
+        FiCaSchedulerNode.class,
+        FiCaSchedulerApp.class,
+        Priority.class,
+        ResourceRequest.class,
+        NodeType.class,
+        RMContainer.class,
+        MutableObject.class,
+        ResourceLimits.class
+      },
+      getClusterResource(),
+      node,
+      app.getCurrentAppAttempt(),
+      DEFAULT_PRIORITY,
+      Utils.createResourceRequest(getMinimumResourceCapability(), hostName, 1),
+      NodeType.NODE_LOCAL,
+      null,
+      new MutableObject(),
+      new ResourceLimits(getLabelManager().getResourceByLabel(RMNodeLabelsManager.NO_LABEL, getClusterResource())));
   }
 
   //

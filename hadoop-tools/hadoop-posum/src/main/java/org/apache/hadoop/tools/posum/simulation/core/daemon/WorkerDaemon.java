@@ -52,18 +52,17 @@ public abstract class WorkerDaemon implements Daemon {
   public final void run() {
     try {
       if (nextRun == startTime) {
-        LOG.debug("Worker doing first step " + this);
         doFirstStep();
       } else {
-        LOG.debug("Worker doing step " + this);
         doStep();
       }
       if (isFinished()) {
-        LOG.debug("Worker finished " + this);
         cleanUp();
         simulationContext.getDaemonQueue().evict(this);
       } else {
-        nextRun = Math.max(simulationContext.getCurrentTime(), nextRun + repeatInterval);
+        do {
+          nextRun += repeatInterval;
+        } while (nextRun < simulationContext.getCurrentTime());
         simulationContext.getDaemonQueue().enqueue(this);
       }
     } catch (Exception e) {

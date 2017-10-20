@@ -39,6 +39,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.createResourceRequest;
+
 public class AMCore {
   private final ResourceManager rm;
   private final String user;
@@ -47,8 +49,7 @@ public class AMCore {
   private ApplicationAttemptId appAttemptId;
   private final static int CONTAINER_MB = 1024;
   private final static int CONTAINER_VCORES = 1;
-  private final static int PRIORITY = 1;
-  private final static Resource ONE_CONTAINER = BuilderUtils.newResource(CONTAINER_MB, CONTAINER_VCORES);
+  private final static Resource CONTAINER_RESOURCE = BuilderUtils.newResource(CONTAINER_MB, CONTAINER_VCORES);
 
   private int RESPONSE_ID = 1;
 
@@ -148,27 +149,21 @@ public class AMCore {
     List<ResourceRequest> ask = new ArrayList<>();
     switch (actualLocality) {
       case NODE_LOCAL:
-        ask.add(createResourceRequest(ONE_CONTAINER, nm.getHostName(), PRIORITY, 1));
+        ask.add(createResourceRequest(CONTAINER_RESOURCE, nm.getHostName(), 1));
       case RACK_LOCAL:
-        ask.add(createResourceRequest(ONE_CONTAINER, nm.getRackName(), PRIORITY, 1));
+        ask.add(createResourceRequest(CONTAINER_RESOURCE, nm.getRackName(), 1));
       default:
-        ask.add(createResourceRequest(ONE_CONTAINER, ResourceRequest.ANY, PRIORITY, 1));
+        ask.add(createResourceRequest(CONTAINER_RESOURCE, ResourceRequest.ANY, 1));
     }
     return sendAllocateRequest(createAllocateRequest(ask));
   }
 
-  public static ResourceRequest createResourceRequest(Resource resource,
-                                                      String host,
-                                                      int priority,
-                                                      int numContainers) {
-    ResourceRequest request = Records.newRecord(ResourceRequest.class);
-    request.setCapability(resource);
-    request.setResourceName(host);
-    request.setNumContainers(numContainers);
-    Priority prio = Records.newRecord(Priority.class);
-    prio.setPriority(priority);
-    request.setPriority(prio);
-    return request;
+  public AllocateResponse requestContainerOnNode(String hostName, String rackName) throws IOException, InterruptedException {
+    List<ResourceRequest> ask = new ArrayList<>();
+    ask.add(createResourceRequest(CONTAINER_RESOURCE, hostName, 1));
+    ask.add(createResourceRequest(CONTAINER_RESOURCE, rackName, 1));
+    ask.add(createResourceRequest(CONTAINER_RESOURCE, ResourceRequest.ANY, 1));
+    return sendAllocateRequest(createAllocateRequest(ask));
   }
 
   public AllocateRequest createAllocateRequest(List<ResourceRequest> ask,

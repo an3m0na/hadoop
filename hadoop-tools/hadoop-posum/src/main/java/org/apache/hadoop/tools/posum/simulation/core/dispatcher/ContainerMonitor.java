@@ -84,7 +84,7 @@ public class ContainerMonitor implements EventHandler<ContainerEvent> {
       if (task.getStartTime() == null) {
         // only mark start time if it was not already running
         task.setStartTime(simulationContext.getCurrentTime());
-        task.setHttpAddress(container.getNodeId().getHost());
+        task.setHostName(container.getNodeId().getHost());
       }
       db.execute(UpdateOrStoreCall.newInstance(TASK, task));
     }

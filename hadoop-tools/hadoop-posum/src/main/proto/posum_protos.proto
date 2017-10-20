@@ -112,6 +112,7 @@ message JobProfileProto {
     repeated int64 splitSizes = 32;
     optional int64 lastUpdated = 33;
     optional int64 deadline = 34;
+    optional string hostName = 35;
 
 
     enum JobStateProto {
@@ -149,7 +150,7 @@ message TaskProfileProto {
     optional int64 mergeTime = 14;
     optional int64 reduceTime = 15;
     optional bool local = 16;
-    optional string httpAddress = 17;
+    optional string hostName = 17;
     optional TaskStateProto state = 18;
     optional int64 lastUpdated = 19;
     repeated string splitLocations = 20;

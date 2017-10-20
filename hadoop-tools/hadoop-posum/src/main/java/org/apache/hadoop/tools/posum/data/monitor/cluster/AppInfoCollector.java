@@ -16,9 +16,9 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
-import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
-import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
 import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 
 import java.util.HashSet;
 import java.util.List;

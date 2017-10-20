@@ -10,13 +10,15 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.core.appmaster.AMDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.appmaster.MRAMDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonPool;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.NMDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
 import org.apache.hadoop.tools.posum.simulation.core.resourcemanager.SimulationResourceManager;
-import org.apache.hadoop.yarn.api.records.NodeId;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.NodeState;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -28,6 +30,8 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,9 +55,8 @@ import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SIMULATION_CONTAINER_VCORES;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SIMULATION_CONTAINER_VCORES_DEFAULT;
 
-public class SimulationRunner {
+public class SimulationRunner<T extends PluginPolicy> {
   private final static Logger LOG = Logger.getLogger(SimulationRunner.class);
-  private static final String HOST_BASE = "192.168.1."; // needed because hostnames need to be resolvable
   private final IdsByQueryCall GET_STARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.isNot("startTime", null), "submitTime", false);
   private final IdsByQueryCall GET_NOTSTARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("startTime", null));
   private final FindByIdCall GET_JOB = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
@@ -62,15 +65,13 @@ public class SimulationRunner {
 
   private SimulationResourceManager rm;
   private DaemonPool daemonPool;
-  private SimulationContext context;
+  private SimulationContext<T> context;
   private Configuration conf;
-  private Map<String, String> simulationHostNames;
   private Resource containerResource;
-  private Map<NodeId, NMDaemon> nmMap;
+  private Map<String, NMDaemon> nmMap;
   private Map<String, AMDaemon> amMap;
 
-
-  public SimulationRunner(SimulationContext context) throws IOException, ClassNotFoundException {
+  public SimulationRunner(SimulationContext<T> context) throws IOException, ClassNotFoundException {
     this.context = context;
     conf = context.getConf();
     daemonPool = new DaemonPool(context);
@@ -85,10 +86,13 @@ public class SimulationRunner {
     startRM();
     prepareAMs();
     queueNMs();
-    queueAMs();
 
     // blocked until all NMs are RUNNING
     waitForNodesRunning();
+
+    queueAMs();
+    // wait for apps to be running and assign containers that are already running
+    addRunningContainers();
 
     daemonPool.start();
     context.getRemainingJobsCounter().await();
@@ -125,7 +129,7 @@ public class SimulationRunner {
 
       String user = job.getUser();
       String queue = job.getQueue();
-      String appId = job.getAppId();
+      String oldAppId = job.getAppId();
       int queueSize = queueAppNumMap.containsKey(queue) ? queueAppNumMap.get(queue) : 0;
       queueSize++;
       queueAppNumMap.put(queue, queueSize);
@@ -136,8 +140,8 @@ public class SimulationRunner {
         DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART);
 
       MRAMDaemon amSim = new MRAMDaemon(context);
-      amSim.init(heartbeatInterval, createContainers(jobId), rm, jobSubmitTime, user, queue, appId, slowStartRatio);
-      amMap.put(appId, amSim);
+      amSim.init(heartbeatInterval, createContainers(jobId), rm, jobSubmitTime, user, queue, oldAppId, job.getHostName(), slowStartRatio);
+      amMap.put(oldAppId, amSim);
     }
 
     LOG.trace(MessageFormat.format("Sim={0}: Cluster time at start is {1}", context.getSchedulerClass().getSimpleName(), context.getClusterTimeAtStart()));
@@ -158,16 +162,27 @@ public class SimulationRunner {
         Long lifeTime = taskStart != null && taskFinish != null ? taskFinish - taskStart : null;
         int priority = 0;
         String type = task.getType() == MAP ? "map" : "reduce";
-        ret.add(new SimulatedContainer(context, containerResource, lifeTime, priority, type, task.getId(), task.getSplitLocations()));
+        Long originalStartTime = task.getStartTime() == null || !context.isOnlineSimulation() ? null :
+          task.getStartTime() - context.getClusterTimeAtStart();
+        ret.add(new SimulatedContainer(context, containerResource, lifeTime, priority, type,
+          task.getId(), task.getSplitLocations(), originalStartTime, task.getHostName()));
       }
     }
+    // sort so that started containers go first for allocation
+    Collections.sort(ret, new Comparator<SimulatedContainer>() {
+      @Override
+      public int compare(SimulatedContainer o1, SimulatedContainer o2) {
+        return o1.getOriginalStartTime() != null ? -1 : 1;
+      }
+    });
     return ret;
   }
 
-
   private void startRM() throws IOException, ClassNotFoundException {
-    rm = new SimulationResourceManager(context);
-    rm.init(new YarnConfiguration());
+    rm = new SimulationResourceManager<>(context);
+    Configuration conf = PosumConfiguration.newInstance(new YarnConfiguration());
+    conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME, false);
+    rm.init(conf);
     rm.start();
   }
 
@@ -180,28 +195,19 @@ public class SimulationRunner {
     //FIXME: use a dynamic snapshot mechanism
     Set<String> activeNodes = context.getTopologyProvider().getActiveNodes();
     nmMap = new HashMap<>(activeNodes.size());
-    simulationHostNames = new HashMap<>(activeNodes.size());
     Random random = new Random();
-    for (String oldHostname : activeNodes) {
+    for (String hostName : activeNodes) {
       // randomize the start time from -heartbeatInterval to zero, in order to start NMs before AMs
       NMDaemon nm = new NMDaemon(context);
-      nm.init(context.getTopologyProvider().resolve(oldHostname),
-        assignNewHost(oldHostname),
-        oldHostname,
+      nm.init(hostName,
         nmMemoryMB,
         nmVCores,
         -random.nextInt(heartbeatInterval),
         heartbeatInterval, rm
       );
-      nmMap.put(nm.getNodeId(), nm);
+      nmMap.put(hostName, nm);
       daemonPool.schedule(nm);
     }
-  }
-
-  private String assignNewHost(String hostName) {
-    String newHostname = HOST_BASE + simulationHostNames.size();
-    simulationHostNames.put(hostName, newHostname);
-    return newHostname;
   }
 
   private void queueAMs() {
@@ -222,6 +228,22 @@ public class SimulationRunner {
         break;
       }
       Thread.sleep(100);
+    }
+  }
+
+  private void addRunningContainers() throws Exception {
+    for (AMDaemon am : amMap.values()) {
+      if (context.isOnlineSimulation() && am.getHostName() != null) { // AM container should be running
+        while (!am.isRegistered())
+          Thread.sleep(100);
+        ApplicationId appId = am.getAppId();
+        (rm.getPluginPolicy()).forceContainerAssignment(appId, am.getHostName());
+        am.doStep();
+        for (SimulatedContainer container : am.getContainers()) {
+          if (container.getOriginalStartTime() != null && container.getHostName() != null)
+            (rm.getPluginPolicy()).forceContainerAssignment(appId, container.getHostName());
+        }
+      }
     }
   }
 }

@@ -5,21 +5,21 @@ import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.cluster.TopologyProvider;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonQueue;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.SimpleDispatcher;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.yarn.event.Dispatcher;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
 import java.util.concurrent.CountDownLatch;
 
-public class SimulationContext implements DatabaseProvider {
+public class SimulationContext<T extends PluginPolicy> implements DatabaseProvider {
 
   private volatile long currentTime = 0;
   private CountDownLatch remainingJobsCounter;
   private DaemonQueue daemonQueue;
   private Configuration conf = PosumConfiguration.newInstance();
-  private Class<? extends ResourceScheduler> schedulerClass;
+  private Class<T> schedulerClass;
   private TopologyProvider topologyProvider;
   private Database database;
   private Database sourceDatabase;
@@ -28,6 +28,10 @@ public class SimulationContext implements DatabaseProvider {
   private boolean awaitingScheduler;
   private boolean onlineSimulation;
   private long clusterTimeAtStart;
+
+  public SimulationContext(Class<T> schedulerClass) {
+    this.schedulerClass = schedulerClass;
+  }
 
   public long getCurrentTime() {
     return currentTime;
@@ -69,12 +73,8 @@ public class SimulationContext implements DatabaseProvider {
     this.conf = conf;
   }
 
-  public Class<? extends ResourceScheduler> getSchedulerClass() {
+  public Class<T> getSchedulerClass() {
     return schedulerClass;
-  }
-
-  public void setSchedulerClass(Class<? extends ResourceScheduler> schedulerClass) {
-    this.schedulerClass = schedulerClass;
   }
 
   public void setDatabase(Database database) {

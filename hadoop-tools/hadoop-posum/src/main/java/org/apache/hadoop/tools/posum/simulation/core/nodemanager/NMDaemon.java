@@ -32,36 +32,32 @@ import static org.apache.hadoop.tools.posum.simulation.core.nodemanager.Simulate
 
 public class NMDaemon extends WorkerDaemon {
   // containers with various STATE
-  private List<ContainerId> completedContainerList;
-  private List<ContainerId> releasedContainerList;
+  private final List<ContainerId> completedContainerList;
+  private final List<ContainerId> releasedContainerList;
   private DelayQueue<SimulatedContainer> containerQueue;
   private Map<ContainerId, SimulatedContainer> runningContainers;
-  private List<ContainerId> amContainerList;
+  private final List<ContainerId> amContainerList;
   private final static Logger LOG = Logger.getLogger(NMDaemon.class);
-  private String originalHostname;
   private NMCore core;
 
   public NMDaemon(SimulationContext simulationContext) {
     super(simulationContext);
-
-  }
-
-  public void init(String rack, String hostname, String originalHostname, int memory, int cores,
-                   int dispatchTime, int heartBeatInterval, ResourceManager rm) {
-    this.originalHostname = originalHostname;
-    super.init(dispatchTime, heartBeatInterval);
-    // create resource
-    this.core = new NMCore(rm, rack, hostname, memory, cores);
-    // init data structures
     completedContainerList =
       Collections.synchronizedList(new ArrayList<ContainerId>());
     releasedContainerList =
       Collections.synchronizedList(new ArrayList<ContainerId>());
-    containerQueue = new DelayQueue<>();
     amContainerList =
       Collections.synchronizedList(new ArrayList<ContainerId>());
-    runningContainers = new ConcurrentHashMap<>();
+  }
 
+  public void init(String hostname, int memory, int cores,
+                   int dispatchTime, int heartBeatInterval, ResourceManager rm) {
+    super.init(dispatchTime, heartBeatInterval);
+    // create resource
+    this.core = new NMCore(rm, simulationContext.getTopologyProvider().resolve(hostname), hostname, memory, cores);
+    // init data structures
+    containerQueue = new DelayQueue<>();
+    runningContainers = new ConcurrentHashMap<>();
     simulationContext.getDispatcher().register(ContainerEventType.class, new EventHandler<ContainerEvent>() {
       @Override
       public void handle(ContainerEvent event) {
@@ -88,7 +84,7 @@ public class NMDaemon extends WorkerDaemon {
   @Override
   public void doStep() throws Exception {
     // we check the lifetime for each running containers
-    SimulatedContainer cs = null;
+    SimulatedContainer cs;
     synchronized (completedContainerList) {
       while ((cs = containerQueue.poll()) != null) {
         runningContainers.remove(cs.getId());
@@ -143,7 +139,7 @@ public class NMDaemon extends WorkerDaemon {
    * catch status of all containers located on current node
    */
   private ArrayList<ContainerStatus> generateContainerStatusList() {
-    ArrayList<ContainerStatus> csList = new ArrayList<ContainerStatus>();
+    ArrayList<ContainerStatus> csList = new ArrayList<>();
     // add running containers
     for (SimulatedContainer container : runningContainers.values()) {
       csList.add(newContainerStatus(container.getId(),
@@ -207,10 +203,12 @@ public class NMDaemon extends WorkerDaemon {
       // normal container
       Long lifeTimeMS = container.getLifeTime();
       if (lifeTimeMS == null) {
-        TaskPredictionInput predictionInput = new TaskPredictionInput(container.getTaskId(), originalHostname);
+        TaskPredictionInput predictionInput = new TaskPredictionInput(container.getTaskId(), getNodeId().getHost());
         lifeTimeMS = simulationContext.getPredictor().predictTaskBehavior(predictionInput).getDuration();
       }
-      container.setEndTime(lifeTimeMS + simulationContext.getCurrentTime());
+      if (container.getOriginalStartTime() != null)
+        lifeTimeMS -= container.getOriginalStartTime();
+      container.setEndTime(simulationContext.getCurrentTime() + lifeTimeMS);
       containerQueue.add(container);
       runningContainers.put(container.getId(), container);
     }
@@ -221,7 +219,7 @@ public class NMDaemon extends WorkerDaemon {
    *
    * @param containerId id of the container to be cleaned
    */
-  public void cleanupContainer(ContainerId containerId) {
+  private void cleanupContainer(ContainerId containerId) {
     synchronized (amContainerList) {
       amContainerList.remove(containerId);
     }

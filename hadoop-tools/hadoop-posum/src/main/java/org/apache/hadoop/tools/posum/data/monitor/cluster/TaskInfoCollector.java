@@ -67,8 +67,8 @@ class TaskInfoCollector {
         if (!api.addRunningAttemptInfo(task)) {
           return null;
         }
-        if (task.isLocal() == null && task.getSplitLocations() != null && task.getHttpAddress() != null) {
-          if (task.getSplitLocations().contains(task.getHttpAddress()))
+        if (task.isLocal() == null && task.getSplitLocations() != null && task.getHostName() != null) {
+          if (task.getSplitLocations().contains(task.getHostName()))
             task.setLocal(true);
         }
         CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
@@ -95,8 +95,8 @@ class TaskInfoCollector {
     for (TaskProfile task : tasks) {
       api.addFinishedAttemptInfo(task);
       task.setAppId(job.getAppId());
-      if (task.isLocal() == null && task.getSplitLocations() != null && task.getHttpAddress() != null) {
-        if (task.getSplitLocations().contains(task.getHttpAddress()))
+      if (task.isLocal() == null && task.getSplitLocations() != null && task.getHostName() != null) {
+        if (task.getSplitLocations().contains(task.getHostName()))
           task.setLocal(true);
       }
       CountersProxy counters = api.getFinishedTaskCounters(task.getJobId(), task.getId());

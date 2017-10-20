@@ -57,6 +57,7 @@ public class TestJobInfoCollector {
     when(dbMock.execute(any(JobForAppCall.class)))
       .thenReturn(SingleEntityPayload.newInstance(DataEntityCollection.JOB, entities.RUNNING_JOB));
     when(apiMock.getRunningJobInfo(entities.APP_ID, entities.RUNNING_APP.getQueue(), entities.RUNNING_JOB)).thenReturn(entities.RUNNING_JOB);
+    when(apiMock.addRunningAttemptInfo(entities.RUNNING_JOB)).thenReturn(true);
     when(apiMock.getRunningJobCounters(entities.APP_ID, entities.JOB_ID)).thenReturn(entities.JOB_COUNTERS);
 
     JobInfo ret = testSubject.getRunningJobInfo(entities.RUNNING_APP);
@@ -72,6 +73,7 @@ public class TestJobInfoCollector {
     when(dbMock.execute(any(JobForAppCall.class))).thenReturn(null);
     when(apiMock.getRunningJobInfo(eq(entities.APP_ID), eq(entities.RUNNING_APP.getQueue()), any(JobProfile.class)))
       .thenReturn(entities.RUNNING_JOB);
+    when(apiMock.addRunningAttemptInfo(entities.RUNNING_JOB)).thenReturn(true);
     when(apiMock.getRunningJobCounters(entities.APP_ID, entities.JOB_ID)).thenReturn(entities.JOB_COUNTERS);
 
     JobInfo ret = testSubject.getRunningJobInfo(entities.RUNNING_APP);
