@@ -21,7 +21,6 @@ import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContai
 import org.apache.hadoop.tools.posum.simulation.core.resourcemanager.SimulationResourceManager;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.NodeState;
-import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -42,7 +41,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import static org.apache.hadoop.mapreduce.MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART;
-import static org.apache.hadoop.mapreduce.v2.api.records.TaskType.MAP;
 import static org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator.DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.AM_DAEMON_HEARTBEAT_INTERVAL_MS;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.AM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT;
@@ -162,10 +160,8 @@ public class SimulationRunner<T extends PluginPolicy> {
         Long taskStart = task.getStartTime();
         Long taskFinish = task.getFinishTime();
         Long lifeTime = taskStart != null && taskFinish != null ? taskFinish - taskStart : null;
-        int priority = 0;
-        String type = task.getType() == MAP ? "map" : "reduce";
         Long originalStartTime = task.getStartTime() == null ? null : task.getStartTime() - context.getClusterTimeAtStart();
-        ret.add(new SimulatedContainer(context, containerResource, lifeTime, priority, type,
+        ret.add(new SimulatedContainer(context, containerResource, lifeTime, task.getType().name(),
           task.getId(), task.getSplitLocations(), originalStartTime, task.getHostName()));
       }
     }
@@ -247,9 +243,7 @@ public class SimulationRunner<T extends PluginPolicy> {
         int preAssignedContainers = 0;
         for (SimulatedContainer container : am.getContainers()) {
           if (context.isOnlineSimulation() && container.getHostName() != null) {
-            Priority priority = Priority.newInstance(container.getType().equals("map") ? MRAMDaemon.PRIORITY_MAP :
-              MRAMDaemon.PRIORITY_REDUCE);
-            if (!(rm.getPluginPolicy()).forceContainerAssignment(appId, container.getHostName(), priority))
+            if (!(rm.getPluginPolicy()).forceContainerAssignment(appId, container.getHostName(), container.getPriority()))
               throw new PosumException(MessageFormat.format("Sim={0}: Could not pre-assign container for {1}", context.getSchedulerClass().getSimpleName(), container.getTaskId()));
             preAssignedContainers++;
             LOG.trace(MessageFormat.format("Sim={0}: Pre-assigned container for {1}", context.getSchedulerClass().getSimpleName(), container.getTaskId()));
