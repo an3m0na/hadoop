@@ -8,6 +8,7 @@ import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
+import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
@@ -19,6 +20,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeRemoved
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
 
 import java.util.List;
+
+import static org.apache.hadoop.tools.posum.common.util.Utils.DEFAULT_PRIORITY;
 
 public abstract class PluginPolicy<
   A extends SchedulerApplicationAttempt & PluginApplicationAttempt,
@@ -97,5 +100,9 @@ public abstract class PluginPolicy<
 
   protected abstract <T extends SchedulerNode & PluginSchedulerNode> void importState(PluginPolicyState<T> state);
 
-  public abstract void forceContainerAssignment(ApplicationId appId, String hostName);
+  public abstract boolean forceContainerAssignment(ApplicationId appId, String hostName, Priority priority);
+
+  public boolean forceContainerAssignment(ApplicationId appId, String hostName) {
+    return forceContainerAssignment(appId, hostName, DEFAULT_PRIORITY);
+  }
 }

@@ -83,7 +83,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.DEFAULT_PRIORITY;
 import static org.apache.hadoop.yarn.conf.YarnConfiguration.DEFAULT_QUEUE_NAME;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.MAXIMUM_APPLICATION_MASTERS_RESOURCE_PERCENT;
 
@@ -935,7 +934,7 @@ public abstract class ExtensibleCapacityScheduler<
   }
 
   @Override
-  public void forceContainerAssignment(ApplicationId appId, String hostName) {
+  public boolean forceContainerAssignment(ApplicationId appId, String hostName, Priority priority) {
     N node = null;
     for (Map.Entry<NodeId, N> nodeEntry : getNodes().entrySet()) {
       if (nodeEntry.getKey().getHost().equals(hostName))
@@ -945,7 +944,8 @@ public abstract class ExtensibleCapacityScheduler<
       throw new PosumException("Node could not be found for " + hostName);
 
     SchedulerApplication<A> app = getSchedulerApplications().get(appId);
-    Utils.invokeMethod(app.getQueue(), LeafQueue.class, "assignContainer",
+    MutableObject allocatedContainer = new MutableObject();
+    Resource assignedResource = Utils.invokeMethod(app.getQueue(), LeafQueue.class, "assignContainer",
       new Class[]{
         Resource.class,
         FiCaSchedulerNode.class,
@@ -960,12 +960,31 @@ public abstract class ExtensibleCapacityScheduler<
       getClusterResource(),
       node,
       app.getCurrentAppAttempt(),
-      DEFAULT_PRIORITY,
+      priority,
       Utils.createResourceRequest(getMinimumResourceCapability(), hostName, 1),
       NodeType.NODE_LOCAL,
       null,
-      new MutableObject(),
+      allocatedContainer,
       new ResourceLimits(getLabelManager().getResourceByLabel(RMNodeLabelsManager.NO_LABEL, getClusterResource())));
+    if (!assignedResource.equals(Resources.none())) {
+      if (allocatedContainer.getValue() != null) {
+        app.getCurrentAppAttempt().incNumAllocatedContainers(NodeType.NODE_LOCAL, NodeType.NODE_LOCAL);
+      }
+      Utils.invokeMethod(app.getQueue(), LeafQueue.class, "allocateResource",
+        new Class[]{
+          Resource.class,
+          SchedulerApplicationAttempt.class,
+          Resource.class,
+          Set.class
+        },
+        getClusterResource(),
+        app.getCurrentAppAttempt(),
+        assignedResource,
+        node.getLabels()
+      );
+      return true;
+    }
+    return false;
   }
 
   //

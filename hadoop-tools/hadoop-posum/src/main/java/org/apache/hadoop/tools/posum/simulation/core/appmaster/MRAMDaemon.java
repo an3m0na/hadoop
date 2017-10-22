@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.simulation.core.appmaster;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEvent;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +44,8 @@ public class MRAMDaemon extends AMDaemon {
   scheduled when all maps have finished (not support slow-start currently).
   */
 
-  private static final int PRIORITY_REDUCE = 10;
-  private static final int PRIORITY_MAP = 20;
+  public static final int PRIORITY_REDUCE = 10;
+  public static final int PRIORITY_MAP = 20;
 
   private LinkedList<SimulatedContainer> pendingMaps = new LinkedList<>();
   private LinkedList<SimulatedContainer> pendingFailedMaps = new LinkedList<>();
@@ -98,9 +100,10 @@ public class MRAMDaemon extends AMDaemon {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   protected void processResponseQueue()
     throws InterruptedException, YarnException, IOException {
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: App {2} gets containers {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), getAppId(), !responseQueue.isEmpty()? responseQueue.peek().getAllocatedContainers() : "no containers"));
+
     // Check whether receive the am container
     if (!isAMContainerRunning) {
       if (!responseQueue.isEmpty()) {
@@ -191,24 +194,52 @@ public class MRAMDaemon extends AMDaemon {
 
       // check allocated containers
       for (Container container : response.getAllocatedContainers()) {
+        if (simulationContext.isOnlineSimulation()) {
+          if (checkPreAssigned(container, scheduledMaps, assignedMaps))
+            continue;
+          if (checkPreAssigned(container, scheduledReduces, assignedReduces))
+            continue;
+          if (preAssignedRemaining()) // container was not pre-assigned but there are pre-assignments waiting
+            throw new PosumException(MessageFormat.format("Sim={0} T={1}: Unexpected container during pre-assignments: {2} on {3}",
+              simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), container.getId(), container.getNodeId()));
+        }
         if (!scheduledMaps.isEmpty()) {
-          SimulatedContainer cs = scheduledMaps.remove();
-          LOG.trace(MessageFormat.format("T={0}: Application {1} starts a mapper ({2}).", simulationContext.getCurrentTime(), core.getAppId(), container.getId()));
-          cs.setNodeId(container.getNodeId());
-          cs.setId(container.getId());
-          assignedMaps.put(container.getId(), cs);
-          simulationContext.getDispatcher().getEventHandler().handle(new ContainerEvent(CONTAINER_STARTED, cs));
+          startContainer(container, scheduledMaps.remove(), assignedMaps);
         } else if (!this.scheduledReduces.isEmpty()) {
-          SimulatedContainer cs = scheduledReduces.remove();
-          LOG.trace(MessageFormat.format("T={0}: Application {1} starts a reducer ({2}).", simulationContext.getCurrentTime(), core.getAppId(), container.getId()));
-          cs.setNodeId(container.getNodeId());
-          cs.setId(container.getId());
-          assignedReduces.put(container.getId(), cs);
-          simulationContext.getDispatcher().getEventHandler()
-            .handle(new ContainerEvent(CONTAINER_STARTED, cs));
+          startContainer(container, scheduledReduces.remove(), assignedReduces);
         }
       }
     }
+  }
+
+  private boolean preAssignedRemaining() {
+    return (!scheduledMaps.isEmpty() && scheduledMaps.getFirst().getHostName() != null) ||
+      (!scheduledReduces.isEmpty() && scheduledReduces.getFirst().getHostName() != null);
+  }
+
+  private boolean checkPreAssigned(Container container,
+                                   LinkedList<SimulatedContainer> scheduled,
+                                   Map<ContainerId, SimulatedContainer> assigned) {
+    for (Iterator<SimulatedContainer> iterator = scheduled.iterator(); iterator.hasNext(); ) {
+      SimulatedContainer simulatedContainer = iterator.next();
+      if (simulatedContainer.getHostName() != null) {
+        if (simulatedContainer.getHostName().equals(container.getNodeId().getHost())) {
+          startContainer(container, simulatedContainer, assigned);
+          iterator.remove();
+          return true;
+        }
+      } else return false;
+    }
+    return false;
+  }
+
+  private void startContainer(Container container,
+                              SimulatedContainer simulatedContainer,
+                              Map<ContainerId, SimulatedContainer> assigned) {
+    simulatedContainer.setNodeId(container.getNodeId());
+    simulatedContainer.setId(container.getId());
+    assigned.put(container.getId(), simulatedContainer);
+    simulationContext.getDispatcher().getEventHandler().handle(new ContainerEvent(CONTAINER_STARTED, simulatedContainer));
   }
 
   @Override

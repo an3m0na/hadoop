@@ -10,6 +10,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.core.appmaster.AMDaemon;
@@ -20,6 +21,7 @@ import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContai
 import org.apache.hadoop.tools.posum.simulation.core.resourcemanager.SimulationResourceManager;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.NodeState;
+import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -162,17 +164,16 @@ public class SimulationRunner<T extends PluginPolicy> {
         Long lifeTime = taskStart != null && taskFinish != null ? taskFinish - taskStart : null;
         int priority = 0;
         String type = task.getType() == MAP ? "map" : "reduce";
-        Long originalStartTime = task.getStartTime() == null || !context.isOnlineSimulation() ? null :
-          task.getStartTime() - context.getClusterTimeAtStart();
+        Long originalStartTime = task.getStartTime() == null ? null : task.getStartTime() - context.getClusterTimeAtStart();
         ret.add(new SimulatedContainer(context, containerResource, lifeTime, priority, type,
           task.getId(), task.getSplitLocations(), originalStartTime, task.getHostName()));
       }
     }
-    // sort so that started containers go first for allocation
+    // sort so that containers that should already be allocated go first
     Collections.sort(ret, new Comparator<SimulatedContainer>() {
       @Override
       public int compare(SimulatedContainer o1, SimulatedContainer o2) {
-        return o1.getOriginalStartTime() != null ? -1 : 1;
+        return o1.getHostName() != null ? -1 : 1;
       }
     });
     return ret;
@@ -237,12 +238,25 @@ public class SimulationRunner<T extends PluginPolicy> {
         while (!am.isRegistered())
           Thread.sleep(100);
         ApplicationId appId = am.getAppId();
-        (rm.getPluginPolicy()).forceContainerAssignment(appId, am.getHostName());
-        am.doStep();
+        if (!(rm.getPluginPolicy()).forceContainerAssignment(appId, am.getHostName()))
+          throw new PosumException(MessageFormat.format("Sim={0}: Could not pre-assign AM container for {1}", context.getSchedulerClass().getSimpleName(), appId));
+        LOG.trace(MessageFormat.format("Sim={0}: Pre-assigned AM container for {1}", context.getSchedulerClass().getSimpleName(), appId));
+        am.doStep(); // ask for AM container
+        am.doStep(); // process the AM container and ask for task containers
+
+        int preAssignedContainers = 0;
         for (SimulatedContainer container : am.getContainers()) {
-          if (container.getOriginalStartTime() != null && container.getHostName() != null)
-            (rm.getPluginPolicy()).forceContainerAssignment(appId, container.getHostName());
+          if (context.isOnlineSimulation() && container.getHostName() != null) {
+            Priority priority = Priority.newInstance(container.getType().equals("map") ? MRAMDaemon.PRIORITY_MAP :
+              MRAMDaemon.PRIORITY_REDUCE);
+            if (!(rm.getPluginPolicy()).forceContainerAssignment(appId, container.getHostName(), priority))
+              throw new PosumException(MessageFormat.format("Sim={0}: Could not pre-assign container for {1}", context.getSchedulerClass().getSimpleName(), container.getTaskId()));
+            preAssignedContainers++;
+            LOG.trace(MessageFormat.format("Sim={0}: Pre-assigned container for {1}", context.getSchedulerClass().getSimpleName(), container.getTaskId()));
+          }
         }
+        if (preAssignedContainers > 0)
+          am.doStep(); // process task containers
       }
     }
   }

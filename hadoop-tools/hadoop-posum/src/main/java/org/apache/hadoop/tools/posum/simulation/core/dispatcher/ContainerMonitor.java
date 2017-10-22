@@ -69,6 +69,8 @@ public class ContainerMonitor implements EventHandler<ContainerEvent> {
       JobProfile job = db.execute(JobForAppCall.newInstance(appId.toString())).getEntity();
       if (job.getStartTime() == null)
         job.setStartTime(simulationContext.getCurrentTime());
+      if (job.getHostName() == null)
+        job.setHostName(container.getNodeId().getHost());
       db.execute(UpdateOrStoreCall.newInstance(JOB, job));
       return;
     }
@@ -81,11 +83,10 @@ public class ContainerMonitor implements EventHandler<ContainerEvent> {
           simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(),
           container.getTaskId(), container.getId()));
       }
-      if (task.getStartTime() == null) {
-        // only mark start time if it was not already running
+      if (task.getStartTime() == null)
         task.setStartTime(simulationContext.getCurrentTime());
+      if (task.getHostName() == null)
         task.setHostName(container.getNodeId().getHost());
-      }
       db.execute(UpdateOrStoreCall.newInstance(TASK, task));
     }
   }

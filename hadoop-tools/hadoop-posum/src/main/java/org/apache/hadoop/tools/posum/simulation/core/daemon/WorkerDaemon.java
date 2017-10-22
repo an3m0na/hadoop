@@ -62,7 +62,7 @@ public abstract class WorkerDaemon implements Daemon {
       } else {
         do {
           nextRun += repeatInterval;
-        } while (nextRun < simulationContext.getCurrentTime());
+        } while (nextRun <= simulationContext.getCurrentTime());
         simulationContext.getDaemonQueue().enqueue(this);
       }
     } catch (Exception e) {

@@ -206,8 +206,8 @@ public class NMDaemon extends WorkerDaemon {
         TaskPredictionInput predictionInput = new TaskPredictionInput(container.getTaskId(), getNodeId().getHost());
         lifeTimeMS = simulationContext.getPredictor().predictTaskBehavior(predictionInput).getDuration();
       }
-      if (container.getOriginalStartTime() != null)
-        lifeTimeMS -= container.getOriginalStartTime();
+      if (simulationContext.isOnlineSimulation() && container.getOriginalStartTime() != null)
+        lifeTimeMS -= simulationContext.getCurrentTime() - container.getOriginalStartTime();
       container.setEndTime(simulationContext.getCurrentTime() + lifeTimeMS);
       containerQueue.add(container);
       runningContainers.put(container.getId(), container);
