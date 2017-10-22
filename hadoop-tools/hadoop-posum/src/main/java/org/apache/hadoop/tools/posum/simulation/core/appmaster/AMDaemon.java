@@ -7,8 +7,10 @@ import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEvent;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
+import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -18,7 +20,6 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,7 @@ import static org.apache.hadoop.tools.posum.simulation.core.dispatcher.Applicati
 @Unstable
 public abstract class AMDaemon extends WorkerDaemon {
   private String oldAppId;
-  List<SimulatedContainer> initialContainers;
+  protected List<SimulatedContainer> initialContainers;
   final BlockingQueue<AllocateResponse> responseQueue;
   String amType;
   // progress
@@ -42,7 +43,9 @@ public abstract class AMDaemon extends WorkerDaemon {
   private volatile boolean registered = false;
 
   protected final Logger LOG = Logger.getLogger(AMDaemon.class);
-  String hostName;
+  protected String hostName;
+  private Map<Priority, Map<String, ResourceRequest>> requests = new HashMap<>();
+  private boolean resendRequests = false;
 
   public AMDaemon(SimulationContext simulationContext) {
     super(simulationContext);
@@ -97,7 +100,7 @@ public abstract class AMDaemon extends WorkerDaemon {
     processResponseQueue();
 
     // send out request
-    sendContainerRequest();
+    sendContainerRequests();
   }
 
   @Override
@@ -116,46 +119,78 @@ public abstract class AMDaemon extends WorkerDaemon {
 
   protected abstract void processResponseQueue() throws Exception;
 
-  protected abstract void sendContainerRequest() throws Exception;
-
-  protected List<ResourceRequest> packageRequests(
-    List<SimulatedContainer> csList, int priority) {
-    // create requests
-    Map<String, ResourceRequest> rackLocalRequestMap = new HashMap<>();
-    Map<String, ResourceRequest> nodeLocalRequestMap = new HashMap<>();
-    ResourceRequest anyRequest = null;
-    for (SimulatedContainer cs : csList) {
-      List<String> hosts = cs.getHostName() != null ? Collections.singletonList(cs.getHostName()) : cs.getPreferredLocations();
-      List<String> racks = simulationContext.getTopologyProvider().getRacks(hosts);
-      // check rack local
-      addContainers(rackLocalRequestMap, cs.getResource(), racks, priority);
-      // check node local
-      addContainers(nodeLocalRequestMap, cs.getResource(), hosts, priority);
-      // any
-      if (anyRequest == null) {
-        anyRequest = createResourceRequest(priority, cs.getResource(), ResourceRequest.ANY, 1);
-      } else {
-        anyRequest.setNumContainers(anyRequest.getNumContainers() + 1);
-      }
-    }
+  protected void sendContainerRequests() throws Exception {
     List<ResourceRequest> ask = new ArrayList<>();
-    ask.addAll(nodeLocalRequestMap.values());
-    ask.addAll(rackLocalRequestMap.values());
-    if (anyRequest != null) {
-      ask.add(anyRequest);
+    if (resendRequests) {
+      for (Map<String, ResourceRequest> requestsByResource : requests.values()) {
+        ask.addAll(requestsByResource.values());
+      }
+      LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId(), ask));
     }
-    return ask;
+
+    final AllocateRequest request = core.createAllocateRequest(ask);
+    if (totalContainers == 0) {
+      request.setProgress(1.0f);
+    } else {
+      request.setProgress((float) finishedContainers / totalContainers);
+    }
+
+    AllocateResponse response = core.sendAllocateRequest(request);
+    if (response != null) {
+      responseQueue.put(response);
+    }
+    resendRequests = false;
   }
 
-  private void addContainers(Map<String, ResourceRequest> requestMap, Resource resource, List<String> locations, int priority) {
-    for (String rack : locations) {
-      ResourceRequest request = requestMap.get(rack);
+  protected void createRequests(List<SimulatedContainer> csList, Priority priority) {
+    if (csList.isEmpty())
+      return;
+    for (SimulatedContainer container : csList)
+      incContainerRequest(container.getResource(), getAllResourceNames(container), priority);
+    resendRequests = true;
+  }
+
+  private void incContainerRequest(Resource resource, List<String> resourceNames, Priority priority) {
+    Map<String, ResourceRequest> requestMap = requests.get(priority);
+    if (requestMap == null) {
+      requestMap = new HashMap<>();
+      requests.put(priority, requestMap);
+    }
+    for (String name : resourceNames) {
+      ResourceRequest request = requestMap.get(name);
       if (request != null) {
         request.setNumContainers(request.getNumContainers() + 1);
       } else {
-        requestMap.put(rack, createResourceRequest(priority, resource, rack, 1));
+        requestMap.put(name, createResourceRequest(priority, resource, name, 1));
       }
     }
+  }
+
+  protected void removeRequests(SimulatedContainer simulatedContainer, Priority priority) {
+    List<String> resourceNames = getAllResourceNames(simulatedContainer);
+    for (String resourceName : resourceNames) {
+      decContainerRequest(priority, resourceName);
+    }
+    resendRequests = true;
+  }
+
+  private void decContainerRequest(Priority priority, String resourceName) {
+    Map<String, ResourceRequest> requestMap = requests.get(priority);
+    ResourceRequest request = requestMap.get(resourceName);
+    request.setNumContainers(request.getNumContainers() - 1);
+    if (request.getNumContainers() == 0)
+      requestMap.remove(resourceName);
+  }
+
+  private List<String> getAllResourceNames(SimulatedContainer container) {
+    List<String> locations = new ArrayList<>();
+    if (simulationContext.isOnlineSimulation() && container.getHostName() != null)
+      locations.add(container.getHostName());
+    else
+      locations.addAll(container.getPreferredLocations());
+    locations.addAll(simulationContext.getTopologyProvider().getRacks(locations));
+    locations.add(ResourceRequest.ANY);
+    return locations;
   }
 
   public ApplicationId getAppId() {

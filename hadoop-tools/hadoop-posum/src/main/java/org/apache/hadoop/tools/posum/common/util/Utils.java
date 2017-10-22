@@ -510,10 +510,10 @@ public class Utils {
     return newResourceRequest(DEFAULT_PRIORITY, host, resource, numContainers);
   }
 
-  public static ResourceRequest createResourceRequest(int prioriy,
+  public static ResourceRequest createResourceRequest(Priority prioriy,
                                                       Resource resource,
                                                       String host,
                                                       int numContainers) {
-    return newResourceRequest(Priority.newInstance(prioriy), host, resource, numContainers);
+    return newResourceRequest(prioriy, host, resource, numContainers);
   }
 }
