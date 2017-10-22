@@ -6,12 +6,12 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.data.mock.data.MockDataStoreImpl;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.newProvider;
 import static org.apache.hadoop.tools.posum.common.util.Utils.parseApplicationId;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -27,12 +27,7 @@ public class TestAppWorkCalculator {
   @Before
   public void setUp() throws Exception {
     db = Database.from(new MockDataStoreImpl(), DatabaseReference.getMain());
-    subject = new AppWorkCalculator(new DatabaseProvider() {
-      @Override
-      public Database getDatabase() {
-        return db;
-      }
-    });
+    subject = new AppWorkCalculator(newProvider(db));
     mockApp = mock(SRTFAppAttempt.class);
   }
 

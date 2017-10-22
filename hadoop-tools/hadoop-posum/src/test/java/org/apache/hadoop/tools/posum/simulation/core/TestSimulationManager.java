@@ -109,7 +109,7 @@ public class TestSimulationManager {
       .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(TASK11, TASK12, TASK21, TASK22)));
     sourceDb.execute(transaction);
 
-    testSubject = new SimulationManager(predictorMock, SCHEDULER_NAME, SCHEDULER_CLASS, dataStoreMock, TOPOLOGY, false);
+    testSubject = new SimulationManager<>(predictorMock, SCHEDULER_NAME, SCHEDULER_CLASS, dataStoreMock, TOPOLOGY, false);
 
     SimulationResultPayload ret = testSubject.call();
     System.out.println("-----------------------Before-----------------");
@@ -197,7 +197,7 @@ public class TestSimulationManager {
       .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(task11, task12, task13, task21, task22)));
     sourceDb.execute(transaction);
 
-    testSubject = new SimulationManager(predictorMock, SCHEDULER_NAME, SCHEDULER_CLASS, dataStoreMock, TOPOLOGY, true);
+    testSubject = new SimulationManager<>(predictorMock, SCHEDULER_NAME, SCHEDULER_CLASS, dataStoreMock, TOPOLOGY, true);
 
     SimulationResultPayload ret = testSubject.call();
     System.out.println("-----------------------Before-----------------");

@@ -28,6 +28,7 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_CONF;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
+import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 import static org.apache.hadoop.tools.posum.common.util.Utils.parseApplicationId;
 
 public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
@@ -76,6 +77,13 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
       job.setFinishTime(null);
       job.setHostName(null);
     }
+    if (orZero(job.getDeadline()) != 0) {
+      long newDeadline = job.getDeadline() - simulationContext.getClusterTimeAtStart();
+      if (newDeadline == 0)
+        newDeadline = 1; // to avoid considering this job a batch job due to deadline=0
+      job.setDeadline(newDeadline);
+    }
+
     transaction.addCall(StoreCall.newInstance(JOB, job));
 
     JobConfProxy jobConf = sourceDb.execute(FindByIdCall.newInstance(JOB_CONF, oldJobIdString)).getEntity();

@@ -1,45 +1,35 @@
-package org.apache.hadoop.tools.posum.simulation.core;
+package org.apache.hadoop.tools.posum.common.util.cluster;
 
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
-import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.getDuration;
 
-public class SimulationEvaluator {
+public class PerformanceEvaluator {
   private static final Long MIN_EXECUTION_TIME = 10000L;
   private Double slowdown = 0.0;
   private Double penalty = 0.0;
   private Double cost = 0.0; // TODO this when cluster resizing is implemented
-  private Database db;
+  private DatabaseProvider dbProvider;
   private int dcNum = 0;
 
-  public SimulationEvaluator(Database db) {
-    this.db = db;
+  public PerformanceEvaluator(DatabaseProvider dbProvider) {
+    this.dbProvider = dbProvider;
   }
 
   public CompoundScorePayload evaluate() {
+    Database db = dbProvider.getDatabase();
     List<JobProfile> finishedJobs = db.execute(FindByQueryCall.newInstance(DataEntityCollection.JOB_HISTORY, null)).getEntities();
-    List<JobConfProxy> finishedJobConfs = db.execute(FindByQueryCall.newInstance(DataEntityCollection.JOB_CONF_HISTORY, null)).getEntities();
-    Map<String, Long> deadlinesById = new HashMap<>();
-    for (JobConfProxy jobConf : finishedJobConfs) {
-      String deadlineString = jobConf.getEntry(PosumConfiguration.APP_DEADLINE);
-      if (deadlineString != null && deadlineString.length() > 0)
-        deadlinesById.put(jobConf.getId(), Long.valueOf(deadlineString));
-    }
     for (JobProfile job : finishedJobs) {
-      Long deadline = deadlinesById.get(job.getId());
-      if (deadline == null) {
+      if (job.getDeadline() == null) {
         // BC job; calculate slowdown
         long runtime = getDuration(job);
         FindByQueryCall findTasks = FindByQueryCall.newInstance(DataEntityCollection.TASK_HISTORY, QueryUtils.is("jobId", job.getId()));
@@ -51,7 +41,7 @@ public class SimulationEvaluator {
         slowdown += 1.0 * runtime / Math.max(executionTime, MIN_EXECUTION_TIME);
       } else {
         // DC job; calculate deadline violation
-        penalty += Math.pow((Math.max(job.getFinishTime() - deadline, 0)), 2);
+        penalty += Math.pow((Math.max(job.getFinishTime() - job.getDeadline(), 0)), 2);
         dcNum++;
       }
     }

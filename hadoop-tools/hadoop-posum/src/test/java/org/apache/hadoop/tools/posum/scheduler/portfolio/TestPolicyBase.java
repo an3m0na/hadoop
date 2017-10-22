@@ -1,9 +1,9 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
-import org.apache.hadoop.tools.posum.client.data.Database;
-import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.cluster.InjectableResourceScheduler;
 import org.apache.hadoop.tools.posum.scheduler.TestSchedulerBase;
+
+import static org.apache.hadoop.tools.posum.common.util.Utils.newProvider;
 
 
 public abstract class TestPolicyBase<T extends PluginPolicy> extends TestSchedulerBase {
@@ -15,11 +15,6 @@ public abstract class TestPolicyBase<T extends PluginPolicy> extends TestSchedul
 
   @Override
   protected InjectableResourceScheduler initScheduler() {
-    return new InjectableResourceScheduler<>(schedulerClass, new DatabaseProvider() {
-      @Override
-      public Database getDatabase() {
-        return db;
-      }
-    });
+    return new InjectableResourceScheduler<>(schedulerClass, newProvider(db));
   }
 }

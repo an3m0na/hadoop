@@ -38,7 +38,7 @@ public class PosumConfiguration {
   public static final int CLUSTER_MONITOR_HEARTBEAT_MS_DEFAULT = 1000;
 
   public static final String POSUM_MONITOR_HEARTBEAT_MS = MONITOR_PREFIX + "posum.heartbeat.ms";
-  public static final int POSUM_MONITOR_HEARTBEAT_MS_DEFAULT = 2000;
+  public static final int POSUM_MONITOR_HEARTBEAT_MS_DEFAULT = 5000;
 
   public static final String PREDICTION_BUFFER = PREDICTOR_PREFIX + "buffer";
   public static final int PREDICTION_BUFFER_DEFAULT = 5;
