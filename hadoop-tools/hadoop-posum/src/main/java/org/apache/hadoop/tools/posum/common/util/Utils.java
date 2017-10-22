@@ -24,6 +24,7 @@ import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
+import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.communication.StandardProtocol;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -515,5 +516,14 @@ public class Utils {
                                                       String host,
                                                       int numContainers) {
     return newResourceRequest(prioriy, host, resource, numContainers);
+  }
+
+  public static DatabaseProvider newProvider(final Database db) {
+    return new DatabaseProvider() {
+      @Override
+      public Database getDatabase() {
+        return db;
+      }
+    };
   }
 }

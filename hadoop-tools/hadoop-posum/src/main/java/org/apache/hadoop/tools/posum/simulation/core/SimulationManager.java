@@ -9,6 +9,7 @@ import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
+import org.apache.hadoop.tools.posum.common.util.cluster.PerformanceEvaluator;
 import org.apache.hadoop.tools.posum.common.util.cluster.TopologyProvider;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEventType;
@@ -25,7 +26,7 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
 
-class SimulationManager implements Callable<SimulationResultPayload> {
+class SimulationManager<T extends PluginPolicy> implements Callable<SimulationResultPayload> {
   private static final Log logger = LogFactory.getLog(SimulationManager.class);
 
   private volatile boolean exit = false;
@@ -37,11 +38,12 @@ class SimulationManager implements Callable<SimulationResultPayload> {
   private SimulationStatistics stats;
   private static final FindByQueryCall GET_LATEST =
     FindByQueryCall.newInstance(JOB, null, "lastUpdated", true, 0, 1);
-  private SimulationContext simulationContext;
+  private SimulationContext<T> simulationContext;
+  private PerformanceEvaluator performanceEvaluator;
 
   SimulationManager(JobBehaviorPredictor predictor,
                     String policyName,
-                    Class<? extends PluginPolicy> policyClass,
+                    Class<T> policyClass,
                     DataStore dataStore,
                     Map<String, String> topology,
                     boolean onlineSimulation) {
@@ -50,6 +52,7 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     this.dataStore = dataStore;
     stats = new SimulationStatistics();
     simulationContext = new SimulationContext<>(policyClass);
+    performanceEvaluator = new PerformanceEvaluator(simulationContext);
     TopologyProvider topologyProvider = topology == null ? new TopologyProvider(simulationContext.getConf(), dataStore) :
       new TopologyProvider(topology);
     simulationContext.setTopologyProvider(topologyProvider);
@@ -100,8 +103,8 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     setUp();
     try {
       dataStore.execute(StoreLogCall.newInstance("Starting simulation for " + policyName), null);
-      new SimulationRunner(simulationContext).run();
-      return SimulationResultPayload.newInstance(policyName, new SimulationEvaluator(db).evaluate());
+      new SimulationRunner<>(simulationContext).run();
+      return SimulationResultPayload.newInstance(policyName, performanceEvaluator.evaluate());
     } catch (InterruptedException e) {
       if (!exit)
         // exiting was not intentional

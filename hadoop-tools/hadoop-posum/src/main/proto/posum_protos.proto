@@ -275,6 +275,7 @@ enum PayloadTypeProto {
     PLD_COLLECTION_MAP = 6;
     PLD_POLICY_INFO_MAP = 7;
     PLD_PROPERTY_MAP = 8;
+    PLD_COMPOUND_SCORE = 9;
 }
 
 message SimplePropertyPayloadProto {

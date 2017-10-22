@@ -21,6 +21,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.StringStringMapPaylo
 import org.apache.hadoop.tools.posum.common.records.payload.TaskPredictionPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.cluster.PerformanceEvaluator;
 import org.apache.hadoop.tools.posum.common.util.conf.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.CLUSTER_METRICS;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.PERFORMANCE;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.SYSTEM_METRICS;
 
 public class PosumInfoCollector {
@@ -46,7 +48,7 @@ public class PosumInfoCollector {
 
   private final PosumAPIClient api;
   private final Database logDb;
-  private final DataStore dataStore;
+  private final Database mainDb;
   private final Configuration conf;
   private final Map<String, PolicyInfoPayload> policyMap;
   private final Set<String> activeNodes;
@@ -60,11 +62,13 @@ public class PosumInfoCollector {
   private JobBehaviorPredictor basicPredictor;
   private JobBehaviorPredictor standardPredictor;
   private JobBehaviorPredictor detailedPredictor;
+  private PerformanceEvaluator performanceEvaluator;
 
   public PosumInfoCollector(Configuration conf, DataStore dataStore) {
-    this.dataStore = dataStore;
-    this.logDb = Database.from(dataStore, DatabaseReference.getLogs());
     this.conf = conf;
+    logDb = Database.from(dataStore, DatabaseReference.getLogs());
+    mainDb = Database.from(dataStore, DatabaseReference.getMain());
+    performanceEvaluator = new PerformanceEvaluator(Utils.newProvider(mainDb));
     fineGrained = conf.getBoolean(PosumConfiguration.FINE_GRAINED_MONITOR,
       PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
     continuousPrediction = conf.getBoolean(PosumConfiguration.CONTINUOUS_PREDICTION,
@@ -90,7 +94,7 @@ public class PosumInfoCollector {
   synchronized void collect() {
     long now = System.currentTimeMillis();
 
-    if(fineGrained) {
+    if (fineGrained) {
       Map<String, String> systemMetrics = new HashMap<>(4);
       for (Utils.PosumProcess posumProcess : Utils.PosumProcess.values()) {
         String response = api.getSystemMetrics(posumProcess);
@@ -111,13 +115,11 @@ public class PosumInfoCollector {
     if (continuousPrediction) {
       if (now - lastPrediction > predictionTimeout) {
         // make new predictions
-        Database db = Database.from(dataStore, DatabaseReference.getMain());
-        basicPredictor.train(db);
-        standardPredictor.train(db);
-        detailedPredictor.train(db);
-
+        basicPredictor.train(mainDb);
+        standardPredictor.train(mainDb);
+        detailedPredictor.train(mainDb);
         IdsByQueryCall getAllTasks = IdsByQueryCall.newInstance(DataEntityCollection.TASK, null);
-        List<String> taskIds = dataStore.execute(getAllTasks, DatabaseReference.getMain()).getEntries();
+        List<String> taskIds = mainDb.execute(getAllTasks).getEntries();
         for (String taskId : taskIds) {
           // prediction can throw exception if data model changes state during calculation
           storePredictionForTask(basicPredictor, taskId);
@@ -174,6 +176,10 @@ public class PosumInfoCollector {
       logDb.execute(CallUtils.storeStatReportCall(LogEntry.Type.ACTIVE_NODES,
         StringListPayload.newInstance(new ArrayList<>(activeNodes))));
     }
+
+    // calculate current evaluation score
+    LogEntry clusterMetricsLog = CallUtils.newLogEntry(PERFORMANCE, performanceEvaluator.evaluate());
+    logDb.execute(StoreLogCall.newInstance(clusterMetricsLog));
 
     lastCollectTime = now;
 
