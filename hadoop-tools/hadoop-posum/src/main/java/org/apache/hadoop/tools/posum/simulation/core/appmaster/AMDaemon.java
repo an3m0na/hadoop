@@ -78,9 +78,14 @@ public abstract class AMDaemon extends WorkerDaemon {
   }
 
   private void requestAMContainer() throws YarnException, IOException, InterruptedException {
-    LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for its AM", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
-    AllocateResponse response = hostName == null ? core.requestContainer() :
-      core.requestContainerOnNode(hostName, simulationContext.getTopologyProvider().getRack(hostName));
+    AllocateResponse response;
+    if (simulationContext.isOnlineSimulation() && hostName != null) {
+      LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for its AM on {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId(), hostName));
+      response = core.requestContainerOnNode(hostName, simulationContext.getTopologyProvider().getRack(hostName));
+    } else {
+      LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for its AM", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
+      response = core.requestContainer();
+    }
     if (response != null) {
       responseQueue.put(response);
     }
@@ -128,7 +133,7 @@ public abstract class AMDaemon extends WorkerDaemon {
       addContainers(nodeLocalRequestMap, cs.getResource(), hosts, priority);
       // any
       if (anyRequest == null) {
-        anyRequest = createResourceRequest(cs.getResource(), ResourceRequest.ANY, 1);
+        anyRequest = createResourceRequest(priority, cs.getResource(), ResourceRequest.ANY, 1);
       } else {
         anyRequest.setNumContainers(anyRequest.getNumContainers() + 1);
       }
@@ -148,7 +153,7 @@ public abstract class AMDaemon extends WorkerDaemon {
       if (request != null) {
         request.setNumContainers(request.getNumContainers() + 1);
       } else {
-        requestMap.put(rack, createResourceRequest(resource, rack, 1));
+        requestMap.put(rack, createResourceRequest(priority, resource, rack, 1));
       }
     }
   }

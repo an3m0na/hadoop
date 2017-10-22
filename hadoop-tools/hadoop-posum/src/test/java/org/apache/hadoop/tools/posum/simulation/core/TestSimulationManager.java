@@ -2,6 +2,8 @@ package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.MRJobConfig;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.mapreduce.v2.util.MRBuilderUtils;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
@@ -47,6 +49,7 @@ import static org.apache.hadoop.tools.posum.test.Utils.APP1;
 import static org.apache.hadoop.tools.posum.test.Utils.APP2;
 import static org.apache.hadoop.tools.posum.test.Utils.DURATION_UNIT;
 import static org.apache.hadoop.tools.posum.test.Utils.JOB1;
+import static org.apache.hadoop.tools.posum.test.Utils.JOB1_ID;
 import static org.apache.hadoop.tools.posum.test.Utils.JOB2;
 import static org.apache.hadoop.tools.posum.test.Utils.NODE1;
 import static org.apache.hadoop.tools.posum.test.Utils.NODE2;
@@ -152,6 +155,7 @@ public class TestSimulationManager {
     JobProfile job1 = JOB1.copy();
     job1.setDeadline(0L);
     job1.setFinishTime(null);
+    job1.setTotalReduceTasks(2);
     job1.setCompletedMaps(1);
 
     JobProfile job2 = JOB2.copy();
@@ -170,20 +174,27 @@ public class TestSimulationManager {
     JobConfProxy jobConf2 = jobConf1.copy();
     jobConf2.setId(job2.getId());
 
-    TaskProfile task11 = TASK11.copy(), task12 = TASK12.copy(), task21 = TASK21.copy(), task22 = TASK22.copy();
+    TaskProfile task11 = TASK11.copy(), task12 = TASK12.copy(), task13 = TASK12.copy(), task21 = TASK21.copy(), task22 = TASK22.copy();
     task11.setFinishTime(job1.getStartTime() + DURATION_UNIT);
     task12.setStartTime(null);
     task12.setFinishTime(null);
+    task13.setStartTime(job1.getStartTime());
+    task13.setId(MRBuilderUtils.newTaskId(JOB1_ID, 3, TaskType.REDUCE).toString());
+    task13.setHostName(NODE2);
+    task13.setFinishTime(null);
+    task12.setHostName(null);
     task21.setStartTime(null);
     task21.setFinishTime(null);
+    task21.setHostName(null);
     task22.setStartTime(null);
     task22.setFinishTime(null);
+    task22.setHostName(null);
+
 
     TransactionCall transaction = TransactionCall.newInstance()
       .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(job1, job2)))
       .addCall(StoreAllCall.newInstance(JOB_CONF, Arrays.asList(jobConf1, jobConf2)))
-      .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(task11, task12)))
-      .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(task21, task22)));
+      .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(task11, task12, task13, task21, task22)));
     sourceDb.execute(transaction);
 
     testSubject = new SimulationManager(predictorMock, SCHEDULER_NAME, SCHEDULER_CLASS, dataStoreMock, TOPOLOGY, true);
@@ -209,7 +220,7 @@ public class TestSimulationManager {
     assertThat(jobs.get(0).getStartTime(), is(0L));
     assertThat(jobs.get(0).getFinishTime().doubleValue(), closeTo(186000, 2001));
     assertThat(jobs.get(0).getCompletedMaps(), is(1));
-    assertThat(jobs.get(0).getCompletedReduces(), is(1));
+    assertThat(jobs.get(0).getCompletedReduces(), is(2));
     assertThat(jobs.get(1).getStartTime().doubleValue(), closeTo(62000, 1001));
     assertThat(jobs.get(1).getFinishTime().doubleValue(), closeTo(186000, 2001));
     assertThat(jobs.get(1).getCompletedMaps(), is(2));
@@ -219,9 +230,11 @@ public class TestSimulationManager {
     assertThat(tasks.get(0).getFinishTime(), is(60000L));
     assertThat(tasks.get(1).getStartTime().doubleValue(), closeTo(64000, 2001L));
     assertThat(tasks.get(1).getFinishTime().doubleValue(), closeTo(186000, 2001));
-    assertThat(tasks.get(2).getStartTime().doubleValue(), closeTo(64000, 2001L));
-    assertThat(tasks.get(2).getFinishTime().doubleValue(), closeTo(186000, 2001));
-    assertThat(tasks.get(3).getStartTime().doubleValue(), closeTo(64000, 2001));
+    assertThat(tasks.get(2).getStartTime(), is(0L));
+    assertThat(tasks.get(2).getFinishTime().doubleValue(), closeTo(124000, 2001));
+    assertThat(tasks.get(3).getStartTime().doubleValue(), closeTo(64000, 2001L));
     assertThat(tasks.get(3).getFinishTime().doubleValue(), closeTo(186000, 2001));
+    assertThat(tasks.get(4).getStartTime().doubleValue(), closeTo(64000, 2001));
+    assertThat(tasks.get(4).getFinishTime().doubleValue(), closeTo(186000, 2001));
   }
 } 

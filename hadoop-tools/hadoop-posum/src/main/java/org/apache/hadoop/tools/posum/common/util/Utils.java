@@ -509,4 +509,11 @@ public class Utils {
                                                       int numContainers) {
     return newResourceRequest(DEFAULT_PRIORITY, host, resource, numContainers);
   }
+
+  public static ResourceRequest createResourceRequest(int prioriy,
+                                                      Resource resource,
+                                                      String host,
+                                                      int numContainers) {
+    return newResourceRequest(Priority.newInstance(prioriy), host, resource, numContainers);
+  }
 }

@@ -69,12 +69,12 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     String oldJobIdString = oldJobId.toString();
     JobProfile job = sourceDb.execute(FindByIdCall.newInstance(JOB, oldJobIdString)).getEntity();
     job.setAppId(appIdString);
-    if (simulationContext.isOnlineSimulation()) {
-      if (job.getStartTime() != null)
-        job.setStartTime(job.getStartTime() - simulationContext.getClusterTimeAtStart());
-    } else {
+    if (simulationContext.isOnlineSimulation() && job.getHostName() != null)
+      job.setStartTime(job.getStartTime() - simulationContext.getClusterTimeAtStart());
+    else {
       job.setStartTime(null);
       job.setFinishTime(null);
+      job.setHostName(null);
     }
     transaction.addCall(StoreCall.newInstance(JOB, job));
 
@@ -93,14 +93,14 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     transaction.addCall(StoreAllCall.newInstance(TASK, tasks));
     for (TaskProfile task : tasks) {
       task.setAppId(appIdString);
-      if (simulationContext.isOnlineSimulation()) {
-        if (task.getStartTime() != null)
-          task.setStartTime(task.getStartTime() - simulationContext.getClusterTimeAtStart());
+      if (simulationContext.isOnlineSimulation() && task.getHostName() != null) {
+        task.setStartTime(task.getStartTime() - simulationContext.getClusterTimeAtStart());
         if (task.getFinishTime() != null)
           task.setFinishTime(task.getFinishTime() - simulationContext.getClusterTimeAtStart());
       } else {
         task.setStartTime(null);
         task.setFinishTime(null);
+        task.setHostName(null);
       }
       CountersProxy taskCounters = sourceDb.execute(FindByIdCall.newInstance(COUNTER, task.getId())).getEntity();
       if (taskCounters != null) {

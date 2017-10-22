@@ -73,8 +73,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.DEFAULT_PRIORITY;
-
 public abstract class SimpleQueuePolicy<
   A extends FiCaPluginApplicationAttempt,
   N extends FiCaPluginSchedulerNode,
@@ -1004,7 +1002,7 @@ public abstract class SimpleQueuePolicy<
   }
 
   @Override
-  public void forceContainerAssignment(ApplicationId appId, String hostName) {
+  public boolean forceContainerAssignment(ApplicationId appId, String hostName, Priority priority) {
     N node = null;
     for (Map.Entry<NodeId, N> nodeEntry : nodes.entrySet()) {
       if (nodeEntry.getKey().getHost().equals(hostName))
@@ -1012,8 +1010,9 @@ public abstract class SimpleQueuePolicy<
     }
     if (node == null)
       throw new PosumException("Node could not be found for " + hostName);
-    assignContainer(node, applications.get(appId).getCurrentAppAttempt(), DEFAULT_PRIORITY, 1,
+    int containers = assignContainer(node, applications.get(appId).getCurrentAppAttempt(), priority, 1,
       Utils.createResourceRequest(minimumAllocation, hostName, 1), NodeType.NODE_LOCAL);
+    return containers == 1;
   }
 }
 
