@@ -27,6 +27,7 @@ public class SingleEntityPayloadPBImpl extends SingleEntityPayload implements Pa
     viaProto = true;
   }
 
+  @Override
   public SingleEntityPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();

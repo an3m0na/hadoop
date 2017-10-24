@@ -1,7 +1,5 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
@@ -17,8 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public class CounterGroupInfoPayloadPBImpl extends CounterGroupInfoPayload implements PayloadPB {
   private CounterGroupInfoPayloadProto proto = CounterGroupInfoPayloadProto.getDefaultInstance();
   private CounterGroupInfoPayloadProto.Builder builder = null;
@@ -35,8 +31,7 @@ public class CounterGroupInfoPayloadPBImpl extends CounterGroupInfoPayload imple
     viaProto = true;
   }
 
-  @JsonIgnore
-  @org.codehaus.jackson.annotate.JsonIgnore
+  @Override
   public CounterGroupInfoPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();

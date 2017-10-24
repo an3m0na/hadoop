@@ -195,6 +195,7 @@ message LogEntryProto {
         LG_NODE_REMOVE = 7;
         LG_SYSTEM_METRICS = 8;
         LG_CLUSTER_METRICS = 9;
+        LG_PERFORMANCE = 10;
     }
 }
 

@@ -23,6 +23,7 @@ public class SimulationResultPayloadPBImpl extends SimulationResultPayload imple
     viaProto = true;
   }
 
+  @Override
   public SimulationResultPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();
