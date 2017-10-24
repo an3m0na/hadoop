@@ -35,6 +35,7 @@ public class CollectionMapPayloadPBImpl extends CollectionMapPayload implements 
     viaProto = true;
   }
 
+  @Override
   public CollectionMapPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();

@@ -1,7 +1,5 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
@@ -10,8 +8,6 @@ import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.yarn.proto.PosumProtos.TaskPredictionPayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.TaskPredictionPayloadProtoOrBuilder;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload implements PayloadPB {
   private TaskPredictionPayloadProto proto = TaskPredictionPayloadProto.getDefaultInstance();
   private TaskPredictionPayloadProto.Builder builder = null;
@@ -26,8 +22,7 @@ public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload implement
     viaProto = true;
   }
 
-  @JsonIgnore
-  @org.codehaus.jackson.annotate.JsonIgnore
+  @Override
   public TaskPredictionPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();

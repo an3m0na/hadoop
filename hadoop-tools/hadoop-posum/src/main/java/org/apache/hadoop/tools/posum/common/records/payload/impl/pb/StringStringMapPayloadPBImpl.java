@@ -1,7 +1,5 @@
 package org.apache.hadoop.tools.posum.common.records.payload.impl.pb;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
@@ -15,8 +13,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@org.codehaus.jackson.annotate.JsonIgnoreProperties(ignoreUnknown = true)
 public class StringStringMapPayloadPBImpl extends StringStringMapPayload implements PayloadPB {
   private StringStringMapPayloadProto proto = StringStringMapPayloadProto.getDefaultInstance();
   private StringStringMapPayloadProto.Builder builder = null;
@@ -33,8 +29,7 @@ public class StringStringMapPayloadPBImpl extends StringStringMapPayload impleme
     viaProto = true;
   }
 
-  @JsonIgnore
-  @org.codehaus.jackson.annotate.JsonIgnore
+  @Override
   public StringStringMapPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();
@@ -145,8 +140,6 @@ public class StringStringMapPayloadPBImpl extends StringStringMapPayload impleme
     this.entries = entries;
   }
 
-  @JsonIgnore
-  @org.codehaus.jackson.annotate.JsonIgnore
   @Override
   public ByteString getProtoBytes() {
     return getProto().toByteString();

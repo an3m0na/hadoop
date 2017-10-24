@@ -22,6 +22,7 @@ public class CompoundScorePayloadPBImpl extends CompoundScorePayload implements 
     viaProto = true;
   }
 
+  @Override
   public CompoundScorePayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();

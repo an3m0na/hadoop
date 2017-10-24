@@ -31,6 +31,7 @@ public class PropertyMapPayloadPBImpl extends PropertyMapPayload implements Payl
     viaProto = true;
   }
 
+  @Override
   public PropertyMapPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();

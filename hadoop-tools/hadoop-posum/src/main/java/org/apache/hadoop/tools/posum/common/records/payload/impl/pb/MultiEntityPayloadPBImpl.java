@@ -32,6 +32,7 @@ public class MultiEntityPayloadPBImpl extends MultiEntityPayload implements Payl
     viaProto = true;
   }
 
+  @Override
   public MultiEntityPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();

@@ -26,6 +26,7 @@ public class DatabaseAlterationPayloadPBImpl extends DatabaseAlterationPayload i
     viaProto = true;
   }
 
+  @Override
   public DatabaseAlterationPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();
