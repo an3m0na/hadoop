@@ -237,8 +237,8 @@ public class SimulationRunner<T extends PluginPolicy> {
         if (!(rm.getPluginPolicy()).forceContainerAssignment(appId, am.getHostName()))
           throw new PosumException(MessageFormat.format("Sim={0}: Could not pre-assign AM container for {1}", context.getSchedulerClass().getSimpleName(), appId));
         LOG.trace(MessageFormat.format("Sim={0}: Pre-assigned AM container for {1}", context.getSchedulerClass().getSimpleName(), appId));
-        am.doStep(); // ask for AM container
-        am.doStep(); // process the AM container and ask for task containers
+        am.doStep(); // process the AM container
+        am.doStep(); // ask for task containers
 
         int preAssignedContainers = 0;
         for (SimulatedContainer container : am.getContainers()) {

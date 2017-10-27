@@ -74,7 +74,7 @@ public class ContainerMonitor implements EventHandler<ContainerEvent> {
       db.execute(UpdateOrStoreCall.newInstance(JOB, job));
       return;
     }
-    LOG.trace(MessageFormat.format("Sim={0} T={1}: Container started for {2}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), container.getTaskId()));
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: Container started: {2}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), container));
 
     synchronized (db) {
       TaskProfile task = db.execute(FindByIdCall.newInstance(TASK, container.getTaskId())).getEntity();
@@ -98,7 +98,7 @@ public class ContainerMonitor implements EventHandler<ContainerEvent> {
       return;
     }
 
-    LOG.trace(MessageFormat.format("Sim={0} T={1}: Container finished for {2}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), container.getTaskId()));
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: Container finished: {2}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), container));
     synchronized (db) {
       boolean jobFinished = false;
       TaskProfile task = db.execute(FindByIdCall.newInstance(TASK, container.getTaskId())).getEntity();

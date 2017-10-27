@@ -143,4 +143,21 @@ public class SimulatedContainer implements Delayed {
   public void setPriority(Priority priority) {
     this.priority = priority;
   }
+
+  @Override
+  public String toString() {
+    return "SimulatedContainer{" +
+      "id=" + id +
+      ", resource=" + resource +
+      ", endTime=" + endTime +
+      ", lifeTime=" + lifeTime +
+      ", preferredLocations=" + preferredLocations +
+      ", originalStartTime=" + originalStartTime +
+      ", priority=" + priority +
+      ", type='" + type + '\'' +
+      ", nodeId=" + nodeId +
+      ", taskId='" + taskId + '\'' +
+      ", hostName='" + hostName + '\'' +
+      '}';
+  }
 }
