@@ -10,6 +10,8 @@ import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContai
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.Container;
+import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
@@ -21,6 +23,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -28,6 +31,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.createResourceRequest;
 import static org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEventType.APPLICATION_SUBMITTED;
+import static org.apache.hadoop.yarn.api.records.ResourceRequest.ANY;
 
 @Private
 @Unstable
@@ -46,6 +50,7 @@ public abstract class AMDaemon extends WorkerDaemon {
   protected String hostName;
   private Map<Priority, Map<String, ResourceRequest>> requests = new HashMap<>();
   private boolean resendRequests = false;
+  private List<ContainerId> releaseList = new LinkedList<>();
 
   public AMDaemon(SimulationContext simulationContext) {
     super(simulationContext);
@@ -68,8 +73,7 @@ public abstract class AMDaemon extends WorkerDaemon {
   public void doFirstStep() throws Exception {
     LOG.trace(MessageFormat.format("Sim={0} T={1}: Submitting app for {2}", simulationContext.getSchedulerClass().getSimpleName(), oldAppId));
     core.submit();
-    simulationContext.getDispatcher().getEventHandler()
-      .handle(new ApplicationEvent(APPLICATION_SUBMITTED, oldAppId, core.getAppId()));
+    simulationContext.getDispatcher().getEventHandler().handle(new ApplicationEvent(APPLICATION_SUBMITTED, oldAppId, core.getAppId()));
 
     LOG.trace(MessageFormat.format("Sim={0} T={1}: Registering a new application {2}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
     core.registerWithRM();
@@ -96,11 +100,11 @@ public abstract class AMDaemon extends WorkerDaemon {
 
   @Override
   public void doStep() throws Exception {
-    // process responses in the queue
-    processResponseQueue();
-
     // send out request
     sendContainerRequests();
+
+    // process responses in the queue
+    processResponseQueue();
   }
 
   @Override
@@ -123,17 +127,17 @@ public abstract class AMDaemon extends WorkerDaemon {
     List<ResourceRequest> ask = new ArrayList<>();
     if (resendRequests) {
       for (Map<String, ResourceRequest> requestsByResource : requests.values()) {
-        ask.addAll(requestsByResource.values());
+        for (ResourceRequest request : requestsByResource.values()) {
+          // create a copy so that it will not be modified by scheduler
+          ask.add(ResourceRequest.newInstance(request.getPriority(), request.getResourceName(), request.getCapability(), request.getNumContainers()));
+        }
       }
       LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId(), ask));
     }
 
     final AllocateRequest request = core.createAllocateRequest(ask);
-    if (totalContainers == 0) {
-      request.setProgress(1.0f);
-    } else {
-      request.setProgress((float) finishedContainers / totalContainers);
-    }
+    request.setProgress(totalContainers == 0 ? 1.0f : (float) finishedContainers / totalContainers);
+    request.setReleaseList(releaseList);
 
     AllocateResponse response = core.sendAllocateRequest(request);
     if (response != null) {
@@ -178,7 +182,7 @@ public abstract class AMDaemon extends WorkerDaemon {
     Map<String, ResourceRequest> requestMap = requests.get(priority);
     ResourceRequest request = requestMap.get(resourceName);
     request.setNumContainers(request.getNumContainers() - 1);
-    if (request.getNumContainers() == 0)
+    if (!resourceName.equals(ANY) && request.getNumContainers() == 0)
       requestMap.remove(resourceName);
   }
 
@@ -189,8 +193,12 @@ public abstract class AMDaemon extends WorkerDaemon {
     else
       locations.addAll(container.getPreferredLocations());
     locations.addAll(simulationContext.getTopologyProvider().getRacks(locations));
-    locations.add(ResourceRequest.ANY);
+    locations.add(ANY);
     return locations;
+  }
+
+  protected void releaseContainer(Container container) {
+    releaseList.add(container.getId());
   }
 
   public ApplicationId getAppId() {

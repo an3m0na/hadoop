@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -101,38 +102,30 @@ public class MRAMDaemon extends AMDaemon {
   }
 
   @Override
-  protected void processResponseQueue()
-    throws InterruptedException, YarnException, IOException {
-    LOG.trace(MessageFormat.format("Sim={0} T={1}: App {2} gets containers {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), getAppId(), !responseQueue.isEmpty() ? responseQueue.peek().getAllocatedContainers() : "no containers"));
-
-    // Check whether receive the am container
-    if (!isAMContainerRunning) {
-      if (!responseQueue.isEmpty()) {
-        AllocateResponse response = responseQueue.take();
-        if (response != null
-          && !response.getAllocatedContainers().isEmpty()) {
-          // Get AM container
-          Container container = response.getAllocatedContainers().get(0);
-          // Start AM container
-          amContainer = new SimulatedContainer(
-            simulationContext,
-            container.getResource(),
-            AM_TYPE,
-            container.getNodeId(),
-            container.getId()
-          );
-          simulationContext.getDispatcher().getEventHandler()
-            .handle(new ContainerEvent(CONTAINER_STARTED, amContainer));
-          LOG.trace(MessageFormat.format("T={0}: Application {1} starts its " +
-            "AM container ({2}).", simulationContext.getCurrentTime(), core.getAppId(), amContainer.getId()));
-          isAMContainerRunning = true;
-        }
-      }
-      return;
-    }
-
+  protected void processResponseQueue() throws InterruptedException, YarnException, IOException {
     while (!responseQueue.isEmpty()) {
       AllocateResponse response = responseQueue.take();
+      if (!isAMContainerRunning) {
+        // Check whether receive the am container
+        if (response == null || response.getAllocatedContainers().isEmpty())
+          continue;
+        // Get AM container
+        Container container = response.getAllocatedContainers().get(0);
+        LOG.trace(MessageFormat.format("Sim={0} T={1}: App {2} gets AM container", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), getAppId(), container));
+        // Start AM container
+        amContainer = new SimulatedContainer(
+          simulationContext,
+          container.getResource(),
+          AM_TYPE,
+          container.getNodeId(),
+          container.getId()
+        );
+        simulationContext.getDispatcher().getEventHandler().handle(new ContainerEvent(CONTAINER_STARTED, amContainer));
+        LOG.trace(MessageFormat.format("T={0}: Application {1} starts its " +
+          "AM container ({2}).", simulationContext.getCurrentTime(), core.getAppId(), amContainer.getId()));
+        isAMContainerRunning = true;
+        return;
+      }
 
       // check completed containers
       if (!response.getCompletedContainersStatuses().isEmpty()) {
@@ -145,16 +138,14 @@ public class MRAMDaemon extends AMDaemon {
               SimulatedContainer simulatedContainer = assignedMaps.remove(containerId);
               mapFinished++;
               finishedContainers++;
-              simulationContext.getDispatcher().getEventHandler()
-                .handle(new ContainerEvent(CONTAINER_FINISHED, simulatedContainer));
+              simulationContext.getDispatcher().getEventHandler().handle(new ContainerEvent(CONTAINER_FINISHED, simulatedContainer));
             } else if (assignedReduces.containsKey(containerId)) {
               LOG.trace(MessageFormat.format("T={0}: Application {1} has one " +
                 "reducer finished ({2}).", simulationContext.getCurrentTime(), core.getAppId(), containerId));
               SimulatedContainer simulatedContainer = assignedReduces.remove(containerId);
               reduceFinished++;
               finishedContainers++;
-              simulationContext.getDispatcher().getEventHandler()
-                .handle(new ContainerEvent(CONTAINER_FINISHED, simulatedContainer));
+              simulationContext.getDispatcher().getEventHandler().handle(new ContainerEvent(CONTAINER_FINISHED, simulatedContainer));
             } else {
               // am container released event
               isFinished = true;
@@ -171,7 +162,7 @@ public class MRAMDaemon extends AMDaemon {
               LOG.trace(MessageFormat.format("T={0}: Application {1} has one " +
                 "reducer killed ({2}).", simulationContext.getCurrentTime(), core.getAppId(), containerId));
               pendingFailedReduces.add(assignedReduces.remove(containerId));
-            } else {
+            } else if (amContainer.getId().equals(containerId)) {
               LOG.info(MessageFormat.format("T={0}: Application {1}'s AM is " +
                 "going to be killed. Restarting...", simulationContext.getCurrentTime(), core.getAppId()));
               restart();
@@ -185,13 +176,15 @@ public class MRAMDaemon extends AMDaemon {
         (mapFinished == mapTotal) &&
         (reduceFinished == reduceTotal)) {
         // to release the AM container
-        simulationContext.getDispatcher().getEventHandler()
-          .handle(new ContainerEvent(CONTAINER_FINISHED, amContainer));
+        simulationContext.getDispatcher().getEventHandler().handle(new ContainerEvent(CONTAINER_FINISHED, amContainer));
         isAMContainerRunning = false;
         LOG.trace(MessageFormat.format("T={0}: Application {1} sends out event " +
           "to clean up its AM container.", simulationContext.getCurrentTime(), core.getAppId()));
         isFinished = true;
       }
+
+      if (LOG.isTraceEnabled() && !response.getAllocatedContainers().isEmpty())
+        LOG.trace(MessageFormat.format("Sim={0} T={1}: App {2} gets containers {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), getAppId(), response.getAllocatedContainers()));
 
       for (Container container : response.getAllocatedContainers()) {
         if (simulationContext.isOnlineSimulation()) {
@@ -217,6 +210,7 @@ public class MRAMDaemon extends AMDaemon {
             unscheduleMap(scheduledContainer);
           else
             iterator.remove();
+          LOG.trace(MessageFormat.format("Sim={0} T={1}: App {2} is pre-assigned container ", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), getAppId(), container));
           startContainer(container, scheduledContainer);
           return true;
         }
@@ -253,11 +247,11 @@ public class MRAMDaemon extends AMDaemon {
   }
 
   private void assignContainer(Container container) {
-    if (isForMap(container)) {
-      startContainer(container, assignContainerToMap(container));
-    } else {
-      startContainer(container, scheduledReduces.remove());
-    }
+    SimulatedContainer assigned = isForMap(container) ? assignContainerToMap(container) : scheduledReduces.poll();
+    if (assigned != null)
+      startContainer(container, assigned);
+    else
+      releaseContainer(container);
   }
 
   private SimulatedContainer assignContainerToMap(Container allocatedContainer) {
@@ -350,7 +344,7 @@ public class MRAMDaemon extends AMDaemon {
   private void scheduleMaps(LinkedList<SimulatedContainer> pendingMaps) {
     for (SimulatedContainer pendingMap : pendingMaps) {
       scheduledMaps.add(pendingMap);
-      List<String> locations = pendingMap.getPreferredLocations();
+      List<String> locations = new ArrayList<>(pendingMap.getPreferredLocations());
       locations.addAll(simulationContext.getTopologyProvider().getRacks(locations));
       for (String location : locations) {
         LinkedList<SimulatedContainer> list = scheduledMapsByLocation.get(location);

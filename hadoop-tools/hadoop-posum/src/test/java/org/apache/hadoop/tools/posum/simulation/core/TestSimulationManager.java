@@ -130,14 +130,14 @@ public class TestSimulationManager {
     System.out.println(db.execute(FindByQueryCall.newInstance(COUNTER_HISTORY, null, ID_FIELD, false)).getEntities());
 
     assertThat(jobs.get(0).getStartTime().doubleValue(), closeTo(2000, 1001));
-    assertThat(jobs.get(0).getFinishTime().doubleValue(), closeTo(312000, 2001));
+    assertThat(jobs.get(0).getFinishTime().doubleValue(), closeTo(308000, 2001));
     assertThat(jobs.get(1).getStartTime().doubleValue(), closeTo(62000, 1001));
     assertThat(jobs.get(1).getFinishTime().doubleValue(), closeTo(186000, 2001));
 
     assertThat(tasks.get(0).getStartTime().doubleValue(), closeTo(4000, 2001));
     assertThat(tasks.get(0).getFinishTime().doubleValue(), closeTo(186000, 2001));
-    assertThat(tasks.get(1).getStartTime().doubleValue(), closeTo(190000, 2001));
-    assertThat(tasks.get(1).getFinishTime().doubleValue(), closeTo(312000, 2001));
+    assertThat(tasks.get(1).getStartTime().doubleValue(), closeTo(186000, 2001));
+    assertThat(tasks.get(1).getFinishTime().doubleValue(), closeTo(308000, 2001));
     assertThat(tasks.get(2).getStartTime().doubleValue(), closeTo(64000, 2001));
     assertThat(tasks.get(2).getFinishTime().doubleValue(), closeTo(126000, 2001));
     assertThat(tasks.get(3).getStartTime().doubleValue(), closeTo(64000, 2001));
@@ -218,23 +218,23 @@ public class TestSimulationManager {
     System.out.println(db.execute(FindByQueryCall.newInstance(COUNTER_HISTORY, null, ID_FIELD, false)).getEntities());
 
     assertThat(jobs.get(0).getStartTime(), is(0L));
-    assertThat(jobs.get(0).getFinishTime().doubleValue(), closeTo(186000, 2001));
+    assertThat(jobs.get(0).getFinishTime().doubleValue(), closeTo(182000, 2001));
     assertThat(jobs.get(0).getCompletedMaps(), is(1));
     assertThat(jobs.get(0).getCompletedReduces(), is(2));
     assertThat(jobs.get(1).getStartTime().doubleValue(), closeTo(62000, 1001));
-    assertThat(jobs.get(1).getFinishTime().doubleValue(), closeTo(186000, 2001));
+    assertThat(jobs.get(1).getFinishTime().doubleValue(), closeTo(182000, 2001));
     assertThat(jobs.get(1).getCompletedMaps(), is(2));
     assertThat(jobs.get(1).getCompletedReduces(), is(0));
 
     assertThat(tasks.get(0).getStartTime(), is(0L));
     assertThat(tasks.get(0).getFinishTime(), is(60000L));
-    assertThat(tasks.get(1).getStartTime().doubleValue(), closeTo(64000, 2001L));
-    assertThat(tasks.get(1).getFinishTime().doubleValue(), closeTo(186000, 2001));
+    assertThat(tasks.get(1).getStartTime().doubleValue(), closeTo(62000, 2001L));
+    assertThat(tasks.get(1).getFinishTime().doubleValue(), closeTo(182000, 2001));
     assertThat(tasks.get(2).getStartTime(), is(0L));
-    assertThat(tasks.get(2).getFinishTime().doubleValue(), closeTo(124000, 2001));
-    assertThat(tasks.get(3).getStartTime().doubleValue(), closeTo(64000, 2001L));
-    assertThat(tasks.get(3).getFinishTime().doubleValue(), closeTo(186000, 2001));
-    assertThat(tasks.get(4).getStartTime().doubleValue(), closeTo(64000, 2001));
-    assertThat(tasks.get(4).getFinishTime().doubleValue(), closeTo(186000, 2001));
+    assertThat(tasks.get(2).getFinishTime().doubleValue(), closeTo(122000, 2001));
+    assertThat(tasks.get(3).getStartTime().doubleValue(), closeTo(62000, 2001L));
+    assertThat(tasks.get(3).getFinishTime().doubleValue(), closeTo(182000, 2001));
+    assertThat(tasks.get(4).getStartTime().doubleValue(), closeTo(62000, 2001));
+    assertThat(tasks.get(4).getFinishTime().doubleValue(), closeTo(182000, 2001));
   }
 } 
