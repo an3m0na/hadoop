@@ -539,3 +539,7 @@ ul.nav {
 .text-nowrap {
   white-space: nowrap;
 }
+
+.an3-toggle{
+  margin: 0.5em;
+}
