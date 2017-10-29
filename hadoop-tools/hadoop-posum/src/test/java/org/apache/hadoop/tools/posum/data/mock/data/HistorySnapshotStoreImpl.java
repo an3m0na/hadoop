@@ -381,8 +381,8 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
   }
 
   @Override
-  public void copyCollection(DataEntityCollection collection, DatabaseReference sourceDB, DatabaseReference destinationDB) {
-    broker.copyCollection(collection, sourceDB, destinationDB);
+  public void copyCollections(DatabaseReference sourceDB, DatabaseReference destinationDB, List<DataEntityCollection> collections) {
+    broker.copyCollections(sourceDB, destinationDB, collections);
   }
 
   @Override

@@ -104,11 +104,11 @@ public class DataMasterClient extends AbstractService implements DataStore {
   }
 
   @Override
-  public void copyCollection(DataEntityCollection collection, DatabaseReference sourceDB, DatabaseReference destinationDB) {
+  public void copyCollections(DatabaseReference sourceDB, DatabaseReference destinationDB, List<DataEntityCollection> collections) {
     Utils.sendSimpleRequest(
       "copyCollection",
       SimpleRequest.newInstance(SimpleRequest.Type.COPY_COLL,
-        DatabaseAlterationPayload.newInstance(collection, sourceDB, destinationDB)),
+        DatabaseAlterationPayload.newInstance(sourceDB, destinationDB, collections)),
       dmClient
     );
   }

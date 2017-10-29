@@ -303,15 +303,17 @@ public class MockDataStoreImpl implements LockBasedDataStore {
   }
 
   @Override
-  public void copyCollection(DataEntityCollection collection, DatabaseReference sourceDB, DatabaseReference destinationDB) {
+  public void copyCollections(DatabaseReference sourceDB, DatabaseReference destinationDB, List<DataEntityCollection> collections) {
     lockForRead(sourceDB);
     try {
       lockForWrite(destinationDB);
       try {
-        getCollectionForWrite(destinationDB, collection).clear();
-        List<GeneralDataEntity> entities = new ArrayList<>(getCollectionForRead(sourceDB, collection).values());
-        if (entities.size() > 0)
-          storeAll(destinationDB, collection, entities);
+        for (DataEntityCollection collection : collections) {
+          getCollectionForWrite(destinationDB, collection).clear();
+          List<GeneralDataEntity> entities = new ArrayList<>(getCollectionForRead(sourceDB, collection).values());
+          if (entities.size() > 0)
+            storeAll(destinationDB, collection, entities);
+        }
       } finally {
         unlockForWrite(destinationDB);
       }

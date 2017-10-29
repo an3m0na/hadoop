@@ -15,8 +15,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
-import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.bson.Document;
 import org.mongojack.DBCursor;
 import org.mongojack.DBProjection;
@@ -377,15 +377,17 @@ public class DataStoreImpl implements LockBasedDataStore {
   }
 
   @Override
-  public void copyCollection(DataEntityCollection collection, DatabaseReference sourceDB, DatabaseReference destinationDB) {
+  public void copyCollections(DatabaseReference sourceDB, DatabaseReference destinationDB, List<DataEntityCollection> collections) {
     lockForRead(sourceDB);
     try {
       lockForWrite(destinationDB);
       try {
-        getCollectionForWrite(destinationDB, collection).drop();
-        List entities = getCollectionForRead(sourceDB, collection).find().toArray();
-        if (entities.size() > 0)
-          storeAll(destinationDB, collection, entities);
+        for (DataEntityCollection collection : collections) {
+          getCollectionForWrite(destinationDB, collection).drop();
+          List entities = getCollectionForRead(sourceDB, collection).find().toArray();
+          if (entities.size() > 0)
+            storeAll(destinationDB, collection, entities);
+        }
       } finally {
         unlockForWrite(destinationDB);
       }
