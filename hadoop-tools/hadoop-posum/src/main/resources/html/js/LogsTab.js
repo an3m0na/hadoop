@@ -9,7 +9,6 @@ function LogsTab(id, container, env) {
     self.autoScrollOn = $(this).prop('checked');
   });
   self.activate = function () {
-
     self.comm.requestData(self.path + "?since=" + self.lastRefreshed, function (data) {
       if (!data || data.length === 0)
         return;
