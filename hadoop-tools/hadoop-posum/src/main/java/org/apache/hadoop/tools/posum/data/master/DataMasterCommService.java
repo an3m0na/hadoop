@@ -129,11 +129,11 @@ public class DataMasterCommService extends CompositeService implements DataMaste
           break;
         case COPY_COLL:
           dbAlteration = (DatabaseAlterationPayload) request.getPayload();
-          dmContext.getDataStore().copyCollection(
-            dbAlteration.getTargetCollection(),
+          dmContext.getDataStore().copyCollections(
             dbAlteration.getSourceDB(),
-            dbAlteration.getDestinationDB()
-          );
+            dbAlteration.getDestinationDB(),
+            dbAlteration.getTargetCollections()
+            );
           break;
         case AWAIT_UPDATE:
           dmContext.getDataStore().awaitUpdate(

@@ -367,7 +367,7 @@ message TaskPredictionPayloadProto {
 message DatabaseAlterationPayloadProto {
     optional DatabaseProto source = 1;
     optional DatabaseProto destination = 2;
-    optional EntityCollectionProto targetCollection = 3;
+    repeated EntityCollectionProto targetCollections = 3;
 }
 
 // --------- Database Calls ---------

@@ -4,6 +4,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.yarn.util.Records;
 
+import java.util.List;
+
 public abstract class DatabaseAlterationPayload implements Payload {
 
   public static DatabaseAlterationPayload newInstance(DatabaseReference db) {
@@ -19,9 +21,11 @@ public abstract class DatabaseAlterationPayload implements Payload {
     return payload;
   }
 
-  public static DatabaseAlterationPayload newInstance(DataEntityCollection collection, DatabaseReference sourceDB, DatabaseReference destinationDB) {
+  public static DatabaseAlterationPayload newInstance(DatabaseReference sourceDB,
+                                                      DatabaseReference destinationDB,
+                                                      List<DataEntityCollection> collections) {
     DatabaseAlterationPayload payload = Records.newRecord(DatabaseAlterationPayload.class);
-    payload.setTargetCollection(collection);
+    payload.setTargetCollections(collections);
     payload.setSourceDB(sourceDB);
     payload.setDestinationDB(destinationDB);
     return payload;
@@ -35,7 +39,7 @@ public abstract class DatabaseAlterationPayload implements Payload {
 
   public abstract void setDestinationDB(DatabaseReference db);
 
-  public abstract DataEntityCollection getTargetCollection();
+  public abstract List<DataEntityCollection> getTargetCollections();
 
-  public abstract void setTargetCollection(DataEntityCollection collection);
+  public abstract void setTargetCollections(List<DataEntityCollection> collection);
 }

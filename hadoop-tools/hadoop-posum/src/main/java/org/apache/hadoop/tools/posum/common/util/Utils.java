@@ -498,11 +498,7 @@ public class Utils {
   public static void copyRunningAppInfo(DataStore dataStore, DatabaseReference source, DatabaseReference target) {
     Database simDb = Database.from(dataStore, target);
     simDb.clear();
-    dataStore.copyCollection(APP, source, target);
-    dataStore.copyCollection(JOB, source, target);
-    dataStore.copyCollection(JOB_CONF, source, target);
-    dataStore.copyCollection(TASK, source, target);
-    dataStore.copyCollection(COUNTER, source, target);
+    dataStore.copyCollections(source, target, Arrays.asList(APP, JOB, JOB_CONF, TASK, COUNTER));
   }
 
   public static ResourceRequest createResourceRequest(Resource resource,
