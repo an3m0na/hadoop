@@ -10,6 +10,7 @@ import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
@@ -29,8 +30,7 @@ import java.util.Map;
 
 public class DataMasterWebApp extends PosumWebApp {
   private static Log logger = LogFactory.getLog(PosumWebApp.class);
-
-  private final transient DataMasterContext context;
+  private final DataMasterContext context;
 
   public DataMasterWebApp(DataMasterContext context, int metricsAddressPort) {
     super(metricsAddressPort);
@@ -48,21 +48,14 @@ public class DataMasterWebApp extends PosumWebApp {
             // json request
             String call = target.substring("/ajax".length());
             JsonNode ret;
-            Long since = 0L;
             String sinceParam;
+            Long since = 0L;
             try {
               switch (call) {
                 case "/policies":
                   sinceParam = request.getParameter("since");
-                  if (sinceParam != null) {
-                    try {
-                      since = Long.valueOf(sinceParam);
-                    } catch (Exception e) {
-                      ret = wrapError("INCORRECT_PARAMETERS",
-                        "Could not parse parameter 'since'", e.getMessage());
-                      break;
-                    }
-                  }
+                  if (sinceParam != null)
+                    since = Long.valueOf(sinceParam);
                   ret = getPolicyMetrics(since);
                   break;
                 case "/system":
@@ -74,17 +67,16 @@ public class DataMasterWebApp extends PosumWebApp {
                 case "/cluster-history":
                   ret = getHistoricalClusterMetrics();
                   break;
+                case "/performance":
+                  sinceParam = request.getParameter("since");
+                  if (sinceParam != null)
+                    since = Long.valueOf(sinceParam);
+                  ret = getPerformanceReadings(since);
+                  break;
                 case "/logs":
                   sinceParam = request.getParameter("since");
-                  if (sinceParam != null) {
-                    try {
-                      since = Long.valueOf(sinceParam);
-                    } catch (Exception e) {
-                      ret = wrapError("INCORRECT_PARAMETERS",
-                        "Could not parse parameter 'since'", e.getMessage());
-                      break;
-                    }
-                  }
+                  if (sinceParam != null)
+                    since = Long.valueOf(sinceParam);
                   ret = getLogs(since);
                   break;
                 default:
@@ -121,6 +113,33 @@ public class DataMasterWebApp extends PosumWebApp {
         }
       }
     };
+  }
+
+  private JsonNode getPerformanceReadings(Long since) {
+    FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.PERFORMANCE.getCollection(),
+      QueryUtils.and(
+        QueryUtils.is("type", LogEntry.Type.PERFORMANCE),
+        QueryUtils.greaterThan("lastUpdated", since)
+      ), "lastUpdated", false);
+    List<LogEntry<CompoundScorePayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
+    JsonArray times = new JsonArray();
+    JsonArray slowdowns = new JsonArray();
+    JsonArray penalties = new JsonArray();
+    JsonArray costs = new JsonArray();
+    for (LogEntry<CompoundScorePayload> log : logs) {
+      times.add(log.getLastUpdated());
+      slowdowns.add(log.getDetails().getSlowdown());
+      penalties.add(log.getDetails().getPenalty());
+      costs.add(log.getDetails().getCost());
+    }
+    return new JsonObject()
+      .put("time", System.currentTimeMillis())
+      .put("scores", new JsonObject()
+        .put("times", times)
+        .put("slowdowns", slowdowns)
+        .put("costs", costs)
+      )
+      .getNode();
   }
 
   private JsonNode getHistoricalSystemMetrics() {

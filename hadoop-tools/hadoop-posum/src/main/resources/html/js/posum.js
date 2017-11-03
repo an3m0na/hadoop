@@ -1,5 +1,5 @@
 $(document).ready(function () {
-  var env = {state: "home", isTest: true, refreshInterval: 2000, testTime: 0};
+  var env = {state: "home", isTest: true, refreshInterval: 5000, testTime: 0};
 
   if (location.hash && location.hash.length > 1)
     env.state = location.hash.substr(1);

@@ -82,7 +82,7 @@ public class PosumWebApp extends HttpServlet {
   protected JsonNode wrapResult(Object result) {
     JsonNode wrapper = new JsonObject()
       .put("successful", true)
-      .put("result", JsonElement.wrapObject(result))
+      .put("result", JsonElement.write(result))
       .getNode();
     LoggerFactory.getLogger(getClass()).trace("Sending result " + wrapper);
     return wrapper;

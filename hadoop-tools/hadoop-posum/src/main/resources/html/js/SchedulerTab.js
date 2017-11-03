@@ -60,7 +60,7 @@ function SchedulerTab(id, container, env) {
     });
 
     path = env.isTest ? "js/psmetrics_scheduler.json" : self.comm.psPath + "/scheduler";
-    env.comm.requestData(path, function (data) {
+    self.comm.requestData(path, function (data) {
       updateTimeSeries(self,
         "plot_timecost",
         data,
