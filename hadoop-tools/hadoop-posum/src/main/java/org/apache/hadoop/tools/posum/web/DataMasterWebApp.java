@@ -61,11 +61,11 @@ public class DataMasterWebApp extends PosumWebApp {
                 case "/system":
                   ret = getSystemMetrics();
                   break;
-                case "/all-systems":
+                case "/all-system":
                   ret = getAllSystemMetrics();
                   break;
-                case "/cluster-history":
-                  ret = getHistoricalClusterMetrics();
+                case "/all-cluster":
+                  ret = getAllClusterMetrics();
                   break;
                 case "/performance":
                   sinceParam = request.getParameter("since");
@@ -146,7 +146,7 @@ public class DataMasterWebApp extends PosumWebApp {
     FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.SYSTEM_METRICS.getCollection(),
       QueryUtils.is("type", LogEntry.Type.SYSTEM_METRICS), "lastUpdated", false);
     List<LogEntry<StringStringMapPayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
-    JsonObject ret = new JsonObject();
+    JsonObject ret = new JsonObject().put("time", System.currentTimeMillis());
     for (LogEntry<StringStringMapPayload> log : logs) {
       for (Map.Entry<String, String> entry : log.getDetails().getEntries().entrySet()) {
         JsonArray list = ret.getAsArray(entry.getKey());
@@ -163,26 +163,28 @@ public class DataMasterWebApp extends PosumWebApp {
         }
       }
     }
-    ret.put("time", System.currentTimeMillis());
     return ret.getNode();
   }
 
-  private JsonNode getHistoricalClusterMetrics() {
+  private JsonNode getAllClusterMetrics() {
     FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.CLUSTER_METRICS.getCollection(),
       QueryUtils.is("type", LogEntry.Type.CLUSTER_METRICS), "lastUpdated", false);
     List<LogEntry<SimplePropertyPayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
-    JsonArray ret = new JsonArray();
+    JsonArray entries = new JsonArray();
     for (LogEntry<SimplePropertyPayload> log : logs) {
       String stringResult = (String) log.getDetails().getValue();
       try {
         JsonNode result = JsonElement.read(stringResult).getNode();
         if (result != null && result.get("successful").asBoolean())
-          ret.add(new JsonElement(result.get("result")));
+          entries.add(new JsonElement(result.get("result")));
       } catch (Exception e) {
         logger.error("Could not deserialize metrics json " + stringResult, e);
       }
     }
-    return ret.getNode();
+    return new JsonObject()
+      .put("time", System.currentTimeMillis())
+      .put("entries", entries)
+      .getNode();
   }
 
   private JsonNode getPolicyMetrics(Long since) {
