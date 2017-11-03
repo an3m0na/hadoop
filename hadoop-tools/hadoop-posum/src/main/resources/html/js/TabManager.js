@@ -17,6 +17,9 @@ function TabManager(env) {
     scheduler: function (id, container, env) {
       return new SchedulerTab(id, container, env);
     },
+    performance: function (id, container, env) {
+      return new PerformanceTab(id, container, env);
+    },
     logs: function (id, container, env) {
       return new LogsTab(id, container, env)
     }
@@ -52,7 +55,7 @@ function TabManager(env) {
 
     setInterval(function () {
       env.testTime += env.refreshInterval;
-      self.load(tabs[env.state]);
+      tabs[env.state].activate();
     }, env.refreshInterval);
 
     return self;
@@ -69,16 +72,4 @@ function TabManager(env) {
   };
 
   self.time = 0;
-  self.load = function (tab) {
-    if (tab.id === "scheduler") {
-      tab.activate();
-    } else if (tab.id === "system") {
-      tab.activate();
-    } else if (tab.id === "cluster") {
-      tab.activate();
-    } else if (tab.id === "logs") {
-      tab.activate();
-    }
-  };
-
 }

@@ -22,7 +22,7 @@ public class JsonElement {
     return innerElement;
   }
 
-  public static JsonElement wrapObject(Object object) {
+  public static JsonElement write(Object object) {
     return new JsonElement(mapper.valueToTree(object));
   }
 

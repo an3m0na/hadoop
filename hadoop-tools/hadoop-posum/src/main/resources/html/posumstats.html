@@ -16,6 +16,7 @@
   <script src="js/SchedulerTab.js"></script>
   <script src="js/SystemTab.js"></script>
   <script src="js/ClusterTab.js"></script>
+  <script src="js/PerformanceTab.js"></script>
   <script src="js/LogsTab.js"></script>
   <script src="js/TabManager.js"></script>
   <script src="js/posum.js"></script>
@@ -30,6 +31,7 @@
       <li><a class="an3-nav-link" href="#cluster">Cluster</a></li>
       <li><a class="an3-nav-link" href="#scheduler">Scheduler</a></li>
       <li><a class="an3-nav-link" href="#system">System</a></li>
+      <li><a class="an3-nav-link" href="#performance">Performance</a></li>
       <li><a class="an3-nav-link" href="#logs">Logs</a></li>
     </ul>
   </div>
@@ -57,6 +59,11 @@
     <div id="plot_policies_map"></div>
     <div id="plot_policies_list"></div>
     <div id="plot_timecost"></div>
+  </div>
+  <div id="performance" class="row an3-tab an3-dual">
+    <div id="plot_performance_slowdown"></div>
+    <div id="plot_performance_penalty"></div>
+    <div id="plot_performance_cost"></div>
   </div>
   <div id="system" class="row an3-tab an3-dual">
     <div id="plot_ps_jvm"></div>
