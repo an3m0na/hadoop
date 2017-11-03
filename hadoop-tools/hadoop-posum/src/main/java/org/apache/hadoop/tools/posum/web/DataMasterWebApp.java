@@ -61,8 +61,8 @@ public class DataMasterWebApp extends PosumWebApp {
                 case "/system":
                   ret = getSystemMetrics();
                   break;
-                case "/system-history":
-                  ret = getHistoricalSystemMetrics();
+                case "/all-systems":
+                  ret = getAllSystemMetrics();
                   break;
                 case "/cluster-history":
                   ret = getHistoricalClusterMetrics();
@@ -142,7 +142,7 @@ public class DataMasterWebApp extends PosumWebApp {
       .getNode();
   }
 
-  private JsonNode getHistoricalSystemMetrics() {
+  private JsonNode getAllSystemMetrics() {
     FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.SYSTEM_METRICS.getCollection(),
       QueryUtils.is("type", LogEntry.Type.SYSTEM_METRICS), "lastUpdated", false);
     List<LogEntry<StringStringMapPayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
@@ -163,6 +163,7 @@ public class DataMasterWebApp extends PosumWebApp {
         }
       }
     }
+    ret.put("time", System.currentTimeMillis());
     return ret.getNode();
   }
 

@@ -63,7 +63,7 @@ function updateTimeSeries(tab,
 
 var defaultTimeSeriesConfig = {
   listExtractor: function (data) {
-    return data;
+    return data.entries;
   },
   entryValueExtractor: function (entry) {
     return {label: entry.value};
@@ -95,7 +95,7 @@ function updateTimeSeriesPlot(tab,
                               element,
                               pathOrData,
                               customConfig) {
-  var config = $.extend({}, defaultTimeSeriesConfig, customConfig);
+  var config = $.extend(true, {}, defaultTimeSeriesConfig, customConfig);
   var parser = function (data) {
     var plot = tab.plots[element];
     if (plot === undefined) {
