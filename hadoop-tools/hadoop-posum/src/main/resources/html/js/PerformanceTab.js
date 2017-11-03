@@ -2,7 +2,7 @@ function PerformanceTab(id, container, env) {
   Tab.call(this, id, container, env);
   var self = this;
   self.activate = function () {
-    var path = env.isTest ? "js/dmmetrics_performance.json" : self.comm.dmPath + "/performance";
+    var path = env.isTest ? "mocks/dmmetrics_performance.json" : self.comm.dmPath + "/performance";
     self.comm.requestData(path, function (data) {
       updateTimeSeriesPlot(self, "plot_performance_slowdown", data, {
         entryValueExtractor: function (entry) {

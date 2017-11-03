@@ -2,7 +2,7 @@ function SchedulerTab(id, container, env) {
   Tab.call(this, id, container, env);
   var self = this;
   self.activate = function () {
-    var path = env.isTest ? "js/dmmetrics_policies.json" : self.comm.dmPath + "/policies";
+    var path = env.isTest ? "mocks/dmmetrics_policies.json" : self.comm.dmPath + "/policies";
     self.comm.requestData(path, function (data) {
       //plot_policies_map
       var totalTime = 0;
@@ -59,7 +59,7 @@ function SchedulerTab(id, container, env) {
       Plotly.newPlot("plot_policies_list", traces, layout);
     });
 
-    path = env.isTest ? "js/psmetrics_scheduler.json" : self.comm.psPath + "/scheduler";
+    path = env.isTest ? "mocks/psmetrics_scheduler.json" : self.comm.psPath + "/scheduler";
     self.comm.requestData(path, function (data) {
       updateTimeSeries(self,
         "plot_timecost",

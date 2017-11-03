@@ -32,7 +32,7 @@ function SystemTab(id, container, env) {
     }));
   };
   self.activate = function () {
-    var path = env.isTest ? "js/metrics_system.json" : self.comm.dmPath + "/all-system";
+    var path = env.isTest ? "mocks/dmmetrics_all-system.json" : self.comm.dmPath + "/all-system";
     self.comm.requestData(path, function (data) {
       self.updateSystemCharts("PS", "Portfolio Scheduler", data);
       self.updateSystemCharts("OM", "Orchestration Master", data);

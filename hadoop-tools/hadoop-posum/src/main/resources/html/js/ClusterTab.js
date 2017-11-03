@@ -2,7 +2,7 @@ function ClusterTab(id, container, env) {
   Tab.call(this, id, container, env);
   var self = this;
   self.activate = function () {
-    var path = env.isTest ? "js/psmetrics_cluster.json" : self.comm.dmPath + "/all-cluster";
+    var path = env.isTest ? "mocks/dmmetrics_all-cluster.json" : self.comm.dmPath + "/all-cluster";
     self.comm.requestData(path, function (data) {
       updateTimeSeriesPlot(self, "plot_apps", data, {
         entryValueExtractor: function (entry) {
