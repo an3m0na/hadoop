@@ -12,7 +12,7 @@ $(document).ready(function () {
   var tabManager = new TabManager(env).initialize();
   env.tabManager = tabManager;
 
-  var path = env.isTest ? "js/conf.json" : env.comm.masterPath + "/conf";
+  var path = env.isTest ? "mocks/conf.json" : env.comm.masterPath + "/conf";
   env.comm.requestData(path, function (data) {
     if (window.location.hostname !== "localhost") {
       var address = data.addresses.PS;
