@@ -190,9 +190,8 @@ public class DataMasterWebApp extends PosumWebApp {
   private JsonNode getPolicyMetrics(Long since) {
     return wrapResult(new JsonObject()
       .put("time", System.currentTimeMillis())
-      .put("policies", new JsonObject()
-        .put("map", composePolicyMap())
-        .put("list", composeRecentChoices(since)))
+      .put("distribution", composePolicyMap())
+      .put("entries", composeRecentChoices(since))
       .getNode());
   }
 
@@ -210,8 +209,7 @@ public class DataMasterWebApp extends PosumWebApp {
     return ret;
   }
 
-  private JsonObject composeRecentChoices(Long since) {
-    JsonArray times = new JsonArray();
+  private JsonArray composeRecentChoices(Long since) {
     JsonArray choices = new JsonArray();
     FindByQueryCall findChoices = FindByQueryCall.newInstance(LogEntry.Type.POLICY_CHANGE.getCollection(),
       QueryUtils.and(
@@ -221,10 +219,12 @@ public class DataMasterWebApp extends PosumWebApp {
     List<LogEntry<SimplePropertyPayload>> choiceLogs =
       context.getDataStore().execute(findChoices, DatabaseReference.getLogs()).getEntities();
     for (LogEntry<SimplePropertyPayload> choiceEntry : choiceLogs) {
-      times.add(choiceEntry.getLastUpdated());
-      choices.add((String) choiceEntry.getDetails().getValue());
+      choices.add(new JsonObject()
+        .put("time", choiceEntry.getLastUpdated())
+        .put("policy", (String) choiceEntry.getDetails().getValue())
+      );
     }
-    return new JsonObject().put("times", times).put("policies", choices);
+    return choices;
   }
 
   private JsonNode getLogs(Long since) {

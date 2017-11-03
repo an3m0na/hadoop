@@ -2,35 +2,37 @@
   "successful": true,
   "result": {
     "time": 1461952157630,
-    "policies": {
-      "map": {
-        "FIFO": {
-          "time": 98560,
-          "number": 8
-        },
-        "DATA": {
-          "time": 130057,
-          "number": 7
-        },
-        "EDF": {
-          "time": 58560,
-          "number": 1
-        }
+    "distribution": {
+      "FIFO": {
+        "time": 58560,
+        "number": 1
       },
-      "list": {
-        "times": [
-          1461952157630,
-          1461952157910,
-          1461952158345,
-          1461952159263
-        ],
-        "policies": [
-          "FIFO",
-          "DATA",
-          "FIFO",
-          "EDF"
-        ]
+      "EDLS_PR": {
+        "time": 98560,
+        "number": 2
+      },
+      "EDLS_SH": {
+        "time": 130057,
+        "number": 1
       }
-    }
+    },
+    "entries": [
+      {
+        "time": 1461952157630,
+        "policy": "FIFO"
+      },
+      {
+        "time": 1461952157910,
+        "policy": "EDLS_PR"
+      },
+      {
+        "time": 1461952158345,
+        "policy": "EDLS_PR"
+      },
+      {
+        "time": 1461952159263,
+        "policy": "EDLS_SH"
+      }
+    ]
   }
 }

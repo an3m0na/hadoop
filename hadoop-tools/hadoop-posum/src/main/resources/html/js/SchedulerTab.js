@@ -4,14 +4,13 @@ function SchedulerTab(id, container, env) {
   self.activate = function () {
     var path = env.isTest ? "mocks/dmmetrics_policies.json" : self.comm.dmPath + "/policies";
     self.comm.requestData(path, function (data) {
-      //plot_policies_map
       var totalTime = 0;
       var chartData = [];
       var crtColor = 0;
-      $.each(data.policies.map, function (k, v) {
+      $.each(data.distribution, function (k, v) {
         totalTime += v.time
       });
-      $.each(data.policies.map, function (k, v) {
+      $.each(data.distribution, function (k, v) {
         var trace = {
           x: [Math.round(v.time / totalTime * 100)],
           y: ["Policy"],
@@ -35,45 +34,32 @@ function SchedulerTab(id, container, env) {
           title: "Percentage of time spent running policy"
         }
       };
-      Plotly.newPlot('plot_policies_map', chartData, layout);
+      Plotly.newPlot('plot_policy_distribution', chartData, layout);
 
-      //plot_policies_list
-      var choiceList = data.policies.list;
-      traces = [{
-        x: choiceList.times,
-        y: choiceList.policies,
-        mode: "lines+markers",
-        line: {shape: "hv"},
-        type: "scatter"
-      }];
-      layout = {
-        title: "Policy Choices",
-        xaxis: {
-          title: "Time",
-          type: "date"
+      updateTimeSeriesPlot(self, "plot_policy_choices", data, {
+        entryValueExtractor: function (entry) {
+          return {"Choice": entry.policy};
         },
-        yaxis: {
-          title: "Policy"
-        }
-      };
-      Plotly.newPlot("plot_policies_list", traces, layout);
+        traceFactory: function (name) {
+          return {x: [], y: [], mode: "lines+markers", line: {shape: "hv"}, type: "scatter", name: name}
+        },
+        plotTitle: "Policy Choices",
+        yaxis: {title: "Policy"},
+        baseTime: env.isTest ? env.testTime : 0
+      });
     });
 
     path = env.isTest ? "mocks/psmetrics_scheduler.json" : self.comm.psPath + "/scheduler";
-    self.comm.requestData(path, function (data) {
-      updateTimeSeries(self,
-        "plot_timecost",
-        data,
-        function (data) {
-          return data.timecost
-        },
-        function (traceObject) {
-          return traceObject
-        },
-        "Operation Timecost",
-        {title: "Cost (MS)"},
-        env.isTest ? env.testTime : 0
-      );
+    updateTimeSeriesPlot(self, "plot_timecost", path, {
+      listExtractor: function (data) {
+        return [data];
+      },
+      entryValueExtractor: function (entry) {
+        return entry.timecost;
+      },
+      plotTitle: "Operation Timecost",
+      yaxis: {title: "Cost (MS)"},
+      baseTime: env.isTest ? env.testTime : 0
     });
   };
 }
