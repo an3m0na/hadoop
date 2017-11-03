@@ -2,35 +2,44 @@ function ClusterTab(id, container, env) {
   Tab.call(this, id, container, env);
   var self = this;
   self.activate = function () {
-    var path = env.isTest ? "js/psmetrics_cluster.json" : self.comm.psPath + "/cluster";
+    var path = env.isTest ? "js/psmetrics_cluster.json" : self.comm.dmPath + "/all-cluster";
     self.comm.requestData(path, function (data) {
-      updateTimeSeries(self,
-        "plot_apps",
-        data,
-        function (data) {
-          return data.running
+      updateTimeSeriesPlot(self, "plot_apps", data, {
+        entryValueExtractor: function (entry) {
+          var ret = {};
+          $.each(entry.running, function(queue, running){
+            ret[queue] = running.applications;
+          });
+          return ret;
         },
-        function (traceObject) {
-          return traceObject.applications
+        plotTitle: "Running Applications",
+        yaxis: {title: "Number"},
+        baseTime: env.isTest ? env.testTime : 0
+      });
+      updateTimeSeriesPlot(self, "plot_containers", data, {
+        entryValueExtractor: function (entry) {
+          var ret = {};
+          $.each(entry.running, function(queue, running){
+            ret[queue] = running.containers;
+          });
+          return ret;
         },
-        "Running Applications",
-        {title: "Number", tickmode: "linear"},
-        env.isTest ? env.testTime : 0
-      );
-
-      updateTimeSeries(self,
-        "plot_containers",
-        data,
-        function (data) {
-          return data.running
+        plotTitle: "Running Containers",
+        yaxis: {title: "Number"},
+        baseTime: env.isTest ? env.testTime : 0
+      });
+      updateTimeSeriesPlot(self, "plot_resources", data, {
+        entryValueExtractor: function (entry) {
+          var ret = {};
+          $.each(entry.resources, function(hostname, resources){
+            ret[hostname] = resources.avail.memory;
+          });
+          return ret;
         },
-        function (traceObject) {
-          return traceObject.containers
-        },
-        "Running Containers",
-        {title: "Number", tickmode: "linear"},
-        env.isTest ? env.testTime : 0
-      );
+        plotTitle: "Free Resources",
+        yaxis: {title: "Memory (GB)"},
+        baseTime: env.isTest ? env.testTime : 0
+      });
     });
   };
 }

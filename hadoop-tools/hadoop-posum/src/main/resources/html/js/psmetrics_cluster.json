@@ -2,19 +2,163 @@
   "successful": true,
   "result": {
     "time": 1461952157630,
-    "running": {
-      "root": {
-        "applications": 5,
-        "containers": 3
+    "entries": [
+      {
+        "time": 1461952157630,
+        "running": {
+          "root": {
+            "applications": 0,
+            "containers": 0
+          },
+          "queue1": {
+            "applications": 0,
+            "containers": 0
+          },
+          "queue2": {
+            "applications": 0,
+            "containers": 0
+          }
+        },
+        "resources": {
+          "Total": {
+            "avail": {
+              "memory": 6144,
+              "vcores": 3
+            },
+            "used": {
+              "memory": 0,
+              "vcores": 0
+            },
+            "num": 0
+          },
+          "node321": {
+            "avail": {
+              "memory": 3072,
+              "vcores": 3
+            },
+            "used": {
+              "memory": 0,
+              "vcores": 0
+            },
+            "num": 0
+          },
+          "node322": {
+            "avail": {
+              "memory": 3072,
+              "vcores": 3
+            },
+            "used": {
+              "memory": 0,
+              "vcores": 0
+            },
+            "num": 0
+          }
+        }
       },
-      "queue1": {
-        "applications": 2,
-        "containers": 1
+      {
+        "time": 1461952157720,
+        "running": {
+          "root": {
+            "applications": 5,
+            "containers": 3
+          },
+          "queue1": {
+            "applications": 2,
+            "containers": 1
+          },
+          "queue2": {
+            "applications": 3,
+            "containers": 2
+          }
+        },
+        "resources": {
+          "Total": {
+            "avail": {
+              "memory": 3072,
+              "vcores": 3
+            },
+            "used": {
+              "memory": 3072,
+              "vcores": 3
+            },
+            "num": 3
+          },
+          "node321": {
+            "avail": {
+              "memory": 1024,
+              "vcores": 1
+            },
+            "used": {
+              "memory": 2048,
+              "vcores": 2
+            },
+            "num": 2
+          },
+          "node322": {
+            "avail": {
+              "memory": 2048,
+              "vcores": 2
+            },
+            "used": {
+              "memory": 1024,
+              "vcores": 1
+            },
+            "num": 2
+          }
+        }
       },
-      "queue2": {
-        "applications": 3,
-        "containers": 2
+      {
+        "time": 1461952158142,
+        "running": {
+          "root": {
+            "applications": 5,
+            "containers": 6
+          },
+          "queue1": {
+            "applications": 2,
+            "containers": 3
+          },
+          "queue2": {
+            "applications": 3,
+            "containers": 3
+          }
+        },
+        "resources": {
+          "Total": {
+            "avail": {
+              "memory": 0,
+              "vcores": 0
+            },
+            "used": {
+              "memory": 6144,
+              "vcores": 3
+            },
+            "num": 6
+          },
+          "node321": {
+            "avail": {
+              "memory": 0,
+              "vcores": 0
+            },
+            "used": {
+              "memory": 3072,
+              "vcores": 3
+            },
+            "num": 3
+          },
+          "node322": {
+            "avail": {
+              "memory": 0,
+              "vcores": 0
+            },
+            "used": {
+              "memory": 3072,
+              "vcores": 3
+            },
+            "num": 3
+          }
+        }
       }
-    }
+    ]
   }
 }

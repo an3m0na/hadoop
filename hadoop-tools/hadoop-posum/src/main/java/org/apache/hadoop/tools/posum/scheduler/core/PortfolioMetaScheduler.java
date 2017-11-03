@@ -727,4 +727,13 @@ public class PortfolioMetaScheduler extends
   public boolean hasMetricsOn() {
     return metricsON;
   }
+
+  public Map<String, SchedulerNodeReport> getNodeReports() {
+    readLock.lock();
+    try {
+      return currentPolicy.getNodeReports();
+    } finally {
+      readLock.unlock();
+    }
+  }
 }

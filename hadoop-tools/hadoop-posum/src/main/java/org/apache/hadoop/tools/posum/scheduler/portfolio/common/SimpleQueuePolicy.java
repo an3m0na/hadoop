@@ -49,6 +49,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppUtils
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplication;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNodeReport;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerUtils;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAddedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppAttemptAddedSchedulerEvent;
@@ -68,6 +69,7 @@ import org.apache.hadoop.yarn.util.resource.Resources;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1013,6 +1015,15 @@ public abstract class SimpleQueuePolicy<
     int containers = assignContainer(node, applications.get(appId).getCurrentAppAttempt(), priority, 1,
       Utils.createResourceRequest(minimumAllocation, hostName, 1), NodeType.NODE_LOCAL);
     return containers == 1;
+  }
+
+  @Override
+  public Map<String, SchedulerNodeReport> getNodeReports() {
+    Map<String, SchedulerNodeReport> reports = new HashMap<>(getNumClusterNodes());
+    for (NodeId nodeId : nodes.keySet()) {
+      reports.put(nodeId.getHost(), getNodeReport(nodeId));
+    }
+    return reports;
   }
 }
 

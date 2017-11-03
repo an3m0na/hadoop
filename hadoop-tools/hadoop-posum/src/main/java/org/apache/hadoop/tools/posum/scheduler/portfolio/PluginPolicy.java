@@ -15,11 +15,13 @@ import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEven
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNodeReport;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeAddedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeRemovedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.hadoop.tools.posum.common.util.Utils.DEFAULT_PRIORITY;
 
@@ -105,4 +107,6 @@ public abstract class PluginPolicy<
   public boolean forceContainerAssignment(ApplicationId appId, String hostName) {
     return forceContainerAssignment(appId, hostName, DEFAULT_PRIORITY);
   }
+
+  public abstract Map<String, SchedulerNodeReport> getNodeReports();
 }

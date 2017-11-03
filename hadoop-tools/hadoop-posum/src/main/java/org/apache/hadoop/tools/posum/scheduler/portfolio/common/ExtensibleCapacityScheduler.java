@@ -77,6 +77,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -985,6 +986,15 @@ public abstract class ExtensibleCapacityScheduler<
       return true;
     }
     return false;
+  }
+
+  @Override
+  public Map<String, SchedulerNodeReport> getNodeReports() {
+    Map<String, SchedulerNodeReport> reports = new HashMap<>(getNumClusterNodes());
+    for (NodeId nodeId : getNodes().keySet()) {
+      reports.put(nodeId.getHost(), getNodeReport(nodeId));
+    }
+    return reports;
   }
 
   //
