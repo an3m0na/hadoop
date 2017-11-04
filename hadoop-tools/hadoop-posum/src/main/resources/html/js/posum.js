@@ -18,7 +18,7 @@ $(document).ready(function () {
       $.each(data.addresses, function (component, address) {
         if (!address) {
           env.comm.showDialog("Error", "Error occurred:\n" +
-            "POSUM not yet ready. Please refresh.");
+            "POSUM not yet ready.\n\nPlease refresh.");
           return;
         }
         env.comm.paths[component] = "http://" + address + "/ajax";
