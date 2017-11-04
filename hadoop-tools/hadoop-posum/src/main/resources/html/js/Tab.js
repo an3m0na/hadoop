@@ -6,7 +6,7 @@ function Tab(id, container, env) {
   self.lastRefreshed = 0;
   self.comm = env.comm;
 
-  self.activate = function () {
+  self.refresh = function () {
     console.log("Tab ", self.id, " is active");
   }
 }

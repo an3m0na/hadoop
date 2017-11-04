@@ -15,16 +15,12 @@ import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.StringStringMapPayload;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.util.json.JsonArray;
 import org.apache.hadoop.tools.posum.common.util.json.JsonElement;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
 import org.apache.hadoop.tools.posum.data.master.DataMasterContext;
-import org.mortbay.jetty.Handler;
-import org.mortbay.jetty.handler.AbstractHandler;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -38,113 +34,68 @@ public class DataMasterWebApp extends PosumWebApp {
   }
 
   @Override
-  protected Handler constructHandler() {
-    return new AbstractHandler() {
-      @Override
-      public void handle(String target, HttpServletRequest request,
-                         HttpServletResponse response, int dispatch) {
-        try {
-          if (target.startsWith("/ajax")) {
-            // json request
-            String call = target.substring("/ajax".length());
-            JsonNode ret;
-            String sinceParam;
-            Long since = 0L;
-            try {
-              switch (call) {
-                case "/policies":
-                  sinceParam = request.getParameter("since");
-                  if (sinceParam != null)
-                    since = Long.valueOf(sinceParam);
-                  ret = getPolicyMetrics(since);
-                  break;
-                case "/system":
-                  ret = getSystemMetrics();
-                  break;
-                case "/all-system":
-                  ret = getAllSystemMetrics();
-                  break;
-                case "/all-cluster":
-                  ret = getAllClusterMetrics();
-                  break;
-                case "/performance":
-                  sinceParam = request.getParameter("since");
-                  if (sinceParam != null)
-                    since = Long.valueOf(sinceParam);
-                  ret = getPerformanceReadings(since);
-                  break;
-                case "/logs":
-                  sinceParam = request.getParameter("since");
-                  if (sinceParam != null)
-                    since = Long.valueOf(sinceParam);
-                  ret = getLogs(since);
-                  break;
-                default:
-                  if (call.startsWith("/data/")) {
-                    String path = call.substring("/data/".length());
-                    String db = null;
-                    String collection = path;
-                    int index = path.indexOf("/");
-                    if (index >= 0) {
-                      db = path.substring(0, index);
-                      collection = path.substring(index);
-                    }
-                    ret = wrapResult(context.getDataStore().execute(
-                      RawDocumentsByQueryCall.newInstance(
-                        DataEntityCollection.fromLabel(collection),
-                        QueryUtils.withParams(request.getParameterMap())
-                      ),
-                      DatabaseReference.fromName(db)));
-                    break;
-                  }
-                  ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", call);
-              }
-            } catch (Exception e) {
-              ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), Utils.getErrorTrace(e));
-            }
-            sendResult(request, response, ret);
-          } else {
-            // static resource request
-            response.setCharacterEncoding("utf-8");
-            staticHandler.handle(target, request, response, dispatch);
+  protected JsonNode handleRoute(String route, HttpServletRequest request) {
+    switch (route) {
+      case "/policies":
+        return getPolicyMetrics(extractSince(request));
+      case "/system":
+        return getSystemMetrics();
+      case "/all-system":
+        return getAllSystemMetrics(extractSince(request));
+      case "/all-cluster":
+        return getAllClusterMetrics(extractSince(request));
+      case "/performance":
+        return getPerformanceReadings(extractSince(request));
+      case "/logs":
+        return getLogs(extractSince(request));
+      default:
+        if (route.startsWith("/data/")) {
+          String path = route.substring("/data/".length());
+          String db = null;
+          String collection = path;
+          int index = path.indexOf("/");
+          if (index >= 0) {
+            db = path.substring(0, index);
+            collection = path.substring(index);
           }
-        } catch (Exception e) {
-          logger.error("Error resolving request: ", e);
+          return wrapResult(context.getDataStore().execute(
+            RawDocumentsByQueryCall.newInstance(
+              DataEntityCollection.fromLabel(collection),
+              QueryUtils.withParams(request.getParameterMap())
+            ),
+            DatabaseReference.fromName(db)));
         }
-      }
-    };
+        return handleUnknownRoute();
+    }
   }
 
-  private JsonNode getPerformanceReadings(Long since) {
+  private JsonNode getPerformanceReadings(long since) {
     FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.PERFORMANCE.getCollection(),
       QueryUtils.and(
         QueryUtils.is("type", LogEntry.Type.PERFORMANCE),
         QueryUtils.greaterThan("lastUpdated", since)
       ), "lastUpdated", false);
     List<LogEntry<CompoundScorePayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
-    JsonArray times = new JsonArray();
-    JsonArray slowdowns = new JsonArray();
-    JsonArray penalties = new JsonArray();
-    JsonArray costs = new JsonArray();
+    JsonArray ret = new JsonArray();
     for (LogEntry<CompoundScorePayload> log : logs) {
-      times.add(log.getLastUpdated());
-      slowdowns.add(log.getDetails().getSlowdown());
-      penalties.add(log.getDetails().getPenalty());
-      costs.add(log.getDetails().getCost());
+      ret.add(
+        new JsonObject()
+          .put("time", log.getLastUpdated())
+          .put("score", JsonElement.write(log.getDetails()))
+      );
     }
-    return new JsonObject()
+    return wrapResult(new JsonObject()
       .put("time", System.currentTimeMillis())
-      .put("scores", new JsonObject()
-        .put("times", times)
-        .put("slowdowns", slowdowns)
-        .put("costs", costs)
-      )
-      .getNode();
+      .put("entries", ret)
+      .getNode());
   }
 
-  private JsonNode getAllSystemMetrics() {
+  private JsonNode getAllSystemMetrics(long since) {
     FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.SYSTEM_METRICS.getCollection(),
-      QueryUtils.is("type", LogEntry.Type.SYSTEM_METRICS), "lastUpdated", false);
+      QueryUtils.and(
+        QueryUtils.is("type", LogEntry.Type.SYSTEM_METRICS),
+        QueryUtils.greaterThan("lastUpdated", since)
+      ), "lastUpdated", false);
     List<LogEntry<StringStringMapPayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
     JsonObject ret = new JsonObject().put("time", System.currentTimeMillis());
     for (LogEntry<StringStringMapPayload> log : logs) {
@@ -163,12 +114,15 @@ public class DataMasterWebApp extends PosumWebApp {
         }
       }
     }
-    return ret.getNode();
+    return wrapResult(ret.getNode());
   }
 
-  private JsonNode getAllClusterMetrics() {
+  private JsonNode getAllClusterMetrics(long since) {
     FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.CLUSTER_METRICS.getCollection(),
-      QueryUtils.is("type", LogEntry.Type.CLUSTER_METRICS), "lastUpdated", false);
+      QueryUtils.and(
+        QueryUtils.is("type", LogEntry.Type.CLUSTER_METRICS),
+        QueryUtils.greaterThan("lastUpdated", since)
+      ), "lastUpdated", false);
     List<LogEntry<SimplePropertyPayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
     JsonArray entries = new JsonArray();
     for (LogEntry<SimplePropertyPayload> log : logs) {
@@ -181,10 +135,10 @@ public class DataMasterWebApp extends PosumWebApp {
         logger.error("Could not deserialize metrics json " + stringResult, e);
       }
     }
-    return new JsonObject()
+    return wrapResult(new JsonObject()
       .put("time", System.currentTimeMillis())
       .put("entries", entries)
-      .getNode();
+      .getNode());
   }
 
   private JsonNode getPolicyMetrics(Long since) {
@@ -209,7 +163,7 @@ public class DataMasterWebApp extends PosumWebApp {
     return ret;
   }
 
-  private JsonArray composeRecentChoices(Long since) {
+  private JsonArray composeRecentChoices(long since) {
     JsonArray choices = new JsonArray();
     FindByQueryCall findChoices = FindByQueryCall.newInstance(LogEntry.Type.POLICY_CHANGE.getCollection(),
       QueryUtils.and(

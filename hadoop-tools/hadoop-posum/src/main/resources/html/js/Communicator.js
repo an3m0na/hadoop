@@ -1,9 +1,11 @@
 function Communicator(env) {
   var self = this;
-  self.psPath = "http://localhost:18010/ajax";
-  self.dmPath = "http://localhost:18020/ajax";
-  self.smPath = "http://localhost:18030/ajax";
-  self.masterPath = "/ajax";
+  self.paths = {
+    OM: "/ajax",
+    PS: "http://localhost:18010/ajax",
+    DM: "http://localhost:18020/ajax",
+    SM: "http://localhost:18030/ajax"
+  };
   var generalDialog = $("#general_dialog");
   var loadingModal = $("#loading_modal");
 
@@ -23,7 +25,9 @@ function Communicator(env) {
 
   self.showDialog = function (title, text, closeFunction, saveFunction) {
     generalDialog.find(".an3-modal-title").text(title);
-    generalDialog.find(".an3-modal-text").text(text);
+    var modalText = generalDialog.find(".an3-modal-text");
+    modalText.text(text);
+    modalText.html(modalText.html().replace(/\n/g, '<br/>'));
     var closeButton = generalDialog.find(".an3-modal-close");
     closeButton.off("click");
     if (closeFunction)
@@ -69,8 +73,8 @@ function Communicator(env) {
     }
   };
 
-  self.handleServerError = function (jqXHR, result, fail) {
-    console.log(result);
+  self.handleServerError = function (jqXHR, result, errorThrown, fail) {
+    console.log("Error response", result, "Error thrown", errorThrown);
     console.log("---");
     var parsedResult = null;
 
@@ -105,12 +109,12 @@ function Communicator(env) {
     if (isPost && showData)
       console.log(data);
     var ajaxMethod = isPost ? $.postJSON : $.getJSON;
-     ajaxMethod(path, data)
+    ajaxMethod(path, data)
       .done(function (response) {
         self.handleServerResponse(response, success, fail);
       })
-      .fail(function (jqXHR, textStatus) {
-        self.handleServerError(jqXHR, textStatus, fail);
+      .fail(function (jqXHR, textStatus, errorThrown) {
+        self.handleServerError(jqXHR, textStatus, errorThrown, fail);
       });
   }
 

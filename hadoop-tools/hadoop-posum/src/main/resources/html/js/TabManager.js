@@ -20,7 +20,7 @@ function TabManager(env) {
       tabs.none.container.show();
     else {
       tab.container.show();
-      tab.activate();
+      tab.refresh();
     }
   };
 
@@ -33,8 +33,8 @@ function TabManager(env) {
       }
     );
 
-    tabContainers.each(function (i, e) {
-      var container = $(e);
+    tabContainers.each(function () {
+      var container = $(this);
       var id = container.attr("id");
       var customTab = customTabs[id] || "Tab";
       tabs[id] = new window[customTab](id, container, env);
@@ -42,7 +42,7 @@ function TabManager(env) {
 
     setInterval(function () {
       env.testTime += env.refreshInterval;
-      tabs[env.state].activate();
+      tabs[env.state].refresh();
     }, env.refreshInterval);
 
     return self;

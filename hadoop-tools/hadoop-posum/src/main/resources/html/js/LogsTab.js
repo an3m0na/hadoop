@@ -2,14 +2,15 @@ function LogsTab(id, container, env) {
   Tab.call(this, id, container, env);
   var self = this;
   self.autoScrollOn = true;
-  self.path = env.isTest ? "mocks/logs.json" : self.comm.dmPath + "/logs";
   self.logTable = container.find("#log_table");
   self.scrollBtn = container.find("#btn_scroll");
   self.scrollBtn.bootstrapToggle().change(function () {
     self.autoScrollOn = $(this).prop('checked');
   });
-  self.activate = function () {
-    self.comm.requestData(self.path + "?since=" + self.lastRefreshed, function (data) {
+
+  self.refresh = function () {
+    var path = env.isTest ? "mocks/logs.json" : self.comm.paths.DM + "/logs";
+    self.comm.requestData(path + "?since=" + self.lastRefreshed, function (data) {
       if (!data || data.length === 0)
         return;
       data.forEach(function (log) {

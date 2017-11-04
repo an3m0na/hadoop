@@ -2,6 +2,8 @@ package org.apache.hadoop.tools.posum.common.util.json;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
+import java.io.IOException;
+
 public class JsonArray extends JsonElement {
   private ArrayNode inner;
 
@@ -56,4 +58,7 @@ public class JsonArray extends JsonElement {
     return this;
   }
 
+  public static JsonArray readArray(String arrayString) throws IOException {
+    return new JsonArray((ArrayNode) read(arrayString).getNode());
+  }
 }
