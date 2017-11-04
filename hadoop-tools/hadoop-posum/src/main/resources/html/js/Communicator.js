@@ -85,7 +85,7 @@ function Communicator(env) {
     }
 
     var errorObject = {
-      isGeneral: jqXHR ? true : false,
+      isGeneral: !!jqXHR,
       code: jqXHR ? jqXHR.status : parsedResult.result.code,
       message: parsedResult ? parsedResult.result.message : result
     };
@@ -99,18 +99,14 @@ function Communicator(env) {
     }
   };
 
-  function generalRequest(isPost, isRaw, showData, path, data, success, fail) {
+  function generalRequest(isPost, showData, path, data, success, fail) {
     console.log("---");
     console.log("Sending " + (isPost ? "POST" : "GET") + " request to " + path + "...");
     if (isPost && showData)
       console.log(data);
-    var ajaxMethod = isPost ? (isRaw ? $.post : $.postJSON) : (isRaw ? $.get : $.getJSON);
-    (isPost ? ajaxMethod(path, data) : ajaxMethod(path))
-      .success(function (response) {
-        if (isRaw && !isPost) {
-          success(response);
-          return;
-        }
+    var ajaxMethod = isPost ? $.postJSON : $.getJSON;
+     ajaxMethod(path, data)
+      .done(function (response) {
         self.handleServerResponse(response, success, fail);
       })
       .fail(function (jqXHR, textStatus) {
@@ -119,24 +115,14 @@ function Communicator(env) {
   }
 
   self.requestData = function (path, success, fail) {
-    generalRequest(false, false, true, path, null, success, fail);
+    generalRequest(false, true, path, undefined, success, fail);
   };
 
   self.postData = function (path, data, success, fail) {
-    generalRequest(true, false, true, path, data, success, fail);
-  };
-
-  self.requestRawData = function (path, success, fail) {
-    generalRequest(false, true, false, path, null, success, fail);
-  };
-
-  self.postRawData = function (path, data, success, fail) {
-    generalRequest(true, true, false, path, data, success, fail);
+    generalRequest(true, true, path, data, success, fail);
   };
 
   self.initialize = function () {
     return self;
   }
-
-
 }
