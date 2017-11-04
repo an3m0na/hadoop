@@ -3,6 +3,8 @@ package org.apache.hadoop.tools.posum.common.util.json;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.io.IOException;
+
 public class JsonObject extends JsonElement {
 
   private ObjectNode inner;
@@ -62,4 +64,11 @@ public class JsonObject extends JsonElement {
     return new JsonArray(array);
   }
 
+  public static JsonObject readObject(String objectString) throws IOException {
+    return new JsonObject((ObjectNode) read(objectString).getNode());
+  }
+
+  public Double getNumber(String key) {
+    return inner.get(key).asDouble();
+  }
 }

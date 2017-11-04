@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.management.OperatingSystemMXBean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.util.json.JsonElement;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
 import org.mortbay.jetty.Handler;
@@ -18,6 +20,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 
@@ -45,24 +48,37 @@ public class PosumWebApp extends HttpServlet {
         try {
           if (target.startsWith("/ajax")) {
             // json request
-            String call = target.substring("/ajax".length());
-            if ("/system".equals(call))
-              sendResult(request, response, wrapResult(getSystemMetrics()));
-            else
-              sendResult(request, response, wrapResult("Server is online!"));
+            String route = target.substring("/ajax".length());
+            JsonNode ret;
+            try {
+              ret = handleRoute(route, request);
+            } catch (Exception e) {
+              ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), Utils.getErrorTrace(e));
+            }
+            sendResult(request, response, ret);
           } else {
-            response.setStatus(HttpServletResponse.SC_OK);
+            // static resource request
             response.setCharacterEncoding("utf-8");
-            response.setContentType("text");
-
-            response.getWriter().println("Server is online!");
-            ((Request) request).setHandled(true);
+            staticHandler.handle(target, request, response, dispatch);
           }
         } catch (Exception e) {
           logger.error("Error resolving request: ", e);
         }
       }
     };
+  }
+
+  protected JsonNode handleRoute(String route, HttpServletRequest request) {
+    switch (route) {
+      case "/system":
+        return getSystemMetrics();
+      default:
+        return handleUnknownRoute();
+    }
+  }
+
+  protected JsonNode handleUnknownRoute() {
+    return wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
   }
 
   public void start() throws Exception {
@@ -98,7 +114,8 @@ public class PosumWebApp extends HttpServlet {
 
 
   protected void sendResult(HttpServletRequest request,
-                            HttpServletResponse response, JsonNode result)
+                            HttpServletResponse response,
+                            JsonNode result)
     throws IOException {
     response.setContentType(MediaType.APPLICATION_JSON);
     response.setStatus(HttpServletResponse.SC_OK);
@@ -128,5 +145,30 @@ public class PosumWebApp extends HttpServlet {
         .put("process", String.format("%.1f", processLoad * 100)))
       .put("threadCount", Integer.toString(threadCount))
       .getNode());
+  }
+
+  protected long extractSince(HttpServletRequest request) {
+    String sinceParam = request.getParameter("since");
+    if (sinceParam != null) {
+      try {
+        return Long.valueOf(sinceParam);
+      } catch (Exception e) {
+        logger.debug("Could not read since param: " + sinceParam);
+      }
+    }
+    return 0;
+  }
+
+  protected JsonObject readPostedObject(HttpServletRequest request) {
+    StringBuilder builder = new StringBuilder();
+    String line;
+    try {
+      BufferedReader reader = request.getReader();
+      while ((line = reader.readLine()) != null)
+        builder.append(line);
+      return JsonObject.readObject(builder.toString());
+    } catch (Exception e) {
+      throw new PosumException("Could not read posted object", e);
+    }
   }
 }

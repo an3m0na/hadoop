@@ -1,9 +1,11 @@
 function PerformanceTab(id, container, env) {
   Tab.call(this, id, container, env);
   var self = this;
-  self.activate = function () {
-    var path = env.isTest ? "mocks/dmmetrics_performance.json" : self.comm.dmPath + "/performance";
+
+  self.refresh = function () {
+    var path = env.isTest ? "mocks/dmmetrics_performance.json" : self.comm.paths.DM + "/performance?since=" + self.lastRefreshed;
     self.comm.requestData(path, function (data) {
+      self.lastRefreshed = data.time;
       updateTimeSeriesPlot(self, "plot_performance_slowdown", data, {
         entryValueExtractor: function (entry) {
           return {Slowdown: entry.score.slowdown};

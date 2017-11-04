@@ -4,7 +4,6 @@ import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
 import org.apache.hadoop.tools.posum.scheduler.core.PortfolioMetaScheduler;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -12,11 +11,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.QueueMetrics;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNodeReport;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;
 import org.apache.hadoop.yarn.util.resource.Resources;
-import org.mortbay.jetty.Handler;
-import org.mortbay.jetty.handler.AbstractHandler;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 public class MetaSchedulerWebApp extends PosumWebApp {
@@ -30,44 +26,17 @@ public class MetaSchedulerWebApp extends PosumWebApp {
   }
 
   @Override
-  protected Handler constructHandler() {
-    return new AbstractHandler() {
-      @Override
-      public void handle(String target, HttpServletRequest request,
-                         HttpServletResponse response, int dispatch) {
-        try {
-          if (target.startsWith("/ajax")) {
-            // json request
-            String call = target.substring("/ajax".length());
-            JsonNode ret;
-            try {
-              switch (call) {
-                case "/cluster":
-                  ret = getClusterMetrics();
-                  break;
-                case "/scheduler":
-                  ret = getSchedulerMetrics();
-                  break;
-                case "/system":
-                  ret = getSystemMetrics();
-                  break;
-                default:
-                  ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
-              }
-            } catch (Exception e) {
-              ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), Utils.getErrorTrace(e));
-            }
-            sendResult(request, response, ret);
-          } else {
-            // static resource request
-            response.setCharacterEncoding("utf-8");
-            staticHandler.handle(target, request, response, dispatch);
-          }
-        } catch (Exception e) {
-          logger.error("Error resolving request: ", e);
-        }
-      }
-    };
+  protected JsonNode handleRoute(String route, HttpServletRequest request) {
+    switch (route) {
+      case "/cluster":
+        return getClusterMetrics();
+      case "/scheduler":
+        return getSchedulerMetrics();
+      case "/system":
+        return getSystemMetrics();
+      default:
+        return handleUnknownRoute();
+    }
   }
 
   private JsonNode getSchedulerMetrics() {

@@ -1,16 +1,13 @@
 package org.apache.hadoop.tools.posum.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
 import org.apache.hadoop.tools.posum.orchestration.core.PosumEvent;
 import org.apache.hadoop.tools.posum.orchestration.core.PosumEventType;
+import org.apache.hadoop.tools.posum.orchestration.core.SimulationScoreComparator;
 import org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMasterContext;
-import org.mortbay.jetty.Handler;
-import org.mortbay.jetty.handler.AbstractHandler;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 public class OrchestratorWebApp extends PosumWebApp {
   private OrchestrationMasterContext context;
@@ -22,44 +19,39 @@ public class OrchestratorWebApp extends PosumWebApp {
   }
 
   @Override
-  protected Handler constructHandler() {
-    return new AbstractHandler() {
-      @Override
-      public void handle(String target, HttpServletRequest request,
-                         HttpServletResponse response, int dispatch) {
-        try {
-          if (target.startsWith("/ajax")) {
-            // json request
-            String call = target.substring("/ajax".length());
-            JsonNode ret;
-            try {
-              switch (call) {
-                case "/conf":
-                  ret = getConfiguration();
-                  break;
-                case "/system":
-                  ret = getSystemMetrics();
-                  break;
-                case "/reset":
-                  ret = reset();
-                  break;
-                default:
-                  ret = wrapError("UNKNOWN_ROUTE", "Specified service path does not exist", null);
-              }
-            } catch (Exception e) {
-              ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), Utils.getErrorTrace(e));
-            }
-            sendResult(request, response, ret);
-          } else {
-            // static resource request
-            response.setCharacterEncoding("utf-8");
-            staticHandler.handle(target, request, response, dispatch);
-          }
-        } catch (Exception e) {
-          e.printStackTrace();
+  protected JsonNode handleRoute(String route, HttpServletRequest request) {
+    switch (route) {
+      case "/conf":
+        return getConfiguration();
+      case "/system":
+        return getSystemMetrics();
+      case "/scale-factors":
+        if (request.getMethod().equals("POST")) {
+          return updateScaleFactors(readPostedObject(request));
         }
-      }
-    };
+        return getScaleFactors();
+      case "/reset":
+        return reset();
+      default:
+        return handleUnknownRoute();
+    }
+  }
+
+  private JsonNode updateScaleFactors(JsonObject input) {
+    context.getSimulationScoreComparator().updateScaleFactors(
+      input.getNumber("alpha"),
+      input.getNumber("beta"),
+      input.getNumber("gamma"));
+    return getScaleFactors();
+  }
+
+  private JsonNode getScaleFactors() {
+    SimulationScoreComparator comparator = context.getSimulationScoreComparator();
+    return wrapResult(new JsonObject()
+      .put("alpha", comparator.getSlowdownScaleFactor())
+      .put("beta", comparator.getPenaltyScaleFactor())
+      .put("gamma", comparator.getCostScaleFactor())
+      .getNode());
   }
 
   private JsonNode reset() {

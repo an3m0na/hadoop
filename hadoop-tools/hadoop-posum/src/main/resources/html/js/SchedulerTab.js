@@ -1,9 +1,11 @@
 function SchedulerTab(id, container, env) {
   Tab.call(this, id, container, env);
   var self = this;
-  self.activate = function () {
-    var path = env.isTest ? "mocks/dmmetrics_policies.json" : self.comm.dmPath + "/policies";
+
+  self.refresh = function () {
+    var path = env.isTest ? "mocks/dmmetrics_policies.json" : self.comm.paths.DM + "/policies?since=" + self.lastRefreshed;
     self.comm.requestData(path, function (data) {
+      self.lastRefreshed = data.time;
       var totalTime = 0;
       var chartData = [];
       var crtColor = 0;
@@ -49,7 +51,7 @@ function SchedulerTab(id, container, env) {
       });
     });
 
-    path = env.isTest ? "mocks/psmetrics_scheduler.json" : self.comm.psPath + "/scheduler";
+    path = env.isTest ? "mocks/psmetrics_scheduler.json" : self.comm.paths.PS + "/scheduler";
     updateTimeSeriesPlot(self, "plot_timecost", path, {
       listExtractor: function (data) {
         return [data];

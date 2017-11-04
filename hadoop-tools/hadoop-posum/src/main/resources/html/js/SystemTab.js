@@ -1,6 +1,7 @@
 function SystemTab(id, container, env) {
   Tab.call(this, id, container, env);
   var self = this;
+
   self.updateSystemCharts = function (componentAcronym, componentName, data) {
     var plotPrefix = "plot_" + componentAcronym.toLowerCase();
     var commonConfig = {
@@ -31,9 +32,10 @@ function SystemTab(id, container, env) {
       yaxis: {title: "Total Number"}
     }));
   };
-  self.activate = function () {
-    var path = env.isTest ? "mocks/dmmetrics_all-system.json" : self.comm.dmPath + "/all-system";
+  self.refresh = function () {
+    var path = env.isTest ? "mocks/dmmetrics_all-system.json" : self.comm.paths.DM + "/all-system?since=" + self.lastRefreshed;
     self.comm.requestData(path, function (data) {
+      self.lastRefreshed = data.time;
       self.updateSystemCharts("PS", "Portfolio Scheduler", data);
       self.updateSystemCharts("OM", "Orchestration Master", data);
       self.updateSystemCharts("DM", "Data Master", data);
