@@ -93,6 +93,7 @@ public abstract class AbstractYarnScheduler
   protected RMContext rmContext;
   protected Map<ApplicationId, SchedulerApplication<T>> applications;
   protected int nmExpireInterval;
+  protected Timer releaseCacheTimer;
 
   protected final static List<Container> EMPTY_CONTAINER_LIST =
       new ArrayList<Container>();
@@ -121,6 +122,12 @@ public abstract class AbstractYarnScheduler
           YarnConfiguration.DEFAULT_RM_WORK_PRESERVING_RECOVERY_SCHEDULING_WAIT_MS);
     createReleaseCache();
     super.serviceInit(conf);
+  }
+
+  @Override
+  protected void serviceStop() throws Exception {
+    releaseCacheTimer.cancel();
+    super.serviceStop();
   }
 
   public synchronized List<Container> getTransferredContainers(
@@ -434,7 +441,8 @@ public abstract class AbstractYarnScheduler
 
   protected void createReleaseCache() {
     // Cleanup the cache after nm expire interval.
-    new Timer().schedule(new TimerTask() {
+    releaseCacheTimer = new Timer();
+    releaseCacheTimer.schedule(new TimerTask() {
       @Override
       public void run() {
         for (SchedulerApplication<T> app : applications.values()) {
