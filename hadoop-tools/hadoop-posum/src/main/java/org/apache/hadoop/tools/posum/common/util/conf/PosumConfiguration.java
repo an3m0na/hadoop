@@ -158,10 +158,10 @@ public class PosumConfiguration {
   public static final String SIMULATION_CONTAINER_VCORES = SIMULATION_CONTAINER_PREFIX + "vcores";
   public static final int SIMULATION_CONTAINER_VCORES_DEFAULT = 1;
 
-  public static final String SLOWDOWN_SCALE_FACTOR = ORCHESTRATOR_PREFIX + "slowdown.scale.factor";
+  public static final String SLOWDOWN_SCALE_FACTOR = ORCHESTRATOR_PREFIX + "scale-factor.alpha";
   public static final double SLOWDOWN_SCALE_FACTOR_DEFAULT = 1.00;
-  public static final String PENALTY_SCALE_FACTOR = ORCHESTRATOR_PREFIX + "penalty.scale.factor";
+  public static final String PENALTY_SCALE_FACTOR = ORCHESTRATOR_PREFIX + "scale-factor.beta";
   public static final double PENALTY_SCALE_FACTOR_DEFAULT = 0.000001;
-  public static final String COST_SCALE_FACTOR = ORCHESTRATOR_PREFIX + "cost.scale.factor";
+  public static final String COST_SCALE_FACTOR = ORCHESTRATOR_PREFIX + "scale-factor.gamma";
   public static final double COST_SCALE_FACTOR_DEFAULT = 1.00;
 }
