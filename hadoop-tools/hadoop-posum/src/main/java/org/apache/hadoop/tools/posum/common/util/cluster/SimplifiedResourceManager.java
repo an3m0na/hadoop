@@ -34,10 +34,8 @@ public class SimplifiedResourceManager<T extends AbstractYarnScheduler> extends 
 
     Method removeService = CompositeService.class.getDeclaredMethod("removeService", Service.class);
     removeService.setAccessible(true);
-    removeService.invoke(activeServices, rmContext.getResourceTrackerService());
     removeService.invoke(activeServices, rmContext.getApplicationMasterService());
     removeService.invoke(activeServices, rmContext.getClientRMService());
-
     removeService(rmContext.getRMAdminService());
   }
 

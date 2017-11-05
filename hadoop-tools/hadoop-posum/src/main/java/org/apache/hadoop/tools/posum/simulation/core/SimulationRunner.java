@@ -58,7 +58,7 @@ import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.
 public class SimulationRunner<T extends PluginPolicy> {
   private final static Logger LOG = Logger.getLogger(SimulationRunner.class);
   private final IdsByQueryCall GET_STARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.isNot("startTime", null), "submitTime", false);
-  private final IdsByQueryCall GET_NOTSTARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("startTime", null));
+  private final IdsByQueryCall GET_NOTSTARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("startTime", null), "submitTime", false);
   private final FindByIdCall GET_JOB = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
   private final FindByIdCall GET_CONF = FindByIdCall.newInstance(DataEntityCollection.JOB_CONF, null);
   private final FindByQueryCall GET_TASKS = FindByQueryCall.newInstance(DataEntityCollection.TASK, null);
@@ -97,6 +97,7 @@ public class SimulationRunner<T extends PluginPolicy> {
     daemonPool.start();
     context.getRemainingJobsCounter().await();
     daemonPool.shutDown();
+    rm.stop();
 
     LOG.info("SimulationRunner finished for " + context.getSchedulerClass().getSimpleName());
   }
@@ -123,7 +124,7 @@ public class SimulationRunner<T extends PluginPolicy> {
       }
       jobSubmitTime -= context.getClusterTimeAtStart();
       if (jobSubmitTime < 0) {
-        LOG.warn(MessageFormat.format("Sim={0}: Warning: reset job {1} start time to 0", job.getId()));
+        LOG.warn(MessageFormat.format("Sim={0}: Warning: reset job {1} start time to 0", context.getSchedulerClass().getSimpleName(), job.getId()));
         jobSubmitTime = 0;
       }
 
