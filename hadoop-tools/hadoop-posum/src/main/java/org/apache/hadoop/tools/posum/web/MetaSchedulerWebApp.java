@@ -63,9 +63,11 @@ public class MetaSchedulerWebApp extends PosumWebApp {
     }
     return wrapResult(new JsonObject()
       .put("time", System.currentTimeMillis())
-      .put("running", new JsonObject()
+      .put("queues", new JsonObject()
         .put("root", new JsonObject()
-          .put("applications", rootMetrics.getAppsRunning())
+          .put("applications", new JsonObject()
+            .put("running", rootMetrics.getAppsRunning())
+            .put("pending", rootMetrics.getAppsPending()))
           .put("containers", rootMetrics.getAllocatedContainers())))
       .put("resources", writeResourceReports())
       .getNode());
