@@ -97,7 +97,7 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
     // we have no information about this job; predict from history
     StandardMapPredictionStats mapStats = model.getRelevantMapStats(job);
     Long inputPerMap = getAvgSplitSize(job);
-    if (mapStats == null || inputPerMap == null) {
+    if (mapStats == null || inputPerMap == null || mapStats.getAvgRate() == null) {
       return handleNoMapInfo(job);
     }
 
