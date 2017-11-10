@@ -58,13 +58,11 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     return getCollection(assets, collection);
   }
 
-  private DBAssets getDatabaseAssets(DatabaseReference db) {
+  private synchronized DBAssets getDatabaseAssets(DatabaseReference db) {
     DBAssets assets = dbRegistry.get(db);
-    synchronized (this) {
-      if (assets == null) {
-        assets = new DBAssets();
-        dbRegistry.put(db, assets);
-      }
+    if (assets == null) {
+      assets = new DBAssets();
+      dbRegistry.put(db, assets);
     }
     return assets;
   }

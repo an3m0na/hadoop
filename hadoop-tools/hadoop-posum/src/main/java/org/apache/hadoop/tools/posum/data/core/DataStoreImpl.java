@@ -43,9 +43,9 @@ public class DataStoreImpl implements LockBasedDataStore {
   private Map<DatabaseReference, DBAssets> dbRegistry = new ConcurrentHashMap<>(DatabaseReference.Type.values().length);
 
   private static class DBAssets {
-    final Object updateMonitor = new Object();
-    public ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    public Map<DataEntityCollection, JacksonDBCollection> collections = new ConcurrentHashMap<>(DataEntityCollection.values().length);
+    private final Object updateMonitor = new Object();
+    private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private Map<DataEntityCollection, JacksonDBCollection> collections = new ConcurrentHashMap<>(DataEntityCollection.values().length);
   }
 
   public DataStoreImpl(Configuration conf) {
@@ -69,13 +69,11 @@ public class DataStoreImpl implements LockBasedDataStore {
     return getCollection(db, assets, collection);
   }
 
-  private DBAssets getDatabaseAssets(DatabaseReference db) {
+  private synchronized DBAssets getDatabaseAssets(DatabaseReference db) {
     DBAssets assets = dbRegistry.get(db);
-    synchronized (this) {
-      if (assets == null) {
-        assets = new DBAssets();
-        dbRegistry.put(db, assets);
-      }
+    if (assets == null) {
+      assets = new DBAssets();
+      dbRegistry.put(db, assets);
     }
     return assets;
   }
