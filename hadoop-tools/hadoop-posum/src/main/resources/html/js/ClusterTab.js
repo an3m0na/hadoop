@@ -9,20 +9,21 @@ function ClusterTab(id, container, env) {
       updateTimeSeriesPlot(self, "plot_apps", data, {
         entryValueExtractor: function (entry) {
           var ret = {};
-          $.each(entry.running, function (queue, running) {
-            ret[queue] = running.applications;
+          $.each(entry.queues, function (name, queue) {
+            ret["Running in " + name] = queue.applications.running;
+            ret["Total in " + name] = queue.applications.running + queue.applications.pending;
           });
           return ret;
         },
-        plotTitle: "Running Applications",
+        plotTitle: "Applications",
         yaxis: {title: "Number"},
         baseTime: env.isTest ? env.testTime : 0
       });
       updateTimeSeriesPlot(self, "plot_containers", data, {
         entryValueExtractor: function (entry) {
           var ret = {};
-          $.each(entry.running, function (queue, running) {
-            ret[queue] = running.containers;
+          $.each(entry.queues, function (name, queue) {
+            ret[name] = queue.containers;
           });
           return ret;
         },

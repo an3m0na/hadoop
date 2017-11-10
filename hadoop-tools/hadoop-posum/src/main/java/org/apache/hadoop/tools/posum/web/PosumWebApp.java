@@ -24,7 +24,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 
-public class PosumWebApp extends HttpServlet {
+public abstract class PosumWebApp extends HttpServlet {
   private static final long serialVersionUID = 1905162041950251407L;
   private static Log logger = LogFactory.getLog(PosumWebApp.class);
 
