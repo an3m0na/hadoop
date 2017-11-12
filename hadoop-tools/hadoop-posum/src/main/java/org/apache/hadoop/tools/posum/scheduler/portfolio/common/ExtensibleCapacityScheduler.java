@@ -54,6 +54,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicat
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerDynamicEditException;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNodeReport;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.AbstractCSQueue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CSQueue;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
@@ -78,7 +79,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -246,14 +246,16 @@ public abstract class ExtensibleCapacityScheduler<
     Set<A> extraApps = new TreeSet<>(getApplicationComparator());
     for (A app : oldApps) {
       updateAppPriority(app);
-      if (!appsPending || (isRunning(app) && oldActiveApps.contains(app)))
-        activeApps.add(app); // app was active and already started; should have priority
-      else
+      if (!appsPending || !app.isPending()) {
+        activeApps.add(app);
+        if (!oldActiveApps.contains(app))
+          activateApp(queue, app);
+      } else {
         extraApps.add(app);
+        if (oldActiveApps.contains(app))
+          deactivateApp(queue, app);
+      }
     }
-    oldActiveApps.removeAll(activeApps);
-    // deactivate apps that were not yet running; maybe other pending apps have priority now
-    deactivateApps(queue, oldActiveApps);
     Utils.writeField(queue, LeafQueue.class, "activeApplications", activeApps);
     // add the rest of the apps to pending
     Utils.writeField(queue, LeafQueue.class, "pendingApplications", extraApps);
@@ -261,18 +263,18 @@ public abstract class ExtensibleCapacityScheduler<
       Utils.invokeMethod(queue, LeafQueue.class, "activateApplications", new Class[]{});
   }
 
-  private boolean isRunning(A app) {
-    return Resources.greaterThanOrEqual(getResourceCalculator(), getClusterResource(),
-      app.getCurrentConsumption(), app.getAMResource());
+  private void activateApp(LeafQueue queue, A app) {
+    LeafQueue.User user = queue.getUser(app.getUser());
+    user.activateApplication();
+    user.getResourceUsage().incAMUsed(app.getAMResource());
+    queue.getQueueResourceUsage().incAMUsed(app.getAMResource());
   }
 
-  protected void deactivateApps(LeafQueue queue, Set<A> oldApps) {
-    for (A oldApp : oldApps) {
-      LeafQueue.User user = queue.getUser(oldApp.getUser());
-      user.finishApplication(true);
-      user.getResourceUsage().decAMUsed(oldApp.getAMResource());
-      queue.getQueueResourceUsage().decAMUsed(oldApp.getAMResource());
-    }
+  private void deactivateApp(LeafQueue queue, A app) {
+    LeafQueue.User user = queue.getUser(app.getUser());
+    user.finishApplication(true);
+    user.getResourceUsage().decAMUsed(app.getAMResource());
+    queue.getQueueResourceUsage().decAMUsed(app.getAMResource());
   }
 
   /**
@@ -377,66 +379,6 @@ public abstract class ExtensibleCapacityScheduler<
 //                asyncSchedulerThread.beginSchedule();
 //            }
     }
-  }
-
-  public SchedulerApplication<A> moveApplicationReference(ApplicationId appId,
-                                                          SchedulerApplication<? extends SchedulerApplicationAttempt> app,
-                                                          String targetQueueName) throws YarnException {
-    SchedulerApplicationAttempt appAttempt = app.getCurrentAppAttempt();
-    String destQueueName = invokeMethod("handleMoveToPlanQueue", new Class<?>[]{String.class}, targetQueueName);
-    LeafQueue dest = invokeMethod("getAndCheckLeafQueue", new Class<?>[]{String.class}, destQueueName);
-
-    SchedulerApplication<A> newApp = new SchedulerApplication<>(dest, app.getUser());
-
-    if (appAttempt != null) {
-      //wrap attempt in appropriate implementation
-
-      A newAppAttempt = FiCaPluginApplicationAttempt.getInstance(aClass, appAttempt, dest.getActiveUsersManager(), inner.getRMContext());
-      if (newAppAttempt instanceof Configurable)
-        ((Configurable) newAppAttempt).setConf(getConf());
-      String sourceQueueName = newAppAttempt.getQueue().getQueueName();
-
-      //the rest is basically standard moveApplication code from CapacityScheduler
-
-      // Validation check - ACLs, submission limits for user & queue
-      String user = newAppAttempt.getUser();
-      try {
-        dest.submitApplication(appId, user, destQueueName);
-      } catch (AccessControlException e) {
-        throw new YarnException(e);
-      }
-      // Move all live containers
-      for (RMContainer rmContainer : newAppAttempt.getLiveContainers()) {
-        // attach the Container to another queue
-        dest.attachContainer(getClusterResource(), newAppAttempt, rmContainer);
-      }
-      // Update metrics
-      newAppAttempt.move(dest);
-      // Calculate its priority given the new scheduler
-      updateAppPriority(newAppAttempt);
-      // Submit to a new queue
-      dest.submitApplicationAttempt(newAppAttempt, user);
-      Resource consumption = newAppAttempt.getCurrentConsumption();
-      if (!consumption.equals(Resources.none())) {
-        Utils.invokeMethod(dest, LeafQueue.class, "allocateResource",
-          new Class[]{
-            Resource.class,
-            SchedulerApplicationAttempt.class,
-            Resource.class,
-            Set.class
-          },
-          getClusterResource(),
-          app.getCurrentAppAttempt(),
-          consumption,
-          new HashSet<>()
-        );
-      }
-      LOG.info("App: " + appId + " successfully moved from "
-        + sourceQueueName + " to: " + destQueueName);
-      newApp.setCurrentAppAttempt(newAppAttempt);
-    }
-
-    return newApp;
   }
 
   protected void allocateContainersToNode(FiCaSchedulerNode node) {
@@ -905,6 +847,58 @@ public abstract class ExtensibleCapacityScheduler<
     return new PluginPolicyState<>(getClusterResource(), getNodes(), getSchedulerApplications());
   }
 
+  private SchedulerApplication<A> moveApplicationReference(ApplicationId appId,
+                                                           SchedulerApplication<? extends SchedulerApplicationAttempt> app,
+                                                           String targetQueueName) throws YarnException {
+    SchedulerApplicationAttempt appAttempt = app.getCurrentAppAttempt();
+    String destQueueName = invokeMethod("handleMoveToPlanQueue", new Class<?>[]{String.class}, targetQueueName);
+    LeafQueue dest = invokeMethod("getAndCheckLeafQueue", new Class<?>[]{String.class}, destQueueName);
+
+    SchedulerApplication<A> newApp = new SchedulerApplication<>(dest, app.getUser());
+    if (appAttempt != null) {
+      //wrap attempt in appropriate implementation
+
+      A newAppAttempt = FiCaPluginApplicationAttempt.getInstance(aClass, appAttempt, dest.getActiveUsersManager(), inner.getRMContext());
+      if (newAppAttempt instanceof Configurable)
+        ((Configurable) newAppAttempt).setConf(getConf());
+      String sourceQueueName = newAppAttempt.getQueue().getQueueName();
+
+      //the rest is basically standard moveApplication code from CapacityScheduler
+
+      // Validation check - ACLs, submission limits for user & queue
+      String user = newAppAttempt.getUser();
+      try {
+        dest.submitApplication(appId, user, destQueueName);
+      } catch (AccessControlException e) {
+        throw new YarnException(e);
+      }
+      // Move all live containers
+      for (RMContainer rmContainer : newAppAttempt.getLiveContainers()) {
+        // attach the Container to another queue
+        dest.attachContainer(getClusterResource(), newAppAttempt, rmContainer);
+      }
+      // Update metrics
+      newAppAttempt.move(dest);
+      // Calculate its priority given the new scheduler
+      updateAppPriority(newAppAttempt);
+      // Submit to a new queue
+      synchronized (dest) {
+        // Add the attempt to our data-structures
+        Utils.invokeMethod(dest, LeafQueue.class, "addApplicationAttempt",
+          new Class[]{
+            FiCaSchedulerApp.class,
+            LeafQueue.User.class
+          },
+          newAppAttempt,
+          dest.getUser(user));
+      }
+      LOG.info("App: " + appId + " successfully moved from "
+        + sourceQueueName + " to: " + destQueueName);
+      newApp.setCurrentAppAttempt(newAppAttempt);
+    }
+    return newApp;
+  }
+
   @Override
   protected <T extends SchedulerNode & PluginSchedulerNode> void importState(PluginPolicyState<T> state) {
     synchronized (inner) {
@@ -987,21 +981,44 @@ public abstract class ExtensibleCapacityScheduler<
       if (allocatedContainer.getValue() != null) {
         app.getCurrentAppAttempt().incNumAllocatedContainers(NodeType.NODE_LOCAL, NodeType.NODE_LOCAL);
       }
-      Utils.invokeMethod(app.getQueue(), LeafQueue.class, "allocateResource",
-        new Class[]{
-          Resource.class,
-          SchedulerApplicationAttempt.class,
-          Resource.class,
-          Set.class
-        },
-        getClusterResource(),
-        app.getCurrentAppAttempt(),
-        assignedResource,
-        node.getLabels()
-      );
+      allocateResources(app.getCurrentAppAttempt(), (LeafQueue) app.getQueue(), assignedResource, node.getLabels());
       return true;
     }
     return false;
+  }
+
+  private void allocateResources(A appAttempt, LeafQueue queue, Resource assignedResource, Set<String> nodeLabels) {
+    Utils.invokeMethod(queue, LeafQueue.class,
+      "allocateResource",
+      new Class[]{
+        Resource.class,
+        SchedulerApplicationAttempt.class,
+        Resource.class,
+        Set.class
+      },
+      getClusterResource(),
+      appAttempt,
+      assignedResource,
+      nodeLabels
+    );
+    if (queue.getParent() != null)
+      allocateResources((ParentQueue) queue.getParent(), assignedResource, nodeLabels);
+  }
+
+  private void allocateResources(ParentQueue queue, Resource assignedResource, Set<String> nodeLabels) {
+    Utils.invokeMethod(queue, AbstractCSQueue.class,
+      "allocateResource",
+      new Class[]{
+        Resource.class,
+        Resource.class,
+        Set.class
+      },
+      getClusterResource(),
+      assignedResource,
+      nodeLabels
+    );
+    if (queue.getParent() != null)
+      allocateResources((ParentQueue) queue.getParent(), assignedResource, nodeLabels);
   }
 
   @Override
