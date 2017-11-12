@@ -996,7 +996,7 @@ public abstract class SimpleQueuePolicy<
         if (newAttempt instanceof Configurable)
           ((Configurable) newAttempt).setConf(conf);
         newApp.setCurrentAppAttempt(newAttempt);
-        queue.getMetrics().submitAppAttempt(app.getUser());
+        newAttempt.move(queue);
         onAppAttemptAdded(newApp.getCurrentAppAttempt());
       }
     }

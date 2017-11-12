@@ -65,6 +65,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(countRMApps(), is(3));
     assertThat(countAppsInQueue("batch"), is(1));
     assertThat(countAppsInQueue("deadline"), is(2));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(0));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(3));
 
     submitApp(4);
     submitApp(5, 30);
@@ -91,6 +94,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(countRMApps(), is(7));
     assertThat(countAppsInQueue("batch"), is(2));
     assertThat(countAppsInQueue("deadline"), is(4));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(4));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(2));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(4));
 
     scheduler.changeToPolicy(EDLS_SH.name());
 
@@ -102,6 +108,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(countRMApps(), is(9));
     assertThat(countAppsInQueue("batch"), is(2));
     assertThat(countAppsInQueue("deadline"), is(5));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(4));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(3));
 
     // now app 8 cannot run before all batch apps are done
     // but now dc apps no longer have a quota
@@ -132,6 +141,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(countRMApps(), is(9));
     assertThat(countAppsInQueue("batch"), is(2));
     assertThat(countAppsInQueue("deadline"), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(2));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(3));
 
     // now app 8 can run because 7 would exceed dc quota
     assertFalse(waitForAMContainer(getApp(7), 0));
@@ -154,6 +166,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(countRMApps(), is(9));
     assertThat(countAppsInQueue("batch"), is(0));
     assertThat(countAppsInQueue("deadline"), is(0));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(0));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(0));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(0));
   }
 
   @Test
@@ -205,6 +220,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(getAMNodeIndex(3), is(0));
     assertThat(getAMNodeIndex(2), is(0));
     assertThat(getAMNodeIndex(1), is(1));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(0));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(3));
 
     sendNodeUpdate(1);
 
@@ -238,6 +256,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(getNmIndex(container1), is(2));
     assertThat(getNmIndex(container2), is(1));
     assertThat(getNmIndex(container3), is(2));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(0));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(6));
 
     container1 = requestAllocation(1);
     container2 = requestAllocation(2, 3, Locality.NODE_LOCAL);
@@ -268,6 +289,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(getNmIndex(container1), is(3));
     assertThat(getNmIndex(container2), is(-1)); // app 2 no longer has priority
     assertThat(getNmIndex(container3), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(0));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(8));
 
     finishApp(1);
     Thread.sleep(1000);
@@ -275,6 +299,10 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     Thread.sleep(1000);
 
     assertThat(getNmIndex(checkAllocation(getApp(2))), is(1));
+
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(2));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(0));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(6));
   }
 
   @Test
@@ -304,12 +332,18 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
 
     assertThat(countAppsInQueue("default"), is(4));
     assertThat(countRMApps(), is(4));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(1));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(3));
 
     scheduler.changeToPolicy(EDLS_SH.name());
 
     assertThat(countAppsInQueue("batch"), is(2));
     assertThat(countAppsInQueue("deadline"), is(2));
     assertThat(countRMApps(), is(4));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(1));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(3));
 
     sendNodeUpdate(2);
 
@@ -321,6 +355,10 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     sendNodeUpdate(1);
 
     assertThat(getAMNodeIndex(2), is(1)); // now it can run
+
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(0));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(3));
   }
 
   @Test
@@ -379,11 +417,18 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(countAppsInQueue("batch"), is(2));
     assertThat(countAppsInQueue("deadline"), is(2));
     assertThat(countRMApps(), is(4));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(2));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(2));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(2));
 
     scheduler.changeToPolicy(LOCF.name());
 
     assertThat(countAppsInQueue("default"), is(4));
     assertThat(countRMApps(), is(4));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(2));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(2));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(2));
+
 
     sendNodeUpdate(0);
     sendNodeUpdate(1);
@@ -399,6 +444,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
 
     assertThat(countAppsInQueue("default"), is(4));
     assertThat(countRMApps(), is(4));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(1));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(3));
 
     double deficit1 = ((SRTFAppAttempt) getAttempt(1)).getResourceDeficit();
     double deficit2 = ((SRTFAppAttempt) getAttempt(2)).getResourceDeficit();
@@ -421,6 +469,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(getNmIndex(container1), is(1));
     assertThat(getNmIndex(container2), is(2));
     assertThat(getNmIndex(container3), is(2));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(4));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(0));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(6));
 
     scheduler.changeToPolicy(EDLS_SH.name());
 
@@ -431,6 +482,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(countAppsInQueue("batch"), is(3));
     assertThat(countAppsInQueue("deadline"), is(2));
     assertThat(countRMApps(), is(5));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(4));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(1));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(6));
 
     sendNodeUpdate(0);
     sendNodeUpdate(1);
@@ -449,6 +503,9 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
 
     assertThat(countAppsInQueue("batch"), is(2));
     assertThat(countAppsInQueue("deadline"), is(1));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(2));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(1));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(3));
 
     assertThat(getAMNodeIndex(5), is(-1)); // locality doesn't matter bc limit would be exceeded
 
@@ -463,5 +520,8 @@ public class TestPortfolioMetaScheduler extends TestSchedulerBase {
     assertThat(countAppsInQueue("batch"), is(2));
     assertThat(countAppsInQueue("deadline"), is(1));
     assertThat(countRMApps(), is(5));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsRunning(), is(3));
+//    assertThat(scheduler.getRootQueueMetrics().getAppsPending(), is(0));
+//    assertThat(scheduler.getRootQueueMetrics().getAllocatedContainers(), is(4));
   }
 }
