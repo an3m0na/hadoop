@@ -78,6 +78,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -415,6 +416,21 @@ public abstract class ExtensibleCapacityScheduler<
       updateAppPriority(newAppAttempt);
       // Submit to a new queue
       dest.submitApplicationAttempt(newAppAttempt, user);
+      Resource consumption = newAppAttempt.getCurrentConsumption();
+      if (!consumption.equals(Resources.none())) {
+        Utils.invokeMethod(dest, LeafQueue.class, "allocateResource",
+          new Class[]{
+            Resource.class,
+            SchedulerApplicationAttempt.class,
+            Resource.class,
+            Set.class
+          },
+          getClusterResource(),
+          app.getCurrentAppAttempt(),
+          consumption,
+          new HashSet<>()
+        );
+      }
       LOG.info("App: " + appId + " successfully moved from "
         + sourceQueueName + " to: " + destQueueName);
       newApp.setCurrentAppAttempt(newAppAttempt);

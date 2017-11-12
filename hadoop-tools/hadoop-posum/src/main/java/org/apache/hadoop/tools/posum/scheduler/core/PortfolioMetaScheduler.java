@@ -10,9 +10,9 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.client.scheduler.MetaScheduler;
 import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.conf.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.web.MetaSchedulerWebApp;
 import org.apache.hadoop.tools.posum.web.PosumWebApp;
@@ -142,6 +142,7 @@ public class PortfolioMetaScheduler extends
       if (metricsON)
         context.stop();
       logger.debug("Policy changed successfully");
+      commService.getDatabase().execute(StoreLogCall.newInstance("Changed scheduling policy to " + policyName));
     }
   }
 

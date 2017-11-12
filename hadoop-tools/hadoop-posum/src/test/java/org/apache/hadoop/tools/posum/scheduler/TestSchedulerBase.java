@@ -151,6 +151,7 @@ public abstract class TestSchedulerBase {
     job.setId(jobId.toString());
     job.setAppId(appId.toString());
     job.setDeadline(deadline);
+    job.setSubmitTime(System.currentTimeMillis());
     db.execute(StoreCall.newInstance(JOB, job));
     allJobs.add(job);
   }
