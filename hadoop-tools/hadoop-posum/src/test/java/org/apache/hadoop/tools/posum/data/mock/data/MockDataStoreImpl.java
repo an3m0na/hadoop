@@ -321,10 +321,13 @@ public class MockDataStoreImpl implements LockBasedDataStore {
   }
 
   @Override
-  public void awaitUpdate(DatabaseReference db) throws InterruptedException {
+  public void awaitUpdate(DatabaseReference db, Long millis) throws InterruptedException {
     Object monitor = getDatabaseAssets(db).updateMonitor;
     synchronized (monitor) {
-      monitor.wait();
+      if (millis != null)
+        monitor.wait(millis);
+      else
+        monitor.wait();
     }
   }
 

@@ -75,6 +75,10 @@ public abstract class SimplePropertyPayload implements Payload, Comparable {
 
   public abstract Object getValue();
 
+  public <T> T getValueAs() {
+    return (T) getValue();
+  }
+
   public abstract void setValue(Object value);
 
   public abstract String getName();
@@ -87,14 +91,14 @@ public abstract class SimplePropertyPayload implements Payload, Comparable {
       return 0;
     if (o == null || !(o instanceof SimplePropertyPayload))
       return -1;
-    Object thisValue = this.getValue();
-    Object thatValue = ((SimplePropertyPayload) o).getValue();
+    Object thisValue = this.getValueAs();
+    Object thatValue = ((SimplePropertyPayload) o).getValueAs();
     if (thisValue == null)
       return 1;
     if (thatValue == null)
       return -1;
     if (thisValue instanceof Comparable)
       return ((Comparable) thisValue).compareTo(thatValue);
-    return this.getValue().toString().compareTo(thatValue.toString());
+    return this.getValueAs().toString().compareTo(thatValue.toString());
   }
 }

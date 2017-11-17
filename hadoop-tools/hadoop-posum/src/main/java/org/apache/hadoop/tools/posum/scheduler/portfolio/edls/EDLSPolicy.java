@@ -25,6 +25,7 @@ import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.C
 
 public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacityScheduler<EDLSAppAttempt, FiCaPluginSchedulerNode> {
 
+  private static final long WAIT_MILLIS = 500;
   protected Log logger;
 
   protected final String DEADLINE_QUEUE = "deadline", BATCH_QUEUE = "batch", ROOT_QUEUE = "root";
@@ -85,7 +86,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
     JobProfile job = db.execute(JobForAppCall.newInstance(appId)).getEntity();
     while (job == null || job.getDeadline() == null) {
       try {
-        db.awaitUpdate();
+        db.awaitUpdate(WAIT_MILLIS);
       } catch (InterruptedException e) {
         logger.error("Could not retrieve job information for " + appId);
         return null;

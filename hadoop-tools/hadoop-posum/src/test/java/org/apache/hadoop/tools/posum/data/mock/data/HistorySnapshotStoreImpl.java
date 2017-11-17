@@ -386,8 +386,8 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
   }
 
   @Override
-  public void awaitUpdate(DatabaseReference db) throws InterruptedException {
-    broker.awaitUpdate(db);
+  public void awaitUpdate(DatabaseReference db, Long millis) throws InterruptedException {
+    broker.awaitUpdate(db, millis);
   }
 
   @Override

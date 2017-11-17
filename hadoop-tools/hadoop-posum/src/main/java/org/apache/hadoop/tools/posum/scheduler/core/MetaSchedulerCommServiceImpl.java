@@ -12,12 +12,13 @@ import org.apache.hadoop.tools.posum.client.orchestration.OrchestrationMasterCli
 import org.apache.hadoop.tools.posum.client.orchestration.Orchestrator;
 import org.apache.hadoop.tools.posum.client.scheduler.MetaScheduler;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
+import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.util.communication.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -92,7 +93,8 @@ public class MetaSchedulerCommServiceImpl extends CompositeService implements Me
           logger.info("Received ping with message: " + request.getPayload());
           break;
         case CHANGE_POLICY:
-          metaScheduler.changeToPolicy((String) request.getPayload());
+          String policy = ((SimplePropertyPayload) request.getPayload()).getValueAs();
+          metaScheduler.changeToPolicy(policy);
           break;
         default:
           return SimpleResponse.newInstance(false, "Could not recognize message type " + request.getType());

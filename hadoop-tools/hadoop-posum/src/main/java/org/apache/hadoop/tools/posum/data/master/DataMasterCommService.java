@@ -10,6 +10,7 @@ import org.apache.hadoop.tools.posum.client.orchestration.OrchestrationMasterCli
 import org.apache.hadoop.tools.posum.common.records.call.DatabaseCallType;
 import org.apache.hadoop.tools.posum.common.records.payload.CollectionMapPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.DatabaseAlterationPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.DatabaseLockPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
@@ -136,12 +137,12 @@ public class DataMasterCommService extends CompositeService implements DataMaste
             );
           break;
         case AWAIT_UPDATE:
-          dmContext.getDataStore().awaitUpdate(
-            ((DatabaseAlterationPayload) request.getPayload()).getSourceDB());
+          DatabaseLockPayload lock = (DatabaseLockPayload) request.getPayload();
+          dmContext.getDataStore().awaitUpdate(lock.getDatabase(), lock.getMillis());
           break;
         case NOTIFY_UPDATE:
-          dmContext.getDataStore().notifyUpdate(
-            ((DatabaseAlterationPayload) request.getPayload()).getSourceDB());
+          lock = (DatabaseLockPayload) request.getPayload();
+          dmContext.getDataStore().notifyUpdate(lock.getDatabase());
           break;
         case RESET:
           dmContext.getDataStore().clear();

@@ -123,16 +123,6 @@ public class Utils {
     return response;
   }
 
-  public static <T> SimpleRequest<T> wrapSimpleRequest(PosumProtos.SimpleRequestProto proto) {
-    try {
-      Class<? extends SimpleRequestPBImpl> implClass =
-        SimpleRequest.Type.fromProto(proto.getType()).getImplClass();
-      return implClass.getConstructor(PosumProtos.SimpleRequestProto.class).newInstance(proto);
-    } catch (Exception e) {
-      throw new PosumException("Could not construct request object for " + proto.getType(), e);
-    }
-  }
-
   public static <T extends Payload> SimpleResponse<T> wrapSimpleResponse(PosumProtos.SimpleResponseProto proto) {
     try {
       return new SimpleResponsePBImpl(proto);

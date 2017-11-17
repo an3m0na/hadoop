@@ -126,7 +126,7 @@ public class DataMasterWebApp extends PosumWebApp {
     List<LogEntry<SimplePropertyPayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
     JsonArray entries = new JsonArray();
     for (LogEntry<SimplePropertyPayload> log : logs) {
-      String stringResult = (String) log.getDetails().getValue();
+      String stringResult = log.getDetails().getValueAs();
       try {
         JsonNode result = JsonElement.read(stringResult).getNode();
         if (result != null && result.get("successful").asBoolean())
@@ -173,9 +173,10 @@ public class DataMasterWebApp extends PosumWebApp {
     List<LogEntry<SimplePropertyPayload>> choiceLogs =
       context.getDataStore().execute(findChoices, DatabaseReference.getLogs()).getEntities();
     for (LogEntry<SimplePropertyPayload> choiceEntry : choiceLogs) {
+      String policy = choiceEntry.getDetails().getValueAs();
       choices.add(new JsonObject()
         .put("time", choiceEntry.getLastUpdated())
-        .put("policy", (String) choiceEntry.getDetails().getValue())
+        .put("policy", policy)
       );
     }
     return choices;
@@ -191,9 +192,10 @@ public class DataMasterWebApp extends PosumWebApp {
     List<LogEntry<SimplePropertyPayload>> logs =
       context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
     for (LogEntry<SimplePropertyPayload> logEntry : logs) {
+      String message = logEntry.getDetails().getValueAs();
       list.add(new JsonObject()
         .put("timestamp", logEntry.getLastUpdated())
-        .put("message", (String) logEntry.getDetails().getValue()));
+        .put("message", message));
     }
     return wrapResult(list.getNode());
   }

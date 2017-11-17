@@ -5,9 +5,9 @@ import com.google.protobuf.ServiceException;
 import org.apache.hadoop.tools.posum.common.records.protocol.OrchestratorMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.HandleSimResultRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.RegistrationRequestPBImpl;
+import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.proto.PosumProtos.HandleSimResultRequestProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.RegistrationRequestProto;
@@ -27,7 +27,7 @@ public class OrchestratorMasterProtocolPBServiceImpl implements OrchestratorMast
   @Override
   public SimpleResponseProto handleSimpleRequest(RpcController controller, SimpleRequestProto request) throws ServiceException {
     try {
-      SimpleResponse response = real.handleSimpleRequest(Utils.wrapSimpleRequest(request));
+      SimpleResponse response = real.handleSimpleRequest(new SimpleRequestPBImpl(request));
       return ((SimpleResponsePBImpl) response).getProto();
     } catch (YarnException | IOException e) {
       throw new ServiceException(e);

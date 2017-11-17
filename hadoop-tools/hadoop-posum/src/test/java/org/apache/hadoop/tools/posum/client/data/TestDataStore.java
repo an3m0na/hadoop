@@ -226,7 +226,7 @@ public abstract class TestDataStore {
     app3.setName(modifiedName);
     app3.setState(state);
     UpdateOrStoreCall updateApp = UpdateOrStoreCall.newInstance(APP, app3);
-    String upsertedId = (String) db.execute(updateApp).getValue();
+    String upsertedId = db.execute(updateApp).getValueAs();
     assertNull(upsertedId);
     FindByQueryCall findAppsByName = FindByQueryCall.newInstance(APP,
       QueryUtils.is("name", modifiedName));
@@ -239,7 +239,7 @@ public abstract class TestDataStore {
     app4.setId(app4IdString);
     app4.setName(modifiedName);
     updateApp.setEntity(app4);
-    upsertedId = (String) db.execute(updateApp).getValue();
+    upsertedId = db.execute(updateApp).getValueAs();
     assertThat(app4.getId(), is(upsertedId));
     returnedApps = db.execute(findAppsByName).getEntities();
     assertThat(returnedApps, containsInAnyOrder(app3, app4));
@@ -361,7 +361,7 @@ public abstract class TestDataStore {
           );
           FindByQueryCall findByProperties = FindByQueryCall.newInstance(JOB, query);
           db.execute(findByProperties).getEntities();
-        } else{
+        } else {
           dataStore.clear();
         }
       }
@@ -381,7 +381,6 @@ public abstract class TestDataStore {
       thread.stopNow();
       thread.join();
     }
-    assertThat(dataStore.listCollections().size(), is(0));
   }
 
   @Test
@@ -413,7 +412,7 @@ public abstract class TestDataStore {
     String message = "Some message";
     StoreLogCall storeLog = StoreLogCall.newInstance(message);
     Long timestamp = storeLog.getLogEntry().getLastUpdated();
-    String logId = (String) dataStore.execute(storeLog, null).getValue();
+    String logId = dataStore.execute(storeLog, null).getValueAs();
     assertNotNull(logId);
     FindByIdCall getLog = FindByIdCall.newInstance(
       DataEntityCollection.AUDIT_LOG,
@@ -462,7 +461,7 @@ public abstract class TestDataStore {
   @Test
   public void testHistoryProfileManipulation() {
     HistoryProfile appHistory = new HistoryProfilePBImpl<>(DataEntityCollection.APP, APP1);
-    db.execute(StoreCall.newInstance(HISTORY, appHistory)).getValue();
+    db.execute(StoreCall.newInstance(HISTORY, appHistory));
 
     String appId = APP1_ID.toString();
     FindByQueryCall findHistory = FindByQueryCall.newInstance(HISTORY, QueryUtils.is("originalId", appId));
