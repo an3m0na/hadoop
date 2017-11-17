@@ -304,6 +304,7 @@ public class PortfolioMetaScheduler extends
   @Override
   public void handle(SchedulerEvent event) {
     Timer.Context generalContext = null, typeContext = null;
+    logger.trace("MetaScheduler received event " + event);
     if (metricsON) {
       generalContext = handleTimer.time();
       typeContext = handleByTypeTimers.get(event.getType()).time();

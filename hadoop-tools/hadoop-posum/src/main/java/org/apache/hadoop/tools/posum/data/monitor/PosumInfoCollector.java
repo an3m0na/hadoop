@@ -95,21 +95,7 @@ public class PosumInfoCollector {
     long now = System.currentTimeMillis();
 
     if (fineGrained) {
-      Map<String, String> systemMetrics = new HashMap<>(4);
-      for (Utils.PosumProcess posumProcess : Utils.PosumProcess.values()) {
-        String response = api.getSystemMetrics(posumProcess);
-        if (response != null)
-          systemMetrics.put(posumProcess.name(), response);
-      }
-      if (!systemMetrics.isEmpty()) {
-        LogEntry systemMetricsLog = CallUtils.newLogEntry(SYSTEM_METRICS, StringStringMapPayload.newInstance(systemMetrics));
-        logDb.execute(StoreLogCall.newInstance(systemMetricsLog));
-      }
-      String response = api.getClusterMetrics();
-      if (response != null) {
-        LogEntry clusterMetricsLog = CallUtils.newLogEntry(CLUSTER_METRICS, SimplePropertyPayload.newInstance("", response));
-        logDb.execute(StoreLogCall.newInstance(clusterMetricsLog));
-      }
+      storeMetricsSnapshots();
     }
 
     if (continuousPrediction) {
@@ -130,7 +116,37 @@ public class PosumInfoCollector {
       }
     }
 
-    // aggregate policy change decisions
+    aggregatePolicyChanges(now);
+    aggregateNodeChanges(now);
+
+    // calculate current evaluation score
+    LogEntry clusterMetricsLog = CallUtils.newLogEntry(PERFORMANCE, performanceEvaluator.evaluate());
+    logDb.execute(StoreLogCall.newInstance(clusterMetricsLog));
+
+    lastCollectTime = now;
+
+    logDb.notifyUpdate();
+  }
+
+  private void storeMetricsSnapshots() {
+    Map<String, String> systemMetrics = new HashMap<>(4);
+    for (Utils.PosumProcess posumProcess : Utils.PosumProcess.values()) {
+      String response = api.getSystemMetrics(posumProcess);
+      if (response != null)
+        systemMetrics.put(posumProcess.name(), response);
+    }
+    if (!systemMetrics.isEmpty()) {
+      LogEntry systemMetricsLog = CallUtils.newLogEntry(SYSTEM_METRICS, StringStringMapPayload.newInstance(systemMetrics));
+      logDb.execute(StoreLogCall.newInstance(systemMetricsLog));
+    }
+    String response = api.getClusterMetrics();
+    if (response != null) {
+      LogEntry clusterMetricsLog = CallUtils.newLogEntry(CLUSTER_METRICS, SimplePropertyPayload.newInstance("", response));
+      logDb.execute(StoreLogCall.newInstance(clusterMetricsLog));
+    }
+  }
+
+  private void aggregatePolicyChanges(long now) {
     FindByQueryCall findPolicyChanges = FindByQueryCall.newInstance(DataEntityCollection.AUDIT_LOG,
       QueryUtils.and(
         QueryUtils.is("type", LogEntry.Type.POLICY_CHANGE),
@@ -143,7 +159,7 @@ public class PosumInfoCollector {
       if (schedulingStart == 0)
         schedulingStart = policyChanges.get(0).getLastUpdated();
       for (LogEntry<SimplePropertyPayload> change : policyChanges) {
-        String policy = (String) change.getDetails().getValue();
+        String policy = change.getDetails().getValueAs();
         PolicyInfoPayload info = policyMap.get(policy);
         if (!policy.equals(lastUsedPolicy)) {
           if (lastUsedPolicy != null) {
@@ -156,8 +172,9 @@ public class PosumInfoCollector {
       logDb.execute(CallUtils.storeStatReportCall(LogEntry.Type.POLICY_MAP,
         PolicyInfoMapPayload.newInstance(policyMap)));
     }
+  }
 
-    // aggregate node change decisions
+  private void aggregateNodeChanges(long now) {
     FindByQueryCall findNodeChanges = FindByQueryCall.newInstance(DataEntityCollection.AUDIT_LOG,
       QueryUtils.and(
         QueryUtils.in("type", Arrays.asList(LogEntry.Type.NODE_ADD, LogEntry.Type.NODE_REMOVE)),
@@ -167,7 +184,7 @@ public class PosumInfoCollector {
     List<LogEntry<SimplePropertyPayload>> nodeChanges = logDb.execute(findNodeChanges).getEntities();
     if (nodeChanges.size() > 0) {
       for (LogEntry<SimplePropertyPayload> nodeChange : nodeChanges) {
-        String hostName = (String) nodeChange.getDetails().getValue();
+        String hostName = nodeChange.getDetails().getValueAs();
         if (nodeChange.getType().equals(LogEntry.Type.NODE_ADD))
           activeNodes.add(hostName);
         else
@@ -176,14 +193,6 @@ public class PosumInfoCollector {
       logDb.execute(CallUtils.storeStatReportCall(LogEntry.Type.ACTIVE_NODES,
         StringListPayload.newInstance(new ArrayList<>(activeNodes))));
     }
-
-    // calculate current evaluation score
-    LogEntry clusterMetricsLog = CallUtils.newLogEntry(PERFORMANCE, performanceEvaluator.evaluate());
-    logDb.execute(StoreLogCall.newInstance(clusterMetricsLog));
-
-    lastCollectTime = now;
-
-    logDb.notifyUpdate();
   }
 
   private void storePredictionForTask(JobBehaviorPredictor predictor, String taskId) {

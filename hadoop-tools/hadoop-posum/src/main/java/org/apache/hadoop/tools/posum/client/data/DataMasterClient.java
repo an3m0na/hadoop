@@ -10,6 +10,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.CollectionMapPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.DatabaseAlterationPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.DatabaseLockPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
@@ -114,11 +115,11 @@ public class DataMasterClient extends AbstractService implements DataStore {
   }
 
   @Override
-  public void awaitUpdate(DatabaseReference db) throws InterruptedException {
+  public void awaitUpdate(DatabaseReference db, Long millis) throws InterruptedException {
     Utils.sendSimpleRequest(
       "awaitUpdate",
       SimpleRequest.newInstance(SimpleRequest.Type.AWAIT_UPDATE,
-        DatabaseAlterationPayload.newInstance(db)),
+        DatabaseLockPayload.newInstance(db)),
       dmClient
     );
   }
@@ -128,7 +129,7 @@ public class DataMasterClient extends AbstractService implements DataStore {
     Utils.sendSimpleRequest(
       "notifyUpdate",
       SimpleRequest.newInstance(SimpleRequest.Type.NOTIFY_UPDATE,
-        DatabaseAlterationPayload.newInstance(db)),
+        DatabaseLockPayload.newInstance(db)),
       dmClient
     );
   }

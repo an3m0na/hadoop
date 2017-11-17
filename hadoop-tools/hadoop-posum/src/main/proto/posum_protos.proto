@@ -277,6 +277,8 @@ enum PayloadTypeProto {
     PLD_POLICY_INFO_MAP = 7;
     PLD_PROPERTY_MAP = 8;
     PLD_COMPOUND_SCORE = 9;
+    PLD_DB_LOCK = 10;
+    PLD_DB_ALTERATION = 11;
 }
 
 message SimplePropertyPayloadProto {
@@ -335,7 +337,7 @@ message CompoundScorePayloadProto {
 }
 
 message StringStringMapPayloadProto {
-     repeated StringStringMapProto entries = 1;
+    repeated StringStringMapProto entries = 1;
 }
 
 message PropertyMapPayloadProto {
@@ -368,6 +370,11 @@ message DatabaseAlterationPayloadProto {
     optional DatabaseProto source = 1;
     optional DatabaseProto destination = 2;
     repeated EntityCollectionProto targetCollections = 3;
+}
+
+message DatabaseLockPayloadProto {
+    required DatabaseProto database = 1;
+    optional int64 millis = 2;
 }
 
 // --------- Database Calls ---------

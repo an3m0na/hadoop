@@ -30,8 +30,8 @@ public class Database {
     return new Database(dataStore, db);
   }
 
-  public void awaitUpdate() throws InterruptedException {
-    dataStore.awaitUpdate(selectedDatabase);
+  public void awaitUpdate(Long millis) throws InterruptedException {
+    dataStore.awaitUpdate(selectedDatabase, millis);
   }
 
   public void notifyUpdate() {

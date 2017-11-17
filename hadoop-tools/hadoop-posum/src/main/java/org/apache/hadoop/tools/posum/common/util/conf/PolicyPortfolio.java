@@ -18,7 +18,8 @@ public class PolicyPortfolio extends HashMap<String, Class<? extends PluginPolic
     EDLS_SH(EDLSSharePolicy.class),
     EDLS_PR(EDLSPriorityPolicy.class),
     LOCF(LocalityFirstPolicy.class),
-    SRTF(ShortestRTFirstPolicy.class);
+    SRTF(ShortestRTFirstPolicy.class)
+ ;
 
     Class<? extends PluginPolicy> implClass;
 
