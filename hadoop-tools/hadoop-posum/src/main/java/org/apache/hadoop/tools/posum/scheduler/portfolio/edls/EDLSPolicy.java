@@ -63,8 +63,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
                                 String user,
                                 boolean isAppRecovering,
                                 ReservationId reservationID) {
-
-    JobProfile job = fetchJobProfile(applicationId.toString());
+    JobProfile job = waitForJobProfile(applicationId);
     if (job == null || job.getDeadline() == 0) {
       logger.debug("Adding app to BC queue " + applicationId);
       return BATCH_QUEUE;
@@ -78,12 +77,13 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
     return resolveQueue(queue, applicationId, user, false, null);
   }
 
-  protected JobProfile fetchJobProfile(String appId) {
+  protected JobProfile waitForJobProfile(ApplicationId appId) {
     Database db = dbProvider.getDatabase();
     if (db == null)
       // DataMaster is not connected; do nothing
       return null;
-    JobProfile job = db.execute(JobForAppCall.newInstance(appId)).getEntity();
+    JobForAppCall getJobCall = JobForAppCall.newInstance(appId.toString());
+    JobProfile job = db.execute(getJobCall).getEntity();
     while (job == null || job.getDeadline() == null) {
       try {
         db.awaitUpdate(WAIT_MILLIS);
@@ -91,9 +91,18 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         logger.error("Could not retrieve job information for " + appId);
         return null;
       }
-      job = db.execute(JobForAppCall.newInstance(appId)).getEntity();
+      job = db.execute(getJobCall).getEntity();
     }
     return job;
+  }
+
+  protected JobProfile fetchJobProfile(ApplicationId appId) {
+    Database db = dbProvider.getDatabase();
+    if (db == null)
+      // DataMaster is not connected; do nothing
+      return null;
+    JobForAppCall getJobCall = JobForAppCall.newInstance(appId.toString());
+    return db.execute(getJobCall).getEntity();
   }
 
   @Override
@@ -103,16 +112,11 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
       if (EDLSAppAttempt.Type.DC.equals(app.getType()))
         // application should already be initialized; do nothing
         return;
-      if (dbProvider.getDatabase() == null)
-        // DataMaster is not connected; do nothing
+      JobProfile job = fetchJobProfile(app.getApplicationId());
+      if(job == null)
         return;
-      String appId = app.getApplicationId().toString();
-      JobProfile job = fetchJobProfile(appId);
       if (app.getType() == null) {
         // new app
-        if (job == null)
-          // something went wrong; do nothing
-          return;
         app.setJobId(job.getId());
         app.setSubmitTime(job.getSubmitTime());
         app.setType(orZero(job.getDeadline()) == 0 ? EDLSAppAttempt.Type.BC : EDLSAppAttempt.Type.DC);
