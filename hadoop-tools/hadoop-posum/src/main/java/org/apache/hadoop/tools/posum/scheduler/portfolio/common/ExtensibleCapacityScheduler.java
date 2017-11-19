@@ -190,13 +190,11 @@ public abstract class ExtensibleCapacityScheduler<
    * Acts the same as resolveQueue, but is used when the scheduler has just been initialized and must accept the
    * applications from a previous scheduler
    *
-   * @param queue         the name of the application's queue in the other scheduler
-   * @param applicationId the application id
+   * @param applicationId the id of the application from the previous scheduler
+   * @param application   the application from the previous scheduler
    * @return the target queue name for this scheduler
    */
-  protected String resolveMoveQueue(String queue,
-                                    ApplicationId applicationId,
-                                    String user) {
+  protected String resolveMoveQueue(ApplicationId applicationId, SchedulerApplication<? extends SchedulerApplicationAttempt> application) {
     //TODO
     return DEFAULT_QUEUE_NAME;
   }
@@ -932,7 +930,7 @@ public abstract class ExtensibleCapacityScheduler<
         ApplicationId appId = appEntry.getKey();
         SchedulerApplication<? extends SchedulerApplicationAttempt> app = appEntry.getValue();
         Queue oldQueue = app.getQueue();
-        String newQueueName = resolveMoveQueue(oldQueue.getQueueName(), appId, app.getUser());
+        String newQueueName = resolveMoveQueue(appId, app);
         try {
           //build a new scheduler application based on the old one
           myApps.put(appId, moveApplicationReference(appId, app, newQueueName));
