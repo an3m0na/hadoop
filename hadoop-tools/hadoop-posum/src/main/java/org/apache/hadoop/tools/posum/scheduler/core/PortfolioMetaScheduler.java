@@ -133,7 +133,7 @@ public class PortfolioMetaScheduler extends
           currentPolicy.transferStateFromPolicy(oldPolicy);
           if (isInState(STATE.STARTED)) {
             oldPolicy.stop();
-            logger.debug("Starting current policy");
+            logger.debug("Starting policy" + policyName);
             currentPolicy.start();
           }
         }
@@ -248,12 +248,7 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public int getNumClusterNodes() {
-    readLock.lock();
-    try {
-      return currentPolicy.getNumClusterNodes();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getNumClusterNodes();
   }
 
   @Override
@@ -324,32 +319,17 @@ public class PortfolioMetaScheduler extends
   @Override
   public QueueInfo getQueueInfo(String queueName,
                                 boolean includeChildQueues, boolean recursive) throws IOException {
-    readLock.lock();
-    try {
-      return currentPolicy.getQueueInfo(queueName, includeChildQueues, recursive);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getQueueInfo(queueName, includeChildQueues, recursive);
   }
 
   @Override
   public List<QueueUserACLInfo> getQueueUserAclInfo() {
-    readLock.lock();
-    try {
-      return currentPolicy.getQueueUserAclInfo();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getQueueUserAclInfo();
   }
 
   @Override
   public ResourceCalculator getResourceCalculator() {
-    readLock.lock();
-    try {
-      return currentPolicy.getResourceCalculator();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getResourceCalculator();
   }
 
   @Override
@@ -364,12 +344,7 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public RMContainer getRMContainer(ContainerId containerId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getRMContainer(containerId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getRMContainer(containerId);
   }
 
   @Override
@@ -384,33 +359,18 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public QueueMetrics getRootQueueMetrics() {
-    readLock.lock();
-    try {
-      return currentPolicy.getRootQueueMetrics();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getRootQueueMetrics();
   }
 
   @Override
   public synchronized boolean checkAccess(UserGroupInformation callerUGI,
                                           QueueACL acl, String queueName) {
-    readLock.lock();
-    try {
-      return currentPolicy.checkAccess(callerUGI, acl, queueName);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.checkAccess(callerUGI, acl, queueName);
   }
 
   @Override
   public synchronized List<ApplicationAttemptId> getAppsInQueue(String queueName) {
-    readLock.lock();
-    try {
-      return currentPolicy.getAppsInQueue(queueName);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getAppsInQueue(queueName);
   }
 
   /**
@@ -419,121 +379,66 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public synchronized List<Container> getTransferredContainers(ApplicationAttemptId currentAttempt) {
-    readLock.lock();
-    try {
-      return currentPolicy.getTransferredContainers(currentAttempt);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getTransferredContainers(currentAttempt);
   }
 
   @Override
   public Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>> getSchedulerApplications() {
-    readLock.lock();
-    try {
-      // explicit conversion required due to currentPolicy outputting SchedulerApplication<? extends SchedulerApplicationAttempt>>
-      Map<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> apps =
-        currentPolicy.getSchedulerApplications();
-      Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>> ret = new HashMap<>(apps.size());
+    // explicit conversion required due to currentPolicy outputting SchedulerApplication<? extends SchedulerApplicationAttempt>>
+    Map<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> apps =
+      currentPolicy.getSchedulerApplications();
+    Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>> ret = new HashMap<>(apps.size());
 
-      for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> entry :
-        apps.entrySet()) {
-        ret.put(entry.getKey(), (SchedulerApplication<SchedulerApplicationAttempt>) entry.getValue());
-      }
-      return ret;
-    } finally {
-      readLock.unlock();
+    for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> entry :
+      apps.entrySet()) {
+      ret.put(entry.getKey(), (SchedulerApplication<SchedulerApplicationAttempt>) entry.getValue());
     }
+    return ret;
   }
 
   @Override
   public Resource getClusterResource() {
-    readLock.lock();
-    try {
-      return currentPolicy.getClusterResource();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getClusterResource();
   }
 
   @Override
   public Resource getMinimumResourceCapability() {
-    readLock.lock();
-    try {
-      return currentPolicy.getMinimumResourceCapability();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getMinimumResourceCapability();
   }
 
   @Override
   public Resource getMaximumResourceCapability() {
-    readLock.lock();
-    try {
-      return currentPolicy.getMaximumResourceCapability();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getMaximumResourceCapability();
   }
 
   @Override
   public Resource getMaximumResourceCapability(String queueName) {
-    readLock.lock();
-    try {
-      return currentPolicy.getMaximumResourceCapability(queueName);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getMaximumResourceCapability(queueName);
   }
 
   @Override
   public SchedulerApplicationAttempt getApplicationAttempt(ApplicationAttemptId applicationAttemptId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getApplicationAttempt(applicationAttemptId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getApplicationAttempt(applicationAttemptId);
   }
 
   @Override
   public SchedulerAppReport getSchedulerAppInfo(ApplicationAttemptId appAttemptId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getSchedulerAppInfo(appAttemptId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getSchedulerAppInfo(appAttemptId);
   }
 
   @Override
   public ApplicationResourceUsageReport getAppResourceUsageReport(ApplicationAttemptId appAttemptId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getAppResourceUsageReport(appAttemptId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getAppResourceUsageReport(appAttemptId);
   }
 
   @Override
   public SchedulerApplicationAttempt getCurrentAttemptForContainer(ContainerId containerId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getCurrentAttemptForContainer(containerId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getCurrentAttemptForContainer(containerId);
   }
 
   @Override
   public SchedulerNodeReport getNodeReport(NodeId nodeId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getNodeReport(nodeId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getNodeReport(nodeId);
   }
 
   @Override
@@ -598,62 +503,53 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public synchronized void moveAllApps(String sourceQueue, String destQueue) throws YarnException {
+    logger.debug("Acquiring read lock34");
     readLock.lock();
     try {
       currentPolicy.moveAllApps(sourceQueue, destQueue);
     } finally {
       readLock.unlock();
+      logger.debug("Unlocked read lock34");
     }
   }
 
   @Override
   public synchronized void killAllAppsInQueue(String queueName) throws YarnException {
+    logger.debug("Acquiring read lock45");
     readLock.lock();
     try {
       currentPolicy.killAllAppsInQueue(queueName);
     } finally {
       readLock.unlock();
+      logger.debug("Unlocked read lock45");
     }
   }
 
   @Override
   public synchronized void updateNodeResource(RMNode nm, ResourceOption resourceOption) {
+    logger.debug("Acquiring read lock56");
     readLock.lock();
     try {
       currentPolicy.updateNodeResource(nm, resourceOption);
     } finally {
       readLock.unlock();
+      logger.debug("Unlocked read lock56");
     }
   }
 
   @Override
   public EnumSet<YarnServiceProtos.SchedulerResourceTypes> getSchedulingResourceTypes() {
-    readLock.lock();
-    try {
-      return currentPolicy.getSchedulingResourceTypes();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getSchedulingResourceTypes();
   }
 
   @Override
   public Set<String> getPlanQueues() throws YarnException {
-    readLock.lock();
-    try {
-      return currentPolicy.getPlanQueues();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getPlanQueues();
   }
 
   @Override
   public List<ResourceRequest> getPendingResourceRequestsForAttempt(ApplicationAttemptId attemptId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getPendingResourceRequestsForAttempt(attemptId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getPendingResourceRequestsForAttempt(attemptId);
   }
 
   @Override
@@ -731,11 +627,6 @@ public class PortfolioMetaScheduler extends
   }
 
   public Map<String, SchedulerNodeReport> getNodeReports() {
-    readLock.lock();
-    try {
-      return currentPolicy.getNodeReports();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getNodeReports();
   }
 }

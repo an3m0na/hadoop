@@ -937,8 +937,7 @@ public abstract class SimpleQueuePolicy<
   }
 
   protected void updateAppHeadRoom(SchedulerApplicationAttempt schedulerAttempt) {
-    schedulerAttempt.setHeadroom(Resources.subtract(clusterResource,
-      usedResource));
+    schedulerAttempt.setHeadroom(Resources.subtract(clusterResource, usedResource));
   }
 
   protected void printQueue() {
@@ -996,6 +995,7 @@ public abstract class SimpleQueuePolicy<
         if (newAttempt instanceof Configurable)
           ((Configurable) newAttempt).setConf(conf);
         newApp.setCurrentAppAttempt(newAttempt);
+        newAttempt.setHeadroomProvider(null);
         newAttempt.move(queue);
         onAppAttemptAdded(newApp.getCurrentAppAttempt());
       }
