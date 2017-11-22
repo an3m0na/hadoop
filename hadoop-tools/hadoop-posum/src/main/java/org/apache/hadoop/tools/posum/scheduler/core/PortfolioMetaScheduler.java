@@ -100,17 +100,17 @@ public class PortfolioMetaScheduler extends
     this.commService = commService;
   }
 
-  private void initPolicy() {
+  private PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode> instantiatePolicy(Class<? extends PluginPolicy> currentPolicyClass) {
+    PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode> newPolicy;
     try {
-      currentPolicy = currentPolicyClass.newInstance();
+      newPolicy = currentPolicyClass.newInstance();
     } catch (InstantiationException | IllegalAccessException e) {
       throw new PosumException("Could not instantiate scheduler for class " + currentPolicyClass, e);
     }
-    currentPolicy.initializePlugin(posumConf, commService);
+    newPolicy.initializePlugin(posumConf, commService);
     if (rmContext != null)
-      currentPolicy.setRMContext(rmContext);
-    logger.debug("Initializing current policy");
-    currentPolicy.init(conf);
+      newPolicy.setRMContext(rmContext);
+    return newPolicy;
   }
 
   @Override
@@ -125,18 +125,18 @@ public class PortfolioMetaScheduler extends
       if (metricsON)
         context = changeTimer.time();
       writeLock.lock();
-      currentPolicyClass = newClass;
-      if (isInState(STATE.INITED) || isInState(STATE.STARTED)) {
-        PluginPolicy oldPolicy = currentPolicy;
-        initPolicy();
-        if (oldPolicy != null) {
-          currentPolicy.transferStateFromPolicy(oldPolicy);
-          if (isInState(STATE.STARTED)) {
-            oldPolicy.stop();
-            logger.debug("Starting policy" + policyName);
-            currentPolicy.start();
-          }
-        }
+      PluginPolicy oldPolicy = currentPolicy;
+      PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode> newPolicy = instantiatePolicy(newClass);
+      if (!isInState(STATE.NOTINITED)) {
+        newPolicy.init(conf);
+      }
+      if (isInState(STATE.STARTED)) {
+        newPolicy.transferStateFromPolicy(oldPolicy);
+        newPolicy.start();
+      }
+      currentPolicy = newPolicy;
+      if (oldPolicy.isInState(STATE.STARTED)) {
+        oldPolicy.stop();
       }
       writeLock.unlock();
       if (metricsON)
@@ -187,7 +187,8 @@ public class PortfolioMetaScheduler extends
       commService = new MetaSchedulerCommServiceImpl(this, posumConf.get(YarnConfiguration.RM_ADDRESS));
       commService.init(posumConf);
     }
-    initPolicy();
+    currentPolicy = instantiatePolicy(currentPolicyClass);
+    currentPolicy.init(conf);
 
     //initialize  metrics
     metricsON = posumConf.getBoolean(PosumConfiguration.SCHEDULER_METRICS_ON, PosumConfiguration.SCHEDULER_METRICS_ON_DEFAULT);
