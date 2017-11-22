@@ -20,8 +20,6 @@ public class PosumConfiguration {
     return conf;
   }
 
-  public static int DEFAULT_BUFFER_SIZE = 1024;
-
   public static final String PREFIX = "tools.posum.";
   public static final String ORCHESTRATOR_PREFIX = PREFIX + "orchestrator.";
   public static final String MONITOR_PREFIX = PREFIX + "monitor.";
@@ -29,10 +27,6 @@ public class PosumConfiguration {
   public static final String DATABASE_PREFIX = PREFIX + "database.";
   public static final String SCHEDULER_PREFIX = PREFIX + "scheduler.";
   public static final String SIMULATION_PREFIX = PREFIX + "simulation.";
-
-
-  public static final String MASTER_HEARTBEAT_MS = ORCHESTRATOR_PREFIX + "heartbeat.ms";
-  public static final int MASTER_HEARTBEAT_MS_DEFAULT = 1000;
 
   public static final String CLUSTER_MONITOR_HEARTBEAT_MS = MONITOR_PREFIX + "cluster.heartbeat.ms";
   public static final int CLUSTER_MONITOR_HEARTBEAT_MS_DEFAULT = 1000;

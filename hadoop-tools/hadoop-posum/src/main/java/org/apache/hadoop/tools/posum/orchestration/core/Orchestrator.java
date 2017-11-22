@@ -28,7 +28,6 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
 
   private OrchestrationMasterContext orchestrationContext;
   private SimulationMonitor simulationMonitor;
-  private boolean switchEnabled;
 
   public Orchestrator(OrchestrationMasterContext orchestrationContext) {
     super(Orchestrator.class.getName());
@@ -39,7 +38,6 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
   protected void serviceInit(Configuration conf) throws Exception {
     simulationMonitor = new SimulationMonitor(orchestrationContext);
     simulationMonitor.init(conf);
-    switchEnabled = getConfig().getBoolean(POLICY_SWITCH_ENABLED, POLICY_SWITCH_ENABLED_DEFAULT);
     SimulationScoreComparator simulationScoreComparator = new SimulationScoreComparator();
     simulationScoreComparator.updateScaleFactors(
       getConfig().getDouble(SLOWDOWN_SCALE_FACTOR, SLOWDOWN_SCALE_FACTOR_DEFAULT),
@@ -88,7 +86,7 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
   }
 
   private void decidePolicyChange(List<SimulationResultPayload> results) {
-    if (!switchEnabled || results == null || results.isEmpty())
+    if (results == null || results.isEmpty())
       return;
     MetaScheduler scheduler = orchestrationContext.getCommService().getScheduler();
     orchestrationContext.getSimulationScoreComparator().sort(results);
