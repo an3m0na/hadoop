@@ -116,17 +116,17 @@ public class PortfolioMetaScheduler extends
   @Override
   public void changeToPolicy(String policyName) {
     logger.debug("Changing policy to " + policyName);
-    Class<? extends PluginPolicy> newClass = policies.get(policyName);
-    if (newClass == null)
+    Class<? extends PluginPolicy> newPolicyClass = policies.get(policyName);
+    if (newPolicyClass == null)
       throw new PosumException("Target policy does not exist: " + policyName);
     commService.getDatabase().execute(StoreLogCall.newInstance(LogEntry.Type.POLICY_CHANGE, policyName));
-    if (!currentPolicyClass.equals(newClass)) {
+    if (!currentPolicyClass.equals(newPolicyClass)) {
       Timer.Context context = null;
       if (metricsON)
         context = changeTimer.time();
       writeLock.lock();
       PluginPolicy oldPolicy = currentPolicy;
-      PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode> newPolicy = instantiatePolicy(newClass);
+      PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode> newPolicy = instantiatePolicy(newPolicyClass);
       if (!isInState(STATE.NOTINITED)) {
         newPolicy.init(conf);
       }
@@ -135,6 +135,7 @@ public class PortfolioMetaScheduler extends
         newPolicy.start();
       }
       currentPolicy = newPolicy;
+      currentPolicyClass = newPolicyClass;
       if (oldPolicy.isInState(STATE.STARTED)) {
         oldPolicy.stop();
       }
