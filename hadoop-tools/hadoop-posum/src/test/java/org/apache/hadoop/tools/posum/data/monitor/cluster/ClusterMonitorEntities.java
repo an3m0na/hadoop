@@ -10,7 +10,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterInfoPayload;
-import org.apache.hadoop.tools.posum.common.util.RestClient;
+import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.util.Records;
@@ -151,7 +151,7 @@ class ClusterMonitorEntities {
     DETAILED_REDUCE_TASK.setShuffleTime(2592L);
     DETAILED_REDUCE_TASK.setReduceTime(0L);
     DETAILED_REDUCE_TASK.setMergeTime(47L);
-    DETAILED_REDUCE_TASK.setHttpAddress("host.domain.com");
+    DETAILED_REDUCE_TASK.setHostName("host.domain.com");
 
     FINISHED_DETAILED_REDUCE_TASK = DETAILED_REDUCE_TASK.copy();
     FINISHED_DETAILED_REDUCE_TASK.setReduceTime(311L);

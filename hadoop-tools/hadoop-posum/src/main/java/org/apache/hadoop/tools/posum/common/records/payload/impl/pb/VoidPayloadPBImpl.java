@@ -12,6 +12,11 @@ public class VoidPayloadPBImpl extends VoidPayload implements PayloadPB {
   }
 
   @Override
+  public Object getProto() {
+    return null;
+  }
+
+  @Override
   public ByteString getProtoBytes() {
     return ByteString.EMPTY;
   }

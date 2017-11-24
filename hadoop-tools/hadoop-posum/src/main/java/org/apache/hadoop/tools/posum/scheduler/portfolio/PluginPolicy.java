@@ -4,21 +4,18 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
-import org.apache.hadoop.tools.posum.common.util.DatabaseProvider;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSAppAttempt;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSQueue;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.singleq.SQSchedulerNode;
+import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
-import org.apache.hadoop.yarn.api.records.NodeId;
+import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer;
 import org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.AbstractYarnScheduler;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplication;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicationAttempt;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNodeReport;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeAddedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.NodeRemovedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
@@ -26,14 +23,15 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEv
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.DEFAULT_PRIORITY;
+
 public abstract class PluginPolicy<
-  A extends SchedulerApplicationAttempt,
-  N extends SchedulerNode>
+  A extends SchedulerApplicationAttempt & PluginApplicationAttempt,
+  N extends SchedulerNode & PluginSchedulerNode>
   extends AbstractYarnScheduler<A, N> implements Configurable {
 
   protected Class<A> aClass;
   protected Class<N> nClass;
-  protected Configuration pluginConf;
   protected DatabaseProvider dbProvider;
 
   public PluginPolicy(Class<A> aClass, Class<N> nClass, String policyName) {
@@ -42,33 +40,8 @@ public abstract class PluginPolicy<
     this.nClass = nClass;
   }
 
-  protected static class PluginPolicyState {
-    public final Resource usedResource;
-    public final SQSQueue queue;
-    public final Map<NodeId, ? extends SQSchedulerNode> nodes;
-    public final Map<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> applications;
-    public final Resource clusterResource;
-    public final Resource maxAllocation;
-    public final boolean usePortForNodeName;
-
-    public PluginPolicyState(Resource usedResource,
-                             SQSQueue queue,
-                             Map<NodeId, ? extends SQSchedulerNode> nodes,
-                             Map<ApplicationId, ? extends SchedulerApplication<? extends SQSAppAttempt>> applications,
-                             Resource clusterResource,
-                             Resource maxAllocation, boolean usePortForNodeName) {
-      this.usedResource = usedResource;
-      this.queue = queue;
-      this.nodes = nodes;
-      this.applications = applications;
-      this.clusterResource = clusterResource;
-      this.maxAllocation = maxAllocation;
-      this.usePortForNodeName = usePortForNodeName;
-    }
-  }
-
   public void initializePlugin(Configuration conf, DatabaseProvider dbProvider) {
-    this.pluginConf = conf;
+    setConf(conf);
     this.dbProvider = dbProvider;
   }
 
@@ -104,8 +77,6 @@ public abstract class PluginPolicy<
     refreshMaximumAllocation(newMaxAlloc);
   }
 
-  public abstract void transferStateFromPolicy(PluginPolicy other);
-
   @Override
   public void handle(SchedulerEvent event) {
     switch (event.getType()) {
@@ -122,4 +93,20 @@ public abstract class PluginPolicy<
       }
     }
   }
+
+  public void transferStateFromPolicy(PluginPolicy other) {
+    importState(other.exportState());
+  }
+
+  protected abstract PluginPolicyState exportState();
+
+  protected abstract <T extends SchedulerNode & PluginSchedulerNode> void importState(PluginPolicyState<T> state);
+
+  public abstract boolean forceContainerAssignment(ApplicationId appId, String hostName, Priority priority);
+
+  public boolean forceContainerAssignment(ApplicationId appId, String hostName) {
+    return forceContainerAssignment(appId, hostName, DEFAULT_PRIORITY);
+  }
+
+  public abstract Map<String, SchedulerNodeReport> getNodeReports();
 }

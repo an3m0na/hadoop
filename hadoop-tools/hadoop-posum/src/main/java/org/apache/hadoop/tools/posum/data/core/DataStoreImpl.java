@@ -15,8 +15,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference
 import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.bson.Document;
 import org.mongojack.DBCursor;
 import org.mongojack.DBProjection;
@@ -43,9 +43,9 @@ public class DataStoreImpl implements LockBasedDataStore {
   private Map<DatabaseReference, DBAssets> dbRegistry = new ConcurrentHashMap<>(DatabaseReference.Type.values().length);
 
   private static class DBAssets {
-    final Object updateMonitor = new Object();
-    public ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    public Map<DataEntityCollection, JacksonDBCollection> collections = new ConcurrentHashMap<>(DataEntityCollection.values().length);
+    private final Object updateMonitor = new Object();
+    private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private Map<DataEntityCollection, JacksonDBCollection> collections = new ConcurrentHashMap<>(DataEntityCollection.values().length);
   }
 
   public DataStoreImpl(Configuration conf) {
@@ -69,13 +69,11 @@ public class DataStoreImpl implements LockBasedDataStore {
     return getCollection(db, assets, collection);
   }
 
-  private DBAssets getDatabaseAssets(DatabaseReference db) {
+  private synchronized DBAssets getDatabaseAssets(DatabaseReference db) {
     DBAssets assets = dbRegistry.get(db);
-    synchronized (this) {
-      if (assets == null) {
-        assets = new DBAssets();
-        dbRegistry.put(db, assets);
-      }
+    if (assets == null) {
+      assets = new DBAssets();
+      dbRegistry.put(db, assets);
     }
     return assets;
   }
@@ -377,15 +375,17 @@ public class DataStoreImpl implements LockBasedDataStore {
   }
 
   @Override
-  public void copyCollection(DataEntityCollection collection, DatabaseReference sourceDB, DatabaseReference destinationDB) {
+  public void copyCollections(DatabaseReference sourceDB, DatabaseReference destinationDB, List<DataEntityCollection> collections) {
     lockForRead(sourceDB);
     try {
       lockForWrite(destinationDB);
       try {
-        getCollectionForWrite(destinationDB, collection).drop();
-        List entities = getCollectionForRead(sourceDB, collection).find().toArray();
-        if (entities.size() > 0)
-          storeAll(destinationDB, collection, entities);
+        for (DataEntityCollection collection : collections) {
+          getCollectionForWrite(destinationDB, collection).drop();
+          List entities = getCollectionForRead(sourceDB, collection).find().toArray();
+          if (entities.size() > 0)
+            storeAll(destinationDB, collection, entities);
+        }
       } finally {
         unlockForWrite(destinationDB);
       }
@@ -395,10 +395,13 @@ public class DataStoreImpl implements LockBasedDataStore {
   }
 
   @Override
-  public void awaitUpdate(DatabaseReference db) throws InterruptedException {
+  public void awaitUpdate(DatabaseReference db, Long millis) throws InterruptedException {
     Object monitor = getDatabaseAssets(db).updateMonitor;
     synchronized (monitor) {
-      monitor.wait();
+      if (millis != null)
+        monitor.wait(millis);
+      else
+        monitor.wait();
     }
   }
 

@@ -1,0 +1,118 @@
+{
+  "successful": true,
+  "result": {
+    "time": 1461952157630,
+    "PS": [
+      {
+        "time": 1461952157630,
+        "jvm": {
+          "total": 10,
+          "max": 12,
+          "used": 5
+        },
+        "cpu": {
+          "total": 0.823,
+          "process": 0.562
+        },
+        "threadCount": 30
+      },
+      {
+        "time": 1461952159461,
+        "jvm": {
+          "total": 12,
+          "max": 12,
+          "used": 8
+        },
+        "cpu": {
+          "total": 0.54,
+          "process": 0.21
+        },
+        "threadCount": 26
+      }
+    ],
+    "OM": [
+      {
+        "time": 1461952157630,
+        "jvm": {
+          "total": 10,
+          "max": 12,
+          "used": 5
+        },
+        "cpu": {
+          "total": 0.823,
+          "process": 0.562
+        },
+        "threadCount": 30
+      },
+      {
+        "time": 1461952159461,
+        "jvm": {
+          "total": 12,
+          "max": 12,
+          "used": 8
+        },
+        "cpu": {
+          "total": 0.54,
+          "process": 0.21
+        },
+        "threadCount": 26
+      }
+    ],
+    "DM": [
+      {
+        "time": 1461952157630,
+        "jvm": {
+          "total": 10,
+          "max": 12,
+          "used": 5
+        },
+        "cpu": {
+          "total": 0.823,
+          "process": 0.562
+        },
+        "threadCount": 30
+      },
+      {
+        "time": 1461952159461,
+        "jvm": {
+          "total": 12,
+          "max": 12,
+          "used": 8
+        },
+        "cpu": {
+          "total": 0.54,
+          "process": 0.21
+        },
+        "threadCount": 26
+      }
+    ],
+    "SM": [
+      {
+        "time": 1461952157630,
+        "jvm": {
+          "total": 10,
+          "max": 12,
+          "used": 5
+        },
+        "cpu": {
+          "total": 0.823,
+          "process": 0.562
+        },
+        "threadCount": 30
+      },
+      {
+        "time": 1461952159461,
+        "jvm": {
+          "total": 12,
+          "max": 12,
+          "used": 8
+        },
+        "cpu": {
+          "total": 0.54,
+          "process": 0.21
+        },
+        "threadCount": 26
+      }
+    ]
+  }
+}

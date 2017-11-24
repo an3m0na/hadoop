@@ -24,7 +24,13 @@ import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.records.response.impl.pb.SimpleResponsePBImpl;
+import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
+import org.apache.hadoop.tools.posum.common.util.communication.StandardProtocol;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.Priority;
+import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.proto.PosumProtos;
 
@@ -37,6 +43,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -48,11 +55,13 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_CONF;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
+import static org.apache.hadoop.yarn.server.utils.BuilderUtils.newResourceRequest;
 
 public class Utils {
 
   private static Log logger = LogFactory.getLog(Utils.class);
   public static final String ID_FIELD = "_id";
+  public final static Priority DEFAULT_PRIORITY = Priority.newInstance(1);
 
   public static ApplicationId parseApplicationId(String id) {
     try {
@@ -114,16 +123,6 @@ public class Utils {
     return response;
   }
 
-  public static <T> SimpleRequest<T> wrapSimpleRequest(PosumProtos.SimpleRequestProto proto) {
-    try {
-      Class<? extends SimpleRequestPBImpl> implClass =
-        SimpleRequest.Type.fromProto(proto.getType()).getImplClass();
-      return implClass.getConstructor(PosumProtos.SimpleRequestProto.class).newInstance(proto);
-    } catch (Exception e) {
-      throw new PosumException("Could not construct request object for " + proto.getType(), e);
-    }
-  }
-
   public static <T extends Payload> SimpleResponse<T> wrapSimpleResponse(PosumProtos.SimpleResponseProto proto) {
     try {
       return new SimpleResponsePBImpl(proto);
@@ -145,10 +144,10 @@ public class Utils {
     DM("DataMaster",
       PosumConfiguration.DM_ADDRESS_DEFAULT + ":" + PosumConfiguration.DM_PORT_DEFAULT,
       DataMasterProtocol.class),
-    SIMULATOR("SimulationMaster",
+    SM("SimulationMaster",
       PosumConfiguration.SIMULATOR_ADDRESS_DEFAULT + ":" + PosumConfiguration.SIMULATOR_PORT_DEFAULT,
       SimulatorMasterProtocol.class),
-    SCHEDULER("PortfolioMetaScheduler",
+    PS("PortfolioMetaScheduler",
       PosumConfiguration.SCHEDULER_ADDRESS_DEFAULT + ":" + PosumConfiguration.SCHEDULER_PORT_DEFAULT,
       MetaSchedulerProtocol.class);
 
@@ -216,6 +215,9 @@ public class Utils {
     try {
       Field field = Utils.findField(startClass, name);
       field.setAccessible(true);
+      Field modifiersField = Field.class.getDeclaredField("modifiers");
+      modifiersField.setAccessible(true);
+      modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
       field.set(object, value);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new PosumException("Reflection error: ", e);
@@ -238,7 +240,7 @@ public class Utils {
       Method method = Utils.findMethod(startClass, name, paramTypes);
       method.setAccessible(true);
       return (T) method.invoke(object, args);
-    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
       throw new PosumException("Reflection error: ", e);
     }
   }
@@ -370,8 +372,8 @@ public class Utils {
         mapNo++;
         mapInputSize += orZero(task.getInputBytes());
         mapOutputSize += orZero(task.getOutputBytes());
-        if (task.getSplitLocations() != null && task.getHttpAddress() != null) {
-          if (task.getSplitLocations().contains(task.getHttpAddress()))
+        if (task.getSplitLocations() != null && task.getHostName() != null) {
+          if (task.getSplitLocations().contains(task.getHostName()))
             task.setLocal(true);
         }
       }
@@ -486,10 +488,28 @@ public class Utils {
   public static void copyRunningAppInfo(DataStore dataStore, DatabaseReference source, DatabaseReference target) {
     Database simDb = Database.from(dataStore, target);
     simDb.clear();
-    dataStore.copyCollection(APP, source, target);
-    dataStore.copyCollection(JOB, source, target);
-    dataStore.copyCollection(JOB_CONF, source, target);
-    dataStore.copyCollection(TASK, source, target);
-    dataStore.copyCollection(COUNTER, source, target);
+    dataStore.copyCollections(source, target, Arrays.asList(APP, JOB, JOB_CONF, TASK, COUNTER));
+  }
+
+  public static ResourceRequest createResourceRequest(Resource resource,
+                                                      String host,
+                                                      int numContainers) {
+    return newResourceRequest(DEFAULT_PRIORITY, host, resource, numContainers);
+  }
+
+  public static ResourceRequest createResourceRequest(Priority prioriy,
+                                                      Resource resource,
+                                                      String host,
+                                                      int numContainers) {
+    return newResourceRequest(prioriy, host, resource, numContainers);
+  }
+
+  public static DatabaseProvider newProvider(final Database db) {
+    return new DatabaseProvider() {
+      @Override
+      public Database getDatabase() {
+        return db;
+      }
+    };
   }
 }

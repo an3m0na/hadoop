@@ -1,39 +1,39 @@
 package org.apache.hadoop.tools.posum.common.records.request;
 
 
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.DatabaseAlterationRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.StringRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.records.request.impl.pb.VoidRequestPBImpl;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.records.payload.Payload;
+import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
+import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
+import org.apache.hadoop.tools.posum.common.records.payload.VoidPayload;
 import org.apache.hadoop.yarn.proto.PosumProtos.SimpleRequestProto.SimpleRequestTypeProto;
+import org.apache.hadoop.yarn.util.Records;
 
 
-public abstract class SimpleRequest<T> {
+public abstract class SimpleRequest<T extends Payload> {
 
   public enum Type {
-    PING(StringRequestPBImpl.class),
-    CHANGE_POLICY(StringRequestPBImpl.class),
-    START(VoidRequestPBImpl.class),
-    SYSTEM_ADDRESSES(VoidRequestPBImpl.class),
-    LIST_COLLECTIONS(VoidRequestPBImpl.class),
-    CLEAR_DATA(VoidRequestPBImpl.class),
-    CLEAR_DB(DatabaseAlterationRequestPBImpl.class),
-    COPY_DB(DatabaseAlterationRequestPBImpl.class),
-    COPY_COLL(DatabaseAlterationRequestPBImpl.class),
-    AWAIT_UPDATE(DatabaseAlterationRequestPBImpl.class),
-    NOTIFY_UPDATE(DatabaseAlterationRequestPBImpl.class),
-    RESET(VoidRequestPBImpl.class);
+    PING(PayloadType.SIMPLE_PROPERTY),
+    CHANGE_POLICY(PayloadType.SIMPLE_PROPERTY),
+    START(PayloadType.VOID),
+    SYSTEM_ADDRESSES(PayloadType.VOID),
+    LIST_COLLECTIONS(PayloadType.VOID),
+    CLEAR_DATA(PayloadType.VOID),
+    CLEAR_DB(PayloadType.DB_ALTERATION),
+    COPY_DB(PayloadType.DB_ALTERATION),
+    COPY_COLL(PayloadType.DB_ALTERATION),
+    AWAIT_UPDATE(PayloadType.DB_LOCK),
+    NOTIFY_UPDATE(PayloadType.DB_LOCK),
+    RESET(PayloadType.VOID);
 
-    private Class<? extends SimpleRequestPBImpl> implClass;
     private static final String prefix = "REQ_";
+    private PayloadType payloadType;
 
-    Type(Class<? extends SimpleRequestPBImpl> implClass) {
-      this.implClass = implClass;
+    Type(PayloadType payloadType) {
+      this.payloadType = payloadType;
     }
 
-    public Class<? extends SimpleRequestPBImpl> getImplClass() {
-      return implClass;
+    public PayloadType getPayloadType() {
+      return payloadType;
     }
 
     public static Type fromProto(SimpleRequestTypeProto proto) {
@@ -45,23 +45,20 @@ public abstract class SimpleRequest<T> {
     }
   }
 
-  public static <T> SimpleRequest<T> newInstance(Type type,
-                                                 T payload) {
-    SimpleRequest<T> request;
-    try {
-      request = type.getImplClass().newInstance();
-    } catch (InstantiationException | IllegalAccessException ex) {
-      throw new PosumException("Could not instantiate request of type " + type, ex);
-    }
+  public static <T extends Payload> SimpleRequest<T> newInstance(Type type,
+                                                                 T payload) {
+    SimpleRequest<T> request = Records.newRecord(SimpleRequest.class);
     request.setType(type);
     request.setPayload(payload);
     return request;
   }
 
-  public static VoidRequestPBImpl newInstance(Type type) {
-    VoidRequestPBImpl request = new VoidRequestPBImpl();
-    request.setType(type);
-    return request;
+  public static SimpleRequest<SimplePropertyPayload> newInstance(Type type, String payload) {
+    return newInstance(type, SimplePropertyPayload.newInstance("payload", payload));
+  }
+
+  public static SimpleRequest<VoidPayload> newInstance(Type type) {
+    return newInstance(type, VoidPayload.newInstance());
   }
 
   public abstract Type getType();
@@ -71,6 +68,4 @@ public abstract class SimpleRequest<T> {
   public abstract T getPayload();
 
   public abstract void setPayload(T payload);
-
-
 }

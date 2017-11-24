@@ -10,9 +10,9 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.client.scheduler.MetaScheduler;
 import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
-import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.conf.PolicyPortfolio;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.web.MetaSchedulerWebApp;
 import org.apache.hadoop.tools.posum.web.PosumWebApp;
@@ -93,17 +93,24 @@ public class PortfolioMetaScheduler extends
     super(PortfolioMetaScheduler.class.getName());
   }
 
-  private void initPolicy() {
+  // for testing purposes
+  PortfolioMetaScheduler(Configuration posumConf, MetaSchedulerCommService commService) {
+    this();
+    this.posumConf = posumConf;
+    this.commService = commService;
+  }
+
+  private PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode> instantiatePolicy(Class<? extends PluginPolicy> currentPolicyClass) {
+    PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode> newPolicy;
     try {
-      currentPolicy = currentPolicyClass.newInstance();
+      newPolicy = currentPolicyClass.newInstance();
     } catch (InstantiationException | IllegalAccessException e) {
       throw new PosumException("Could not instantiate scheduler for class " + currentPolicyClass, e);
     }
-    currentPolicy.initializePlugin(posumConf, commService);
+    newPolicy.initializePlugin(posumConf, commService);
     if (rmContext != null)
-      currentPolicy.setRMContext(rmContext);
-    logger.debug("Initializing current policy");
-    currentPolicy.init(conf);
+      newPolicy.setRMContext(rmContext);
+    return newPolicy;
   }
 
   @Override
@@ -118,23 +125,24 @@ public class PortfolioMetaScheduler extends
       if (metricsON)
         context = changeTimer.time();
       writeLock.lock();
-      currentPolicyClass = newClass;
-      if (isInState(STATE.INITED) || isInState(STATE.STARTED)) {
-        PluginPolicy oldPolicy = currentPolicy;
-        initPolicy();
-        if (oldPolicy != null) {
-          currentPolicy.transferStateFromPolicy(oldPolicy);
-          if (isInState(STATE.STARTED)) {
-            oldPolicy.stop();
-            logger.debug("Starting current policy");
-            currentPolicy.start();
-          }
-        }
+      PluginPolicy oldPolicy = currentPolicy;
+      PluginPolicy<? extends SchedulerApplicationAttempt, ? extends SchedulerNode> newPolicy = instantiatePolicy(newClass);
+      if (!isInState(STATE.NOTINITED)) {
+        newPolicy.init(conf);
+      }
+      if (isInState(STATE.STARTED)) {
+        newPolicy.transferStateFromPolicy(oldPolicy);
+        newPolicy.start();
+      }
+      currentPolicy = newPolicy;
+      if (oldPolicy.isInState(STATE.STARTED)) {
+        oldPolicy.stop();
       }
       writeLock.unlock();
       if (metricsON)
         context.stop();
       logger.debug("Policy changed successfully");
+      commService.getDatabase().execute(StoreLogCall.newInstance("Changed scheduling policy to " + policyName));
     }
   }
 
@@ -170,13 +178,17 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public void serviceInit(Configuration conf) throws Exception {
-    this.posumConf = PosumConfiguration.newInstance();
-    setConf(conf);
+    if (posumConf == null)
+      posumConf = PosumConfiguration.newInstance(conf);
+    setConf(posumConf);
     policies = new PolicyPortfolio(posumConf);
     currentPolicyClass = policies.get(policies.getDefaultPolicyName());
-    commService = new MetaSchedulerCommService(this, conf.get(YarnConfiguration.RM_ADDRESS));
-    commService.init(posumConf);
-    initPolicy();
+    if (commService == null) {
+      commService = new MetaSchedulerCommServiceImpl(this, posumConf.get(YarnConfiguration.RM_ADDRESS));
+      commService.init(posumConf);
+    }
+    currentPolicy = instantiatePolicy(currentPolicyClass);
+    currentPolicy.init(conf);
 
     //initialize  metrics
     metricsON = posumConf.getBoolean(PosumConfiguration.SCHEDULER_METRICS_ON, PosumConfiguration.SCHEDULER_METRICS_ON_DEFAULT);
@@ -194,11 +206,11 @@ public class PortfolioMetaScheduler extends
         Timer timer = new Timer(new SlidingTimeWindowReservoir(windowSize, TimeUnit.MILLISECONDS));
         handleByTypeTimers.put(e, timer);
       }
-    }
 
-    //initialize statistics service
-    webApp = new MetaSchedulerWebApp(this,
-      posumConf.getInt(PosumConfiguration.SCHEDULER_WEBAPP_PORT, PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT));
+      //initialize statistics service
+      webApp = new MetaSchedulerWebApp(this,
+        posumConf.getInt(PosumConfiguration.SCHEDULER_WEBAPP_PORT, PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT));
+    }
   }
 
   @Override
@@ -213,7 +225,8 @@ public class PortfolioMetaScheduler extends
     } finally {
       readLock.unlock();
     }
-    webApp.start();
+    if (webApp != null)
+      webApp.start();
   }
 
   @Override
@@ -236,12 +249,7 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public int getNumClusterNodes() {
-    readLock.lock();
-    try {
-      return currentPolicy.getNumClusterNodes();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getNumClusterNodes();
   }
 
   @Override
@@ -292,6 +300,7 @@ public class PortfolioMetaScheduler extends
   @Override
   public void handle(SchedulerEvent event) {
     Timer.Context generalContext = null, typeContext = null;
+    logger.trace("MetaScheduler received event " + event);
     if (metricsON) {
       generalContext = handleTimer.time();
       typeContext = handleByTypeTimers.get(event.getType()).time();
@@ -311,32 +320,17 @@ public class PortfolioMetaScheduler extends
   @Override
   public QueueInfo getQueueInfo(String queueName,
                                 boolean includeChildQueues, boolean recursive) throws IOException {
-    readLock.lock();
-    try {
-      return currentPolicy.getQueueInfo(queueName, includeChildQueues, recursive);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getQueueInfo(queueName, includeChildQueues, recursive);
   }
 
   @Override
   public List<QueueUserACLInfo> getQueueUserAclInfo() {
-    readLock.lock();
-    try {
-      return currentPolicy.getQueueUserAclInfo();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getQueueUserAclInfo();
   }
 
   @Override
   public ResourceCalculator getResourceCalculator() {
-    readLock.lock();
-    try {
-      return currentPolicy.getResourceCalculator();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getResourceCalculator();
   }
 
   @Override
@@ -351,12 +345,7 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public RMContainer getRMContainer(ContainerId containerId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getRMContainer(containerId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getRMContainer(containerId);
   }
 
   @Override
@@ -371,33 +360,18 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public QueueMetrics getRootQueueMetrics() {
-    readLock.lock();
-    try {
-      return currentPolicy.getRootQueueMetrics();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getRootQueueMetrics();
   }
 
   @Override
   public synchronized boolean checkAccess(UserGroupInformation callerUGI,
                                           QueueACL acl, String queueName) {
-    readLock.lock();
-    try {
-      return currentPolicy.checkAccess(callerUGI, acl, queueName);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.checkAccess(callerUGI, acl, queueName);
   }
 
   @Override
   public synchronized List<ApplicationAttemptId> getAppsInQueue(String queueName) {
-    readLock.lock();
-    try {
-      return currentPolicy.getAppsInQueue(queueName);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getAppsInQueue(queueName);
   }
 
   /**
@@ -406,121 +380,66 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public synchronized List<Container> getTransferredContainers(ApplicationAttemptId currentAttempt) {
-    readLock.lock();
-    try {
-      return currentPolicy.getTransferredContainers(currentAttempt);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getTransferredContainers(currentAttempt);
   }
 
   @Override
   public Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>> getSchedulerApplications() {
-    readLock.lock();
-    try {
-      // explicit conversion required due to currentPolicy outputting SchedulerApplication<? extends SchedulerApplicationAttempt>>
-      Map<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> apps =
-        currentPolicy.getSchedulerApplications();
-      Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>> ret = new HashMap<>(apps.size());
+    // explicit conversion required due to currentPolicy outputting SchedulerApplication<? extends SchedulerApplicationAttempt>>
+    Map<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> apps =
+      currentPolicy.getSchedulerApplications();
+    Map<ApplicationId, SchedulerApplication<SchedulerApplicationAttempt>> ret = new HashMap<>(apps.size());
 
-      for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> entry :
-        apps.entrySet()) {
-        ret.put(entry.getKey(), (SchedulerApplication<SchedulerApplicationAttempt>) entry.getValue());
-      }
-      return ret;
-    } finally {
-      readLock.unlock();
+    for (Map.Entry<ApplicationId, ? extends SchedulerApplication<? extends SchedulerApplicationAttempt>> entry :
+      apps.entrySet()) {
+      ret.put(entry.getKey(), (SchedulerApplication<SchedulerApplicationAttempt>) entry.getValue());
     }
+    return ret;
   }
 
   @Override
   public Resource getClusterResource() {
-    readLock.lock();
-    try {
-      return currentPolicy.getClusterResource();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getClusterResource();
   }
 
   @Override
   public Resource getMinimumResourceCapability() {
-    readLock.lock();
-    try {
-      return currentPolicy.getMinimumResourceCapability();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getMinimumResourceCapability();
   }
 
   @Override
   public Resource getMaximumResourceCapability() {
-    readLock.lock();
-    try {
-      return currentPolicy.getMaximumResourceCapability();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getMaximumResourceCapability();
   }
 
   @Override
   public Resource getMaximumResourceCapability(String queueName) {
-    readLock.lock();
-    try {
-      return currentPolicy.getMaximumResourceCapability(queueName);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getMaximumResourceCapability(queueName);
   }
 
   @Override
   public SchedulerApplicationAttempt getApplicationAttempt(ApplicationAttemptId applicationAttemptId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getApplicationAttempt(applicationAttemptId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getApplicationAttempt(applicationAttemptId);
   }
 
   @Override
   public SchedulerAppReport getSchedulerAppInfo(ApplicationAttemptId appAttemptId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getSchedulerAppInfo(appAttemptId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getSchedulerAppInfo(appAttemptId);
   }
 
   @Override
   public ApplicationResourceUsageReport getAppResourceUsageReport(ApplicationAttemptId appAttemptId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getAppResourceUsageReport(appAttemptId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getAppResourceUsageReport(appAttemptId);
   }
 
   @Override
   public SchedulerApplicationAttempt getCurrentAttemptForContainer(ContainerId containerId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getCurrentAttemptForContainer(containerId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getCurrentAttemptForContainer(containerId);
   }
 
   @Override
   public SchedulerNodeReport getNodeReport(NodeId nodeId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getNodeReport(nodeId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getNodeReport(nodeId);
   }
 
   @Override
@@ -585,62 +504,53 @@ public class PortfolioMetaScheduler extends
 
   @Override
   public synchronized void moveAllApps(String sourceQueue, String destQueue) throws YarnException {
+    logger.debug("Acquiring read lock34");
     readLock.lock();
     try {
       currentPolicy.moveAllApps(sourceQueue, destQueue);
     } finally {
       readLock.unlock();
+      logger.debug("Unlocked read lock34");
     }
   }
 
   @Override
   public synchronized void killAllAppsInQueue(String queueName) throws YarnException {
+    logger.debug("Acquiring read lock45");
     readLock.lock();
     try {
       currentPolicy.killAllAppsInQueue(queueName);
     } finally {
       readLock.unlock();
+      logger.debug("Unlocked read lock45");
     }
   }
 
   @Override
   public synchronized void updateNodeResource(RMNode nm, ResourceOption resourceOption) {
+    logger.debug("Acquiring read lock56");
     readLock.lock();
     try {
       currentPolicy.updateNodeResource(nm, resourceOption);
     } finally {
       readLock.unlock();
+      logger.debug("Unlocked read lock56");
     }
   }
 
   @Override
   public EnumSet<YarnServiceProtos.SchedulerResourceTypes> getSchedulingResourceTypes() {
-    readLock.lock();
-    try {
-      return currentPolicy.getSchedulingResourceTypes();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getSchedulingResourceTypes();
   }
 
   @Override
   public Set<String> getPlanQueues() throws YarnException {
-    readLock.lock();
-    try {
-      return currentPolicy.getPlanQueues();
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getPlanQueues();
   }
 
   @Override
   public List<ResourceRequest> getPendingResourceRequestsForAttempt(ApplicationAttemptId attemptId) {
-    readLock.lock();
-    try {
-      return currentPolicy.getPendingResourceRequestsForAttempt(attemptId);
-    } finally {
-      readLock.unlock();
-    }
+    return currentPolicy.getPendingResourceRequestsForAttempt(attemptId);
   }
 
   @Override
@@ -715,5 +625,9 @@ public class PortfolioMetaScheduler extends
 
   public boolean hasMetricsOn() {
     return metricsON;
+  }
+
+  public Map<String, SchedulerNodeReport> getNodeReports() {
+    return currentPolicy.getNodeReports();
   }
 }

@@ -1,14 +1,15 @@
 package org.apache.hadoop.tools.posum.common.records.request.impl.pb;
 
-import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
+import org.apache.hadoop.tools.posum.common.records.payload.Payload;
+import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.proto.PosumProtos.SimpleRequestProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.SimpleRequestProtoOrBuilder;
 
-public abstract class SimpleRequestPBImpl<T> extends SimpleRequest<T> {
+public class SimpleRequestPBImpl<T extends Payload> extends SimpleRequest<T> {
 
   public SimpleRequestPBImpl() {
     this.proto = SimpleRequestProto.getDefaultInstance();
@@ -48,7 +49,7 @@ public abstract class SimpleRequestPBImpl<T> extends SimpleRequest<T> {
   private void mergeLocalToBuilder() {
     maybeInitBuilder();
     if (this.payload != null)
-      builder.setPayload(payloadToBytes(payload));
+      builder.setPayload(((PayloadPB) payload).getProtoBytes());
   }
 
   private void mergeLocalToProto() {
@@ -72,10 +73,6 @@ public abstract class SimpleRequestPBImpl<T> extends SimpleRequest<T> {
     return proto;
   }
 
-  public abstract ByteString payloadToBytes(T payload);
-
-  public abstract T bytesToPayload(ByteString data) throws InvalidProtocolBufferException;
-
   @Override
   public Type getType() {
     SimpleRequestProtoOrBuilder p = viaProto ? proto : builder;
@@ -91,12 +88,13 @@ public abstract class SimpleRequestPBImpl<T> extends SimpleRequest<T> {
 
   @Override
   public T getPayload() {
-    if (this.payload == null) {
+    if (payload == null) {
       SimpleRequestProtoOrBuilder p = viaProto ? proto : builder;
       if (p.hasPayload())
         try {
-          this.payload = bytesToPayload(p.getPayload());
-        } catch (InvalidProtocolBufferException e) {
+          payload = (T) getType().getPayloadType().getImplClass().newInstance();
+          ((PayloadPB) payload).populateFromProtoBytes(p.getPayload());
+        } catch (InstantiationException | IllegalAccessException | InvalidProtocolBufferException e) {
           throw new PosumException("Could not read message payload", e);
         }
     }

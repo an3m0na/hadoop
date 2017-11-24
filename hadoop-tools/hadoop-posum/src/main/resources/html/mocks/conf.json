@@ -1,0 +1,11 @@
+{
+  "successful": true,
+  "result": {
+    "refreshInterval": 3000,
+    "addresses": {
+      "PS": "localhost:18010",
+      "DM": "localhost:18020",
+      "SM": "localhost:18030"
+    }
+  }
+}

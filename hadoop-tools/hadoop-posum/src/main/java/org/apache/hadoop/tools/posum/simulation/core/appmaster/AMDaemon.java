@@ -2,86 +2,55 @@ package org.apache.hadoop.tools.posum.simulation.core.appmaster;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.token.Token;
+import org.apache.hadoop.tools.posum.common.util.cluster.AMCore;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEvent;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.FinishApplicationMasterRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterRequest;
-import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterResponse;
-import org.apache.hadoop.yarn.api.protocolrecords.SubmitApplicationRequest;
-import org.apache.hadoop.yarn.api.records.ApplicationAccessType;
-import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
+import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerId;
-import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
-import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
-import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.factories.RecordFactory;
-import org.apache.hadoop.yarn.factory.providers.RecordFactoryProvider;
-import org.apache.hadoop.yarn.security.AMRMTokenIdentifier;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt;
-import org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState;
-import org.apache.hadoop.yarn.util.Records;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.security.PrivilegedExceptionAction;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static org.apache.hadoop.tools.posum.common.util.Utils.createResourceRequest;
 import static org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEventType.APPLICATION_SUBMITTED;
+import static org.apache.hadoop.yarn.api.records.ResourceRequest.ANY;
 
 @Private
 @Unstable
 public abstract class AMDaemon extends WorkerDaemon {
-  // resource manager
-  protected ResourceManager rm;
-  // application
-  protected ApplicationId appId;
-  protected ApplicationAttemptId appAttemptId;
-  protected String oldAppId;    // jobId from the jobhistory file
+  private String oldAppId;
   protected List<SimulatedContainer> initialContainers;
-  // record factory
-  protected final static RecordFactory recordFactory =
-    RecordFactoryProvider.getRecordFactory(null);
-  // response queue
-  protected final BlockingQueue<AllocateResponse> responseQueue;
-  protected int RESPONSE_ID = 1;
-  // user name
-  protected String user;
-  // queue name
-  protected String queue;
-  // am type
-  protected String amtype;
-  // job start/end time
-  protected long simulateStartTimeMS;
-  protected long simulateFinishTimeMS;
+  final BlockingQueue<AllocateResponse> responseQueue;
+  String amType;
   // progress
-  protected int totalContainers;
-  protected int finishedContainers;
+  int totalContainers;
+  int finishedContainers;
+  AMCore core;
+  private volatile boolean registered = false;
 
   protected final Logger LOG = Logger.getLogger(AMDaemon.class);
+  protected String hostName;
+  private Map<Priority, Map<String, ResourceRequest>> requests = new HashMap<>();
+  private boolean resendRequests = false;
+  private List<ContainerId> releaseList = new LinkedList<>();
 
   public AMDaemon(SimulationContext simulationContext) {
     super(simulationContext);
@@ -89,12 +58,10 @@ public abstract class AMDaemon extends WorkerDaemon {
   }
 
   public void init(int heartbeatInterval, List<SimulatedContainer> containerList, ResourceManager rm,
-                   long traceStartTime, String user, String queue, String oldAppId) {
+                   long traceStartTime, String user, String queue, String oldAppId, String hostName) {
+    this.hostName = hostName;
     super.init(traceStartTime, heartbeatInterval);
-    this.user = user;
-    this.rm = rm;
-    this.user = user;
-    this.queue = queue;
+    this.core = new AMCore(rm, user, queue);
     this.oldAppId = oldAppId;
     this.initialContainers = containerList;
   }
@@ -104,221 +71,149 @@ public abstract class AMDaemon extends WorkerDaemon {
    */
   @Override
   public void doFirstStep() throws Exception {
-    simulateStartTimeMS = simulationContext.getCurrentTime();
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: Submitting app for {2}", simulationContext.getSchedulerClass().getSimpleName(), oldAppId));
+    core.submit();
+    simulationContext.getDispatcher().getEventHandler().handle(new ApplicationEvent(APPLICATION_SUBMITTED, oldAppId, core.getAppId()));
 
-    // submit application, waiting until ACCEPTED
-    submitApp();
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: Registering a new application {2}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
+    core.registerWithRM();
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} is registered", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
 
-    // register application master
-    registerAM();
+    requestAMContainer();
+
+    registered = true;
+  }
+
+  private void requestAMContainer() throws YarnException, IOException, InterruptedException {
+    AllocateResponse response;
+    if (simulationContext.isOnlineSimulation() && hostName != null) {
+      LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for its AM on {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId(), hostName));
+      response = core.requestContainerOnNode(hostName, simulationContext.getTopologyProvider().getRack(hostName));
+    } else {
+      LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for its AM", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
+      response = core.requestContainer();
+    }
+    if (response != null) {
+      responseQueue.put(response);
+    }
   }
 
   @Override
   public void doStep() throws Exception {
+    // send out request
+    sendContainerRequests();
+
     // process responses in the queue
     processResponseQueue();
-
-    // send out request
-    sendContainerRequest();
   }
 
   @Override
   public void cleanUp() throws Exception {
-    LOG.trace(MessageFormat.format("T={0}: Application {1} is shutting down.", simulationContext.getCurrentTime(), appId));
-    // unregister application master
-    final FinishApplicationMasterRequest finishAMRequest = recordFactory
-      .newRecordInstance(FinishApplicationMasterRequest.class);
-    finishAMRequest.setFinalApplicationStatus(FinalApplicationStatus.SUCCEEDED);
-
-    UserGroupInformation ugi =
-      UserGroupInformation.createRemoteUser(appAttemptId.toString());
-    Token<AMRMTokenIdentifier> token = rm.getRMContext().getRMApps().get(appId)
-      .getRMAppAttempt(appAttemptId).getAMRMToken();
-    ugi.addTokenIdentifier(token.decodeIdentifier());
-    ugi.doAs(new PrivilegedExceptionAction<Object>() {
-      @Override
-      public Object run() throws Exception {
-        rm.getApplicationMasterService()
-          .finishApplicationMaster(finishAMRequest);
-        return null;
-      }
-    });
-
-    simulateFinishTimeMS = simulationContext.getCurrentTime();
+    LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} is shutting down.", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
+    core.unregister();
   }
 
-  protected ResourceRequest createResourceRequest(
-    Resource resource, String host, int priority, int numContainers) {
-    ResourceRequest request = recordFactory
-      .newRecordInstance(ResourceRequest.class);
-    request.setCapability(resource);
-    request.setResourceName(host);
-    request.setNumContainers(numContainers);
-    Priority prio = recordFactory.newRecordInstance(Priority.class);
-    prio.setPriority(priority);
-    request.setPriority(prio);
-    return request;
-  }
-
-  protected AllocateRequest createAllocateRequest(List<ResourceRequest> ask,
-                                                  List<ContainerId> toRelease) {
-    AllocateRequest allocateRequest =
-      recordFactory.newRecordInstance(AllocateRequest.class);
-    allocateRequest.setResponseId(RESPONSE_ID++);
-    allocateRequest.setAskList(ask);
-    allocateRequest.setReleaseList(toRelease);
-    return allocateRequest;
-  }
-
-  protected AllocateRequest createAllocateRequest(List<ResourceRequest> ask) {
-    return createAllocateRequest(ask, new ArrayList<ContainerId>());
+  /**
+   * restart running because of the am container killed
+   */
+  void restart() throws YarnException, IOException, InterruptedException {
+    // resent am container request
+    requestAMContainer();
   }
 
   protected abstract void processResponseQueue() throws Exception;
 
-  protected abstract void sendContainerRequest() throws Exception;
-
-  private void submitApp()
-    throws YarnException, InterruptedException, IOException {
-    // ask for new application
-    GetNewApplicationRequest newAppRequest =
-      Records.newRecord(GetNewApplicationRequest.class);
-    GetNewApplicationResponse newAppResponse =
-      rm.getClientRMService().getNewApplication(newAppRequest);
-    appId = newAppResponse.getApplicationId();
-
-    LOG.trace("Calling application submitted for " + oldAppId);
-    simulationContext.getDispatcher().getEventHandler()
-      .handle(new ApplicationEvent(APPLICATION_SUBMITTED, oldAppId, appId));
-
-    // submit the application
-    final SubmitApplicationRequest subAppRequest =
-      Records.newRecord(SubmitApplicationRequest.class);
-    ApplicationSubmissionContext appSubContext =
-      Records.newRecord(ApplicationSubmissionContext.class);
-    appSubContext.setApplicationId(appId);
-    appSubContext.setMaxAppAttempts(1);
-    appSubContext.setQueue(queue);
-    appSubContext.setPriority(Priority.newInstance(0));
-    ContainerLaunchContext conLauContext =
-      Records.newRecord(ContainerLaunchContext.class);
-    conLauContext.setApplicationACLs(
-      new HashMap<ApplicationAccessType, String>());
-    conLauContext.setCommands(new ArrayList<String>());
-    conLauContext.setEnvironment(new HashMap<String, String>());
-    conLauContext.setLocalResources(new HashMap<String, LocalResource>());
-    conLauContext.setServiceData(new HashMap<String, ByteBuffer>());
-    appSubContext.setAMContainerSpec(conLauContext);
-    appSubContext.setUnmanagedAM(true);
-    subAppRequest.setApplicationSubmissionContext(appSubContext);
-    UserGroupInformation ugi = UserGroupInformation.createRemoteUser(user);
-    ugi.doAs(new PrivilegedExceptionAction<Object>() {
-      @Override
-      public Object run() throws YarnException {
-        rm.getClientRMService().submitApplication(subAppRequest);
-        return null;
-      }
-    });
-    LOG.trace(MessageFormat.format("T={0}: Submit a new application {1}", simulationContext.getCurrentTime(), appId));
-
-    // waiting until application ACCEPTED
-    RMApp app = rm.getRMContext().getRMApps().get(appId);
-    while (app.getState() != RMAppState.ACCEPTED) {
-      Thread.sleep(10);
-    }
-
-    // Waiting until application attempt reach LAUNCHED
-    // "Unmanaged AM must register after AM attempt reaches LAUNCHED state"
-    this.appAttemptId = rm.getRMContext().getRMApps().get(appId)
-      .getCurrentAppAttempt().getAppAttemptId();
-    RMAppAttempt rmAppAttempt = rm.getRMContext().getRMApps().get(appId)
-      .getCurrentAppAttempt();
-    while (rmAppAttempt.getAppAttemptState() != RMAppAttemptState.LAUNCHED) {
-      Thread.sleep(10);
-    }
-  }
-
-  private void registerAM()
-    throws YarnException, IOException, InterruptedException {
-    // register application master
-    final RegisterApplicationMasterRequest amRegisterRequest =
-      Records.newRecord(RegisterApplicationMasterRequest.class);
-    amRegisterRequest.setHost("localhost");
-    amRegisterRequest.setRpcPort(1000);
-    amRegisterRequest.setTrackingUrl("localhost:1000");
-
-    UserGroupInformation ugi =
-      UserGroupInformation.createRemoteUser(appAttemptId.toString());
-    Token<AMRMTokenIdentifier> token = rm.getRMContext().getRMApps().get(appId)
-      .getRMAppAttempt(appAttemptId).getAMRMToken();
-    ugi.addTokenIdentifier(token.decodeIdentifier());
-
-    ugi.doAs(
-      new PrivilegedExceptionAction<RegisterApplicationMasterResponse>() {
-        @Override
-        public RegisterApplicationMasterResponse run() throws Exception {
-          return rm.getApplicationMasterService()
-            .registerApplicationMaster(amRegisterRequest);
+  protected void sendContainerRequests() throws Exception {
+    List<ResourceRequest> ask = new ArrayList<>();
+    if (resendRequests) {
+      for (Map<String, ResourceRequest> requestsByResource : requests.values()) {
+        for (ResourceRequest request : requestsByResource.values()) {
+          // create a copy so that it will not be modified by scheduler
+          ask.add(ResourceRequest.newInstance(request.getPriority(), request.getResourceName(), request.getCapability(), request.getNumContainers()));
         }
-      });
-
-    LOG.trace(MessageFormat.format(
-      "T={0}: Register the application master for application {1}", simulationContext.getCurrentTime(), appId));
-  }
-
-  protected List<ResourceRequest> packageRequests(
-    List<SimulatedContainer> csList, int priority) {
-    // create requests
-    Map<String, ResourceRequest> rackLocalRequestMap = new HashMap<String, ResourceRequest>();
-    Map<String, ResourceRequest> nodeLocalRequestMap = new HashMap<String, ResourceRequest>();
-    ResourceRequest anyRequest = null;
-    for (SimulatedContainer cs : csList) {
-      List<String> hosts = cs.getPreferredLocations();
-      List<String> racks = simulationContext.getTopologyProvider().getRacks(hosts);
-      // check rack local
-      addContainers(rackLocalRequestMap, cs.getResource(), racks, priority);
-      // check node local
-      addContainers(nodeLocalRequestMap, cs.getResource(), hosts, priority);
-      // any
-      if (anyRequest == null) {
-        anyRequest = createResourceRequest(cs.getResource(), ResourceRequest.ANY, priority, 1);
-      } else {
-        anyRequest.setNumContainers(anyRequest.getNumContainers() + 1);
       }
+      LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId(), ask));
     }
-    List<ResourceRequest> ask = new ArrayList<ResourceRequest>();
-    ask.addAll(nodeLocalRequestMap.values());
-    ask.addAll(rackLocalRequestMap.values());
-    if (anyRequest != null) {
-      ask.add(anyRequest);
+
+    final AllocateRequest request = core.createAllocateRequest(ask);
+    request.setProgress(totalContainers == 0 ? 1.0f : (float) finishedContainers / totalContainers);
+    request.setReleaseList(releaseList);
+
+    AllocateResponse response = core.sendAllocateRequest(request);
+    if (response != null) {
+      responseQueue.put(response);
     }
-    return ask;
+    resendRequests = false;
   }
 
-  private void addContainers(Map<String, ResourceRequest> requestMap, Resource resource, List<String> locations, int priority) {
-    for (String rack : locations) {
-      ResourceRequest request = requestMap.get(rack);
+  protected void createRequests(List<SimulatedContainer> csList, Priority priority) {
+    if (csList.isEmpty())
+      return;
+    for (SimulatedContainer container : csList)
+      incContainerRequest(container.getResource(), getAllResourceNames(container), priority);
+    resendRequests = true;
+  }
+
+  private void incContainerRequest(Resource resource, List<String> resourceNames, Priority priority) {
+    Map<String, ResourceRequest> requestMap = requests.get(priority);
+    if (requestMap == null) {
+      requestMap = new HashMap<>();
+      requests.put(priority, requestMap);
+    }
+    for (String name : resourceNames) {
+      ResourceRequest request = requestMap.get(name);
       if (request != null) {
         request.setNumContainers(request.getNumContainers() + 1);
       } else {
-        requestMap.put(rack, createResourceRequest(resource, rack, priority, 1));
+        requestMap.put(name, createResourceRequest(priority, resource, name, 1));
       }
     }
   }
 
-  public String getQueue() {
-    return queue;
+  protected void removeRequests(SimulatedContainer simulatedContainer, Priority priority) {
+    List<String> resourceNames = getAllResourceNames(simulatedContainer);
+    for (String resourceName : resourceNames) {
+      decContainerRequest(priority, resourceName);
+    }
+    resendRequests = true;
   }
 
-  public String getAMType() {
-    return amtype;
+  private void decContainerRequest(Priority priority, String resourceName) {
+    Map<String, ResourceRequest> requestMap = requests.get(priority);
+    ResourceRequest request = requestMap.get(resourceName);
+    request.setNumContainers(request.getNumContainers() - 1);
+    if (!resourceName.equals(ANY) && request.getNumContainers() == 0)
+      requestMap.remove(resourceName);
   }
 
-  public long getDuration() {
-    return simulateFinishTimeMS - simulateStartTimeMS;
+  private List<String> getAllResourceNames(SimulatedContainer container) {
+    List<String> locations = new ArrayList<>();
+    if (simulationContext.isOnlineSimulation() && container.getHostName() != null)
+      locations.add(container.getHostName());
+    else
+      locations.addAll(container.getPreferredLocations());
+    locations.addAll(simulationContext.getTopologyProvider().getRacks(locations));
+    locations.add(ANY);
+    return locations;
   }
 
-  public int getNumTasks() {
-    return totalContainers;
+  protected void releaseContainer(Container container) {
+    releaseList.add(container.getId());
+  }
+
+  public ApplicationId getAppId() {
+    return core.getAppId();
+  }
+
+  public List<SimulatedContainer> getContainers() {
+    return initialContainers;
+  }
+
+  public boolean isRegistered() {
+    return registered;
+  }
+
+  public String getHostName() {
+    return hostName;
   }
 }

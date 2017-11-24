@@ -1,0 +1,38 @@
+{
+  "successful": true,
+  "result": {
+    "time": 1461952157630,
+    "distribution": {
+      "FIFO": {
+        "time": 58560,
+        "number": 1
+      },
+      "EDLS_PR": {
+        "time": 98560,
+        "number": 2
+      },
+      "EDLS_SH": {
+        "time": 130057,
+        "number": 1
+      }
+    },
+    "entries": [
+      {
+        "time": 1461952157630,
+        "policy": "FIFO"
+      },
+      {
+        "time": 1461952157910,
+        "policy": "EDLS_PR"
+      },
+      {
+        "time": 1461952158345,
+        "policy": "EDLS_PR"
+      },
+      {
+        "time": 1461952159263,
+        "policy": "EDLS_SH"
+      }
+    ]
+  }
+}

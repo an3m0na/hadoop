@@ -29,10 +29,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.HISTORY;
@@ -224,7 +226,7 @@ public abstract class TestDataStore {
     app3.setName(modifiedName);
     app3.setState(state);
     UpdateOrStoreCall updateApp = UpdateOrStoreCall.newInstance(APP, app3);
-    String upsertedId = (String) db.execute(updateApp).getValue();
+    String upsertedId = db.execute(updateApp).getValueAs();
     assertNull(upsertedId);
     FindByQueryCall findAppsByName = FindByQueryCall.newInstance(APP,
       QueryUtils.is("name", modifiedName));
@@ -237,7 +239,7 @@ public abstract class TestDataStore {
     app4.setId(app4IdString);
     app4.setName(modifiedName);
     updateApp.setEntity(app4);
-    upsertedId = (String) db.execute(updateApp).getValue();
+    upsertedId = db.execute(updateApp).getValueAs();
     assertThat(app4.getId(), is(upsertedId));
     returnedApps = db.execute(findAppsByName).getEntities();
     assertThat(returnedApps, containsInAnyOrder(app3, app4));
@@ -337,6 +339,50 @@ public abstract class TestDataStore {
     assertThat(db.execute(allEntities).getEntities(), hasSize(0));
   }
 
+  private class Reader extends Thread {
+    private Random random;
+    private volatile boolean done = false;
+
+    private Reader(Random random) {
+      this.random = random;
+    }
+
+    public void stopNow() {
+      done = true;
+    }
+
+    @Override
+    public void run() {
+      while (!done) {
+        if (random.nextInt() % 100 != 0) {
+          DatabaseQuery query = QueryUtils.and(
+            QueryUtils.is("finishTime", JOB1.getFinishTime()),
+            QueryUtils.is("totalMapTasks", 1)
+          );
+          FindByQueryCall findByProperties = FindByQueryCall.newInstance(JOB, query);
+          db.execute(findByProperties).getEntities();
+        } else {
+          dataStore.clear();
+        }
+      }
+    }
+  }
+
+  @Test
+  public void testClearWhileBeingAccessed() throws Exception {
+    List<Reader> readers = new ArrayList<>(100);
+    Random random = new Random(System.currentTimeMillis());
+    for (int i = 0; i < 100; i++) {
+      Reader thread = new Reader(random);
+      readers.add(thread);
+      thread.start();
+    }
+    for (Reader thread : readers) {
+      thread.stopNow();
+      thread.join();
+    }
+  }
+
   @Test
   public void testMove() throws Exception {
     int collectionNo = dataStore.listCollections().get(db.getTarget()).size();
@@ -366,7 +412,7 @@ public abstract class TestDataStore {
     String message = "Some message";
     StoreLogCall storeLog = StoreLogCall.newInstance(message);
     Long timestamp = storeLog.getLogEntry().getLastUpdated();
-    String logId = (String) dataStore.execute(storeLog, null).getValue();
+    String logId = dataStore.execute(storeLog, null).getValueAs();
     assertNotNull(logId);
     FindByIdCall getLog = FindByIdCall.newInstance(
       DataEntityCollection.AUDIT_LOG,
@@ -415,7 +461,7 @@ public abstract class TestDataStore {
   @Test
   public void testHistoryProfileManipulation() {
     HistoryProfile appHistory = new HistoryProfilePBImpl<>(DataEntityCollection.APP, APP1);
-    db.execute(StoreCall.newInstance(HISTORY, appHistory)).getValue();
+    db.execute(StoreCall.newInstance(HISTORY, appHistory));
 
     String appId = APP1_ID.toString();
     FindByQueryCall findHistory = FindByQueryCall.newInstance(HISTORY, QueryUtils.is("originalId", appId));

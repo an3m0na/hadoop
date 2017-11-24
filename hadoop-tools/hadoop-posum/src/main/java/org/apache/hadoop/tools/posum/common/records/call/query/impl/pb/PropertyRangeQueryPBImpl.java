@@ -150,7 +150,7 @@ public class PropertyRangeQueryPBImpl extends PropertyRangeQuery implements Payl
       PropertyRangeQueryProtoOrBuilder p = viaProto ? proto : builder;
       values = new ArrayList<>(p.getValuesCount());
       for (SimplePropertyPayloadProto propertyProto : p.getValuesList()) {
-        values.add(new SimplePropertyPayloadPBImpl(propertyProto).getValue());
+        values.add(new SimplePropertyPayloadPBImpl(propertyProto).getValueAs());
       }
     }
     return (List<T>) values;

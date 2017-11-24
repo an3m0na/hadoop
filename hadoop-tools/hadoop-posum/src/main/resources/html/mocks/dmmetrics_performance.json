@@ -1,0 +1,40 @@
+{
+  "successful": true,
+  "result": {
+    "time": 1461952157630,
+    "entries": [
+      {
+        "time": 1461952157630,
+        "score": {
+          "slowdown": 0.4,
+          "penalty": 0.88889,
+          "cost": 0
+        }
+      },
+      {
+        "time": 1461952157910,
+        "score": {
+          "slowdown": 1.2,
+          "penalty": 0.34678,
+          "cost": 0
+        }
+      },
+      {
+        "time": 1461952158345,
+        "score": {
+          "slowdown": 2.33,
+          "penalty": 0.70999,
+          "cost": 0
+        }
+      },
+      {
+        "time": 1461952159263,
+        "score": {
+          "slowdown": 1.09,
+          "penalty": 0.6908776,
+          "cost": 0
+        }
+      }
+    ]
+  }
+}

@@ -8,15 +8,15 @@ import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
-import org.apache.hadoop.tools.posum.common.util.TopologyProvider;
+import org.apache.hadoop.tools.posum.common.util.cluster.PerformanceEvaluator;
+import org.apache.hadoop.tools.posum.common.util.cluster.TopologyProvider;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEventType;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationMonitor;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEventType;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerMonitor;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 
 import java.util.List;
 import java.util.Map;
@@ -26,12 +26,11 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
 
 
-class SimulationManager implements Callable<SimulationResultPayload> {
+class SimulationManager<T extends PluginPolicy> implements Callable<SimulationResultPayload> {
   private static final Log logger = LogFactory.getLog(SimulationManager.class);
 
   private volatile boolean exit = false;
   private String policyName;
-  private Class<? extends ResourceScheduler> policyClass;
   private JobBehaviorPredictor predictor;
   private DataStore dataStore;
   private Database db;
@@ -39,33 +38,32 @@ class SimulationManager implements Callable<SimulationResultPayload> {
   private SimulationStatistics stats;
   private static final FindByQueryCall GET_LATEST =
     FindByQueryCall.newInstance(JOB, null, "lastUpdated", true, 0, 1);
-  private SimulationContext simulationContext;
-
+  private SimulationContext<T> simulationContext;
+  private PerformanceEvaluator performanceEvaluator;
 
   SimulationManager(JobBehaviorPredictor predictor,
                     String policyName,
-                    Class<? extends ResourceScheduler> policyClass,
+                    Class<T> policyClass,
                     DataStore dataStore,
-                    Map<String, String> topology) {
+                    Map<String, String> topology,
+                    boolean onlineSimulation) {
     this.predictor = predictor;
     this.policyName = policyName;
-    this.policyClass = policyClass;
     this.dataStore = dataStore;
-    this.stats = new SimulationStatistics();
-    this.simulationContext = new SimulationContext();
+    stats = new SimulationStatistics();
+    simulationContext = new SimulationContext<>(policyClass);
+    performanceEvaluator = new PerformanceEvaluator(simulationContext);
     TopologyProvider topologyProvider = topology == null ? new TopologyProvider(simulationContext.getConf(), dataStore) :
       new TopologyProvider(topology);
-    this.simulationContext.setTopologyProvider(topologyProvider);
+    simulationContext.setTopologyProvider(topologyProvider);
+    simulationContext.setOnlineSimulation(onlineSimulation);
   }
 
-  public String getPolicyName(){
+  public String getPolicyName() {
     return policyName;
   }
 
   private void setUp() {
-    simulationContext.setSchedulerClass(policyClass);
-    simulationContext.setStartTime(System.currentTimeMillis());
-
     sourceDb = Database.from(dataStore, DatabaseReference.getSimulation());
     simulationContext.setSourceDatabase(sourceDb);
 
@@ -76,6 +74,7 @@ class SimulationManager implements Callable<SimulationResultPayload> {
 
     simulationContext.setPredictor(predictor);
     stats.setStartTimeCluster(getLastUpdated());
+    simulationContext.setCurrentTime(stats.getStartTimeCluster());
     stats.setStartTimePhysical(System.currentTimeMillis());
 
     simulationContext.getDispatcher().register(ContainerEventType.class, new ContainerMonitor(simulationContext, db));
@@ -83,7 +82,7 @@ class SimulationManager implements Callable<SimulationResultPayload> {
   }
 
   private void tearDown() {
-    stats.setEndTimeCluster(stats.getStartTimeCluster() + simulationContext.getEndTime());
+    stats.setEndTimeCluster(stats.getStartTimeCluster() + simulationContext.getCurrentTime());
     stats.setEndTimePhysical(System.currentTimeMillis());
     //TODO log stats
   }
@@ -104,15 +103,15 @@ class SimulationManager implements Callable<SimulationResultPayload> {
     setUp();
     try {
       dataStore.execute(StoreLogCall.newInstance("Starting simulation for " + policyName), null);
-      new SimulationRunner(simulationContext).run();
-      return SimulationResultPayload.newInstance(policyName, new SimulationEvaluator(db).evaluate());
+      new SimulationRunner<>(simulationContext).run();
+      return SimulationResultPayload.newInstance(policyName, performanceEvaluator.evaluate());
     } catch (InterruptedException e) {
       if (!exit)
         // exiting was not intentional
-        logger.error("Simulation was interrupted unexpectedly", e);
+        logger.error("Simulation for " + policyName + "was interrupted unexpectedly", e);
       return SimulationResultPayload.newInstance(policyName, null);
     } catch (Exception e) {
-      logger.error("Error during simulation. Shutting down simulation...", e);
+      logger.error("Error during simulation for " + policyName + ". Shutting down simulation...", e);
       return SimulationResultPayload.newInstance(policyName, null);
     } finally {
       tearDown();

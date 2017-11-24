@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.simulation.core.daemon;
 
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.log4j.Logger;
 
@@ -7,8 +8,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE;
-import static org.apache.hadoop.tools.posum.common.util.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE_DEFAULT;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SIMULATION_RUNNER_POOL_SIZE_DEFAULT;
 import static org.apache.hadoop.util.ShutdownThreadsHelper.shutdownExecutorService;
 
 public class DaemonPool {
@@ -19,14 +20,25 @@ public class DaemonPool {
   private TimeKeeperDaemon timeKeeper;
 
   @SuppressWarnings("unchecked")
-  public DaemonPool(SimulationContext simulationContext) {
+  public DaemonPool(final SimulationContext simulationContext) {
     queue = new DaemonQueue();
     simulationContext.setDaemonQueue(queue);
 
     timeKeeper = new TimeKeeperDaemon(simulationContext);
 
     int threadPoolSize = simulationContext.getConf().getInt(SIMULATION_RUNNER_POOL_SIZE, SIMULATION_RUNNER_POOL_SIZE_DEFAULT);
-    executor = new ThreadPoolExecutor(threadPoolSize, threadPoolSize, 0, TimeUnit.MILLISECONDS, (BlockingQueue) queue);
+    executor = new ThreadPoolExecutor(threadPoolSize, threadPoolSize, 0, TimeUnit.MILLISECONDS, (BlockingQueue) queue) {
+      @Override
+      protected void afterExecute(Runnable r, Throwable t) {
+        super.afterExecute(r, t);
+        if (t != null) {
+          LOG.error("Simulation[" + simulationContext.getSchedulerClass().getSimpleName() + "]: " +
+            "Daemon encountered exception. Shutting down daemon pool...", t);
+          shutDown();
+          throw new PosumException("Daemon encountered exception", t);
+        }
+      }
+    };
     executor.prestartAllCoreThreads();
   }
 

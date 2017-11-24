@@ -381,13 +381,13 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
   }
 
   @Override
-  public void copyCollection(DataEntityCollection collection, DatabaseReference sourceDB, DatabaseReference destinationDB) {
-    broker.copyCollection(collection, sourceDB, destinationDB);
+  public void copyCollections(DatabaseReference sourceDB, DatabaseReference destinationDB, List<DataEntityCollection> collections) {
+    broker.copyCollections(sourceDB, destinationDB, collections);
   }
 
   @Override
-  public void awaitUpdate(DatabaseReference db) throws InterruptedException {
-    broker.awaitUpdate(db);
+  public void awaitUpdate(DatabaseReference db, Long millis) throws InterruptedException {
+    broker.awaitUpdate(db, millis);
   }
 
   @Override

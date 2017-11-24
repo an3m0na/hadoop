@@ -8,14 +8,19 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.DatabaseReferencePBImpl;
 import org.apache.hadoop.tools.posum.common.records.payload.DatabaseAlterationPayload;
 import org.apache.hadoop.tools.posum.common.records.pb.PayloadPB;
-import org.apache.hadoop.yarn.proto.PosumProtos;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseAlterationPayloadProto;
 import org.apache.hadoop.yarn.proto.PosumProtos.DatabaseAlterationPayloadProtoOrBuilder;
+import org.apache.hadoop.yarn.proto.PosumProtos.EntityCollectionProto;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class DatabaseAlterationPayloadPBImpl extends DatabaseAlterationPayload implements PayloadPB {
   private DatabaseAlterationPayloadProto proto = DatabaseAlterationPayloadProto.getDefaultInstance();
   private DatabaseAlterationPayloadProto.Builder builder = null;
   private boolean viaProto = false;
+  private List<DataEntityCollection> collections;
 
   public DatabaseAlterationPayloadPBImpl() {
     builder = DatabaseAlterationPayloadProto.newBuilder();
@@ -26,6 +31,7 @@ public class DatabaseAlterationPayloadPBImpl extends DatabaseAlterationPayload i
     viaProto = true;
   }
 
+  @Override
   public DatabaseAlterationPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();
@@ -54,6 +60,38 @@ public class DatabaseAlterationPayloadPBImpl extends DatabaseAlterationPayload i
   }
 
   private void mergeLocalToBuilder() {
+    maybeInitBuilder();
+    if (collections == null)
+      return;
+    builder.clearTargetCollections();
+    Iterable<EntityCollectionProto> iterable =
+      new Iterable<EntityCollectionProto>() {
+
+        @Override
+        public Iterator<EntityCollectionProto> iterator() {
+          return new Iterator<EntityCollectionProto>() {
+
+            Iterator<DataEntityCollection> collectionIterator = collections.iterator();
+
+            @Override
+            public void remove() {
+              throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public EntityCollectionProto next() {
+              DataEntityCollection collection = collectionIterator.next();
+              return EntityCollectionProto.valueOf("COLL_" + collection.name());
+            }
+
+            @Override
+            public boolean hasNext() {
+              return collectionIterator.hasNext();
+            }
+          };
+        }
+      };
+    builder.addAllTargetCollections(iterable);
   }
 
   private void mergeLocalToProto() {
@@ -108,21 +146,26 @@ public class DatabaseAlterationPayloadPBImpl extends DatabaseAlterationPayload i
   }
 
   @Override
-  public DataEntityCollection getTargetCollection() {
-    DatabaseAlterationPayloadProtoOrBuilder p = viaProto ? proto : builder;
-    if (!p.hasTargetCollection())
-      return null;
-    return DataEntityCollection.valueOf(p.getTargetCollection().name().substring("COLL_".length()));
+  public List<DataEntityCollection> getTargetCollections() {
+    if (collections == null) {
+      DatabaseAlterationPayloadProtoOrBuilder p = viaProto ? proto : builder;
+      collections = new ArrayList<>(p.getTargetCollectionsCount());
+      for (EntityCollectionProto collectionProto : p.getTargetCollectionsList())
+        collections.add(DataEntityCollection.valueOf(collectionProto.name().substring("COLL_".length())));
+    }
+    return collections;
   }
 
   @Override
-  public void setTargetCollection(DataEntityCollection collection) {
+  public void setTargetCollections(List<DataEntityCollection> collections) {
     maybeInitBuilder();
-    if (collection == null) {
-      builder.clearTargetCollection();
+    if (collections == null) {
+      builder.clearTargetCollections();
+      this.collections = null;
       return;
     }
-    builder.setTargetCollection(PosumProtos.EntityCollectionProto.valueOf("COLL_" + collection.name()));
+    this.collections = new ArrayList<>(collections.size());
+    this.collections.addAll(collections);
   }
 
 

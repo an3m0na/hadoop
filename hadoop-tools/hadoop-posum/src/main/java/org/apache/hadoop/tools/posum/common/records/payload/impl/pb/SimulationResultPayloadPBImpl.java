@@ -23,6 +23,7 @@ public class SimulationResultPayloadPBImpl extends SimulationResultPayload imple
     viaProto = true;
   }
 
+  @Override
   public SimulationResultPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();
@@ -93,6 +94,10 @@ public class SimulationResultPayloadPBImpl extends SimulationResultPayload imple
   @Override
   public void setScore(CompoundScorePayload score) {
     maybeInitBuilder();
+    if(score == null){
+      builder.clearScore();
+      return;
+    }
     builder.setScore(((CompoundScorePayloadPBImpl) score).getProto());
   }
 

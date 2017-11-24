@@ -1,9 +1,9 @@
 package org.apache.hadoop.tools.posum.test;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.PosumMasterProcess;
+import org.apache.hadoop.tools.posum.common.util.communication.PosumMasterProcess;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;

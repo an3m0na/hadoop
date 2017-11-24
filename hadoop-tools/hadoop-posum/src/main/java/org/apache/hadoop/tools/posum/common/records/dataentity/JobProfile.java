@@ -133,4 +133,7 @@ public interface JobProfile extends GeneralDataEntity<JobProfile> {
 
   void setDeadline(Long deadline);
 
+  String getHostName();
+
+  void setHostName(String hostName);
 }

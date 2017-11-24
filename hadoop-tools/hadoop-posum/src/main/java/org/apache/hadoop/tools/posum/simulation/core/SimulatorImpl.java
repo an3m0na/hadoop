@@ -13,7 +13,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultRequest;
-import org.apache.hadoop.tools.posum.common.util.PolicyPortfolio;
+import org.apache.hadoop.tools.posum.common.util.conf.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.master.SimulationMasterContext;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
@@ -77,7 +77,7 @@ public class SimulatorImpl extends CompositeService implements Simulator {
       logger.debug("Starting simulation for " + policy.getKey());
       Class<? extends PluginPolicy> policyClass = policy.getValue();
       // TODO add topology
-      SimulationManager simulation = new SimulationManager(predictor, policy.getKey(), policyClass, dataStore, null);
+      SimulationManager<? extends PluginPolicy> simulation = new SimulationManager<>(predictor, policy.getKey(), policyClass, dataStore, null, true);
       simulations.add(new PendingResult(simulation, executor.submit(simulation)));
     }
     resultAggregator = new ResultAggregator(simulations, this);

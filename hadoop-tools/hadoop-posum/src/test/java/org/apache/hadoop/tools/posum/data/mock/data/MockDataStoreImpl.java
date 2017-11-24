@@ -58,13 +58,11 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     return getCollection(assets, collection);
   }
 
-  private DBAssets getDatabaseAssets(DatabaseReference db) {
+  private synchronized DBAssets getDatabaseAssets(DatabaseReference db) {
     DBAssets assets = dbRegistry.get(db);
-    synchronized (this) {
-      if (assets == null) {
-        assets = new DBAssets();
-        dbRegistry.put(db, assets);
-      }
+    if (assets == null) {
+      assets = new DBAssets();
+      dbRegistry.put(db, assets);
     }
     return assets;
   }
@@ -303,15 +301,17 @@ public class MockDataStoreImpl implements LockBasedDataStore {
   }
 
   @Override
-  public void copyCollection(DataEntityCollection collection, DatabaseReference sourceDB, DatabaseReference destinationDB) {
+  public void copyCollections(DatabaseReference sourceDB, DatabaseReference destinationDB, List<DataEntityCollection> collections) {
     lockForRead(sourceDB);
     try {
       lockForWrite(destinationDB);
       try {
-        getCollectionForWrite(destinationDB, collection).clear();
-        List<GeneralDataEntity> entities = new ArrayList<>(getCollectionForRead(sourceDB, collection).values());
-        if (entities.size() > 0)
-          storeAll(destinationDB, collection, entities);
+        for (DataEntityCollection collection : collections) {
+          getCollectionForWrite(destinationDB, collection).clear();
+          List<GeneralDataEntity> entities = new ArrayList<>(getCollectionForRead(sourceDB, collection).values());
+          if (entities.size() > 0)
+            storeAll(destinationDB, collection, entities);
+        }
       } finally {
         unlockForWrite(destinationDB);
       }
@@ -321,10 +321,13 @@ public class MockDataStoreImpl implements LockBasedDataStore {
   }
 
   @Override
-  public void awaitUpdate(DatabaseReference db) throws InterruptedException {
+  public void awaitUpdate(DatabaseReference db, Long millis) throws InterruptedException {
     Object monitor = getDatabaseAssets(db).updateMonitor;
     synchronized (monitor) {
-      monitor.wait();
+      if (millis != null)
+        monitor.wait(millis);
+      else
+        monitor.wait();
     }
   }
 

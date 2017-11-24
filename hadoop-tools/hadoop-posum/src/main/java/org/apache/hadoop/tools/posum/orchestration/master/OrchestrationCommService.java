@@ -7,7 +7,6 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.client.data.DataMasterClient;
-import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.scheduler.MetaScheduler;
 import org.apache.hadoop.tools.posum.client.scheduler.MetaSchedulerClient;
 import org.apache.hadoop.tools.posum.client.simulation.Simulator;
@@ -19,10 +18,10 @@ import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultReque
 import org.apache.hadoop.tools.posum.common.records.request.RegistrationRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.util.DummyTokenSecretManager;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.communication.DummyTokenSecretManager;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.orchestration.core.PosumEvent;
 import org.apache.hadoop.tools.posum.orchestration.core.PosumEventType;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -37,7 +36,7 @@ public class OrchestrationCommService extends CompositeService implements Orches
 
   private static Log logger = LogFactory.getLog(OrchestrationCommService.class);
 
-  OrchestrationMasterContext pmContext;
+  private OrchestrationMasterContext pmContext;
   private Server server;
   private MetaSchedulerClient schedulerClient;
   private DataMasterClient dataClient;
@@ -100,9 +99,9 @@ public class OrchestrationCommService extends CompositeService implements Orches
         case SYSTEM_ADDRESSES:
           Map<String, String> map = new HashMap<>(4);
           map.put(Utils.PosumProcess.DM.name(), getDMAddress());
-          map.put(Utils.PosumProcess.SCHEDULER.name(), getPSAddress());
-          map.put(Utils.PosumProcess.SIMULATOR.name(), getSMAddress());
-          map.put(Utils.PosumProcess.OM.name(), connectAddress);
+          map.put(Utils.PosumProcess.PS.name(), getPSAddress());
+          map.put(Utils.PosumProcess.SM.name(), getSMAddress());
+          map.put(Utils.PosumProcess.OM.name(), getOMAddress());
           return SimpleResponse.newInstance(PayloadType.STRING_STRING_MAP,
             StringStringMapPayload.newInstance(map));
         default:
@@ -143,7 +142,7 @@ public class OrchestrationCommService extends CompositeService implements Orches
           addIfService(dataClient);
           dataClient.start();
           break;
-        case SIMULATOR:
+        case SM:
           checkDM();
           simulatorClient = new SimulatorClient(request.getConnectAddress());
           simulatorClient.init(getConfig());
@@ -151,7 +150,7 @@ public class OrchestrationCommService extends CompositeService implements Orches
           simulatorClient.start();
           pmContext.getDispatcher().getEventHandler().handle(new PosumEvent(PosumEventType.SIMULATOR_CONNECTED));
           break;
-        case SCHEDULER:
+        case PS:
           checkDM();
           schedulerClient = new MetaSchedulerClient(request.getConnectAddress());
           schedulerClient.init(getConfig());
@@ -216,6 +215,14 @@ public class OrchestrationCommService extends CompositeService implements Orches
         return address.split(":")[0] + ":" + getConfig().getInt(PosumConfiguration.SIMULATOR_WEBAPP_PORT,
           PosumConfiguration.SIMULATOR_WEBAPP_PORT_DEFAULT);
       }
+    }
+    return null;
+  }
+
+  public String getOMAddress() {
+    if (connectAddress != null) {
+      return connectAddress.split(":")[0] + ":" + getConfig().getInt(PosumConfiguration.MASTER_WEBAPP_PORT,
+        PosumConfiguration.MASTER_WEBAPP_PORT_DEFAULT);
     }
     return null;
   }

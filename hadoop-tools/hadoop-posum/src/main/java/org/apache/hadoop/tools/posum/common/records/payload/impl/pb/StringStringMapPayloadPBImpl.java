@@ -29,6 +29,7 @@ public class StringStringMapPayloadPBImpl extends StringStringMapPayload impleme
     viaProto = true;
   }
 
+  @Override
   public StringStringMapPayloadProto getProto() {
     mergeLocalToProto();
     proto = viaProto ? proto : builder.build();

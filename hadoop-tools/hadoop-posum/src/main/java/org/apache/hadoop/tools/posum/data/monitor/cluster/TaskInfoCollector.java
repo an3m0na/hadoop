@@ -15,9 +15,9 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.util.PosumConfiguration;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.RestClient;
+import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
 import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.util.Records;
 
@@ -67,8 +67,8 @@ class TaskInfoCollector {
         if (!api.addRunningAttemptInfo(task)) {
           return null;
         }
-        if (task.isLocal() == null && task.getSplitLocations() != null && task.getHttpAddress() != null) {
-          if (task.getSplitLocations().contains(task.getHttpAddress()))
+        if (task.isLocal() == null && task.getSplitLocations() != null && task.getHostName() != null) {
+          if (task.getSplitLocations().contains(task.getHostName()))
             task.setLocal(true);
         }
         CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
@@ -95,8 +95,8 @@ class TaskInfoCollector {
     for (TaskProfile task : tasks) {
       api.addFinishedAttemptInfo(task);
       task.setAppId(job.getAppId());
-      if (task.isLocal() == null && task.getSplitLocations() != null && task.getHttpAddress() != null) {
-        if (task.getSplitLocations().contains(task.getHttpAddress()))
+      if (task.isLocal() == null && task.getSplitLocations() != null && task.getHostName() != null) {
+        if (task.getSplitLocations().contains(task.getHostName()))
           task.setLocal(true);
       }
       CountersProxy counters = api.getFinishedTaskCounters(task.getJobId(), task.getId());

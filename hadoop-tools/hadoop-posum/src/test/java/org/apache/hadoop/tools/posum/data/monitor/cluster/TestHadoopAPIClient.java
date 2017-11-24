@@ -4,8 +4,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.AppProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.common.util.RestClient;
-import org.apache.hadoop.tools.posum.common.util.RestClient.TrackingUI;
+import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
+import org.apache.hadoop.tools.posum.common.util.communication.RestClient.TrackingUI;
 import org.apache.hadoop.tools.posum.test.Utils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
@@ -58,12 +58,11 @@ public class TestHadoopAPIClient {
 
   @Test
   public void getAppsInfoTest() throws Exception {
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("cluster/apps"), any(String[].class)))
-      .thenReturn("{}");
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("cluster/apps"))).thenReturn("{}");
     List<AppProfile> ret = testSubject.getAppsInfo();
     assertThat(ret, empty());
 
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("cluster/apps"), any(String[].class)))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("cluster/apps")))
       .thenReturn(Utils.getApiJson("apps.json"));
     ret = testSubject.getAppsInfo();
     ret.get(0).setLastUpdated(entities.FINISHED_APP.getLastUpdated());
@@ -126,12 +125,12 @@ public class TestHadoopAPIClient {
 
   @Test
   public void getFinishedTasksInfoTest() throws Exception {
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s/tasks"), any(String[].class)))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s/tasks"), any(String.class)))
       .thenReturn("{}");
     List<TaskProfile> ret = testSubject.getFinishedTasksInfo(entities.JOB_ID, new ArrayList<TaskProfile>());
     assertThat(ret, empty());
 
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s/tasks"), any(String[].class)))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s/tasks"), any(String.class)))
       .thenReturn(Utils.getApiJson("history_tasks.json"));
     ret = testSubject.getFinishedTasksInfo(entities.JOB_ID, Arrays.asList(entities.RUNNING_TASKS));
     ret.get(0).setLastUpdated(entities.FINISHED_TASKS[0].getLastUpdated());
@@ -141,12 +140,12 @@ public class TestHadoopAPIClient {
 
   @Test
   public void getRunningTasksInfoTest() throws Exception {
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs/%s/tasks"), any(String[].class)))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs/%s/tasks"), any(String.class), any(String.class)))
       .thenReturn("{}");
     List<TaskProfile> ret = testSubject.getRunningTasksInfo(entities.RUNNING_JOB, new ArrayList<TaskProfile>());
     assertThat(ret, empty());
 
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs/%s/tasks"), any(String[].class)))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs/%s/tasks"), any(String.class), any(String.class)))
       .thenReturn(Utils.getApiJson("tasks.json"));
 
     ret = testSubject.getRunningTasksInfo(entities.RUNNING_JOB, Arrays.asList(entities.RUNNING_TASKS));
@@ -158,14 +157,14 @@ public class TestHadoopAPIClient {
 
   @Test
   public void addRunningAttemptInfoTest() throws Exception {
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs/%s/tasks/%s/attempts"), any(String[].class)))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs/%s/tasks/%s/attempts"), any(String.class), any(String.class), any(String.class)))
       .thenReturn("{}");
     TaskProfile savedTask = entities.RUNNING_REDUCE_TASK.copy();
     boolean ret = testSubject.addRunningAttemptInfo(entities.RUNNING_REDUCE_TASK);
     assertFalse(ret);
     assertThat(entities.RUNNING_REDUCE_TASK, is(savedTask));
 
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs/%s/tasks/%s/attempts"), any(String[].class)))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.AM), eq("jobs/%s/tasks/%s/attempts"), any(String.class), any(String.class), any(String.class)))
       .thenReturn(Utils.getApiJson("task_attempts.json"));
     ret = testSubject.addRunningAttemptInfo(entities.RUNNING_REDUCE_TASK);
     assertTrue(ret);
@@ -174,13 +173,13 @@ public class TestHadoopAPIClient {
 
   @Test
   public void addFinishedAttemptInfoTest() throws Exception {
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s/tasks/%s/attempts"), any(String[].class)))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s/tasks/%s/attempts"), any(String.class), any(String.class)))
       .thenReturn("{}");
     TaskProfile savedTask = entities.RUNNING_REDUCE_TASK.copy();
     testSubject.addFinishedAttemptInfo(entities.RUNNING_REDUCE_TASK);
     assertThat(entities.RUNNING_REDUCE_TASK, is(savedTask));
 
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s/tasks/%s/attempts"), any(String[].class)))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.HISTORY), eq("jobs/%s/tasks/%s/attempts"), any(String.class), any(String.class)))
       .thenReturn(Utils.getApiJson("history_task_attempts.json"));
     testSubject.addFinishedAttemptInfo(entities.RUNNING_REDUCE_TASK);
     assertThat(entities.RUNNING_REDUCE_TASK, is(entities.FINISHED_DETAILED_REDUCE_TASK));
