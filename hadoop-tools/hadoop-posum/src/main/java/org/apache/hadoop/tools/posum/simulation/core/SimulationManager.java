@@ -104,7 +104,9 @@ class SimulationManager<T extends PluginPolicy> implements Callable<SimulationRe
     try {
       dataStore.execute(StoreLogCall.newInstance("Starting simulation for " + policyName), null);
       new SimulationRunner<>(simulationContext).run();
-      return SimulationResultPayload.newInstance(policyName, performanceEvaluator.evaluate());
+      SimulationResultPayload result = SimulationResultPayload.newInstance(policyName, performanceEvaluator.evaluate());
+      dataStore.execute(StoreLogCall.newInstance("Score for simulation of " + policyName + ": " + result), null);
+      return result;
     } catch (InterruptedException e) {
       if (!exit)
         // exiting was not intentional
