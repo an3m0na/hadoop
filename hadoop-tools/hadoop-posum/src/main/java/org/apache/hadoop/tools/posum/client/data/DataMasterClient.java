@@ -119,7 +119,7 @@ public class DataMasterClient extends AbstractService implements DataStore {
     Utils.sendSimpleRequest(
       "awaitUpdate",
       SimpleRequest.newInstance(SimpleRequest.Type.AWAIT_UPDATE,
-        DatabaseLockPayload.newInstance(db)),
+        DatabaseLockPayload.newInstance(db, millis)),
       dmClient
     );
   }

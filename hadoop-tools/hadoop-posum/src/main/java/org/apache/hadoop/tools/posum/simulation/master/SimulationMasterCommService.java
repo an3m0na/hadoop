@@ -64,10 +64,11 @@ public class SimulationMasterCommService extends CompositeService implements Sim
       NetUtils.getConnectAddress(this.simulatorServer.getListenerAddress()).toString();
     connectAddress = fullAddress.substring(fullAddress.indexOf("/") + 1);
     String dmAddress = masterClient.register(Utils.PosumProcess.SM, connectAddress);
-    dataClient = new DataMasterClient(dmAddress);
-    dataClient.init(getConfig());
-    addIfService(dataClient);
-    dataClient.start();
+    DataMasterClient newDataClient = new DataMasterClient(dmAddress);
+    newDataClient.init(getConfig());
+    addIfService(newDataClient);
+    newDataClient.start();
+    dataClient = newDataClient;
   }
 
   public String getConnectAddress() {
