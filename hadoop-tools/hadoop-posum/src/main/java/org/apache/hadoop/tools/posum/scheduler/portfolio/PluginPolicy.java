@@ -2,8 +2,8 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
@@ -23,6 +23,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEv
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.NODE_ADD;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.NODE_REMOVE;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.DEFAULT_PRIORITY;
 
 public abstract class PluginPolicy<
@@ -82,14 +84,14 @@ public abstract class PluginPolicy<
     switch (event.getType()) {
       case NODE_ADDED: {
         NodeAddedSchedulerEvent nodeAddedEvent = (NodeAddedSchedulerEvent) event;
-        dbProvider.getDatabase().execute(StoreLogCall.newInstance(LogEntry.Type.NODE_ADD,
-          nodeAddedEvent.getAddedRMNode().getHostName()));
+        dbProvider.getDatabase().execute(StoreLogCall.newInstance(
+          DatabaseUtils.newLogEntry(NODE_ADD, nodeAddedEvent.getAddedRMNode().getHostName())));
       }
       break;
       case NODE_REMOVED: {
         NodeRemovedSchedulerEvent nodeRemovedEvent = (NodeRemovedSchedulerEvent) event;
-        dbProvider.getDatabase().execute(StoreLogCall.newInstance(LogEntry.Type.NODE_REMOVE,
-          nodeRemovedEvent.getRemovedRMNode().getHostName()));
+        dbProvider.getDatabase().execute(StoreLogCall.newInstance(
+          DatabaseUtils.newLogEntry(NODE_REMOVE, nodeRemovedEvent.getRemovedRMNode().getHostName())));
       }
     }
   }

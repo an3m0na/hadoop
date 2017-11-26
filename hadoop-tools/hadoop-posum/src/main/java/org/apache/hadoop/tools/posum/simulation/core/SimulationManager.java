@@ -4,8 +4,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
+import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
-import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
@@ -102,10 +102,10 @@ class SimulationManager<T extends PluginPolicy> implements Callable<SimulationRe
   public SimulationResultPayload call() throws Exception {
     setUp();
     try {
-      dataStore.execute(StoreLogCall.newInstance("Starting simulation for " + policyName), null);
+      DatabaseUtils.storeLogEntry("Starting simulation for " + policyName, dataStore);
       new SimulationRunner<>(simulationContext).run();
       SimulationResultPayload result = SimulationResultPayload.newInstance(policyName, performanceEvaluator.evaluate());
-      dataStore.execute(StoreLogCall.newInstance("Score for simulation of " + policyName + ": " + result), null);
+      DatabaseUtils.storeLogEntry("Score for simulation of " + policyName + ": " + result, dataStore);
       return result;
     } catch (InterruptedException e) {
       if (!exit)

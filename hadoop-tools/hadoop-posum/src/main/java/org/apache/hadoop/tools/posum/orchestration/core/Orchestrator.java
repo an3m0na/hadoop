@@ -4,8 +4,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.client.scheduler.MetaScheduler;
-import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMasterContext;
@@ -17,8 +17,6 @@ import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.COST_SCALE_FACTOR_DEFAULT;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.PENALTY_SCALE_FACTOR;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.PENALTY_SCALE_FACTOR_DEFAULT;
-import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.POLICY_SWITCH_ENABLED;
-import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.POLICY_SWITCH_ENABLED_DEFAULT;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SLOWDOWN_SCALE_FACTOR;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SLOWDOWN_SCALE_FACTOR_DEFAULT;
 
@@ -73,8 +71,7 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
           logger.info("Sending reset command to all POSUM processes...");
           orchestrationContext.getCommService().getSimulator().reset();
           orchestrationContext.getCommService().getDataMaster().reset();
-          orchestrationContext.getCommService().getDataMaster()
-            .execute(StoreLogCall.newInstance("System reset complete"), null);
+          DatabaseUtils.storeLogEntry("System reset complete", orchestrationContext.getCommService().getDataMaster());
           logger.info("System reset complete");
           break;
         default:

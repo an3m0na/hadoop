@@ -151,8 +151,7 @@ public class DataMasterWebApp extends PosumWebApp {
 
   private JsonObject composePolicyMap() {
     JsonObject ret = new JsonObject();
-    LogEntry<PolicyInfoMapPayload> policyReport = context.getDataStore().execute(
-      DatabaseUtils.findStatReportCall(LogEntry.Type.POLICY_MAP), DatabaseReference.getLogs()).getEntity();
+    LogEntry<PolicyInfoMapPayload> policyReport = DatabaseUtils.findStatsLogEntry(LogEntry.Type.POLICY_MAP, context.getDataStore());
     if (policyReport != null) {
       for (Map.Entry<String, PolicyInfoPayload> policyInfo : policyReport.getDetails().getEntries().entrySet()) {
         ret.put(policyInfo.getKey(), new JsonObject()

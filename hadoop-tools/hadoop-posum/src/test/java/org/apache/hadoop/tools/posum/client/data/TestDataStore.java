@@ -410,9 +410,9 @@ public abstract class TestDataStore {
   @Test
   public void testLogging() throws Exception {
     String message = "Some message";
-    StoreLogCall storeLog = StoreLogCall.newInstance(message);
-    Long timestamp = storeLog.getLogEntry().getLastUpdated();
-    String logId = dataStore.execute(storeLog, null).getValueAs();
+    LogEntry logEntry = DatabaseUtils.newLogEntry(message);
+    Long timestamp = logEntry.getLastUpdated();
+    String logId = dataStore.execute(StoreLogCall.newInstance(logEntry), null).getValueAs();
     assertNotNull(logId);
     FindByIdCall getLog = FindByIdCall.newInstance(
       DataEntityCollection.AUDIT_LOG,
@@ -426,15 +426,13 @@ public abstract class TestDataStore {
 
   @Test
   public void testLogChronology() throws Exception {
-    StoreLogCall storeLog = StoreLogCall.newInstance("First");
-    LogEntry first = storeLog.getLogEntry();
-    dataStore.execute(storeLog, null);
+    LogEntry first =  DatabaseUtils.newLogEntry("First");
+    dataStore.execute(StoreLogCall.newInstance(first), null);
 
-    storeLog = StoreLogCall.newInstance("Second");
-    LogEntry second = storeLog.getLogEntry();
+    LogEntry second = DatabaseUtils.newLogEntry("Second");
     Long secondTimestamp = first.getLastUpdated() + 1000;
-    storeLog.getLogEntry().setLastUpdated(secondTimestamp);
-    dataStore.execute(storeLog, null);
+    second.setLastUpdated(secondTimestamp);
+    dataStore.execute(StoreLogCall.newInstance(second), null);
 
     FindByQueryCall getLog = FindByQueryCall.newInstance(
       DataEntityCollection.AUDIT_LOG,

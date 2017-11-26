@@ -3,7 +3,6 @@ package org.apache.hadoop.tools.posum.common.util.cluster;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
-import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.StringListPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
@@ -61,8 +60,7 @@ public class TopologyProvider {
   public Set<String> getActiveNodes() {
     if (topology != null)
       return topology.keySet();
-    LogEntry<StringListPayload> activeNodesLog = dataStore.execute(
-      DatabaseUtils.findStatReportCall(LogEntry.Type.ACTIVE_NODES), DatabaseReference.getLogs()).getEntity();
+    LogEntry<StringListPayload> activeNodesLog = DatabaseUtils.findStatsLogEntry(LogEntry.Type.ACTIVE_NODES, dataStore);
     if (activeNodesLog != null) {
       activeNodes = new HashSet<>(activeNodesLog.getDetails().getEntries());
     }

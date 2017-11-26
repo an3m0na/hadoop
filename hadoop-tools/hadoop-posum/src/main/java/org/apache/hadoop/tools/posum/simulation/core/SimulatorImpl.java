@@ -6,9 +6,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
+import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.client.simulation.Simulator;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
-import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
@@ -117,7 +117,7 @@ public class SimulatorImpl extends CompositeService implements Simulator {
     resultRequest.setResults(results);
     logger.trace("Sending simulation result request");
     String message = results.size() > 0 ? "Simulation results: " + results : "Simulation was not performed";
-    context.getDataBroker().execute(StoreLogCall.newInstance(message), null);
+    DatabaseUtils.storeLogEntry(message, context.getDataBroker());
     context.getCommService().getOrchestratorMaster().handleSimulationResult(resultRequest);
     simulationOngoing = false;
   }
