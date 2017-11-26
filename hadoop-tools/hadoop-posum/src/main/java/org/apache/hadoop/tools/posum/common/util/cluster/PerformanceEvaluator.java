@@ -68,6 +68,6 @@ public class PerformanceEvaluator {
         dcNum++;
       }
     }
-    return CompoundScorePayload.newInstance(slowdown, dcNum > 0 ? penalty / dcNum : 0.0, cost);
+    return CompoundScorePayload.newInstance(slowdown, dcNum > 0 ? Math.sqrt(penalty / dcNum) : 0.0, cost);
   }
 }
