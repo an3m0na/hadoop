@@ -16,7 +16,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryProfilePBImpl;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 
@@ -157,7 +157,7 @@ public class AppInfoCollector {
         auditCalls.addCall(StoreCall.newInstance(HISTORY, new HistoryProfilePBImpl<>(COUNTER, counters)));
       }
 
-      Utils.updateJobStatisticsFromTasks(job, taskInfo.getTasks());
+      ClusterUtils.updateJobStatisticsFromTasks(job, taskInfo.getTasks());
     }
 
     updateCalls.addCall(UpdateOrStoreCall.newInstance(JOB, job));

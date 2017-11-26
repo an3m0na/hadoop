@@ -19,7 +19,7 @@ import org.apache.hadoop.tools.posum.common.records.request.RegistrationRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.communication.CommUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.orchestration.core.PosumEvent;
@@ -98,10 +98,10 @@ public class OrchestrationCommService extends CompositeService implements Orches
           break;
         case SYSTEM_ADDRESSES:
           Map<String, String> map = new HashMap<>(4);
-          map.put(Utils.PosumProcess.DM.name(), getDMAddress());
-          map.put(Utils.PosumProcess.PS.name(), getPSAddress());
-          map.put(Utils.PosumProcess.SM.name(), getSMAddress());
-          map.put(Utils.PosumProcess.OM.name(), getOMAddress());
+          map.put(CommUtils.PosumProcess.DM.name(), getDMAddress());
+          map.put(CommUtils.PosumProcess.PS.name(), getPSAddress());
+          map.put(CommUtils.PosumProcess.SM.name(), getSMAddress());
+          map.put(CommUtils.PosumProcess.OM.name(), getOMAddress());
           return SimpleResponse.newInstance(PayloadType.STRING_STRING_MAP,
             StringStringMapPayload.newInstance(map));
         default:

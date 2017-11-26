@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.tools.posum.client.data.Database;
+import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
@@ -8,9 +9,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.util.cluster.PerformanceEvaluator;
-import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.yarn.util.Records;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,7 +89,7 @@ public class TestPerformanceEvaluator {
   public void testEvaluationForExpired() {
     JOBS.get(1).setDeadline(500L);
     JOBS.get(3).setDeadline(30L);
-    CompoundScorePayload result = new PerformanceEvaluator(Utils.newProvider(db)).evaluate();
+    CompoundScorePayload result = new PerformanceEvaluator(DatabaseUtils.newProvider(db)).evaluate();
     assertThat(result, is(CompoundScorePayload.newInstance(7.712307692307692, 79112.5, 0.0)));
   }
 
@@ -98,7 +97,7 @@ public class TestPerformanceEvaluator {
   public void testEvaluationForNotExpired() {
     JOBS.get(1).setDeadline(700L);
     JOBS.get(3).setDeadline(550L);
-    CompoundScorePayload result = new PerformanceEvaluator(Utils.newProvider(db)).evaluate();
+    CompoundScorePayload result = new PerformanceEvaluator(DatabaseUtils.newProvider(db)).evaluate();
     assertThat(result, is(CompoundScorePayload.newInstance(7.712307692307692, 0.0, 0.0)));
   }
 }

@@ -10,7 +10,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.v2.jobhistory.JHAdminConfig;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
@@ -63,19 +62,19 @@ public class RestClient {
       return labelMap.get(label);
     }
 
-    public synchronized static boolean checkUpdated(Map<Utils.PosumProcess, String> addresses) {
+    public synchronized static boolean checkUpdated(Map<CommUtils.PosumProcess, String> addresses) {
       if (updated)
         return true;
-      String psAddress = addresses.get(Utils.PosumProcess.PS);
+      String psAddress = addresses.get(CommUtils.PosumProcess.PS);
       if (psAddress == null)
         return false;
-      String pmAddress = addresses.get(Utils.PosumProcess.OM);
+      String pmAddress = addresses.get(CommUtils.PosumProcess.OM);
       if (pmAddress == null)
         return false;
-      String dmAddress = addresses.get(Utils.PosumProcess.DM);
+      String dmAddress = addresses.get(CommUtils.PosumProcess.DM);
       if (dmAddress == null)
         return false;
-      String smAddress = addresses.get(Utils.PosumProcess.SM);
+      String smAddress = addresses.get(CommUtils.PosumProcess.SM);
       if (smAddress == null)
         return false;
       String rmAddress = getHostnameOnly(psAddress);

@@ -11,10 +11,10 @@ import org.apache.hadoop.tools.posum.common.records.request.HandleSimResultReque
 import org.apache.hadoop.tools.posum.common.records.request.RegistrationRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.util.communication.CommUtils;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.communication.StandardClientProxyFactory;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class OrchestrationMasterClient extends AbstractService implements Orches
 
   private SimpleResponse sendSimpleRequest(String kind, SimpleRequest request) {
     try {
-      return Utils.handleError(kind, pmClient.handleSimpleRequest(request));
+      return CommUtils.handleError(kind, pmClient.handleSimpleRequest(request));
     } catch (IOException | YarnException e) {
       throw new PosumException("Error during RPC call", e);
     }
@@ -73,9 +73,9 @@ public class OrchestrationMasterClient extends AbstractService implements Orches
   }
 
   @Override
-  public String register(Utils.PosumProcess process, String address) {
+  public String register(CommUtils.PosumProcess process, String address) {
     try {
-      return Utils.handleError("register",
+      return CommUtils.handleError("register",
         pmClient.registerProcess(RegistrationRequest.newInstance(process, address))).getText();
     } catch (IOException | YarnException e) {
       throw new PosumException("Error during RPC call", e);
@@ -85,20 +85,20 @@ public class OrchestrationMasterClient extends AbstractService implements Orches
   @Override
   public void handleSimulationResult(HandleSimResultRequest request) {
     try {
-      Utils.handleError("handleSimulationResult", pmClient.handleSimulationResult(request));
+      CommUtils.handleError("handleSimulationResult", pmClient.handleSimulationResult(request));
     } catch (IOException | YarnException e) {
       throw new PosumException("Error during RPC call", e);
     }
   }
 
-  public Map<Utils.PosumProcess, String> getSystemAddresses() {
+  public Map<CommUtils.PosumProcess, String> getSystemAddresses() {
     SimpleResponse response =
       sendSimpleRequest("getSystemAddresses", SimpleRequest.newInstance(SimpleRequest.Type.SYSTEM_ADDRESSES));
     StringStringMapPayload payload = (StringStringMapPayload) response.getPayload();
     if (payload != null) {
-      Map<Utils.PosumProcess, String> ret = new HashMap<>();
+      Map<CommUtils.PosumProcess, String> ret = new HashMap<>();
       for (Map.Entry<String, String> entry : payload.getEntries().entrySet()) {
-        ret.put(Utils.PosumProcess.valueOf(entry.getKey()), entry.getValue());
+        ret.put(CommUtils.PosumProcess.valueOf(entry.getKey()), entry.getValue());
       }
       return ret;
     }

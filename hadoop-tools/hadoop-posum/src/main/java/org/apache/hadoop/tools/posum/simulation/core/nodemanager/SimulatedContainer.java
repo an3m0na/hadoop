@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.DEFAULT_PRIORITY;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.DEFAULT_PRIORITY;
 
 @Private
 @Unstable

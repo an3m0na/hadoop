@@ -20,7 +20,7 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_HISTORY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
-import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
+import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.ID_FIELD;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 

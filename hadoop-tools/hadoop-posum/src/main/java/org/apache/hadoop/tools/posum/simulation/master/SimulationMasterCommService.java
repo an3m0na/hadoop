@@ -12,8 +12,8 @@ import org.apache.hadoop.tools.posum.client.orchestration.Orchestrator;
 import org.apache.hadoop.tools.posum.common.records.protocol.SimulatorMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.util.communication.CommUtils;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -63,7 +63,7 @@ public class SimulationMasterCommService extends CompositeService implements Sim
     String fullAddress =
       NetUtils.getConnectAddress(this.simulatorServer.getListenerAddress()).toString();
     connectAddress = fullAddress.substring(fullAddress.indexOf("/") + 1);
-    String dmAddress = masterClient.register(Utils.PosumProcess.SM, connectAddress);
+    String dmAddress = masterClient.register(CommUtils.PosumProcess.SM, connectAddress);
     DataMasterClient newDataClient = new DataMasterClient(dmAddress);
     newDataClient.init(getConfig());
     addIfService(newDataClient);

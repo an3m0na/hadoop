@@ -16,9 +16,9 @@ import org.apache.hadoop.tools.posum.common.records.protocol.DataMasterProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.DatabaseCallExecutionRequest;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
+import org.apache.hadoop.tools.posum.common.util.communication.CommUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
 
 import java.net.InetSocketAddress;
@@ -73,7 +73,7 @@ public class DataMasterCommService extends CompositeService implements DataMaste
     String fullAddress =
       NetUtils.getConnectAddress(this.dmServer.getListenerAddress()).toString();
     connectAddress = fullAddress.substring(fullAddress.indexOf("/") + 1);
-    masterClient.register(Utils.PosumProcess.DM, connectAddress);
+    masterClient.register(CommUtils.PosumProcess.DM, connectAddress);
   }
 
   public String getConnectAddress() {
@@ -159,7 +159,7 @@ public class DataMasterCommService extends CompositeService implements DataMaste
     return SimpleResponse.newInstance(true);
   }
 
-  public Map<Utils.PosumProcess, String> getSystemAddresses() {
+  public Map<CommUtils.PosumProcess, String> getSystemAddresses() {
     return masterClient.getSystemAddresses();
   }
 }

@@ -6,7 +6,7 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
@@ -1013,7 +1013,7 @@ public abstract class SimpleQueuePolicy<
     if (node == null)
       throw new PosumException("Node could not be found for " + hostName);
     int containers = assignContainer(node, applications.get(appId).getCurrentAppAttempt(), priority, 1,
-      Utils.createResourceRequest(minimumAllocation, hostName, 1), NodeType.NODE_LOCAL);
+      ClusterUtils.createResourceRequest(minimumAllocation, hostName, 1), NodeType.NODE_LOCAL);
     return containers == 1;
   }
 

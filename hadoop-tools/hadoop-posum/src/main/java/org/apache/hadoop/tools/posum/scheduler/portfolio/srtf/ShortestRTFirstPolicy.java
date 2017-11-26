@@ -15,7 +15,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerNode;
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 public class ShortestRTFirstPolicy extends SimpleQueuePolicy<SRTFAppAttempt, FiCaPluginSchedulerNode, SimpleQueue, ShortestRTFirstPolicy> {
   private static Log logger = LogFactory.getLog(ShortestRTFirstPolicy.class);

@@ -15,7 +15,7 @@ import java.util.List;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 public abstract class SimpleRateBasedPredictor<M extends PredictionModel> extends JobBehaviorPredictor<M> {
 

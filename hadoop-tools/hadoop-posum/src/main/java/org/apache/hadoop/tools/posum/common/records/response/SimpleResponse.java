@@ -2,7 +2,7 @@ package org.apache.hadoop.tools.posum.common.records.response;
 
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.payload.PayloadType;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.communication.CommUtils;
 import org.apache.hadoop.yarn.util.Records;
 
 public abstract class SimpleResponse<T extends Payload> {
@@ -22,7 +22,7 @@ public abstract class SimpleResponse<T extends Payload> {
   public static SimpleResponse newInstance(String text, Throwable e) {
     SimpleResponse ret = newInstance(false, text);
     if (e != null)
-      ret.setException(Utils.getErrorTrace(e));
+      ret.setException(CommUtils.getErrorTrace(e));
     return ret;
   }
 
@@ -41,7 +41,7 @@ public abstract class SimpleResponse<T extends Payload> {
     response.setType(payloadType);
     response.setText(text);
     if (e != null)
-      response.setException(Utils.getErrorTrace(e));
+      response.setException(CommUtils.getErrorTrace(e));
     return response;
   }
 

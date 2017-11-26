@@ -11,8 +11,8 @@ import org.apache.hadoop.tools.posum.test.Utils;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.newProvider;
-import static org.apache.hadoop.tools.posum.common.util.Utils.parseApplicationId;
+import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.newProvider;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.parseApplicationId;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;

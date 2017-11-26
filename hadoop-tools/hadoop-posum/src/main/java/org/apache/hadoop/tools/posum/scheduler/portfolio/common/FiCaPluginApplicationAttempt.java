@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.common;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.GeneralUtils;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginApplicationAttempt;
 import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -137,7 +137,7 @@ public class FiCaPluginApplicationAttempt extends FiCaSchedulerApp implements Pl
   @Override
   public synchronized void addPreemptContainer(ContainerId cont) {
     if (core != null) {
-      Utils.invokeMethod(core, FiCaSchedulerApp.class, "addPreemptContainer", new Class<?>[]{ContainerId.class}, cont);
+      GeneralUtils.invokeMethod(core, FiCaSchedulerApp.class, "addPreemptContainer", new Class<?>[]{ContainerId.class}, cont);
       return;
     }
     super.addPreemptContainer(cont);
@@ -162,7 +162,7 @@ public class FiCaPluginApplicationAttempt extends FiCaSchedulerApp implements Pl
   @Override
   public synchronized void setHeadroomProvider(CapacityHeadroomProvider headroomProvider) {
     if (core != null) {
-      Utils.writeField(core, FiCaSchedulerApp.class, "headroomProvider", headroomProvider);
+      GeneralUtils.writeField(core, FiCaSchedulerApp.class, "headroomProvider", headroomProvider);
       return;
     }
     super.setHeadroomProvider(headroomProvider);
@@ -179,7 +179,7 @@ public class FiCaPluginApplicationAttempt extends FiCaSchedulerApp implements Pl
   @Override
   protected synchronized void resetReReservations(Priority priority) {
     if (core != null) {
-      Utils.invokeMethod(core, SchedulerApplicationAttempt.class, "resetReReservations", new Class<?>[]{Priority.class}, priority);
+      GeneralUtils.invokeMethod(core, SchedulerApplicationAttempt.class, "resetReReservations", new Class<?>[]{Priority.class}, priority);
       return;
     }
     super.resetReReservations(priority);
@@ -188,7 +188,7 @@ public class FiCaPluginApplicationAttempt extends FiCaSchedulerApp implements Pl
   @Override
   protected synchronized void addReReservation(Priority priority) {
     if (core != null) {
-      Utils.invokeMethod(core, SchedulerApplicationAttempt.class, "addReReservation", new Class<?>[]{Priority.class}, priority);
+      GeneralUtils.invokeMethod(core, SchedulerApplicationAttempt.class, "addReReservation", new Class<?>[]{Priority.class}, priority);
       return;
     }
     super.addReReservation(priority);

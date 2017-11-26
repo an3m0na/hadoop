@@ -1,5 +1,6 @@
 package org.apache.hadoop.tools.posum.common.records.call;
 
+import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
@@ -15,7 +16,7 @@ public abstract class StoreLogCall extends LockBasedDatabaseCallImpl<SimplePrope
   }
 
   public static StoreLogCall newInstance(LogEntry.Type type, String message) {
-    return newInstance(CallUtils.newLogEntry(type == null ? LogEntry.Type.GENERAL : type,
+    return newInstance(DatabaseUtils.newLogEntry(type == null ? LogEntry.Type.GENERAL : type,
       SimplePropertyPayload.newInstance(null, message)));
   }
 

@@ -23,7 +23,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEv
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.DEFAULT_PRIORITY;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.DEFAULT_PRIORITY;
 
 public abstract class PluginPolicy<
   A extends SchedulerApplicationAttempt & PluginApplicationAttempt,

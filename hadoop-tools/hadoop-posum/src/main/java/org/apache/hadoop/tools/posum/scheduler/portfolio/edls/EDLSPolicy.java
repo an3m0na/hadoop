@@ -23,7 +23,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaS
 import java.util.Comparator;
 import java.util.List;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.DOT;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.MAXIMUM_APPLICATIONS_SUFFIX;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.PREFIX;

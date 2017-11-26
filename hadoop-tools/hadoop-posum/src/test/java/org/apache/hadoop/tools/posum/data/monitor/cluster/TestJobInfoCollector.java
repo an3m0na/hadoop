@@ -2,15 +2,12 @@ package org.apache.hadoop.tools.posum.data.monitor.cluster;
 
 import org.apache.hadoop.mapreduce.split.JobSplit;
 import org.apache.hadoop.mapreduce.v2.api.records.JobId;
-import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
-import org.apache.hadoop.tools.posum.common.util.Utils;
-import org.apache.hadoop.yarn.util.Records;
+import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,11 +16,8 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
-import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_CONF;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
@@ -67,7 +61,7 @@ public class TestJobInfoCollector {
 
   @Test
   public void getNewRunningJobInfoTest() throws IOException {
-    JobId jobId = Utils.parseJobId(entities.JOB_ID);
+    JobId jobId = ClusterUtils.parseJobId(entities.JOB_ID);
     when(hdfsReaderMock.getSubmittedConf(jobId, entities.RUNNING_APP.getUser())).thenReturn(entities.JOB_CONF);
     when(hdfsReaderMock.getSplitMetaInfo(jobId, entities.JOB_CONF)).thenReturn(taskSplitMetaInfos);
     when(dbMock.execute(any(JobForAppCall.class))).thenReturn(null);
@@ -96,7 +90,7 @@ public class TestJobInfoCollector {
 
   @Test
   public void getSubmittedJobInfoTest() throws IOException {
-    JobId jobId = Utils.parseJobId(entities.JOB_ID);
+    JobId jobId = ClusterUtils.parseJobId(entities.JOB_ID);
     when(hdfsReaderMock.getSubmittedConf(jobId, entities.RUNNING_APP.getUser())).thenReturn(entities.JOB_CONF);
     when(hdfsReaderMock.getSplitMetaInfo(jobId, entities.JOB_CONF)).thenReturn(taskSplitMetaInfos);
     JobInfo ret = testSubject.getSubmittedJobInfo(entities.APP_ID, entities.RUNNING_APP.getUser());

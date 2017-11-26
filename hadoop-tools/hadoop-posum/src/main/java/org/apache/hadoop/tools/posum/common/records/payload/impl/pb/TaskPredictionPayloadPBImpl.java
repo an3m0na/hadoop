@@ -71,7 +71,7 @@ public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload implement
 
 
   @Override
-  public String getId() {
+  public String getTaskId() {
     TaskPredictionPayloadProtoOrBuilder p = viaProto ? proto : builder;
     return p.getId();
   }
@@ -89,7 +89,7 @@ public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload implement
   }
 
   @Override
-  public void setId(String name) {
+  public void setTaskId(String name) {
     maybeInitBuilder();
     builder.setId(name);
   }

@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio;
 import org.apache.hadoop.tools.posum.common.util.cluster.InjectableResourceScheduler;
 import org.apache.hadoop.tools.posum.scheduler.TestSchedulerBase;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.newProvider;
+import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.newProvider;
 
 
 public abstract class TestPolicyBase<T extends PluginPolicy> extends TestSchedulerBase {

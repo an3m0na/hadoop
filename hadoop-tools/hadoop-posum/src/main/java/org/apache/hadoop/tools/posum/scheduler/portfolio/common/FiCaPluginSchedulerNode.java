@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio.common;
 
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.GeneralUtils;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginSchedulerNode;
 import org.apache.hadoop.yarn.api.records.Container;
 import org.apache.hadoop.yarn.api.records.ContainerId;
@@ -210,7 +210,7 @@ public class FiCaPluginSchedulerNode extends FiCaSchedulerNode implements Plugin
   @Override
   protected synchronized void setReservedContainer(RMContainer reservedContainer) {
     if (core != null) {
-      Utils.invokeMethod(core, SchedulerNode.class, "setReservedContainer", new Class<?>[]{RMContainer.class}, reservedContainer);
+      GeneralUtils.invokeMethod(core, SchedulerNode.class, "setReservedContainer", new Class<?>[]{RMContainer.class}, reservedContainer);
       return;
     }
     super.setReservedContainer(reservedContainer);

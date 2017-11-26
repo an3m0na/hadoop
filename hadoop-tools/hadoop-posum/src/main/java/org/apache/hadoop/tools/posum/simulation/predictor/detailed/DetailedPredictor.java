@@ -16,11 +16,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.getDoubleField;
-import static org.apache.hadoop.tools.posum.common.util.Utils.getDuration;
-import static org.apache.hadoop.tools.posum.common.util.Utils.getIntField;
-import static org.apache.hadoop.tools.posum.common.util.Utils.getLongField;
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDoubleField;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getIntField;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getLongField;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.MAP_FINISH;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.MAP_GENERAL;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.MAP_LOCAL;

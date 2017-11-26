@@ -28,8 +28,8 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_CONF;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
-import static org.apache.hadoop.tools.posum.common.util.Utils.parseApplicationId;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.parseApplicationId;
 
 public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
   private static final Log LOG = LogFactory.getLog(ApplicationMonitor.class);

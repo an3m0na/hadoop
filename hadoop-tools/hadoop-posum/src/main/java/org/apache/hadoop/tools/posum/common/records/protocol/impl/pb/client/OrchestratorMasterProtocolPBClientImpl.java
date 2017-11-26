@@ -13,7 +13,7 @@ import org.apache.hadoop.tools.posum.common.records.request.impl.pb.HandleSimRes
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.RegistrationRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.communication.CommUtils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
 import org.apache.hadoop.yarn.proto.PosumProtos.HandleSimResultRequestProto;
@@ -48,7 +48,7 @@ public class OrchestratorMasterProtocolPBClientImpl implements OrchestratorMaste
     SimpleRequestProto requestProto =
       ((SimpleRequestPBImpl) request).getProto();
     try {
-      return Utils.wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
+      return CommUtils.wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
     } catch (ServiceException e) {
       RPCUtil.unwrapAndThrowException(e);
       return null;
@@ -60,7 +60,7 @@ public class OrchestratorMasterProtocolPBClientImpl implements OrchestratorMaste
     HandleSimResultRequestProto requestProto =
       ((HandleSimResultRequestPBImpl) request).getProto();
     try {
-      return Utils.wrapSimpleResponse(proxy.handleSimulationResult(null, requestProto));
+      return CommUtils.wrapSimpleResponse(proxy.handleSimulationResult(null, requestProto));
     } catch (ServiceException e) {
       RPCUtil.unwrapAndThrowException(e);
       return null;
@@ -72,7 +72,7 @@ public class OrchestratorMasterProtocolPBClientImpl implements OrchestratorMaste
     RegistrationRequestProto requestProto =
       ((RegistrationRequestPBImpl) request).getProto();
     try {
-      return Utils.wrapSimpleResponse(proxy.registerProcess(null, requestProto));
+      return CommUtils.wrapSimpleResponse(proxy.registerProcess(null, requestProto));
     } catch (ServiceException e) {
       RPCUtil.unwrapAndThrowException(e);
       return null;

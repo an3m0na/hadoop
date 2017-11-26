@@ -15,8 +15,8 @@ import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import java.text.MessageFormat;
 import java.util.List;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.getDuration;
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 public class PerformanceEvaluator {
   private static final Log LOG = LogFactory.getLog(PerformanceEvaluator.class);

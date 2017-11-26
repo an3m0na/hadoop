@@ -1,10 +1,23 @@
-package org.apache.hadoop.tools.posum.common.records.call;
+package org.apache.hadoop.tools.posum.client.data;
 
+import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
+import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
+import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.yarn.util.Records;
 
-public class CallUtils {
+public class DatabaseUtils {
+  public static final String ID_FIELD = "_id";
+
+  public static DatabaseProvider newProvider(final Database db) {
+    return new DatabaseProvider() {
+      @Override
+      public Database getDatabase() {
+        return db;
+      }
+    };
+  }
 
   public static <T extends Payload> StoreLogCall storeStatReportCall(LogEntry.Type type, T payload) {
     LogEntry<T> report = Records.newRecord(LogEntry.class);

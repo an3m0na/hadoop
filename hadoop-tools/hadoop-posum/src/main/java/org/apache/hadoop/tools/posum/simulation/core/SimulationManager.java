@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 
 class SimulationManager<T extends PluginPolicy> implements Callable<SimulationResultPayload> {

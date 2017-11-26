@@ -9,7 +9,7 @@ import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 
 import java.text.MessageFormat;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 public class AppWorkCalculator {
   private static Log logger = LogFactory.getLog(AppWorkCalculator.class);

@@ -9,7 +9,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.HistoryPr
 
 import java.io.IOException;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
+import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.ID_FIELD;
 
 public class HistoryProfileDeserializer extends JsonDeserializer<HistoryProfilePBImpl> {
 

@@ -10,7 +10,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.GeneralDataEntity
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.GeneralUtils;
 import org.apache.hadoop.tools.posum.data.core.LockBasedDataStore;
 import org.apache.hadoop.tools.posum.data.mock.data.predicate.QueryPredicate;
 import org.apache.hadoop.tools.posum.data.mock.data.predicate.QueryPredicateFactory;
@@ -140,7 +140,7 @@ public class MockDataStoreImpl implements LockBasedDataStore {
     if (sortField != null)
       relevantProperties.add(sortField);
     try {
-      Map<String, Method> propertyReaders = Utils.getBeanPropertyReaders(entityClass, relevantProperties);
+      Map<String, Method> propertyReaders = GeneralUtils.getBeanPropertyReaders(entityClass, relevantProperties);
       for (Map.Entry<String, T> entry : entities.entrySet()) {
         if (predicate.check(entry.getValue(), propertyReaders)) {
           Object sortablePropertyValue = null;

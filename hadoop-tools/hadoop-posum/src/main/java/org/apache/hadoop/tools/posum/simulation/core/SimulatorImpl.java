@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.copyRunningAppInfo;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.copyRunningAppInfo;
 import static org.apache.hadoop.util.ShutdownThreadsHelper.shutdownExecutorService;
 
 public class SimulatorImpl extends CompositeService implements Simulator {

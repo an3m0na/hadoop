@@ -17,7 +17,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.impl.pb.CountersProxyPBImpl;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
@@ -114,7 +114,7 @@ public class HadoopAPIClient {
   }
 
   JobProfile getFinishedJobInfo(String appId) {
-    ApplicationId realAppId = Utils.parseApplicationId(appId);
+    ApplicationId realAppId = ClusterUtils.parseApplicationId(appId);
     JobId expectedRealJobId = MRBuilderUtils.newJobId(realAppId, realAppId.getId());
     String expectedJobId = expectedRealJobId.toString();
 
