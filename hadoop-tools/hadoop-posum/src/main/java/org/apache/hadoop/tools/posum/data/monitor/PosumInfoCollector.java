@@ -199,7 +199,7 @@ public class PosumInfoCollector {
         taskId,
         predictor.predictTaskBehavior(new TaskPredictionInput(taskId)).getDuration()
       );
-      DatabaseUtils.storeStatReportCall(TASK_PREDICTION, prediction, dataStore);
+      DatabaseUtils.storeLogEntry(TASK_PREDICTION, prediction, dataStore);
     } catch (Exception e) {
       if (!(e instanceof PosumException))
         logger.error("Could not predict task duration for " + taskId + " due to: ", e);
