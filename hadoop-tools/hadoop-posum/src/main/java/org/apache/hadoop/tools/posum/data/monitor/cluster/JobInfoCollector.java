@@ -19,10 +19,10 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.ExternalDeadline;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SingleEntityPayload;
-import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
-import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.util.Records;
 
@@ -91,8 +91,8 @@ class JobInfoCollector {
       info.setJobCounters(counters);
     }
     if (profile == null)
-      throw new RuntimeException("Profile data could not be retrieved at all for " + app.getId());
-    if(profile.getSubmitTime() == null)
+      return null;
+    if (profile.getSubmitTime() == null)
       profile.setSubmitTime(app.getStartTime());
     if (databaseDeadlines && profile.getDeadline() == null) {
       setDatabaseDeadline(profile);
