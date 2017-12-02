@@ -126,9 +126,14 @@ public class OrchestrationCommService extends CompositeService implements Orches
     return SimpleResponse.newInstance(true);
   }
 
-  private void checkDM() {
-    if (dataClient == null || dataClient.getConnectAddress() == null)
-      throw new PosumException("No DataMaster registered! Shutting down...");
+  private void waitForDM() {
+    while (dataClient == null || dataClient.getConnectAddress() == null) {
+      try {
+        Thread.sleep(500L);
+      } catch (InterruptedException e) {
+        throw new PosumException("Interrupted while waiting for DM");
+      }
+    }
   }
 
   @Override
@@ -143,7 +148,7 @@ public class OrchestrationCommService extends CompositeService implements Orches
           dataClient.start();
           break;
         case SM:
-          checkDM();
+          waitForDM();
           simulatorClient = new SimulatorClient(request.getConnectAddress());
           simulatorClient.init(getConfig());
           addIfService(simulatorClient);
@@ -151,7 +156,7 @@ public class OrchestrationCommService extends CompositeService implements Orches
           pmContext.getDispatcher().getEventHandler().handle(new PosumEvent(PosumEventType.SIMULATOR_CONNECTED));
           break;
         case PS:
-          checkDM();
+          waitForDM();
           schedulerClient = new MetaSchedulerClient(request.getConnectAddress());
           schedulerClient.init(getConfig());
           addIfService(schedulerClient);
