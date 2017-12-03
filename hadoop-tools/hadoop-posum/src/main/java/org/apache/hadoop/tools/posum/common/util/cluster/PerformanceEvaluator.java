@@ -15,25 +15,25 @@ import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import java.text.MessageFormat;
 import java.util.List;
 
-import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
 import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
 
 public class PerformanceEvaluator {
   private static final Log LOG = LogFactory.getLog(PerformanceEvaluator.class);
   private static final Long MIN_EXECUTION_TIME = 10000L;
-
-  private Double slowdown = 0.0;
-  private Double penalty = 0.0;
-  private Double cost = 0.0; // TODO this when cluster resizing is implemented
   private DatabaseProvider dbProvider;
-  private int dcNum = 0;
 
   public PerformanceEvaluator(DatabaseProvider dbProvider) {
     this.dbProvider = dbProvider;
   }
 
   public CompoundScorePayload evaluate() {
+    Double slowdown = 0.0;
+    Double penalty = 0.0;
+    Double cost = 0.0; // TODO this when cluster resizing is implemented
+    int dcNum = 0;
     Database db = dbProvider.getDatabase();
+
     List<JobProfile> finishedJobs = db.execute(FindByQueryCall.newInstance(DataEntityCollection.JOB_HISTORY, null)).getEntities();
     for (JobProfile job : finishedJobs) {
       if (orZero(job.getDeadline()) == 0) {
@@ -45,22 +45,22 @@ public class PerformanceEvaluator {
         for (TaskProfile task : tasks) {
           executionTime += getDuration(task);
         }
-        if(LOG.isTraceEnabled()){
-          if(dbProvider instanceof SimulationContext){
+        if (LOG.isTraceEnabled()) {
+          if (dbProvider instanceof SimulationContext) {
             String simulation = ((SimulationContext) dbProvider).getSchedulerClass().getSimpleName();
             LOG.trace(MessageFormat.format("Sim={0}: Performance for job {1}: runtime={2} executionTime={3}", simulation, job.getId(), runtime, executionTime));
-          } else{
+          } else {
             LOG.trace(MessageFormat.format("Online: Performance for job {0}: runtime={1} executionTime={2}", job.getId(), runtime, executionTime));
           }
         }
         slowdown += 1.0 * runtime / Math.max(executionTime, MIN_EXECUTION_TIME);
       } else {
         // DC job; calculate deadline violation
-        if(LOG.isTraceEnabled()){
-          if(dbProvider instanceof SimulationContext){
+        if (LOG.isTraceEnabled()) {
+          if (dbProvider instanceof SimulationContext) {
             String simulation = ((SimulationContext) dbProvider).getSchedulerClass().getSimpleName();
             LOG.trace(MessageFormat.format("Sim={0}: Performance for job {1}: deadlineViolation={2}", simulation, job.getId(), job.getFinishTime() - job.getDeadline()));
-          } else{
+          } else {
             LOG.trace(MessageFormat.format("Online: Performance for job {0}: deadlineViolation={1}", job.getId(), job.getFinishTime() - job.getDeadline()));
           }
         }
