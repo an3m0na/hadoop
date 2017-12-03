@@ -3,6 +3,7 @@ function ClusterTab(id, container, env) {
   var self = this;
 
   self.refresh = function () {
+    self.loading = true;
     var path = env.isTest ? "mocks/dmmetrics_all-cluster.json" : self.comm.paths.DM + "/all-cluster?since=" + self.lastRefreshed;
     self.comm.requestData(path, function (data) {
       self.lastRefreshed = data.time;
@@ -43,6 +44,10 @@ function ClusterTab(id, container, env) {
         yaxis: {title: "Memory (GB)"},
         baseTime: env.isTest ? env.testTime : 0
       });
+
+      self.loading = false;
+    }, function () {
+      self.loading = false;
     });
   };
 }

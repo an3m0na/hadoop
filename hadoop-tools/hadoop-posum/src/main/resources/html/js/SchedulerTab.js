@@ -3,6 +3,7 @@ function SchedulerTab(id, container, env) {
   var self = this;
 
   self.refresh = function () {
+    self.loading = true;
     var path = env.isTest ? "mocks/dmmetrics_policies.json" : self.comm.paths.DM + "/policies?since=" + self.lastRefreshed;
     self.comm.requestData(path, function (data) {
       self.lastRefreshed = data.time;
@@ -49,6 +50,10 @@ function SchedulerTab(id, container, env) {
         yaxis: {title: "Policy"},
         baseTime: env.isTest ? env.testTime : 0
       });
+
+      self.loading = false
+    }, function(){
+      self.loading = false;
     });
 
     path = env.isTest ? "mocks/psmetrics_scheduler.json" : self.comm.paths.PS + "/scheduler";

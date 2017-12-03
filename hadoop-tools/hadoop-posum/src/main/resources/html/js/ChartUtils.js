@@ -13,7 +13,10 @@ var defaultTimeSeriesConfig = {
   plotTitle: "Plot",
   yaxis: {title: "Value", tickmode: "auto", nticks: 10},
   xaxis: {title: "Time", type: "date"},
-  baseTime: 0
+  baseTime: 0,
+  errorHandler: function () {
+    // ignore errors
+  }
 };
 
 function addNewValues(traces, config, newData) {
@@ -53,5 +56,5 @@ function updateTimeSeriesPlot(tab,
   if ($.isPlainObject(pathOrData))
     parser(pathOrData);
   else
-    tab.comm.requestData(pathOrData, parser);
+    tab.comm.requestData(pathOrData, parser, config.errorHandler);
 }

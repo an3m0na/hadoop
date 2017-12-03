@@ -42,7 +42,10 @@ function TabManager(env) {
 
     setInterval(function () {
       env.testTime += env.refreshInterval;
-      tabs[env.state].refresh();
+      var tab = tabs[env.state];
+      if (tab.loading)
+        return;
+      tab.refresh();
     }, env.refreshInterval);
 
     return self;

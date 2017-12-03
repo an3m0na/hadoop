@@ -33,6 +33,7 @@ function SystemTab(id, container, env) {
     }));
   };
   self.refresh = function () {
+    self.loading = true;
     var path = env.isTest ? "mocks/dmmetrics_all-system.json" : self.comm.paths.DM + "/all-system?since=" + self.lastRefreshed;
     self.comm.requestData(path, function (data) {
       self.lastRefreshed = data.time;
@@ -40,6 +41,10 @@ function SystemTab(id, container, env) {
       self.updateSystemCharts("OM", "Orchestration Master", data);
       self.updateSystemCharts("DM", "Data Master", data);
       self.updateSystemCharts("SM", "Simulation Master", data);
+
+      self.loading = false;
+    }, function () {
+      self.loading = false;
     });
   };
 }

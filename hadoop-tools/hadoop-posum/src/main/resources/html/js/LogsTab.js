@@ -9,6 +9,7 @@ function LogsTab(id, container, env) {
   });
 
   self.refresh = function () {
+    self.loading = true;
     var path = env.isTest ? "mocks/logs.json" : self.comm.paths.DM + "/logs";
     self.comm.requestData(path + "?since=" + self.lastRefreshed, function (data) {
       if (!data || data.length === 0)
@@ -28,6 +29,9 @@ function LogsTab(id, container, env) {
         self.scrollToBottom();
       }
       self.lastRefreshed = data[data.length - 1].timestamp;
+      self.loading = false;
+    }, function () {
+      self.loading = false;
     });
   };
 

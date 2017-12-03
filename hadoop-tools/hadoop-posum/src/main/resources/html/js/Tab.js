@@ -5,6 +5,7 @@ function Tab(id, container, env) {
   self.plots = {};
   self.lastRefreshed = 0;
   self.comm = env.comm;
+  self.loading = false;
 
   self.refresh = function () {
     console.log("Tab ", self.id, " is active");
