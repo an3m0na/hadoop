@@ -4,8 +4,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.CompositeService;
+import org.apache.hadoop.tools.posum.client.data.DataMasterClient;
 import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.client.scheduler.MetaScheduler;
+import org.apache.hadoop.tools.posum.client.simulation.Simulator;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMasterContext;
@@ -15,6 +17,8 @@ import java.util.List;
 
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.COST_SCALE_FACTOR;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.COST_SCALE_FACTOR_DEFAULT;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.DEFAULT_POLICY;
+import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.DEFAULT_POLICY_DEFAULT;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.PENALTY_SCALE_FACTOR;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.PENALTY_SCALE_FACTOR_DEFAULT;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.POLICY_SWITCH_ENABLED;
@@ -63,7 +67,9 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
           break;
         case SIMULATION_START:
           logger.trace("Starting simulation");
-          orchestrationContext.getCommService().getSimulator().startSimulation();
+          Simulator simulator = orchestrationContext.getCommService().getSimulator();
+          if (simulator != null)
+            simulator.startSimulation();
           break;
         case SIMULATION_FINISH:
           simulationMonitor.simulationFinished();
@@ -73,8 +79,7 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
           break;
         case SYSTEM_RESET:
           logger.info("Sending reset command to all POSUM processes...");
-          orchestrationContext.getCommService().getSimulator().reset();
-          orchestrationContext.getCommService().getDataMaster().reset();
+          resetProcesses();
           DatabaseUtils.storeLogEntry("System reset complete", orchestrationContext.getCommService().getDataMaster());
           logger.info("System reset complete");
           break;
@@ -86,16 +91,32 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
     }
   }
 
+  private void resetProcesses() {
+    simulationMonitor.pause();
+
+    Simulator simulator = orchestrationContext.getCommService().getSimulator();
+    if (simulator != null)
+      simulator.reset();
+
+    MetaScheduler scheduler = orchestrationContext.getCommService().getScheduler();
+    if (scheduler != null)
+      scheduler.changeToPolicy(getConfig().get(DEFAULT_POLICY, DEFAULT_POLICY_DEFAULT));
+
+    DataMasterClient dataMaster = orchestrationContext.getCommService().getDataMaster();
+    if (dataMaster != null)
+      dataMaster.reset();
+
+    simulationMonitor.resume();
+  }
+
   private void decidePolicyChange(List<SimulationResultPayload> results) {
     if (results == null || results.isEmpty())
       return;
     MetaScheduler scheduler = orchestrationContext.getCommService().getScheduler();
     orchestrationContext.getSimulationScoreComparator().sort(results);
     SimulationResultPayload bestResult = results.get(0);
-    if (bestResult == null || scheduler == null)
-      return;
     logger.info("Best policy is: " + bestResult.getPolicyName());
-    if (switchEnabled) {
+    if (switchEnabled && scheduler != null) {
       logger.info("Switching policy...");
       scheduler.changeToPolicy(bestResult.getPolicyName());
     }

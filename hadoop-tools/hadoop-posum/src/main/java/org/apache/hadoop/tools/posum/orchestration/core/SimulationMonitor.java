@@ -12,6 +12,7 @@ public class SimulationMonitor extends GeneralLooper<SimulationMonitor> {
 
   private final OrchestrationMasterContext context;
   private volatile boolean simulationRunning = false;
+  private volatile boolean paused = false;
   private final Object lock = new Object();
 
   public SimulationMonitor(OrchestrationMasterContext context) {
@@ -30,7 +31,7 @@ public class SimulationMonitor extends GeneralLooper<SimulationMonitor> {
   @Override
   protected void doAction() {
     synchronized (lock) {
-      while (simulationRunning)
+      while (simulationRunning || paused)
         try {
           lock.wait();
         } catch (InterruptedException e) {
@@ -42,6 +43,18 @@ public class SimulationMonitor extends GeneralLooper<SimulationMonitor> {
       context.getDispatcher().getEventHandler().handle(new PosumEvent(PosumEventType.SIMULATION_START));
     }
 
+  }
+
+  void pause() {
+    synchronized (lock) {
+      paused = true;
+    }
+  }
+
+  void resume() {
+    synchronized (lock) {
+      paused = false;
+    }
   }
 
   void simulationFinished() {

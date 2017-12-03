@@ -1,5 +1,7 @@
 package org.apache.hadoop.tools.posum.orchestration.core;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.records.payload.CompoundScorePayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 
@@ -8,6 +10,8 @@ import java.util.Comparator;
 import java.util.List;
 
 public class SimulationScoreComparator implements Comparator<SimulationResultPayload> {
+  private static Log logger = LogFactory.getLog(SimulationScoreComparator.class);
+
   private Double slowdownScaleFactor, penaltyScaleFactor, costScaleFactor;
 
   public Double getSlowdownScaleFactor() {
@@ -26,6 +30,7 @@ public class SimulationScoreComparator implements Comparator<SimulationResultPay
     this.slowdownScaleFactor = slowdownScaleFactor;
     this.penaltyScaleFactor = penaltyScaleFactor;
     this.costScaleFactor = costScaleFactor;
+    logger.info("Scale factors updated to: " + slowdownScaleFactor + " " + penaltyScaleFactor + " " + costScaleFactor);
   }
 
   @Override
