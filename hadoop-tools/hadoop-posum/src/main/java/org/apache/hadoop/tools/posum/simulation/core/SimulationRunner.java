@@ -237,7 +237,7 @@ public class SimulationRunner<T extends PluginPolicy> {
         ApplicationId appId = am.getAppId();
         if (!(rm.getPluginPolicy()).forceContainerAssignment(appId, am.getHostName()))
           throw new PosumException(MessageFormat.format("Sim={0}: Could not pre-assign AM container for {1}", context.getSchedulerClass().getSimpleName(), appId));
-        LOG.trace(MessageFormat.format("Sim={0}: Pre-assigned AM container for {1}", context.getSchedulerClass().getSimpleName(), appId));
+        LOG.debug(MessageFormat.format("Sim={0}: Pre-assigned AM container for {1}", context.getSchedulerClass().getSimpleName(), appId));
         am.doStep(); // process the AM container
         am.doStep(); // ask for task containers
 
@@ -247,7 +247,7 @@ public class SimulationRunner<T extends PluginPolicy> {
             if (!(rm.getPluginPolicy()).forceContainerAssignment(appId, container.getHostName(), container.getPriority()))
               throw new PosumException(MessageFormat.format("Sim={0}: Could not pre-assign container for {1}", context.getSchedulerClass().getSimpleName(), container.getTaskId()));
             preAssignedContainers++;
-            LOG.trace(MessageFormat.format("Sim={0}: Pre-assigned container for {1}", context.getSchedulerClass().getSimpleName(), container.getTaskId()));
+            LOG.debug(MessageFormat.format("Sim={0}: Pre-assigned container for {1}", context.getSchedulerClass().getSimpleName(), container.getTaskId()));
           }
         }
         if (preAssignedContainers > 0)

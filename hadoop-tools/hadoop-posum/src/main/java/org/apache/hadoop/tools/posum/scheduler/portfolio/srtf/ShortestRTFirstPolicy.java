@@ -1,7 +1,5 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio.srtf;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
@@ -18,8 +16,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 public class ShortestRTFirstPolicy extends SimpleQueuePolicy<SRTFAppAttempt, FiCaPluginSchedulerNode, SimpleQueue, ShortestRTFirstPolicy> {
-  private static Log logger = LogFactory.getLog(ShortestRTFirstPolicy.class);
-
   private long lastCheck = 0;
   private long maxCheck;
   private AppWorkCalculator appWorkCalculator;
@@ -90,6 +86,13 @@ public class ShortestRTFirstPolicy extends SimpleQueuePolicy<SRTFAppAttempt, FiC
       newOrderedApps.add(app);
     }
     this.orderedApps = newOrderedApps;
+    if (logger.isDebugEnabled()) {
+      StringBuilder builder = new StringBuilder("New app stats are: ");
+      for (SRTFAppAttempt orderedApp : this.orderedApps) {
+        builder.append(orderedApp.toShortString()).append(", ");
+      }
+      logger.debug(builder.toString());
+    }
   }
 
   @Override

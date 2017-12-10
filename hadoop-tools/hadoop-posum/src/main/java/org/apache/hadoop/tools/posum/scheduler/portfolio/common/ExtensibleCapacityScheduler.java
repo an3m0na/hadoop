@@ -2,14 +2,12 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.common;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang.mutable.MutableObject;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.GeneralUtils;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
@@ -93,8 +91,6 @@ public abstract class ExtensibleCapacityScheduler<
   A extends FiCaPluginApplicationAttempt,
   N extends FiCaPluginSchedulerNode>
   extends PluginPolicy<A, N> implements PreemptableResourceScheduler, CapacitySchedulerContext {
-
-  private static Log LOG = LogFactory.getLog(ExtensibleCapacityScheduler.class);
 
   private CapacitySchedulerConfiguration capacityConf;
   protected final CapacityScheduler inner;
@@ -330,15 +326,15 @@ public abstract class ExtensibleCapacityScheduler<
 
       onAppAttemptAdded(attempt);
 
-      LOG.debug("Submitting app attempt to queue: \n" + attempt);
+      logger.debug("Submitting app attempt to queue: \n" + attempt);
 
       queue.submitApplicationAttempt(attempt, application.getUser());
-      LOG.info("Added Application Attempt " + applicationAttemptId
+      logger.info("Added Application Attempt " + applicationAttemptId
         + " to scheduler from user " + application.getUser() + " in queue "
         + queue.getQueueName());
       if (isAttemptRecovering) {
-        if (LOG.isDebugEnabled()) {
-          LOG.debug(applicationAttemptId
+        if (logger.isDebugEnabled()) {
+          logger.debug(applicationAttemptId
             + " is recovering. Skipping notifying ATTEMPT_ADDED");
         }
       } else {
@@ -370,7 +366,7 @@ public abstract class ExtensibleCapacityScheduler<
       int numNodes = this.<AtomicInteger>readField("numNodeManagers").incrementAndGet();
       updateMaximumAllocation(schedulerNode, true);
 
-      LOG.info("Added node " + nodeManager.getNodeAddress() +
+      logger.info("Added node " + nodeManager.getNodeAddress() +
         " clusterResource: " + getClusterResource());
 
       //FIXME uncomment if scheduleAsynchronously becomes available
@@ -386,8 +382,8 @@ public abstract class ExtensibleCapacityScheduler<
         updateApplicationPriorities(this.<CSQueue>readField("root"));
       }
     }
-    if (LOG.isTraceEnabled())
-      LOG.trace(printQueues());
+    if (logger.isTraceEnabled())
+      logger.trace(printQueues());
     invokeMethod("allocateContainersToNode", new Class<?>[]{FiCaSchedulerNode.class}, node);
   }
 
@@ -403,7 +399,7 @@ public abstract class ExtensibleCapacityScheduler<
       invokeMethod(initializationMethod, new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
       //asynchronous scheduling is disabled by default, in order to have control over the scheduling cycle
       writeField("scheduleAsynchronously", false);
-      LOG.info("Overwrote CapacityScheduler with: " +
+      logger.info("Overwrote CapacityScheduler with: " +
         "calculator=" + getResourceCalculator().getClass() + ", " +
         "asynchronousScheduling=false" + ", " +
         "queues=" + Arrays.asList(capacityConf.getQueues(CapacitySchedulerConfiguration.ROOT)));
@@ -803,7 +799,7 @@ public abstract class ExtensibleCapacityScheduler<
       StringBuilder builder = new StringBuilder("Queues are:\n");
       return printQueues(builder, this.<CSQueue>readField("root")).toString();
     } catch (Exception e) {
-      LOG.trace(e);
+      logger.trace(e);
       return "Could not print queues due to error";
     }
   }
@@ -891,7 +887,7 @@ public abstract class ExtensibleCapacityScheduler<
           newAppAttempt,
           dest.getUser(user));
       }
-      LOG.info("App: " + appId + " successfully moved from "
+      logger.info("App: " + appId + " successfully moved from "
         + sourceQueueName + " to: " + destQueueName);
       newApp.setCurrentAppAttempt(newAppAttempt);
     }

@@ -38,7 +38,7 @@ public class SimulationMonitor extends GeneralLooper<SimulationMonitor> {
           logger.warn(e);
         }
       //TODO check if simulation is actually needed
-      logger.trace("Should start simulation");
+      logger.debug("Should start simulation");
       simulationRunning = true;
       context.getDispatcher().getEventHandler().handle(new PosumEvent(PosumEventType.SIMULATION_START));
     }

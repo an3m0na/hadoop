@@ -1,10 +1,13 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
+import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
@@ -32,6 +35,8 @@ public abstract class PluginPolicy<
   N extends SchedulerNode & PluginSchedulerNode>
   extends AbstractYarnScheduler<A, N> implements Configurable {
 
+  protected Log logger = LogFactory.getLog(PluginPolicy.class);
+
   protected Class<A> aClass;
   protected Class<N> nClass;
   protected DatabaseProvider dbProvider;
@@ -40,11 +45,16 @@ public abstract class PluginPolicy<
     super(policyName);
     this.aClass = aClass;
     this.nClass = nClass;
+    this.logger = LogFactory.getLog(getClass());
   }
 
   public void initializePlugin(Configuration conf, DatabaseProvider dbProvider) {
     setConf(conf);
     this.dbProvider = dbProvider;
+    if (dbProvider instanceof SimulationContext) {
+      String simulationPolicy = ((SimulationContext) dbProvider).getSchedulerClass().getSimpleName();
+      logger = LogFactory.getLog("org.apache.hadoop.tools.posum.Simulation_" + simulationPolicy);
+    }
   }
 
   public void forwardCompletedContainer(RMContainer rmContainer, ContainerStatus containerStatus, RMContainerEventType event) {

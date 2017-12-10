@@ -51,6 +51,10 @@ public class SRTFAppAttempt extends FiCaPluginApplicationAttempt {
       "\n      ResourceDeficit: " + resourceDeficit;
   }
 
+  public String toShortString() {
+    return jobId + "(deficit=" + resourceDeficit + ")";
+  }
+
   @Override
   public synchronized void transferStateFromPreviousAttempt(SchedulerApplicationAttempt appAttempt) {
     logger.debug("Transferring state from previous attempt " + appAttempt.getApplicationAttemptId());
@@ -111,7 +115,7 @@ public class SRTFAppAttempt extends FiCaPluginApplicationAttempt {
     }
     desiredResource = desired;
     resourceDeficit = getCurrentConsumption().getMemory() - desiredResource;
-    logger.debug(MessageFormat.format("New deficit for {0}: {1}", getJobId(), resourceDeficit));
+    logger.trace(MessageFormat.format("New deficit for {0}: {1}", getJobId(), resourceDeficit));
   }
 
   public Long getTotalWork() {
