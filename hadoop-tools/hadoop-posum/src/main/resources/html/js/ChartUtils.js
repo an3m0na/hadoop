@@ -13,13 +13,31 @@ var defaultTimeSeriesConfig = {
   plotTitle: "Plot",
   yaxis: {title: "Value", tickmode: "auto", nticks: 10},
   xaxis: {title: "Time", type: "date"},
+  layout: {},
   baseTime: 0,
   errorHandler: function () {
     // ignore errors
   }
 };
 
-function addNewValues(traces, config, newData) {
+var defaultBoxPlotConfig = {
+  entryExtractor: function (record) {
+    return {
+      group: record.group,
+      value: record.value
+    };
+  },
+  traceFactory: function (name) {
+    return {x: [], y: [], name: name, type: 'box'};
+  },
+  plotTitle: "Plot",
+  xaxis: {title: "Trace", type: "linear"},
+  yaxis: {title: "Value", tickmode: "auto"},
+  layout: {height: 700},
+  errorHandler: undefined
+};
+
+function addNewTicks(traces, config, newData) {
   $.each(config.listExtractor(newData), function (i, entry) {
     $.each(config.entryValueExtractor(entry), function (name, value) {
       var trace = traces.find(function (trace) {
@@ -44,16 +62,54 @@ function updateTimeSeriesPlot(tab,
   var parser = function (data) {
     var plot = tab.plots[element];
     if (plot === undefined) {
-      var plotConfig = {title: config.plotTitle, xaxis: config.xaxis, yaxis: config.yaxis};
-      Plotly.newPlot(element, addNewValues([], config, data), plotConfig).then(function (value) {
+      var plotConfig = $.extend(true, {
+        title: config.plotTitle,
+        xaxis: config.xaxis,
+        yaxis: config.yaxis
+      }, config.layout);
+      Plotly.newPlot(element, addNewTicks([], config, data), plotConfig).then(function (value) {
         tab.plots[element] = value;
       });
     } else {
-      addNewValues(plot.data, config, data);
+      addNewTicks(plot.data, config, data);
       Plotly.redraw(plot);
     }
   };
   if ($.isPlainObject(pathOrData))
+    parser(pathOrData);
+  else
+    tab.comm.requestData(pathOrData, parser, config.errorHandler);
+}
+
+function createBoxPlot(tab,
+                       element,
+                       pathOrData,
+                       customConfig) {
+  var config = $.extend(true, {}, defaultBoxPlotConfig, customConfig);
+  var parser = function (data) {
+    var traces = [];
+    $.each(data, function (index, record) {
+      var entry = config.entryExtractor(record);
+      var trace = traces.find(function (trace) {
+        return trace.name === entry.group;
+      });
+      if (!trace) {
+        trace = config.traceFactory(entry.group);
+        traces.push(trace);
+      }
+      trace.x.push(entry.group);
+      trace.y.push(entry.value);
+    });
+    var plotConfig = $.extend(true, {
+      title: config.plotTitle,
+      xaxis: config.xaxis,
+      yaxis: config.yaxis
+    }, config.layout);
+    Plotly.newPlot(element, traces, plotConfig).then(function (value) {
+      tab.plots[element] = value;
+    });
+  };
+  if ($.isArray(pathOrData))
     parser(pathOrData);
   else
     tab.comm.requestData(pathOrData, parser, config.errorHandler);
