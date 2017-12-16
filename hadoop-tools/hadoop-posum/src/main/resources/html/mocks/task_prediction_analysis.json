@@ -1,0 +1,275 @@
+{
+  "successful": true,
+  "result": [
+    {
+      "_id": "5a355d489dbe36056b8a230c",
+      "TimeBucket": 0,
+      "TaskId": "task_1512754731678_0001_m_000000",
+      "JobType": "GREP_SEARCH",
+      "TaskType": "MAP",
+      "Error": 3612,
+      "RelativeError": 0.3757802746566791
+    },
+    {
+      "_id": "5a355d489dbe36056b8a230d",
+      "TimeBucket": 0,
+      "TaskId": "task_1512754731678_0001_m_000000",
+      "JobType": "GREP_SEARCH",
+      "TaskType": "MAP",
+      "Error": 3612,
+      "RelativeError": 0.3757802746566791
+    },
+    {
+      "_id": "5a355d489dbe36056b8a230e",
+      "TimeBucket": 0,
+      "TaskId": "task_1512754731678_0001_m_000000",
+      "JobType": "GREP_SEARCH",
+      "TaskType": "MAP",
+      "Error": 3612,
+      "RelativeError": 0.3757802746566791
+    },
+    {
+      "_id": "5a355d489dbe36056b8a230f",
+      "TimeBucket": 0,
+      "TaskId": "task_1512754731678_0001_m_000001",
+      "JobType": "GREP_SEARCH",
+      "TaskType": "MAP",
+      "Error": 3293,
+      "RelativeError": 0.354352738620467
+    },
+    {
+      "_id": "5a355d489dbe36056b8a2310",
+      "TimeBucket": 0,
+      "TaskId": "task_1512754731678_0001_m_000001",
+      "JobType": "GREP_SEARCH",
+      "TaskType": "MAP",
+      "Error": 3293,
+      "RelativeError": 0.354352738620467
+    },
+    {
+      "_id": "5a355d489dbe36056b8a2311",
+      "TimeBucket": 0,
+      "TaskId": "task_1512754731678_0001_m_000001",
+      "JobType": "GREP_SEARCH",
+      "TaskType": "MAP",
+      "Error": 3293,
+      "RelativeError": 0.354352738620467
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5831",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000000",
+      "JobType": "SORT",
+      "TaskType": "MAP",
+      "Error": 359,
+      "RelativeError": 0.06366377017201631
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5832",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000000",
+      "JobType": "SORT",
+      "TaskType": "MAP",
+      "Error": 7359,
+      "RelativeError": 1.3050186203227523
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5833",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000000",
+      "JobType": "SORT",
+      "TaskType": "MAP",
+      "Error": 8003,
+      "RelativeError": 1.41922326653662
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5834",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000001",
+      "JobType": "SORT",
+      "TaskType": "MAP",
+      "Error": 882,
+      "RelativeError": 0.1724003127443315
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5835",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000001",
+      "JobType": "SORT",
+      "TaskType": "MAP",
+      "Error": 7882,
+      "RelativeError": 1.540656763096169
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5836",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000001",
+      "JobType": "SORT",
+      "TaskType": "MAP",
+      "Error": 8526,
+      "RelativeError": 1.6665363565285378
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5837",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000002",
+      "JobType": "SORT",
+      "TaskType": "MAP",
+      "Error": 481,
+      "RelativeError": 0.08718506434656516
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5838",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000002",
+      "JobType": "SORT",
+      "TaskType": "MAP",
+      "Error": 7481,
+      "RelativeError": 1.3559905745876382
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5839",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000002",
+      "JobType": "SORT",
+      "TaskType": "MAP",
+      "Error": 8125,
+      "RelativeError": 1.4727206815298168
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a583a",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000003",
+      "JobType": "SORT",
+      "TaskType": "MAP",
+      "Error": 227,
+      "RelativeError": 0.03933460405475654
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d463b",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000003",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 3641,
+      "RelativeError" : 0.1171116114506272
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d463c",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000003",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 3857,
+      "RelativeError" : 0.12405918301704728
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d463d",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000004",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 9369,
+      "RelativeError" : 0.30936106983655276
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d463e",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000004",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 4446,
+      "RelativeError" : 0.14680534918276375
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d463f",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000004",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 4662,
+      "RelativeError" : 0.15393759286775632
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d4640",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000005",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 12027,
+      "RelativeError" : 0.3650851470722156
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d4641",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000005",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 1788,
+      "RelativeError" : 0.054275566888261545
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d4642",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000005",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 2004,
+      "RelativeError" : 0.0608323467808032
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d4643",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000006",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 12556,
+      "RelativeError" : 0.37511950286806883
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d4644",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000006",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 1259,
+      "RelativeError" : 0.03761352772466539
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d4645",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000006",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 1475,
+      "RelativeError" : 0.044066682600382406
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d4646",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000007",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 10549,
+      "RelativeError" : 0.3352614015572859
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d4647",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000007",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 3266,
+      "RelativeError" : 0.10379787064992849
+    },
+    {
+      "_id" : "5a355d619dbe36056b8d4648",
+      "TimeBucket" : 2,
+      "TaskId" : "task_1512754731678_0034_r_000007",
+      "JobType" : "INDEX",
+      "TaskType" : "REDUCE",
+      "Error" : 3482,
+      "RelativeError" : 0.11066264102971556
+    }
+  ]
+}

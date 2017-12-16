@@ -6,9 +6,13 @@ function ControlsTab(id, container, env) {
   self.refresh = function () {
     if (self.initialized)
       return;
+    self.loading = true;
     self.comm.requestData(env.isTest ? "mocks/scale-factors.json" : self.comm.paths.OM + "/scale-factors", function (data) {
       self.updateScaleFactors(data);
       self.initialized = true;
+      self.loading = false;
+    }, function(){
+      self.loading = false;
     });
   };
 

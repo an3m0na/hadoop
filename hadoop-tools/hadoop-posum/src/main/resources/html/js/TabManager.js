@@ -7,7 +7,8 @@ function TabManager(env) {
     scheduler: "SchedulerTab",
     performance: "PerformanceTab",
     logs: "LogsTab",
-    controls: "ControlsTab"
+    controls: "ControlsTab",
+    analysis: "AnalysisTab"
   };
   var tabs = {};
   var navBar = $("#navbar");
