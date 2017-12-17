@@ -146,6 +146,87 @@
       "RelativeError": 0.03933460405475654
     },
     {
+      "_id": "5a355d4b9dbe36056b8a5831",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000000",
+      "JobType": "SORT",
+      "TaskType": "REDUCE",
+      "Error": 359,
+      "RelativeError": 0.06366377017201631
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5832",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000000",
+      "JobType": "SORT",
+      "TaskType": "REDUCE",
+      "Error": 7359,
+      "RelativeError": 1.3050186203227523
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5833",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000000",
+      "JobType": "SORT",
+      "TaskType": "REDUCE",
+      "Error": 8003,
+      "RelativeError": 1.41922326653662
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5834",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000001",
+      "JobType": "SORT",
+      "TaskType": "REDUCE",
+      "Error": 882,
+      "RelativeError": 0.1724003127443315
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5835",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000001",
+      "JobType": "SORT",
+      "TaskType": "REDUCE",
+      "Error": 7882,
+      "RelativeError": 1.540656763096169
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5836",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000001",
+      "JobType": "SORT",
+      "TaskType": "REDUCE",
+      "Error": 8526,
+      "RelativeError": 1.6665363565285378
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5837",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000002",
+      "JobType": "SORT",
+      "TaskType": "REDUCE",
+      "Error": 481,
+      "RelativeError": 0.08718506434656516
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5838",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000002",
+      "JobType": "SORT",
+      "TaskType": "REDUCE",
+      "Error": 7481,
+      "RelativeError": 1.3559905745876382
+    },
+    {
+      "_id": "5a355d4b9dbe36056b8a5839",
+      "TimeBucket": 10,
+      "TaskId": "task_1512754731678_0011_m_000002",
+      "JobType": "SORT",
+      "TaskType": "REDUCE",
+      "Error": 8125,
+      "RelativeError": 1.4727206815298168
+    },
+    {
       "_id" : "5a355d619dbe36056b8d463b",
       "TimeBucket" : 2,
       "TaskId" : "task_1512754731678_0034_r_000003",

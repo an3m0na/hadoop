@@ -27,11 +27,11 @@ var defaultBoxPlotConfig = {
       value: record.value
     };
   },
-  traceFactory: function (name) {
-    return {x: [], y: [], name: name, type: 'box'};
+  traceFactory: function (group, label) {
+    return {x: [], y: [], name: label, group: group, type: 'box'};
   },
   plotTitle: "Plot",
-  xaxis: {title: "Trace", type: "linear"},
+  xaxis: {title: "Trace"},
   yaxis: {title: "Value", tickmode: "auto"},
   layout: {height: 700},
   errorHandler: undefined
@@ -44,7 +44,8 @@ function addNewTicks(traces, config, newData) {
         return trace.name === name;
       });
       if (!trace) {
-        trace = config.traceFactory(name);
+        trace = defaultTimeSeriesConfig.traceFactory(name);
+        trace = $.extend(true, trace, config.traceFactory(name));
         traces.push(trace);
       }
       trace.x.push(config.baseTime + entry.time);
@@ -91,14 +92,16 @@ function createBoxPlot(tab,
     $.each(data, function (index, record) {
       var entry = config.entryExtractor(record);
       var trace = traces.find(function (trace) {
-        return trace.name === entry.group;
+        return trace.group === entry.group;
       });
       if (!trace) {
-        trace = config.traceFactory(entry.group);
+        var label = entry.label === undefined ? entry.group : entry.label;
+        trace = defaultBoxPlotConfig.traceFactory(entry.group, label);
+        trace = $.extend(true, trace, config.traceFactory(entry.group, label));
         traces.push(trace);
       }
-      trace.x.push(entry.group);
-      trace.y.push(entry.value);
+      trace.x.push(entry.x === undefined ? entry.group : entry.x);
+      trace.y.push(entry.y);
     });
     var plotConfig = $.extend(true, {
       title: config.plotTitle,

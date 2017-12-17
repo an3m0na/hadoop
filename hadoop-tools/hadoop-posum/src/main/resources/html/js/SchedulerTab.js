@@ -43,8 +43,8 @@ function SchedulerTab(id, container, env) {
         entryValueExtractor: function (entry) {
           return {"Choice": entry.policy};
         },
-        traceFactory: function (name) {
-          return {x: [], y: [], mode: "lines+markers", line: {shape: "hv"}, type: "scatter", name: name}
+        traceFactory: function () {
+          return {mode: "lines+markers", line: {shape: "hv"}}
         },
         plotTitle: "Policy Choices",
         yaxis: {title: "Policy"},
