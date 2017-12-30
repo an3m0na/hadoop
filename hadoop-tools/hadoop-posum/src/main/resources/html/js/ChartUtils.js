@@ -23,15 +23,15 @@ var defaultTimeSeriesConfig = {
 var defaultBoxPlotConfig = {
   entryExtractor: function (record) {
     return {
-      group: record.group,
-      value: record.value
+      name: record.name,
+      y: record.value
     };
   },
-  traceFactory: function (group, label) {
-    return {x: [], y: [], name: label, group: group, type: 'box'};
+  traceFactory: function (name) {
+    return {x: [], y: [], name: name, type: 'box'};
   },
   plotTitle: "Plot",
-  xaxis: {title: "Trace"},
+  xaxis: {title: "Trace", type: "category"},
   yaxis: {title: "Value", tickmode: "auto"},
   layout: {height: 700},
   errorHandler: undefined
@@ -92,15 +92,14 @@ function createBoxPlot(tab,
     $.each(data, function (index, record) {
       var entry = config.entryExtractor(record);
       var trace = traces.find(function (trace) {
-        return trace.group === entry.group;
+        return trace.name === entry.name;
       });
       if (!trace) {
-        var label = entry.label === undefined ? entry.group : entry.label;
-        trace = defaultBoxPlotConfig.traceFactory(entry.group, label);
-        trace = $.extend(true, trace, config.traceFactory(entry.group, label));
+        trace = defaultBoxPlotConfig.traceFactory(entry.name);
+        trace = $.extend(true, trace, config.traceFactory(entry.name));
         traces.push(trace);
       }
-      trace.x.push(entry.x === undefined ? entry.group : entry.x);
+      trace.x.push(entry.x === undefined ? entry.name : entry.x);
       trace.y.push(entry.y);
     });
     var plotConfig = $.extend(true, {
@@ -108,6 +107,36 @@ function createBoxPlot(tab,
       xaxis: config.xaxis,
       yaxis: config.yaxis
     }, config.layout);
+
+    // var x = ['day 1', 'day 1', 'day 1', 'day 1', 'day 1', 'day 1',
+    //   'day 2', 'day 2', 'day 2', 'day 2', 'day 2', 'day 2']
+    //
+    // var trace1 = {
+    //   y: [0.2, 0.2, 0.6, 1.0, 0.5, 0.4, 0.2, 0.7, 0.9, 0.1, 0.5, 0.3],
+    //   x: x,
+    //   name: 'kale',
+    //   marker: {color: '#3D9970'},
+    //   type: 'box'
+    // };
+    //
+    // var trace2 = {
+    //   y: [0.6, 0.7, 0.3, 0.6, 0.0, 0.5, 0.7, 0.9, 0.5, 0.8, 0.7, 0.2],
+    //   x: x,
+    //   name: 'radishes',
+    //   marker: {color: '#FF4136'},
+    //   type: 'box'
+    // };
+    //
+    // var trace3 = {
+    //   y: [0.1, 0.3, 0.1, 0.9, 0.6, 0.6, 0.9, 1.0, 0.3, 0.6, 0.8, 0.5],
+    //   x: x,
+    //   name: 'carrots',
+    //   marker: {color: '#FF851B'},
+    //   type: 'box'
+    // };
+    //
+    // var traces = [trace1, trace2, trace3];
+
     Plotly.newPlot(element, traces, plotConfig).then(function (value) {
       tab.plots[element] = value;
     });
