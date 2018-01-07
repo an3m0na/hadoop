@@ -10,6 +10,7 @@ import org.apache.hadoop.tools.posum.client.scheduler.MetaScheduler;
 import org.apache.hadoop.tools.posum.client.simulation.Simulator;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.conf.PolicyPortfolio;
 import org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMasterContext;
 import org.apache.hadoop.yarn.event.EventHandler;
 
@@ -32,7 +33,6 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
 
   private OrchestrationMasterContext orchestrationContext;
   private SimulationMonitor simulationMonitor;
-  private boolean switchEnabled;
 
   public Orchestrator(OrchestrationMasterContext orchestrationContext) {
     super(Orchestrator.class.getName());
@@ -43,7 +43,9 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
   protected void serviceInit(Configuration conf) throws Exception {
     simulationMonitor = new SimulationMonitor(orchestrationContext);
     simulationMonitor.init(conf);
-    switchEnabled = getConfig().getBoolean(POLICY_SWITCH_ENABLED, POLICY_SWITCH_ENABLED_DEFAULT);
+    orchestrationContext.setPolicyPortfolio(new PolicyPortfolio(conf));
+    orchestrationContext.setCurrentPolicy(orchestrationContext.getPolicyPortfolio().getDefaultPolicyName());
+    orchestrationContext.setSwitchEnabled(getConfig().getBoolean(POLICY_SWITCH_ENABLED, POLICY_SWITCH_ENABLED_DEFAULT));
     SimulationScoreComparator simulationScoreComparator = new SimulationScoreComparator();
     simulationScoreComparator.updateScaleFactors(
       getConfig().getDouble(SLOWDOWN_SCALE_FACTOR, SLOWDOWN_SCALE_FACTOR_DEFAULT),
@@ -116,9 +118,10 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
     orchestrationContext.getSimulationScoreComparator().sort(results);
     SimulationResultPayload bestResult = results.get(0);
     logger.info("Best policy is: " + bestResult.getPolicyName());
-    if (switchEnabled && scheduler != null) {
+    if (orchestrationContext.isSwitchEnabled() && scheduler != null) {
       logger.info("Switching policy...");
       scheduler.changeToPolicy(bestResult.getPolicyName());
+      orchestrationContext.setCurrentPolicy(bestResult.getPolicyName());
     }
   }
 }

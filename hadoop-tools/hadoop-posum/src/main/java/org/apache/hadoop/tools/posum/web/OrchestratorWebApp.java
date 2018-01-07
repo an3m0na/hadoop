@@ -1,6 +1,9 @@
 package org.apache.hadoop.tools.posum.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.apache.hadoop.tools.posum.common.util.json.JsonArray;
+import org.apache.hadoop.tools.posum.common.util.json.JsonElement;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
 import org.apache.hadoop.tools.posum.orchestration.core.PosumEvent;
 import org.apache.hadoop.tools.posum.orchestration.core.PosumEventType;
@@ -10,6 +13,7 @@ import org.apache.hadoop.tools.posum.orchestration.master.OrchestrationMasterCon
 import javax.servlet.http.HttpServletRequest;
 
 public class OrchestratorWebApp extends PosumWebApp {
+  public static final String DYNAMIC = "DYNAMIC";
   private OrchestrationMasterContext context;
 
   public OrchestratorWebApp(OrchestrationMasterContext context, int metricsAddressPort) {
@@ -32,9 +36,35 @@ public class OrchestratorWebApp extends PosumWebApp {
         return getScaleFactors();
       case "/reset":
         return reset();
+      case "/policy":
+        if (request.getMethod().equals("POST")) {
+          return switchPolicy(readPostedObject(request).get("policy").getNode().asText());
+        }
+        return getPolicyOptions();
       default:
         return handleUnknownRoute();
     }
+  }
+
+  private JsonNode getPolicyOptions() {
+    JsonElement options = JsonElement.write(context.getPolicyPortfolio().keySet());
+    return wrapResult(new JsonObject()
+      .put("options", new JsonArray((ArrayNode) options.getNode()).add(DYNAMIC))
+      .put("selected", context.isSwitchEnabled() ? DYNAMIC : context.getCurrentPolicy())
+      .getNode());
+  }
+
+  private JsonNode switchPolicy(String policy) {
+    if (DYNAMIC.equals(policy)) {
+      context.setSwitchEnabled(true);
+    } else if (context.getPolicyPortfolio().containsKey(policy)) {
+      context.setSwitchEnabled(false);
+      context.getCommService().getScheduler().changeToPolicy(policy);
+      context.setCurrentPolicy(policy);
+    } else {
+      return wrapError("INCORRECT_POLICY", "Provided policy is not supported", null);
+    }
+    return getPolicyOptions();
   }
 
   private JsonNode updateScaleFactors(JsonObject input) {

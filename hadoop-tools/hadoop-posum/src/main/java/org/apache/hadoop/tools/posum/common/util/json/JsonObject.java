@@ -15,6 +15,7 @@ public class JsonObject extends JsonElement {
   }
 
   public JsonObject(ObjectNode node) {
+    innerElement = node;
     inner = node;
   }
 

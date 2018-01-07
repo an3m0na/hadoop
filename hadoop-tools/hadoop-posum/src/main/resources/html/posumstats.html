@@ -161,6 +161,31 @@
           </div>
         </div>
       </div>
+      <div class="card border-warning">
+        <div class="card-header">Current policy</div>
+        <div class="card-body">
+          <form class="an3-current-policy">
+            <div class="form-group">
+              <label for="input_policy">Choose a specific scheduler, or enable dynamic switching:</label>
+              <select class="form-control" id="input_policy">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+              </select>
+            </div>
+            <!--<div class="form-group row">-->
+              <!--<label for="input_alpha" class="col-lg-1 col-md-2 col-form-label">Alpha</label>-->
+              <!--<div class="col-md-4">-->
+                <!--<input type="number" class="form-control" id="input_policy" step="any" min="0">-->
+                <!--<small class="form-text text-muted">The weight of slowdown in score comparison.</small>-->
+              <!--</div>-->
+            <!--</div>-->
+            <button id="btn_switch" class="btn btn-md btn-warning" role="button">Change</button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
   <div id="analysis" class="row an3-tab an3-dual">
