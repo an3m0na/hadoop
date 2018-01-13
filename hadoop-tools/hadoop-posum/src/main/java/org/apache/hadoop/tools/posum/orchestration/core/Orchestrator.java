@@ -101,8 +101,11 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
       simulator.reset();
 
     MetaScheduler scheduler = orchestrationContext.getCommService().getScheduler();
-    if (scheduler != null)
-      scheduler.changeToPolicy(getConfig().get(DEFAULT_POLICY, DEFAULT_POLICY_DEFAULT));
+    if (scheduler != null) {
+      String defaultPolicy = getConfig().get(DEFAULT_POLICY, DEFAULT_POLICY_DEFAULT);
+      scheduler.changeToPolicy(defaultPolicy);
+      orchestrationContext.setCurrentPolicy(defaultPolicy);
+    }
 
     DataMasterClient dataMaster = orchestrationContext.getCommService().getDataMaster();
     if (dataMaster != null)
