@@ -16,11 +16,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDoubleField;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getIntField;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getLongField;
-import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.MAP_FINISH;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.MAP_GENERAL;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.FlexKeys.MAP_LOCAL;
@@ -160,6 +160,10 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
     Boolean local = null;
     if (input.getNodeAddress() != null)
       local = input.getTask().getSplitLocations().contains(input.getNodeAddress());
+    else {
+      if (input instanceof DetailedTaskPredictionInput)
+        local = ((DetailedTaskPredictionInput) input).getLocal();
+    }
 
     Double rate = local == null ? jobStats.getAvgRate() : local ? jobStats.getAvgLocalRate() : jobStats.getAvgRemoteRate();
 

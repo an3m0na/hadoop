@@ -27,6 +27,7 @@ import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedTaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardPredictor;
 
 import java.util.ArrayList;
@@ -115,9 +116,11 @@ public class PosumInfoCollector {
         List<String> taskIds = mainDb.execute(getAllTasks).getEntries();
         for (String taskId : taskIds) {
           // prediction can throw exception if data model changes state during calculation
-          storePredictionForTask(basicPredictor, taskId);
-          storePredictionForTask(standardPredictor, taskId);
-          storePredictionForTask(detailedPredictor, taskId);
+          storePredictionForTask(basicPredictor, new TaskPredictionInput(taskId));
+          storePredictionForTask(standardPredictor, new TaskPredictionInput(taskId));
+          storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, true));
+          storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, false));
+          storePredictionForTask(detailedPredictor, new TaskPredictionInput(taskId));
         }
         lastPrediction = now;
       }
@@ -192,19 +195,20 @@ public class PosumInfoCollector {
     }
   }
 
-  private void storePredictionForTask(JobBehaviorPredictor predictor, String taskId) {
+  private void storePredictionForTask(JobBehaviorPredictor predictor, TaskPredictionInput input) {
     try {
       TaskPredictionPayload prediction = TaskPredictionPayload.newInstance(
         predictor.getClass().getSimpleName(),
-        taskId,
-        predictor.predictTaskBehavior(new TaskPredictionInput(taskId)).getDuration()
+        input.getTaskId(),
+        predictor.predictTaskBehavior(input).getDuration(),
+        input instanceof DetailedTaskPredictionInput ? ((DetailedTaskPredictionInput) input).getLocal() : null
       );
       DatabaseUtils.storeLogEntry(TASK_PREDICTION, prediction, dataStore);
     } catch (Exception e) {
       if (!(e instanceof PosumException))
-        logger.error("Could not predict task duration for " + taskId + " due to: ", e);
+        logger.error("Could not predict task duration for " + input.getTaskId() + " due to: ", e);
       else if (!e.getMessage().startsWith("Task has already finished"))
-        logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
+        logger.debug("Could not predict task duration for " + input.getTaskId() + " due to: ", e);
     }
   }
 

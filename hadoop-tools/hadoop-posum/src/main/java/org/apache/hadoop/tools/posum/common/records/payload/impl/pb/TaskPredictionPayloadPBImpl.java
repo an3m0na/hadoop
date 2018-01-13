@@ -101,6 +101,24 @@ public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload implement
   }
 
   @Override
+  public void setLocal(Boolean local) {
+    maybeInitBuilder();
+    if (local == null) {
+      builder.clearLocal();
+      return;
+    }
+    builder.setLocal(local);
+  }
+
+  @Override
+  public Boolean getLocal() {
+    TaskPredictionPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasLocal())
+      return null;
+    return p.getLocal();
+  }
+
+  @Override
   public void setDuration(Long duration) {
     maybeInitBuilder();
     builder.setDuration(duration);

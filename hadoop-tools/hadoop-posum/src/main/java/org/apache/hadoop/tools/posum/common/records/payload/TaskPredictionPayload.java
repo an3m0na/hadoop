@@ -12,6 +12,12 @@ public abstract class TaskPredictionPayload implements Payload {
     return result;
   }
 
+  public static TaskPredictionPayload newInstance(String predictor, String taskId, Long duration, Boolean local) {
+    TaskPredictionPayload result = newInstance(predictor, taskId, duration);
+    result.setLocal(local);
+    return result;
+  }
+
   public abstract void setPredictor(String predictor);
 
   public abstract String getPredictor();
@@ -23,6 +29,10 @@ public abstract class TaskPredictionPayload implements Payload {
   public abstract void setDuration(Long duration);
 
   public abstract Long getDuration();
+
+  public abstract void setLocal(Boolean local);
+
+  public abstract Boolean getLocal();
 
   @Override
   public String toString() {

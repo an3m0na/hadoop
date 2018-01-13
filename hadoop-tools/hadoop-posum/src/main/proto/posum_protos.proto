@@ -364,6 +364,7 @@ message TaskPredictionPayloadProto {
     required string predictor = 1;
     required string id = 2;
     optional int64 duration = 3;
+    optional bool local = 4;
 }
 
 message DatabaseAlterationPayloadProto {
