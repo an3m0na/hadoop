@@ -53,7 +53,7 @@ public abstract class PluginPolicy<
     this.dbProvider = dbProvider;
     if (dbProvider instanceof SimulationContext) {
       String simulationPolicy = ((SimulationContext) dbProvider).getSchedulerClass().getSimpleName();
-      logger = LogFactory.getLog("org.apache.hadoop.tools.posum.Simulation_" + simulationPolicy);
+      logger = LogFactory.getLog("org.apache.hadoop.tools.posum.scheduler.simulation." + simulationPolicy);
     }
   }
 

@@ -12,7 +12,7 @@ function LogsTab(id, container, env) {
     self.loading = true;
     var path = env.isTest ? "mocks/logs.json" : self.comm.paths.DM + "/logs";
     self.comm.requestData(path + "?since=" + self.lastRefreshed, function (data) {
-      if (data) {
+      if (data && data.length > 0) {
         data.forEach(function (log) {
           const timestamp = moment.unix(log.timestamp / 1000);
           const sameYear = moment().subtract(1, "years").isBefore(timestamp);
@@ -27,8 +27,8 @@ function LogsTab(id, container, env) {
         if (self.autoScrollOn) {
           self.scrollToBottom();
         }
+        self.lastRefreshed = data[data.length - 1].timestamp;
       }
-      self.lastRefreshed = data[data.length - 1].timestamp;
       self.loading = false;
     }, function () {
       self.loading = false;
