@@ -1,6 +1,5 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio.edls;
 
-import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
@@ -11,8 +10,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollect
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.common.ExtensibleCapacityScheduler;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ReservationId;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplication;
@@ -23,7 +22,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.common.fica.FiCaS
 import java.util.Comparator;
 import java.util.List;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.DOT;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.MAXIMUM_APPLICATIONS_SUFFIX;
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.PREFIX;
@@ -32,7 +31,6 @@ import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.C
 public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacityScheduler<EDLSAppAttempt, FiCaPluginSchedulerNode> {
 
   private static final long WAIT_MILLIS = 500;
-  protected Log logger;
 
   protected final String DEADLINE_QUEUE = "deadline", BATCH_QUEUE = "batch", ROOT_QUEUE = "root";
   private long lastCheck = 0;
@@ -81,8 +79,8 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
   @Override
   protected String resolveMoveQueue(ApplicationId applicationId, SchedulerApplication<? extends SchedulerApplicationAttempt> application) {
     SchedulerApplicationAttempt appAttempt = application.getCurrentAppAttempt();
-    if( appAttempt!= null){
-      if(appAttempt instanceof EDLSAppAttempt)
+    if (appAttempt != null) {
+      if (appAttempt instanceof EDLSAppAttempt)
         // the queue should already be resolved
         return application.getQueue().getQueueName();
     }
@@ -114,12 +112,12 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
       return null;
     JobForAppCall getJobCall = JobForAppCall.newInstance(appId.toString());
     JobProfile job = db.execute(getJobCall).getEntity();
-    if(job != null)
+    if (job != null)
       return job;
     FindByQueryCall getFinishedJobCall = FindByQueryCall.newInstance(DataEntityCollection.JOB_HISTORY,
       QueryUtils.is("appId", appId.toString()));
     List<JobProfile> jobs = db.execute(getFinishedJobCall).getEntities();
-    if(jobs.size() == 1)
+    if (jobs.size() == 1)
       return jobs.get(0);
     return null;
   }
@@ -132,7 +130,7 @@ public class EDLSPolicy<E extends EDLSPolicy> extends ExtensibleCapacitySchedule
         // application should already be initialized; do nothing
         return;
       JobProfile job = fetchJobProfile(app.getApplicationId());
-      if(job == null)
+      if (job == null)
         return;
       if (app.getType() == null) {
         // new app

@@ -5,8 +5,8 @@ import org.apache.hadoop.yarn.util.Records;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.safeEquals;
-import static org.apache.hadoop.tools.posum.common.util.Utils.safeHashCode;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.safeEquals;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.safeHashCode;
 
 
 public abstract class DatabaseReference {

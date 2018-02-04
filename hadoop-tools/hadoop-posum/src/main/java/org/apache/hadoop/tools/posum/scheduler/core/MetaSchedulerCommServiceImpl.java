@@ -16,7 +16,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayloa
 import org.apache.hadoop.tools.posum.common.records.protocol.MetaSchedulerProtocol;
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.communication.CommUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.DummyTokenSecretManager;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.yarn.ipc.YarnRPC;
@@ -69,7 +69,7 @@ public class MetaSchedulerCommServiceImpl extends CompositeService implements Me
     String connectAddress =
       NetUtils.getConnectAddress(this.metaServer.getListenerAddress()).toString();
     logger.info("Connect address is " + connectAddress);
-    String dmAddress = masterClient.register(Utils.PosumProcess.PS,
+    String dmAddress = masterClient.register(CommUtils.PosumProcess.PS,
       connectAddress.substring(connectAddress.indexOf("/") + 1));
     dataClient = new DataMasterClient(dmAddress);
     dataClient.init(getConfig());

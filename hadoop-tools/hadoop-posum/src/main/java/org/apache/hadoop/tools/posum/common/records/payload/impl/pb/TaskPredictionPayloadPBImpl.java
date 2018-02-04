@@ -71,7 +71,7 @@ public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload implement
 
 
   @Override
-  public String getId() {
+  public String getTaskId() {
     TaskPredictionPayloadProtoOrBuilder p = viaProto ? proto : builder;
     return p.getId();
   }
@@ -89,7 +89,7 @@ public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload implement
   }
 
   @Override
-  public void setId(String name) {
+  public void setTaskId(String name) {
     maybeInitBuilder();
     builder.setId(name);
   }
@@ -98,6 +98,24 @@ public class TaskPredictionPayloadPBImpl extends TaskPredictionPayload implement
   public Long getDuration() {
     TaskPredictionPayloadProtoOrBuilder p = viaProto ? proto : builder;
     return p.getDuration();
+  }
+
+  @Override
+  public void setLocal(Boolean local) {
+    maybeInitBuilder();
+    if (local == null) {
+      builder.clearLocal();
+      return;
+    }
+    builder.setLocal(local);
+  }
+
+  @Override
+  public Boolean getLocal() {
+    TaskPredictionPayloadProtoOrBuilder p = viaProto ? proto : builder;
+    if (!p.hasLocal())
+      return null;
+    return p.getLocal();
   }
 
   @Override

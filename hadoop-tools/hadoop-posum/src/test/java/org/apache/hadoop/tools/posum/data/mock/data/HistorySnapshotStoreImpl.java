@@ -19,7 +19,7 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.Payload;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.apache.hadoop.tools.posum.data.core.DataImporter;
 
 import java.util.ArrayList;
@@ -37,8 +37,8 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_HISTORY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
-import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.ID_FIELD;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
 
@@ -192,7 +192,7 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
   private void removeDataRelatedToJobs(List<String> toRemove, boolean fromHistory) {
     List<String> appIdsToRemove = new ArrayList<>(toRemove.size());
     for (String jobId : toRemove) {
-      JobId realId = Utils.parseJobId(jobId);
+      JobId realId = ClusterUtils.parseJobId(jobId);
       appIdsToRemove.add(realId.getAppId().toString());
     }
 
@@ -230,7 +230,7 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
   private void addAppsRelatedToJobs(List<String> jobIds, boolean toHistory) {
     List<String> appIdsToUpdate = new ArrayList<>(jobIds.size());
     for (String jobId : jobIds) {
-      JobId realId = Utils.parseJobId(jobId);
+      JobId realId = ClusterUtils.parseJobId(jobId);
       appIdsToUpdate.add(realId.getAppId().toString());
     }
     List<AppProfile> apps = runOnShadow(
@@ -287,7 +287,7 @@ public class HistorySnapshotStoreImpl implements HistorySnapshotStore {
     for (TaskProfile task : tasks) {
       updateCalls.addAllCalls(addTaskInfo(task));
     }
-    Utils.updateJobStatisticsFromTasks(job, tasks);
+    ClusterUtils.updateJobStatisticsFromTasks(job, tasks);
     updateCalls.addCall(UpdateOrStoreCall.newInstance(JOB, job));
     if (isNewJob) {
       // add its configuration

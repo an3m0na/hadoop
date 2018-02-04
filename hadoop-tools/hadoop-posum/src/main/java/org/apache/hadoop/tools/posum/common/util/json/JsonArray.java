@@ -13,6 +13,7 @@ public class JsonArray extends JsonElement {
   }
 
   public JsonArray(ArrayNode inner) {
+    this.innerElement = inner;
     this.inner = inner;
   }
 

@@ -1,0 +1,14 @@
+{
+  "successful": true,
+  "result": {
+    "options": [
+      "EDLS_SH",
+      "FIFO",
+      "LOCF",
+      "EDLS_PR",
+      "SRTF",
+      "DYNAMIC"
+    ],
+    "selected": "DYNAMIC"
+  }
+}

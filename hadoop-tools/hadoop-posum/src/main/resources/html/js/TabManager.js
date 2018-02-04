@@ -7,7 +7,8 @@ function TabManager(env) {
     scheduler: "SchedulerTab",
     performance: "PerformanceTab",
     logs: "LogsTab",
-    controls: "ControlsTab"
+    controls: "ControlsTab",
+    analysis: "AnalysisTab"
   };
   var tabs = {};
   var navBar = $("#navbar");
@@ -42,7 +43,10 @@ function TabManager(env) {
 
     setInterval(function () {
       env.testTime += env.refreshInterval;
-      tabs[env.state].refresh();
+      var tab = tabs[env.state];
+      if (tab.loading)
+        return;
+      tab.refresh();
     }, env.refreshInterval);
 
     return self;

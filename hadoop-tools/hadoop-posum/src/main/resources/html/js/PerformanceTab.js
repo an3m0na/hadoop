@@ -3,6 +3,7 @@ function PerformanceTab(id, container, env) {
   var self = this;
 
   self.refresh = function () {
+    self.loading = true;
     var path = env.isTest ? "mocks/dmmetrics_performance.json" : self.comm.paths.DM + "/performance?since=" + self.lastRefreshed;
     self.comm.requestData(path, function (data) {
       self.lastRefreshed = data.time;
@@ -30,6 +31,10 @@ function PerformanceTab(id, container, env) {
         yaxis: {title: "Cost (Euro)"},
         baseTime: env.isTest ? env.testTime : 0
       });
+
+      self.loading = false;
+    }, function () {
+      self.loading = false;
     });
   };
 }

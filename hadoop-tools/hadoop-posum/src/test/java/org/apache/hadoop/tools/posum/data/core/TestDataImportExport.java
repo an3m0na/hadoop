@@ -17,7 +17,7 @@ import java.io.File;
 import java.util.List;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference.Type.MAIN;
-import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
+import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.ID_FIELD;
 import static org.apache.hadoop.tools.posum.test.Utils.CLUSTER_TIMESTAMP;
 import static org.apache.hadoop.tools.posum.test.Utils.newView;
 import static org.junit.Assert.assertArrayEquals;

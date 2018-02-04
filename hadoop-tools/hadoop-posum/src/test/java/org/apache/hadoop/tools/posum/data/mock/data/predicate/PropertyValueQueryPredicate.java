@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.safeEquals;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.safeEquals;
 
 class PropertyValueQueryPredicate extends QueryPredicate<PropertyValueQuery> {
 

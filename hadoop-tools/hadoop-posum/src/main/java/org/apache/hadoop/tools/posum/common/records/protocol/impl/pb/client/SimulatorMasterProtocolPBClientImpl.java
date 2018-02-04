@@ -9,7 +9,7 @@ import org.apache.hadoop.tools.posum.common.records.protocol.impl.pb.service.Sim
 import org.apache.hadoop.tools.posum.common.records.request.SimpleRequest;
 import org.apache.hadoop.tools.posum.common.records.request.impl.pb.SimpleRequestPBImpl;
 import org.apache.hadoop.tools.posum.common.records.response.SimpleResponse;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.communication.CommUtils;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.ipc.RPCUtil;
 import org.apache.hadoop.yarn.proto.PosumProtos.SimpleRequestProto;
@@ -42,7 +42,7 @@ public class SimulatorMasterProtocolPBClientImpl implements SimulatorMasterProto
     SimpleRequestProto requestProto =
       ((SimpleRequestPBImpl) request).getProto();
     try {
-      return Utils.wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
+      return CommUtils.wrapSimpleResponse(proxy.handleSimpleRequest(null, requestProto));
     } catch (ServiceException e) {
       RPCUtil.unwrapAndThrowException(e);
       return null;

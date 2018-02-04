@@ -5,7 +5,7 @@ import com.sun.management.OperatingSystemMXBean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.communication.CommUtils;
 import org.apache.hadoop.tools.posum.common.util.json.JsonElement;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
 import org.mortbay.jetty.Handler;
@@ -53,7 +53,7 @@ public abstract class PosumWebApp extends HttpServlet {
             try {
               ret = handleRoute(route, request);
             } catch (Exception e) {
-              ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), Utils.getErrorTrace(e));
+              ret = wrapError("EXCEPTION_OCCURRED", e.getMessage(), CommUtils.getErrorTrace(e));
             }
             sendResult(request, response, ret);
           } else {

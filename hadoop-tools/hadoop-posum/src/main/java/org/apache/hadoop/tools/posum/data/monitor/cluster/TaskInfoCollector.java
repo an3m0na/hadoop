@@ -15,10 +15,10 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
+import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
-import org.apache.hadoop.tools.posum.common.util.Utils;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
-import static org.apache.hadoop.tools.posum.common.util.Utils.ID_FIELD;
+import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.ID_FIELD;
 import static org.apache.hadoop.util.ShutdownThreadsHelper.shutdownExecutorService;
 
 class TaskInfoCollector {
@@ -75,7 +75,7 @@ class TaskInfoCollector {
         if (counters == null) {
           return null;
         }
-        Utils.updateTaskStatisticsFromCounters(task, counters);
+        ClusterUtils.updateTaskStatisticsFromCounters(task, counters);
         return counters;
       } catch (Exception e) {
         throw new PosumException("Exception occured while getting details for " + task.getId());
@@ -101,7 +101,7 @@ class TaskInfoCollector {
       }
       CountersProxy counters = api.getFinishedTaskCounters(task.getJobId(), task.getId());
       if (counters != null) {
-        Utils.updateTaskStatisticsFromCounters(task, counters);
+        ClusterUtils.updateTaskStatisticsFromCounters(task, counters);
         countersList.add(counters);
       }
     }
@@ -160,7 +160,7 @@ class TaskInfoCollector {
 
   private List<TaskProfile> createTaskStubs(JobProfile job) {
     List<TaskProfile> taskStubs = new ArrayList<>(job.getTotalMapTasks());
-    JobId jobId = Utils.parseJobId(job.getId());
+    JobId jobId = ClusterUtils.parseJobId(job.getId());
     for (int i = 0; i < job.getSplitLocations().size(); i++) {
       TaskProfile task = Records.newRecord(TaskProfile.class);
       task.setId(MRBuilderUtils.newTaskId(jobId, i, TaskType.MAP).toString());

@@ -1,7 +1,5 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio.locf;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginSchedulerNode;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.common.FiCaPluginApplicationAttempt;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.common.SimpleQueue;
@@ -13,7 +11,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerAppUtils
 import org.apache.hadoop.yarn.util.resource.Resources;
 
 public class LocalityFirstPolicy extends SimpleQueuePolicy<FiCaPluginApplicationAttempt, FiCaPluginSchedulerNode, SimpleQueue, LocalityFirstPolicy> {
-  private static Log LOG = LogFactory.getLog(LocalityFirstPolicy.class);
 
   public LocalityFirstPolicy() {
     super(FiCaPluginApplicationAttempt.class, FiCaPluginSchedulerNode.class, SimpleQueue.class, LocalityFirstPolicy.class);
@@ -37,11 +34,11 @@ public class LocalityFirstPolicy extends SimpleQueuePolicy<FiCaPluginApplication
 
   private void assignByLocality(FiCaPluginSchedulerNode node, NodeType localityLevel) {
     for (FiCaPluginApplicationAttempt app : orderedApps) {
-      LOG.trace("pre-assignContainers-" + localityLevel + " for " + app.getApplicationAttemptId());
+      logger.trace("pre-assignContainers-" + localityLevel + " for " + app.getApplicationAttemptId());
       app.showRequests();
       synchronized (app) {
         // Check if this resource is on the blacklist
-        if (SchedulerAppUtils.isBlacklisted(app, node, LOG)) {
+        if (SchedulerAppUtils.isBlacklisted(app, node, logger)) {
           continue;
         }
 
@@ -77,7 +74,7 @@ public class LocalityFirstPolicy extends SimpleQueuePolicy<FiCaPluginApplication
           }
         }
       }
-      LOG.trace("post-assignContainers-" + localityLevel + " for " + app.getApplicationAttemptId());
+      logger.trace("post-assignContainers-" + localityLevel + " for " + app.getApplicationAttemptId());
       app.showRequests();
 
       if (outOfResources(node)) {

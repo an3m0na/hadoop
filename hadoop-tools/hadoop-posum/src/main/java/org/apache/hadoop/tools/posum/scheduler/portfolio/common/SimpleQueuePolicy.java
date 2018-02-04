@@ -1,12 +1,10 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio.common;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
@@ -82,8 +80,6 @@ public abstract class SimpleQueuePolicy<
   S extends SimpleQueuePolicy<A, N, Q, S>>
   extends PluginPolicy<A, N> {
 
-  private static Log LOG = LogFactory.getLog(SimpleQueuePolicy.class);
-
   private Configuration conf;
   private static final String DEFAULT_QUEUE_NAME = "default";
   private static final RecordFactory recordFactory =
@@ -103,7 +99,6 @@ public abstract class SimpleQueuePolicy<
     super(aClass, nClass, sClass.getName());
     this.qClass = qClass;
   }
-
 
   public Resource getUsedResource() {
     return usedResource;
@@ -145,8 +140,6 @@ public abstract class SimpleQueuePolicy<
 
   protected synchronized void initScheduler(Configuration conf) {
     validateConf(conf);
-    LOG.debug("Configuration valid");
-
     this.conf = conf;
     //General allocation configs found in FIFO and FS
     this.minimumAllocation =
@@ -186,7 +179,7 @@ public abstract class SimpleQueuePolicy<
                                     RMContainerEventType rmContainerEventType) {
 
     if (rmContainer == null) {
-      LOG.info("Null container completed...");
+      logger.info("Null container completed...");
       return;
     }
 
@@ -201,7 +194,7 @@ public abstract class SimpleQueuePolicy<
     N node = nodes.get(container.getNodeId());
 
     if (application == null) {
-      LOG.trace("Unknown application: " + appId +
+      logger.trace("Unknown application: " + appId +
         " released container " + container.getId() +
         " on node: " + node +
         " with event: " + rmContainerEventType);
@@ -217,7 +210,7 @@ public abstract class SimpleQueuePolicy<
     // Update total usage
     Resources.subtractFrom(usedResource, container.getResource());
 
-    LOG.trace("Application attempt " + application.getApplicationAttemptId() +
+    logger.trace("Application attempt " + application.getApplicationAttemptId() +
       " released container " + container.getId() +
       " on node: " + node +
       " with event: " + rmContainerEventType);
@@ -278,7 +271,7 @@ public abstract class SimpleQueuePolicy<
 
     A application = getApplicationAttempt(applicationAttemptId);
     if (application == null) {
-      LOG.error("Calling allocate on removed " +
+      logger.error("Calling allocate on removed " +
         "or non existant application " + applicationAttemptId);
       return EMPTY_ALLOCATION;
     }
@@ -295,13 +288,13 @@ public abstract class SimpleQueuePolicy<
       // make sure we aren't stopping/removing the application
       // when the allocate comes in
       if (application.isStopped()) {
-        LOG.info("Calling allocate on a stopped " +
+        logger.info("Calling allocate on a stopped " +
           "application " + applicationAttemptId);
         return EMPTY_ALLOCATION;
       }
 
       if (!ask.isEmpty()) {
-        LOG.trace("allocate: pre-addSource" +
+        logger.trace("allocate: pre-addSource" +
           " applicationId=" + applicationAttemptId +
           " application=" + application);
         application.showRequests();
@@ -309,12 +302,12 @@ public abstract class SimpleQueuePolicy<
         // Update application requests
         application.updateResourceRequests(ask);
 
-        LOG.trace("allocate: post-addSource" +
+        logger.trace("allocate: post-addSource" +
           " applicationId=" + applicationAttemptId +
           " application=" + application);
         application.showRequests();
 
-        LOG.trace("allocate:" +
+        logger.trace("allocate:" +
           " applicationId=" + applicationAttemptId +
           " #ask=" + ask.size());
       }
@@ -429,7 +422,7 @@ public abstract class SimpleQueuePolicy<
             appAttemptRemovedEvent.getFinalAttemptState(),
             appAttemptRemovedEvent.getKeepContainersAcrossAppAttempts());
         } catch (IOException ie) {
-          LOG.error("Unable to remove application "
+          logger.error("Unable to remove application "
             + appAttemptRemovedEvent.getApplicationAttemptID(), ie);
         }
         break;
@@ -448,7 +441,7 @@ public abstract class SimpleQueuePolicy<
         break;
       //TODO (only if preemptable capacity scheduler) case NODE_LABELS_UPDATE:
       default:
-        LOG.error("Unknown event arrived at scheduler:" + event.toString());
+        logger.error("Unknown event arrived at scheduler:" + event.toString());
     }
   }
 
@@ -475,7 +468,7 @@ public abstract class SimpleQueuePolicy<
         && container.getState().equals(RMContainerState.RUNNING)) {
         // do not kill the running container in the case of work-preserving AM
         // restart.
-        LOG.info("Skip killing " + container.getContainerId());
+        logger.info("Skip killing " + container.getContainerId());
         continue;
       }
       completedContainer(container,
@@ -505,11 +498,11 @@ public abstract class SimpleQueuePolicy<
     onAppAttemptAdded(schedulerAppAttempt);
 
     queue.getMetrics().submitAppAttempt(user);
-    LOG.info("Added Application Attempt " + appAttemptId
+    logger.info("Added Application Attempt " + appAttemptId
       + " to scheduler from user " + application.getUser());
     if (isAttemptRecovering) {
-      if (LOG.isDebugEnabled()) {
-        LOG.trace(appAttemptId
+      if (logger.isDebugEnabled()) {
+        logger.trace(appAttemptId
           + " is recovering. Skipping notifying ATTEMPT_ADDED");
       }
     } else {
@@ -523,7 +516,7 @@ public abstract class SimpleQueuePolicy<
     SchedulerApplication<A> application =
       applications.get(applicationId);
     if (application == null) {
-      LOG.warn("Couldn't find application " + applicationId);
+      logger.warn("Couldn't find application " + applicationId);
       return;
     }
 
@@ -540,11 +533,11 @@ public abstract class SimpleQueuePolicy<
     applications.put(applicationId, application);
 
     queue.getMetrics().submitApp(user);
-    LOG.info("Accepted application " + applicationId + " from user: " + user
+    logger.info("Accepted application " + applicationId + " from user: " + user
       + ", currently num of applications: " + applications.size());
     if (isAppRecovering) {
-      if (LOG.isDebugEnabled()) {
-        LOG.trace(applicationId + " is recovering. Skip notifying APP_ACCEPTED");
+      if (logger.isDebugEnabled()) {
+        logger.trace(applicationId + " is recovering. Skip notifying APP_ACCEPTED");
       }
     } else {
       rmContext.getDispatcher().getEventHandler()
@@ -573,19 +566,19 @@ public abstract class SimpleQueuePolicy<
     // Process completed containers
     for (ContainerStatus completedContainer : completedContainers) {
       ContainerId containerId = completedContainer.getContainerId();
-      LOG.trace("Container FINISHED: " + containerId);
+      logger.trace("Container FINISHED: " + containerId);
       completedContainer(getRMContainer(containerId),
         completedContainer, RMContainerEventType.FINISHED);
     }
 
     if (Resources.greaterThanOrEqual(resourceCalculator, clusterResource,
       node.getAvailableResource(), minimumAllocation)) {
-      LOG.trace("Node heartbeat " + rmNode.getNodeID() +
+      logger.trace("Node heartbeat " + rmNode.getNodeID() +
         " available resource = " + node.getAvailableResource());
 
       assignContainers(node);
 
-      LOG.trace("Node after allocation " + rmNode.getNodeID() + " resource = "
+      logger.trace("Node after allocation " + rmNode.getNodeID() + " resource = "
         + node.getAvailableResource());
     }
 
@@ -603,11 +596,11 @@ public abstract class SimpleQueuePolicy<
     // Just like FIFO
 
     for (A app : orderedApps) {
-      LOG.trace("pre-assignContainers");
+      logger.trace("pre-assignContainers");
       app.showRequests();
       synchronized (app) {
         // Check if this resource is on the blacklist
-        if (SchedulerAppUtils.isBlacklisted(app, node, LOG)) {
+        if (SchedulerAppUtils.isBlacklisted(app, node, logger)) {
           continue;
         }
 
@@ -633,7 +626,7 @@ public abstract class SimpleQueuePolicy<
         }
       }
 
-      LOG.trace("post-assignContainers");
+      logger.trace("post-assignContainers");
       app.showRequests();
 
       // Done
@@ -662,14 +655,14 @@ public abstract class SimpleQueuePolicy<
    */
   private void assignContainers(N node) {
 
-    LOG.trace("assignContainers:" +
+    logger.trace("assignContainers:" +
       " node=" + node.getRMNode().getNodeAddress() +
       " #applications=" + applications.size());
 
     if (checkIfPrioritiesExpired()) {
       updateApplicationPriorities();
     }
-    if (LOG.isTraceEnabled())
+    if (logger.isTraceEnabled())
       printQueue();
 
     assignFromQueue(node);
@@ -762,7 +755,7 @@ public abstract class SimpleQueuePolicy<
       assignOffSwitchContainers(node, application, priority);
 
 
-    LOG.debug("assignContainersOnNode:" +
+    logger.debug("assignContainersOnNode:" +
       " node=" + node.getRMNode().getNodeAddress() +
       " application=" + application.getApplicationId().getId() +
       " priority=" + priority.getPriority() +
@@ -840,7 +833,7 @@ public abstract class SimpleQueuePolicy<
   private int assignContainer(N node, A application,
                               Priority priority, int assignableContainers,
                               ResourceRequest request, NodeType type) {
-    LOG.trace("assignContainers:" +
+    logger.trace("assignContainers:" +
       " node=" + node.getRMNode().getNodeAddress() +
       " application=" + application.getApplicationId().getId() +
       " priority=" + priority.getPriority() +
@@ -941,12 +934,8 @@ public abstract class SimpleQueuePolicy<
   }
 
   protected void printQueue() {
-    StringBuilder builder = new StringBuilder("Apps are now [ ");
-    for (A app : orderedApps) {
-      builder.append(app.toString()).append(" ");
-    }
-    builder.append("]");
-    LOG.debug(builder.toString());
+    if (logger.isDebugEnabled())
+      logger.debug("Apps are now " + orderedApps);
   }
 
   protected abstract void updateAppPriority(A app);
@@ -955,13 +944,13 @@ public abstract class SimpleQueuePolicy<
     orderedApps.remove(app);
     updateAppPriority(app);
     orderedApps.add(app);
-    printQueue();
+    logger.debug("Added attempt " + app.getApplicationAttemptId());
   }
 
   protected synchronized void onAppAttemptDone(A app) {
     Resources.subtractFrom(usedAMResource, app.getAMResource());
     orderedApps.remove(app);
-    printQueue();
+    logger.debug("Removed attempt " + app.getApplicationAttemptId());
   }
 
   @Override
@@ -1013,7 +1002,7 @@ public abstract class SimpleQueuePolicy<
     if (node == null)
       throw new PosumException("Node could not be found for " + hostName);
     int containers = assignContainer(node, applications.get(appId).getCurrentAppAttempt(), priority, 1,
-      Utils.createResourceRequest(minimumAllocation, hostName, 1), NodeType.NODE_LOCAL);
+      ClusterUtils.createResourceRequest(minimumAllocation, hostName, 1), NodeType.NODE_LOCAL);
     return containers == 1;
   }
 

@@ -41,8 +41,8 @@ public class SimulationMasterContext {
   }
 
   public DataStore getDataBroker() {
-    DataMasterClient dm = commService.getDataMaster();
-    while (dm == null) {
+    DataMasterClient dm;
+    while ((dm = commService.getDataMaster()) == null) {
       logger.info("Simulations are waiting for Data Master to be available");
       try {
         Thread.sleep(1000);

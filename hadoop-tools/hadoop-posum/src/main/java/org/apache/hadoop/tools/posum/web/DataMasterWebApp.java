@@ -3,7 +3,7 @@ package org.apache.hadoop.tools.posum.web;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.tools.posum.common.records.call.CallUtils;
+import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.RawDocumentsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
@@ -151,8 +151,7 @@ public class DataMasterWebApp extends PosumWebApp {
 
   private JsonObject composePolicyMap() {
     JsonObject ret = new JsonObject();
-    LogEntry<PolicyInfoMapPayload> policyReport = context.getDataStore().execute(
-      CallUtils.findStatReportCall(LogEntry.Type.POLICY_MAP), DatabaseReference.getLogs()).getEntity();
+    LogEntry<PolicyInfoMapPayload> policyReport = DatabaseUtils.findStatsLogEntry(LogEntry.Type.POLICY_MAP, context.getDataStore());
     if (policyReport != null) {
       for (Map.Entry<String, PolicyInfoPayload> policyInfo : policyReport.getDetails().getEntries().entrySet()) {
         ret.put(policyInfo.getKey(), new JsonObject()

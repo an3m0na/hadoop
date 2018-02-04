@@ -15,10 +15,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.getDoubleField;
-import static org.apache.hadoop.tools.posum.common.util.Utils.getDuration;
-import static org.apache.hadoop.tools.posum.common.util.Utils.getIntField;
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDoubleField;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getIntField;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.simulation.predictor.standard.FlexKeys.MAP_RATE;
 import static org.apache.hadoop.tools.posum.simulation.predictor.standard.FlexKeys.MAP_SELECTIVITY;
 import static org.apache.hadoop.tools.posum.simulation.predictor.standard.FlexKeys.PROFILED_MAPS;

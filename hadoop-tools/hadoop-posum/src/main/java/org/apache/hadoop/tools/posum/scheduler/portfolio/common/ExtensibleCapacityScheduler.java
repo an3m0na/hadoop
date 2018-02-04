@@ -2,14 +2,13 @@ package org.apache.hadoop.tools.posum.scheduler.portfolio.common;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang.mutable.MutableObject;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.tools.posum.common.util.GeneralUtils;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.Utils;
+import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
@@ -93,8 +92,6 @@ public abstract class ExtensibleCapacityScheduler<
   N extends FiCaPluginSchedulerNode>
   extends PluginPolicy<A, N> implements PreemptableResourceScheduler, CapacitySchedulerContext {
 
-  private static Log LOG = LogFactory.getLog(ExtensibleCapacityScheduler.class);
-
   private CapacitySchedulerConfiguration capacityConf;
   protected final CapacityScheduler inner;
 
@@ -117,16 +114,16 @@ public abstract class ExtensibleCapacityScheduler<
   //
 
   protected void writeField(String name, Object value) {
-    Utils.writeField(inner, CapacityScheduler.class, name, value);
+    GeneralUtils.writeField(inner, CapacityScheduler.class, name, value);
   }
 
   protected <T> T readField(String name) {
-    return Utils.readField(inner, CapacityScheduler.class, name);
+    return GeneralUtils.readField(inner, CapacityScheduler.class, name);
   }
 
 
   protected <T> T invokeMethod(String name, Class<?>[] paramTypes, Object... args) {
-    return Utils.invokeMethod(inner, CapacityScheduler.class, name, paramTypes, args);
+    return GeneralUtils.invokeMethod(inner, CapacityScheduler.class, name, paramTypes, args);
   }
 
   //
@@ -234,8 +231,8 @@ public abstract class ExtensibleCapacityScheduler<
    * @param queue target leaf queue
    */
   protected void updateApplicationPriorities(LeafQueue queue) {
-    Set<A> oldActiveApps = Utils.readField(queue, LeafQueue.class, "activeApplications");
-    Set<A> oldApps = Utils.readField(queue, LeafQueue.class, "pendingApplications");
+    Set<A> oldActiveApps = GeneralUtils.readField(queue, LeafQueue.class, "activeApplications");
+    Set<A> oldApps = GeneralUtils.readField(queue, LeafQueue.class, "pendingApplications");
     boolean appsPending = !oldApps.isEmpty();
     oldApps.addAll(oldActiveApps);
     if (oldApps.isEmpty())
@@ -254,11 +251,11 @@ public abstract class ExtensibleCapacityScheduler<
           deactivateApp(queue, app);
       }
     }
-    Utils.writeField(queue, LeafQueue.class, "activeApplications", activeApps);
+    GeneralUtils.writeField(queue, LeafQueue.class, "activeApplications", activeApps);
     // add the rest of the apps to pending
-    Utils.writeField(queue, LeafQueue.class, "pendingApplications", extraApps);
+    GeneralUtils.writeField(queue, LeafQueue.class, "pendingApplications", extraApps);
     if (appsPending) // not all apps were active, so retry activation
-      Utils.invokeMethod(queue, LeafQueue.class, "activateApplications", new Class[]{});
+      GeneralUtils.invokeMethod(queue, LeafQueue.class, "activateApplications", new Class[]{});
   }
 
   private void activateApp(LeafQueue queue, A app) {
@@ -329,15 +326,15 @@ public abstract class ExtensibleCapacityScheduler<
 
       onAppAttemptAdded(attempt);
 
-      LOG.debug("Submitting app attempt to queue: \n" + attempt);
+      logger.debug("Submitting app attempt to queue: \n" + attempt);
 
       queue.submitApplicationAttempt(attempt, application.getUser());
-      LOG.info("Added Application Attempt " + applicationAttemptId
+      logger.info("Added Application Attempt " + applicationAttemptId
         + " to scheduler from user " + application.getUser() + " in queue "
         + queue.getQueueName());
       if (isAttemptRecovering) {
-        if (LOG.isDebugEnabled()) {
-          LOG.debug(applicationAttemptId
+        if (logger.isDebugEnabled()) {
+          logger.debug(applicationAttemptId
             + " is recovering. Skipping notifying ATTEMPT_ADDED");
         }
       } else {
@@ -369,7 +366,7 @@ public abstract class ExtensibleCapacityScheduler<
       int numNodes = this.<AtomicInteger>readField("numNodeManagers").incrementAndGet();
       updateMaximumAllocation(schedulerNode, true);
 
-      LOG.info("Added node " + nodeManager.getNodeAddress() +
+      logger.info("Added node " + nodeManager.getNodeAddress() +
         " clusterResource: " + getClusterResource());
 
       //FIXME uncomment if scheduleAsynchronously becomes available
@@ -385,8 +382,8 @@ public abstract class ExtensibleCapacityScheduler<
         updateApplicationPriorities(this.<CSQueue>readField("root"));
       }
     }
-    if (LOG.isTraceEnabled())
-      LOG.trace(printQueues());
+    if (logger.isTraceEnabled())
+      logger.trace(printQueues());
     invokeMethod("allocateContainersToNode", new Class<?>[]{FiCaSchedulerNode.class}, node);
   }
 
@@ -402,7 +399,7 @@ public abstract class ExtensibleCapacityScheduler<
       invokeMethod(initializationMethod, new Class<?>[]{CapacitySchedulerConfiguration.class}, capacityConf);
       //asynchronous scheduling is disabled by default, in order to have control over the scheduling cycle
       writeField("scheduleAsynchronously", false);
-      LOG.info("Overwrote CapacityScheduler with: " +
+      logger.info("Overwrote CapacityScheduler with: " +
         "calculator=" + getResourceCalculator().getClass() + ", " +
         "asynchronousScheduling=false" + ", " +
         "queues=" + Arrays.asList(capacityConf.getQueues(CapacitySchedulerConfiguration.ROOT)));
@@ -802,7 +799,7 @@ public abstract class ExtensibleCapacityScheduler<
       StringBuilder builder = new StringBuilder("Queues are:\n");
       return printQueues(builder, this.<CSQueue>readField("root")).toString();
     } catch (Exception e) {
-      LOG.trace(e);
+      logger.trace(e);
       return "Could not print queues due to error";
     }
   }
@@ -817,13 +814,13 @@ public abstract class ExtensibleCapacityScheduler<
     } else {
       LeafQueue leaf = (LeafQueue) queue;
       Set<A> pendingApplications =
-        Utils.readField(leaf, LeafQueue.class, "pendingApplications");
+        GeneralUtils.readField(leaf, LeafQueue.class, "pendingApplications");
       builder.append(" --pending:\n");
       for (A app : pendingApplications) {
         builder.append("   ").append(app);
       }
       Set<A> activeApplications =
-        Utils.readField(leaf, LeafQueue.class, "activeApplications");
+        GeneralUtils.readField(leaf, LeafQueue.class, "activeApplications");
       builder.append(" --active:\n");
       for (A app : activeApplications) {
         builder.append("   ").append(app);
@@ -882,7 +879,7 @@ public abstract class ExtensibleCapacityScheduler<
       // Submit to a new queue
       synchronized (dest) {
         // Add the attempt to our data-structures
-        Utils.invokeMethod(dest, LeafQueue.class, "addApplicationAttempt",
+        GeneralUtils.invokeMethod(dest, LeafQueue.class, "addApplicationAttempt",
           new Class[]{
             FiCaSchedulerApp.class,
             LeafQueue.User.class
@@ -890,7 +887,7 @@ public abstract class ExtensibleCapacityScheduler<
           newAppAttempt,
           dest.getUser(user));
       }
-      LOG.info("App: " + appId + " successfully moved from "
+      logger.info("App: " + appId + " successfully moved from "
         + sourceQueueName + " to: " + destQueueName);
       newApp.setCurrentAppAttempt(newAppAttempt);
     }
@@ -954,7 +951,7 @@ public abstract class ExtensibleCapacityScheduler<
 
     SchedulerApplication<A> app = getSchedulerApplications().get(appId);
     MutableObject allocatedContainer = new MutableObject();
-    Resource assignedResource = Utils.invokeMethod(app.getQueue(), LeafQueue.class, "assignContainer",
+    Resource assignedResource = GeneralUtils.invokeMethod(app.getQueue(), LeafQueue.class, "assignContainer",
       new Class[]{
         Resource.class,
         FiCaSchedulerNode.class,
@@ -970,7 +967,7 @@ public abstract class ExtensibleCapacityScheduler<
       node,
       app.getCurrentAppAttempt(),
       priority,
-      Utils.createResourceRequest(getMinimumResourceCapability(), hostName, 1),
+      ClusterUtils.createResourceRequest(getMinimumResourceCapability(), hostName, 1),
       NodeType.NODE_LOCAL,
       null,
       allocatedContainer,
@@ -986,7 +983,7 @@ public abstract class ExtensibleCapacityScheduler<
   }
 
   private void allocateResources(A appAttempt, LeafQueue queue, Resource assignedResource, Set<String> nodeLabels) {
-    Utils.invokeMethod(queue, LeafQueue.class,
+    GeneralUtils.invokeMethod(queue, LeafQueue.class,
       "allocateResource",
       new Class[]{
         Resource.class,
@@ -1004,7 +1001,7 @@ public abstract class ExtensibleCapacityScheduler<
   }
 
   private void allocateResources(ParentQueue queue, Resource assignedResource, Set<String> nodeLabels) {
-    Utils.invokeMethod(queue, AbstractCSQueue.class,
+    GeneralUtils.invokeMethod(queue, AbstractCSQueue.class,
       "allocateResource",
       new Class[]{
         Resource.class,

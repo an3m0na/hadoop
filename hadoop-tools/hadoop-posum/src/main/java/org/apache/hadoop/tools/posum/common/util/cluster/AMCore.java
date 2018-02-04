@@ -39,7 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.createResourceRequest;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.createResourceRequest;
 
 public class AMCore {
   private final ResourceManager rm;

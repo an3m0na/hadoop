@@ -6,18 +6,22 @@ import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.JobForAppCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
+import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 
 import java.text.MessageFormat;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 public class AppWorkCalculator {
-  private static Log logger = LogFactory.getLog(AppWorkCalculator.class);
+  private Log logger = LogFactory.getLog(AppWorkCalculator.class);
 
   private DatabaseProvider dbProvider;
 
   protected AppWorkCalculator(DatabaseProvider dbProvider) {
     this.dbProvider = dbProvider;
+    if (dbProvider instanceof SimulationContext) {
+      logger = LogFactory.getLog("org.apache.hadoop.tools.posum.scheduler.simulation.AppWorkCalculator");
+    }
   }
 
   public void updateRemainingTime(SRTFAppAttempt app) {

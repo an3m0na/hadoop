@@ -1,10 +1,13 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
-import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
+import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
@@ -23,12 +26,16 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEv
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.DEFAULT_PRIORITY;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.NODE_ADD;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.NODE_REMOVE;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.DEFAULT_PRIORITY;
 
 public abstract class PluginPolicy<
   A extends SchedulerApplicationAttempt & PluginApplicationAttempt,
   N extends SchedulerNode & PluginSchedulerNode>
   extends AbstractYarnScheduler<A, N> implements Configurable {
+
+  protected Log logger = LogFactory.getLog(PluginPolicy.class);
 
   protected Class<A> aClass;
   protected Class<N> nClass;
@@ -38,11 +45,16 @@ public abstract class PluginPolicy<
     super(policyName);
     this.aClass = aClass;
     this.nClass = nClass;
+    this.logger = LogFactory.getLog(getClass());
   }
 
   public void initializePlugin(Configuration conf, DatabaseProvider dbProvider) {
     setConf(conf);
     this.dbProvider = dbProvider;
+    if (dbProvider instanceof SimulationContext) {
+      String simulationPolicy = ((SimulationContext) dbProvider).getSchedulerClass().getSimpleName();
+      logger = LogFactory.getLog("org.apache.hadoop.tools.posum.scheduler.simulation." + simulationPolicy);
+    }
   }
 
   public void forwardCompletedContainer(RMContainer rmContainer, ContainerStatus containerStatus, RMContainerEventType event) {
@@ -82,14 +94,14 @@ public abstract class PluginPolicy<
     switch (event.getType()) {
       case NODE_ADDED: {
         NodeAddedSchedulerEvent nodeAddedEvent = (NodeAddedSchedulerEvent) event;
-        dbProvider.getDatabase().execute(StoreLogCall.newInstance(LogEntry.Type.NODE_ADD,
-          nodeAddedEvent.getAddedRMNode().getHostName()));
+        dbProvider.getDatabase().execute(StoreLogCall.newInstance(
+          DatabaseUtils.newLogEntry(NODE_ADD, nodeAddedEvent.getAddedRMNode().getHostName())));
       }
       break;
       case NODE_REMOVED: {
         NodeRemovedSchedulerEvent nodeRemovedEvent = (NodeRemovedSchedulerEvent) event;
-        dbProvider.getDatabase().execute(StoreLogCall.newInstance(LogEntry.Type.NODE_REMOVE,
-          nodeRemovedEvent.getRemovedRMNode().getHostName()));
+        dbProvider.getDatabase().execute(StoreLogCall.newInstance(
+          DatabaseUtils.newLogEntry(NODE_REMOVE, nodeRemovedEvent.getRemovedRMNode().getHostName())));
       }
     }
   }

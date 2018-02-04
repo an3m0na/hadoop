@@ -4,8 +4,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
+import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
-import org.apache.hadoop.tools.posum.common.records.call.StoreLogCall;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.SimulationResultPayload;
@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 
 class SimulationManager<T extends PluginPolicy> implements Callable<SimulationResultPayload> {
@@ -102,9 +102,11 @@ class SimulationManager<T extends PluginPolicy> implements Callable<SimulationRe
   public SimulationResultPayload call() throws Exception {
     setUp();
     try {
-      dataStore.execute(StoreLogCall.newInstance("Starting simulation for " + policyName), null);
+      DatabaseUtils.storeLogEntry("Starting simulation for " + policyName, dataStore);
       new SimulationRunner<>(simulationContext).run();
-      return SimulationResultPayload.newInstance(policyName, performanceEvaluator.evaluate());
+      SimulationResultPayload result = SimulationResultPayload.newInstance(policyName, performanceEvaluator.evaluate());
+      DatabaseUtils.storeLogEntry("Score for simulation of " + policyName + ": " + result, dataStore);
+      return result;
     } catch (InterruptedException e) {
       if (!exit)
         // exiting was not intentional

@@ -13,16 +13,27 @@ $(document).ready(function () {
   env.tabManager = tabManager;
 
   var path = env.isTest ? "mocks/conf.json" : env.comm.paths.OM + "/conf";
+  var confComplete = true;
+  var periodicUpdater;
+
+  var updateConf = function (data) {
+    $.each(data.addresses, function (component, address) {
+      if (!address) {
+        confComplete = false;
+        return;
+      }
+      env.comm.paths[component] = "http://" + address + "/ajax";
+    });
+    if (confComplete)
+      clearInterval(periodicUpdater);
+  };
   env.comm.requestData(path, function (data) {
-    if (window.location.hostname !== "localhost") {
-      $.each(data.addresses, function (component, address) {
-        if (!address) {
-          env.comm.showDialog("Error", "Error occurred:\n" +
-            "POSUM not yet ready.\n\nPlease refresh.");
-          return;
-        }
-        env.comm.paths[component] = "http://" + address + "/ajax";
-      });
+    updateConf(data);
+    if (!confComplete) {
+      env.comm.showDialog("Warning", "Not all POSUM processes are online yet.\n\nData may not be complete.");
+      periodicUpdater = setInterval(function () {
+        env.comm.requestData(path, updateConf);
+      }, env.refreshInterval);
     }
   });
 

@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.createResourceRequest;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.createResourceRequest;
 import static org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEventType.APPLICATION_SUBMITTED;
 import static org.apache.hadoop.yarn.api.records.ResourceRequest.ANY;
 

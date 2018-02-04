@@ -13,7 +13,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.SchedulerApplicat
 
 import java.text.MessageFormat;
 
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 public class SRTFAppAttempt extends FiCaPluginApplicationAttempt {
   private static final Log logger = LogFactory.getLog(SRTFAppAttempt.class);
@@ -49,6 +49,10 @@ public class SRTFAppAttempt extends FiCaPluginApplicationAttempt {
       "\n      RemainingWork: " + remainingWork +
       "\n      DesiredResource: " + desiredResource +
       "\n      ResourceDeficit: " + resourceDeficit;
+  }
+
+  public String toShortString() {
+    return jobId + "(deficit=" + resourceDeficit + ")";
   }
 
   @Override
@@ -111,7 +115,7 @@ public class SRTFAppAttempt extends FiCaPluginApplicationAttempt {
     }
     desiredResource = desired;
     resourceDeficit = getCurrentConsumption().getMemory() - desiredResource;
-    logger.debug(MessageFormat.format("New deficit for {0}: {1}", getJobId(), resourceDeficit));
+    logger.trace(MessageFormat.format("New deficit for {0}: {1}", getJobId(), resourceDeficit));
   }
 
   public Long getTotalWork() {

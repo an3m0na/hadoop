@@ -38,7 +38,7 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_HISTORY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
-import static org.apache.hadoop.tools.posum.common.util.Utils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer.AM_TYPE;
 
 public class ContainerMonitor implements EventHandler<ContainerEvent> {
@@ -141,7 +141,7 @@ public class ContainerMonitor implements EventHandler<ContainerEvent> {
     JobProfile job = db.execute(JobForAppCall.newInstance(appIdString)).getEntity();
     if (job.getFinishTime() == null) {
       job.setFinishTime(simulationContext.getCurrentTime());
-      LOG.debug("Finish time for " + job.getId() + " is " + job.getFinishTime());
+      LOG.debug(MessageFormat.format("Sim={0} T={1}: Finish time for {2} is {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), job.getId(), job.getFinishTime()));
     }
     transaction.addCall(DeleteByIdCall.newInstance(JOB, job.getId()));
     transaction.addCall(StoreCall.newInstance(JOB_HISTORY, job));
