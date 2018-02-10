@@ -64,7 +64,7 @@ public class PerformanceEvaluator {
             LOG.trace(MessageFormat.format("Online: Performance for job {0}: deadlineViolation={1}", job.getId(), job.getFinishTime() - job.getDeadline()));
           }
         }
-        penalty += Math.pow((Math.max(job.getFinishTime() - job.getDeadline(), 0) / 1000), 2);
+        penalty += Math.pow((Math.max(job.getFinishTime() - job.getDeadline(), 0) / 1000.0), 2);
         dcNum++;
       }
     }

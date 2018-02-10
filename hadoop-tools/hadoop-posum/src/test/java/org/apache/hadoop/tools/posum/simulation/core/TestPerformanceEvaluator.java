@@ -90,7 +90,7 @@ public class TestPerformanceEvaluator {
     JOBS.get(1).setDeadline(500L);
     JOBS.get(3).setDeadline(30L);
     CompoundScorePayload result = new PerformanceEvaluator(DatabaseUtils.newProvider(db)).evaluate();
-    assertThat(result, is(CompoundScorePayload.newInstance(7.712307692307692, 281.2694437723373, 0.0)));
+    assertThat(result, is(CompoundScorePayload.newInstance(7.712307692307692, 0.28126944377233726, 0.0)));
   }
 
   @Test
