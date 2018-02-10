@@ -6,75 +6,69 @@ import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class SimpleMRPredictionModel<M extends PredictionStats, R extends PredictionStats> extends SimplePredictionModel {
+public abstract class SimpleMRPredictionModel<
+  M extends PredictionStats,
+  R extends PredictionStats,
+  P extends SimpleMRPredictionProfile<M, R>> extends SimplePredictionModel<P> {
 
-  protected Class<M> mapStatsClass;
-  protected Class<R> reduceStatsClass;
-  private Map<String, M> mapStatsByUser = new HashMap<>();
-  private Map<String, R> reduceStatsByUser = new HashMap<>();
-  private Map<String, M> mapStatsByClass = new HashMap<>();
-  private Map<String, R> reduceStatsByClass = new HashMap<>();
+  private Map<String, M> mapStatsDictionary = new HashMap<>();
+  private Map<String, R> reduceStatsDictionary = new HashMap<>();
 
-  public SimpleMRPredictionModel(Class<M> mapStatsClass, Class<R> reduceStatsClass, int historyBuffer) {
+  public SimpleMRPredictionModel(int historyBuffer) {
     super(historyBuffer);
-    this.mapStatsClass = mapStatsClass;
-    this.reduceStatsClass = reduceStatsClass;
-    this.historyBuffer = historyBuffer;
   }
 
   @Override
-  public void updateModel(JobProfile job) {
-    updateStatsByType(job, mapStatsByClass, reduceStatsByClass, job.getMapperClass(), job.getReducerClass(), 1);
-    updateStatsByType(job, mapStatsByUser, reduceStatsByUser, job.getUser(), job.getUser(), 2);
-    sourceJobs.add(job.getId());
+  public void updateModel(P predictionProfile) {
+    super.updateModel(predictionProfile);
+    JobProfile job = predictionProfile.getJob();
+    updateStatsByType(predictionProfile, job.getMapperClass(), job.getReducerClass(), 1);
+    updateStatsByType(predictionProfile, job.getUser(), job.getUser(), 2);
   }
 
-  private void updateStatsByType(JobProfile job,
-                                 Map<String, M> mapStatsDictionary,
-                                 Map<String, R> reduceStatsDictionary,
+  private void updateStatsByType(P predictionProfile,
                                  String mapKey,
                                  String reduceKey,
                                  int relevance) {
     M mapStats = mapStatsDictionary.get(mapKey);
     if (mapStats == null) {
-      mapStats = newMapStats(historyBuffer, relevance);
+      mapStats = newMapStats(relevance);
       mapStatsDictionary.put(mapKey, mapStats);
     }
-    mapStats.addSource(job);
-    if (job.getTotalReduceTasks() > 0) {
+    mapStats.merge(predictionProfile.getMapStats());
+    if (predictionProfile.getJob().getTotalReduceTasks() > 0) {
       R reduceStats = reduceStatsDictionary.get(reduceKey);
       if (reduceStats == null) {
-        reduceStats = newReduceStats(historyBuffer, relevance);
+        reduceStats = newReduceStats(relevance);
         reduceStatsDictionary.put(reduceKey, reduceStats);
       }
-      reduceStats.addSource(job);
+      reduceStats.merge(predictionProfile.getReduceStats());
     }
   }
 
-  protected abstract M newMapStats(int historyBuffer, int relevance);
+  protected abstract M newMapStats(int relevance);
 
-  protected abstract R newReduceStats(int historyBuffer, int relevance);
+  protected abstract R newReduceStats(int relevance);
 
   public M getRelevantMapStats(JobProfile job) {
     return getRelevantMapStats(job.getMapperClass(), job.getUser());
   }
 
-  public M getRelevantMapStats(String mapClass, String user) {
-    M classStats = mapStatsByClass.get(mapClass);
-    if (classStats != null && classStats.getSampleSize() > 1)
+  private M getRelevantMapStats(String mapClass, String user) {
+    M classStats = mapStatsDictionary.get(mapClass);
+    if (classStats != null)
       return classStats;
-    return mapStatsByUser.get(user);
+    return mapStatsDictionary.get(user);
   }
 
   public R getRelevantReduceStats(JobProfile job) {
     return getRelevantReduceStats(job.getReducerClass(), job.getUser());
   }
 
-  public R getRelevantReduceStats(String reduceClass, String user) {
-    R classStats = reduceStatsByClass.get(reduceClass);
-    if (classStats != null && classStats.getSampleSize() > 1)
+  private R getRelevantReduceStats(String reduceClass, String user) {
+    R classStats = reduceStatsDictionary.get(reduceClass);
+    if (classStats != null)
       return classStats;
-    return reduceStatsByUser.get(user);
+    return reduceStatsDictionary.get(user);
   }
-
 }

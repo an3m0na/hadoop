@@ -1,63 +1,28 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.simple;
 
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
 
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.List;
 
-public class SimpleReducePredictionStats extends PredictionStats {
-  private Double avgReduceDuration;
-  private Queue<Double> reduceDurations;
-  private Double avgReduceRate;
-  private Queue<Double> reduceRates;
-  private final String rateKey;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
 
-  public SimpleReducePredictionStats(int maxHistory, int relevance, String rateKey) {
-    super(maxHistory, relevance);
-    this.reduceDurations = new ArrayBlockingQueue<>(maxHistory);
-    this.reduceRates = new ArrayBlockingQueue<>(maxHistory);
-    this.rateKey = rateKey;
+public abstract class SimpleReducePredictionStats extends PredictionStats {
+
+  public SimpleReducePredictionStats(int relevance, Enum... statKeys) {
+    super(relevance, statKeys);
   }
 
-  public Double getAvgReduceRate() {
-    return avgReduceRate;
+  public void addSamples(JobProfile job, List<TaskProfile> tasks) {
+    for (TaskProfile task : tasks) {
+      if (getDuration(task) <= 0 || !task.getType().equals(TaskType.REDUCE))
+        continue;
+      // this is a finished reduce task; add as sample
+      addSample(job, task);
+    }
   }
 
-  public void setAvgReduceRate(Double avgReduceRates) {
-    this.avgReduceRate = avgReduceRates;
-  }
-
-  public Queue<Double> getReduceRates() {
-    return reduceRates;
-  }
-
-  public Double getAvgReduceDuration() {
-    return avgReduceDuration;
-  }
-
-  public void setAvgReduceDuration(Double avgReduceDuration) {
-    this.avgReduceDuration = avgReduceDuration;
-  }
-
-  public Queue<Double> getReduceDurations() {
-    return reduceDurations;
-  }
-
-  public void updateStatsFromFlexFields(Map<String, String> flexFields) {
-    avgReduceRate = addValue(
-      flexFields == null? null : flexFields.get(rateKey),
-      avgReduceRate,
-      reduceRates
-    );
-  }
-
-  public void addSource(JobProfile job) {
-    updateStatsFromFlexFields(job.getFlexFields());
-    job.getAvgReduceDuration();
-    avgReduceDuration = addValue(job.getAvgReduceDuration(), avgReduceDuration, reduceDurations);
-    incrementSampleSize();
-  }
-
+  public abstract void addSample(JobProfile job, TaskProfile task);
 }

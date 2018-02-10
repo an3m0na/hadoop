@@ -3,83 +3,57 @@ package org.apache.hadoop.tools.posum.simulation.predictor.simple;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
-import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionModel;
+import org.apache.hadoop.tools.posum.simulation.predictor.PredictionProfile;
+import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
+import org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardPredictor;
 
-import java.util.List;
-
-import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
-import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
 import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
+import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.MAP_DURATION;
 
-public abstract class SimpleRateBasedPredictor<M extends PredictionModel> extends JobBehaviorPredictor<M> {
+public abstract class SimpleRateBasedPredictor<
+  M extends PredictionModel<P>,
+  P extends PredictionProfile> extends JobBehaviorPredictor<M, P> {
 
-  private static final Log logger = LogFactory.getLog(SimpleRateBasedPredictor.class);
+  private static final Log logger = LogFactory.getLog(StandardPredictor.class);
 
   public SimpleRateBasedPredictor(Configuration conf) {
     super(conf);
   }
 
-  protected List<TaskProfile> getJobTasks(String jobId, boolean fromHistory) {
-    FindByQueryCall getTasks = FindByQueryCall.newInstance(fromHistory ? TASK_HISTORY : TASK,
-      QueryUtils.is("jobId", jobId));
-    return getDatabase().execute(getTasks).getEntities();
+  protected <T extends PredictionStats> TaskPredictionOutput handleNoMapRateInfo(JobProfile job, T historicalStats, T jobStats) {
+    Double avgDuration = getAnyStat(MAP_DURATION, historicalStats, jobStats);
+    logger.trace("Incomplete map rate info for " + job.getId() + ". Trying average duration " + avgDuration);
+    if (avgDuration != null)
+      return new TaskPredictionOutput(avgDuration.longValue());
+    return handleNoMapInfo(job);
   }
 
-  protected static Long getSplitSize(TaskProfile task, JobProfile job) {
-    if (task != null && task.getSplitSize() != null)
-      return task.getSplitSize();
-    return getAvgSplitSize(job);
-  }
-
-  protected static Long getAvgSplitSize(JobProfile job) {
-    if (job.getTotalSplitSize() == null || job.getTotalMapTasks() < 1)
+  protected static Long predictMapByRate(JobProfile job, Long taskInput, Double avgRate) {
+    if (taskInput == null || avgRate == null)
       return null;
-    // consider equal sizes; restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-    return Math.max(job.getTotalSplitSize() / job.getTotalMapTasks(), 1);
-  }
-
-  protected static Long getReduceDuration(JobProfile job, Double avgSelectivity, Double avgRate) {
-    if (job.getTotalSplitSize() == null || avgSelectivity == null || avgRate == null)
-      return null;
-    // calculate how much input the task has
     // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-    Double inputPerTask = Math.max(orZero(job.getTotalSplitSize()) * avgSelectivity / job.getTotalReduceTasks(), 1);
-    Double duration = inputPerTask / avgRate;
+    Double duration = Math.max(taskInput, 1.0) / avgRate;
+    logger.trace("Map duration for " + job.getId() + " should be " + taskInput + " / " + avgRate + " = " + duration);
     return duration.longValue();
   }
 
-  protected Double getMapTaskSelectivity(JobProfile job, SimpleMapPredictionStats mapStats, String selectivityKey) {
-    // we try to get the selectivity from the map history
-    if (mapStats == null || mapStats.getRelevance() > 1 || mapStats.getAvgSelectivity() == null) {
-      // there is no history, or it is not relevant for selectivity, so get current selectivity
-      String selectivityString = job.getFlexField(selectivityKey);
-      logger.trace("Using own selectivity for " + job.getId() + ": " + selectivityString);
-      return selectivityString != null ? Double.valueOf(selectivityString) : null;
-    }
-    return mapStats.getAvgSelectivity();
+  protected static Long predictReduceByRate(JobProfile job, Double avgSelectivity, Double avgRate) {
+    if (job.getTotalSplitSize() == null || avgSelectivity == null || avgRate == null)
+      return null;
+    Double inputPerTask = calculateInputPerReduce(job, avgSelectivity);
+    Double duration = inputPerTask / avgRate;
+    logger.trace("Reduce duration for " + job.getId() + " should be " + inputPerTask + " / " + avgRate + " = " + duration);
+    return duration.longValue();
   }
 
-  protected TaskPredictionOutput handleNoMapInfo(JobProfile job) {
-    logger.trace("Insufficient map data for " + job.getId() + ". Using default");
-    // return the default; there is nothing we can do
-    return new TaskPredictionOutput(DEFAULT_TASK_DURATION);
-  }
-
-  protected TaskPredictionOutput handleNoReduceInfo(JobProfile job, Double avgSelectivity, Double mapRate) {
-    // assume the reduce processing rate is the same as the map processing rate to calculate reduce duration
-    Long duration = getReduceDuration(job, avgSelectivity, mapRate);
-    if (duration == null) {
-      // our selectivity or map rate data is unreliable; just return default duration
-      logger.trace("Insufficient reduce data for " + job.getName() + ". Using default");
-      return new TaskPredictionOutput(DEFAULT_TASK_DURATION);
-    }
-    logger.trace("Reduce duration computed based on map data for " + job.getId() + " as " + duration + "from (remote) mapRate=" + mapRate + " and selectivity=" + avgSelectivity);
-    return new TaskPredictionOutput(duration);
+  protected static Double calculateInputPerReduce(JobProfile job, Double avgSelectivity) {
+    // calculate how much reduce input remains
+    Double inputLeft = orZero(job.getTotalSplitSize()) * avgSelectivity - orZero(job.getReduceInputBytes());
+    // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+    return Math.max(inputLeft / (job.getTotalReduceTasks() - job.getCompletedReduces()), 1.0);
   }
 }

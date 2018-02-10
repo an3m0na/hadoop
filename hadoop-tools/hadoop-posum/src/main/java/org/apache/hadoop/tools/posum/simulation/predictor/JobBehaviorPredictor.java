@@ -1,27 +1,34 @@
 package org.apache.hadoop.tools.posum.simulation.predictor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
+import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.SaveJobFlexFieldsCall;
+import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
 import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
-public abstract class JobBehaviorPredictor<M extends PredictionModel> {
+public abstract class JobBehaviorPredictor<M extends PredictionModel<P>, P extends PredictionProfile> {
+  private static final Log logger = LogFactory.getLog(JobBehaviorPredictor.class);
 
-  protected final Long DEFAULT_TASK_DURATION;
+  protected final Long defaultTaskDuration;
   protected Configuration conf;
   private Database db;
   protected int historyBuffer;
@@ -30,7 +37,7 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
   protected JobBehaviorPredictor(Configuration conf) {
     this.conf = conf;
     this.historyBuffer = conf.getInt(PosumConfiguration.PREDICTION_BUFFER, PosumConfiguration.PREDICTION_BUFFER_DEFAULT);
-    this.DEFAULT_TASK_DURATION = conf.getLong(PosumConfiguration.AVERAGE_TASK_DURATION,
+    this.defaultTaskDuration = conf.getLong(PosumConfiguration.AVERAGE_TASK_DURATION,
       PosumConfiguration.AVERAGE_TASK_DURATION_DEFAULT);
   }
 
@@ -63,23 +70,15 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
     for (String jobId : historyJobIds) {
       FindByIdCall getJob = FindByIdCall.newInstance(DataEntityCollection.JOB_HISTORY, jobId);
       JobProfile job = getDatabase().execute(getJob).getEntity();
-      updatePredictionProfile(job, true);
-      model.updateModel(job);
+      P profile = buildPredictionProfile(job);
+      savePredictionProfile(profile);
+      model.updateModel(profile);
     }
   }
 
   protected abstract M initializeModel();
 
-  protected void updatePredictionProfile(JobProfile job, boolean fromHistory) {
-    Map<String, String> fieldMap = getPredictionProfileUpdates(job, fromHistory);
-    if (fieldMap != null && !fieldMap.isEmpty()) {
-      job.addAllFlexFields(fieldMap);
-      SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), fieldMap, fromHistory);
-      getDatabase().execute(saveFlexFields);
-    }
-  }
-
-  protected abstract Map<String, String> getPredictionProfileUpdates(JobProfile job, boolean fromHistory);
+  protected abstract P buildPredictionProfile(JobProfile job);
 
   public void switchDatabase(Database db) {
     this.db = db;
@@ -98,14 +97,26 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
 
   public TaskPredictionOutput predictTaskBehavior(TaskPredictionInput input) {
     completeInput(input);
+    P predictionProfile = buildPredictionProfile(input.getJob());
+    savePredictionProfile(predictionProfile);
     if (input.getTaskType().equals(TaskType.REDUCE))
-      return predictReduceTaskBehavior(input);
-    return predictMapTaskBehavior(input);
+      return predictReduceTaskBehavior(input, predictionProfile);
+    return predictMapTaskBehavior(input, predictionProfile);
   }
 
-  protected abstract TaskPredictionOutput predictMapTaskBehavior(TaskPredictionInput input);
+  protected void savePredictionProfile(PredictionProfile predictionProfile) {
+    JobProfile job = predictionProfile.getJob();
+    Map<String, String> profileFields = predictionProfile.serialize();
+    if (profileFields != null && !profileFields.isEmpty()) {
+      SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), profileFields, job.getFinishTime() != null);
+      getDatabase().execute(saveFlexFields);
+      job.addAllFlexFields(profileFields);
+    }
+  }
 
-  protected abstract TaskPredictionOutput predictReduceTaskBehavior(TaskPredictionInput input);
+  protected abstract TaskPredictionOutput predictMapTaskBehavior(TaskPredictionInput input, P predictionProfile);
+
+  protected abstract TaskPredictionOutput predictReduceTaskBehavior(TaskPredictionInput input, P predictionProfile);
 
   private TaskPredictionInput completeInput(TaskPredictionInput input) {
     if (input.getTaskId() != null) {
@@ -125,8 +136,52 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel> {
         input.setJob(getJobById(input.getJobId()));
       }
     }
-    updatePredictionProfile(input.getJob(), false);
     return input;
+  }
+
+  private <T extends PredictionStats> Double getStat(Enum key, T historicalStats, T jobStats, boolean forceRelevance) {
+    Double historicalAverage = historicalStats == null ? null : historicalStats.getAverage(key);
+    Double currentAverage = jobStats == null ? null : jobStats.getAverage(key);
+
+    // we try to get the average from the map history
+    if (historicalAverage == null) {
+      // we have no historical information about this job current average if it exists
+      return currentAverage;
+    }
+    // we have historical information
+    if (historicalStats.getRelevance() <= 1)
+      // historical info is relevant, so prefer it
+      return historicalAverage;
+    if (forceRelevance)
+      // history is not relevant, so return current average if it exists
+      return currentAverage;
+    return currentAverage == null ? historicalAverage : currentAverage;
+  }
+
+  protected <T extends PredictionStats> Double getRelevantStat(Enum key, T historicalStats, T jobStats) {
+    return getStat(key, historicalStats, jobStats, true);
+  }
+
+  protected <T extends PredictionStats> Double getAnyStat(Enum key, T historicalStats, T jobStats) {
+    return getStat(key, historicalStats, jobStats, false);
+  }
+
+  protected TaskPredictionOutput handleNoMapInfo(JobProfile job) {
+    logger.trace("Insufficient map data for " + job.getId() + ". Using default");
+    // return the default; there is nothing we can do
+    return new TaskPredictionOutput(defaultTaskDuration);
+  }
+
+  protected TaskPredictionOutput handleNoReduceInfo(JobProfile job) {
+    logger.trace("Insufficient reduce data for " + job.getName() + ". Using default");
+    // return the default; there is nothing we can do
+    return new TaskPredictionOutput(defaultTaskDuration);
+  }
+
+  protected List<TaskProfile> getJobTasks(String jobId, boolean fromHistory) {
+    FindByQueryCall getTasks = FindByQueryCall.newInstance(fromHistory ? TASK_HISTORY : TASK,
+      QueryUtils.is("jobId", jobId));
+    return getDatabase().execute(getTasks).getEntities();
   }
 
   private JobProfile getJobById(String jobId) {

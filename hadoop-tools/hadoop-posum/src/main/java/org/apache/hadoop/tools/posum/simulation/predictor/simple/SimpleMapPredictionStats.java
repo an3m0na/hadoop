@@ -1,67 +1,28 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.simple;
 
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
 
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.List;
 
-public class SimpleMapPredictionStats extends PredictionStats {
-  private Double avgRate;
-  private Queue<Double> rates;
-  private Double avgSelectivity;
-  private Queue<Double> selectivities;
-  private final String rateKey;
-  private final String selectivityKey;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
 
-  public SimpleMapPredictionStats(int maxHistory, int relevance, String rateKey, String selectivityKey) {
-    super(maxHistory, relevance);
-    this.rates = new ArrayBlockingQueue<>(maxHistory);
-    this.selectivities = new ArrayBlockingQueue<>(maxHistory);
-    this.rateKey = rateKey;
-    this.selectivityKey = selectivityKey;
+public abstract class SimpleMapPredictionStats extends PredictionStats {
+
+  public SimpleMapPredictionStats(int relevance, Enum... statKeys) {
+    super(relevance, statKeys);
   }
 
-  public Double getAvgRate() {
-    return avgRate;
+  public void addSamples(JobProfile job, List<TaskProfile> tasks) {
+    for (TaskProfile task : tasks) {
+      if (getDuration(task) <= 0 || !task.getType().equals(TaskType.MAP))
+        continue;
+      // this is a finished map task; add as sample
+      addSample(job, task);
+    }
   }
 
-  public void setAvgRate(Double avgRate) {
-    this.avgRate = avgRate;
-  }
-
-  public Queue<Double> getRates() {
-    return rates;
-  }
-
-  public Double getAvgSelectivity() {
-    return avgSelectivity;
-  }
-
-  public void setAvgSelectivity(Double avgSelectivity) {
-    this.avgSelectivity = avgSelectivity;
-  }
-
-  public Queue<Double> getSelectivities() {
-    return selectivities;
-  }
-
-  public void updateStatsFromFlexFields(Map<String, String> flexFields) {
-    avgRate = addValue(
-      flexFields == null ? null : flexFields.get(rateKey),
-      avgRate,
-      rates
-    );
-    avgSelectivity = addValue(
-      flexFields == null ? null : flexFields.get(selectivityKey),
-      avgSelectivity,
-      selectivities
-    );
-  }
-
-  public void addSource(JobProfile job) {
-    updateStatsFromFlexFields(job.getFlexFields());
-    incrementSampleSize();
-  }
+  public abstract void addSample(JobProfile job, TaskProfile task);
 }

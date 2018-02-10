@@ -1,74 +1,32 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.basic;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
+import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys;
 
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.List;
 
-public class BasicPredictionStats extends PredictionStats {
-  private Double avgMapDuration;
-  private Queue<Double> mapDurations;
-  private Double avgReduceDuration;
-  private Queue<Double> reduceDurations;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
+import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.MAP_DURATION;
+import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.REDUCE_DURATION;
 
-  public BasicPredictionStats(int maxHistory, int relevance) {
-    super(maxHistory, relevance);
-    this.mapDurations = new ArrayBlockingQueue<>(maxHistory);
-    this.reduceDurations = new ArrayBlockingQueue<>(maxHistory);
+class BasicPredictionStats extends PredictionStats {
+  BasicPredictionStats(int relevance) {
+    super(relevance, SimpleStatKeys.MAP_DURATION, REDUCE_DURATION);
   }
 
-  @Override
-  public void updateStatsFromFlexFields(Map<String, String> flexFields) {
-    // no stats are in flex fields
+  void addSamples(List<TaskProfile> tasks) {
+    for (TaskProfile task : tasks) {
+      if (getDuration(task) <= 0)
+        continue;
+      // this is a finished map task; calculate processing rate
+      addSample(task);
+    }
   }
 
-  public Double getAvgMapDuration() {
-    return avgMapDuration;
-  }
-
-  public void setAvgMapDuration(Double avgMapDuration) {
-    this.avgMapDuration = avgMapDuration;
-  }
-
-  public Queue<Double> getMapDurations() {
-    return mapDurations;
-  }
-
-  public void setMapDurations(Queue<Double> mapDurations) {
-    this.mapDurations = mapDurations;
-  }
-
-  public Double getAvgReduceDuration() {
-    return avgReduceDuration;
-  }
-
-  public void setAvgReduceDuration(Double avgReduceDuration) {
-    this.avgReduceDuration = avgReduceDuration;
-  }
-
-  public Queue<Double> getReduceDurations() {
-    return reduceDurations;
-  }
-
-  public void setReduceDurations(Queue<Double> reduceDurations) {
-    this.reduceDurations = reduceDurations;
-  }
-
-  public void addSource(JobProfile job) {
-    avgMapDuration = addValue(job.getAvgMapDuration(), avgMapDuration, mapDurations);
-    avgReduceDuration = addValue(job.getAvgReduceDuration(), avgReduceDuration, reduceDurations);
-    incrementSampleSize();
-  }
-
-  @Override
-  public String toString() {
-    return "BasicPredictionStats{" +
-      "avgMapDuration=" + avgMapDuration +
-      ", mapDurations=" + mapDurations +
-      ", avgReduceDuration=" + avgReduceDuration +
-      ", reduceDurations=" + reduceDurations +
-      '}';
+  private void addSample(TaskProfile task) {
+    Double duration = getDuration(task).doubleValue();
+    addSample(task.getType() == TaskType.MAP ? MAP_DURATION : REDUCE_DURATION, duration);
   }
 }

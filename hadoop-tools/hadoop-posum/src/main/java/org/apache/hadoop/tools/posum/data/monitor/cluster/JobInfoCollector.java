@@ -132,7 +132,7 @@ class JobInfoCollector {
       // there is no running record of the job
       job = api.getFinishedJobInfo(appId);
     } else {
-      // addSource the running info with the history info
+      // readStatsFromFlexFields the running info with the history info
       job = api.getFinishedJobInfo(appId, job.getId(), job);
     }
     return job;

@@ -66,7 +66,7 @@ public class DataOrientedPolicy extends ExtensibleCapacityScheduler<DOSAppAttemp
         }
       }
     } catch (Exception e) {
-      logger.debug("Could not addSource app priority for : " + app.getApplicationId(), e);
+      logger.debug("Could not readStatsFromFlexFields app priority for : " + app.getApplicationId(), e);
     }
   }
 }

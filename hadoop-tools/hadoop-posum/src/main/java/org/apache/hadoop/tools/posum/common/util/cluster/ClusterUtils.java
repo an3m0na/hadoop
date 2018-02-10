@@ -12,8 +12,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterInfoPayload;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.GeneralUtils;
+import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -21,6 +21,7 @@ import org.apache.hadoop.yarn.api.records.ResourceRequest;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.COUNTER;
@@ -110,6 +111,19 @@ public class ClusterUtils {
     if (task.getStartTime() == null || task.getFinishTime() == null || task.getFinishTime() == 0)
       return 0L;
     return task.getFinishTime() - task.getStartTime();
+  }
+
+  public static Long getSplitSize(TaskProfile task, JobProfile job) {
+    if (task != null && task.getSplitSize() != null)
+      return task.getSplitSize();
+    return getAvgSplitSize(job);
+  }
+
+  public static Long getAvgSplitSize(JobProfile job) {
+    if (job.getTotalSplitSize() == null || job.getTotalMapTasks() < 1)
+      return null;
+    // consider equal sizes; restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+    return Math.max(job.getTotalSplitSize() / job.getTotalMapTasks(), 1);
   }
 
   public static void updateJobStatisticsFromTasks(JobProfile job, List<TaskProfile> tasks) {
@@ -205,23 +219,13 @@ public class ClusterUtils {
     }
   }
 
-  public static Boolean getBooleanField(JobProfile job, String fieldString, Boolean defaultValue) {
-    String valueString = job.getFlexField(fieldString);
-    return valueString == null ? defaultValue : Boolean.valueOf(valueString);
-  }
-
-  public static Double getDoubleField(JobProfile job, String fieldString, Double defaultValue) {
-    String valueString = job.getFlexField(fieldString);
+  public static Double getDouble(Map<String, String> map, String key, Double defaultValue) {
+    String valueString = map.get(key);
     return valueString == null ? defaultValue : Double.valueOf(valueString);
   }
 
-  public static Long getLongField(JobProfile job, String fieldString, Long defaultValue) {
-    String valueString = job.getFlexField(fieldString);
-    return valueString == null ? defaultValue : Long.valueOf(valueString);
-  }
-
-  public static Integer getIntField(JobProfile job, String fieldString, Integer defaultValue) {
-    String valueString = job.getFlexField(fieldString);
+  public static Integer getInteger(Map<String, String> map, String key, Integer defaultValue) {
+    String valueString = map.get(key);
     return valueString == null ? defaultValue : Integer.valueOf(valueString);
   }
 

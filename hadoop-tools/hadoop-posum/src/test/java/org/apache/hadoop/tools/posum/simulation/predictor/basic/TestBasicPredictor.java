@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.simulation.predictor.basic;
 
 import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TestPredictor;
@@ -11,64 +12,70 @@ import java.util.List;
 import java.util.Set;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_HISTORY;
+import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.MAP_DURATION;
+import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.REDUCE_DURATION;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 public class TestBasicPredictor extends TestPredictor<BasicPredictor> {
-  
+
   public TestBasicPredictor() {
     super(BasicPredictor.class);
   }
-  
+
   @Test
-  public void testModelMakeup() throws Exception {
+  public void testModelMakeup() {
     Set<String> sourceJobs = predictor.getModel().getSourceJobs();
     List<String> historicalJobs = db.execute(IdsByQueryCall.newInstance(JOB_HISTORY, null)).getEntries();
     assertThat(sourceJobs, containsInAnyOrder(historicalJobs.toArray()));
 
     // check history stats for known user
-    BasicPredictionStats someJobStats = predictor.getModel().getRelevantStats(someJob);
-    assertThat(someJobStats.getAvgMapDuration(), is(2869.0));
-    assertThat(someJobStats.getAvgReduceDuration(), is(82522.0));
+    BasicPredictionStats knownUserJobStats = predictor.getModel().getRelevantStats(createJobOnKnownUser());
+    assertThat(knownUserJobStats.getAverage(MAP_DURATION), is(3652.267932489452));
+    assertThat(knownUserJobStats.getAverage(REDUCE_DURATION), is(38556.70000000001));
 
     // check history stats for unknown user
-    BasicPredictionStats anotherJobStats = predictor.getModel().getRelevantStats(anotherJob);
-    assertThat(anotherJobStats, nullValue());
+    BasicPredictionStats unknownUserJobStats = predictor.getModel().getRelevantStats(createJobOnUnknownUser());
+    assertThat(unknownUserJobStats, nullValue());
   }
 
   @Test
-  public void testMapPrediction() throws Exception {
-    TaskPredictionOutput prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob.getId(), TaskType.MAP));
-    assertThat(prediction.getDuration(), is(2869L));
+  public void testMapPrediction() {
+    JobProfile knownUserJob = createJobOnKnownUser();
+    JobProfile unknownUserJob = createJobOnUnknownUser();
+    TaskPredictionOutput prediction = predictor.predictTaskBehavior(new TaskPredictionInput(knownUserJob.getId(), TaskType.MAP));
+    assertThat(prediction.getDuration(), is(3652L));
 
-    someJob.setAvgMapDuration(1000L);
-    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob.getId(), TaskType.MAP));
+    knownUserJob.setAvgMapDuration(1000L);
+    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(knownUserJob, TaskType.MAP));
     assertThat(prediction.getDuration(), is(1000L));
 
-    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(anotherJob.getId(), TaskType.MAP));
+    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(unknownUserJob, TaskType.MAP));
     assertThat(prediction.getDuration(), is(DEFAULT_TASK_DURATION));
 
-    anotherJob.setAvgMapDuration(2000L);
-    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(anotherJob.getId(), TaskType.MAP));
+    unknownUserJob.setAvgMapDuration(2000L);
+    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(unknownUserJob, TaskType.MAP));
     assertThat(prediction.getDuration(), is(2000L));
   }
 
   @Test
-  public void testReducePrediction() throws Exception {
-    TaskPredictionOutput prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob.getId(), TaskType.REDUCE));
-    assertThat(prediction.getDuration(), is(82522L));
+  public void testReducePrediction() {
+    JobProfile knownUserJob = createJobOnKnownUser();
+    JobProfile unknownUserJob = createJobOnUnknownUser();
+    TaskPredictionOutput prediction = predictor.predictTaskBehavior(new TaskPredictionInput(knownUserJob.getId(), TaskType.REDUCE));
+    assertThat(prediction.getDuration(), is(38556L));
 
-    someJob.setAvgReduceDuration(1001L);
-    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(someJob.getId(), TaskType.REDUCE));
+    knownUserJob.setAvgReduceDuration(1001L);
+    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(knownUserJob, TaskType.REDUCE));
     assertThat(prediction.getDuration(), is(1001L));
 
-    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(anotherJob.getId(), TaskType.REDUCE));
+    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(unknownUserJob, TaskType.REDUCE));
     assertThat(prediction.getDuration(), is(DEFAULT_TASK_DURATION));
 
-    anotherJob.setAvgReduceDuration(2001L);
-    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(anotherJob.getId(), TaskType.REDUCE));
+    unknownUserJob.setAvgReduceDuration(2001L);
+    prediction = predictor.predictTaskBehavior(new TaskPredictionInput(unknownUserJob, TaskType.REDUCE));
     assertThat(prediction.getDuration(), is(2001L));
   }
 }

@@ -616,9 +616,9 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
 
   private void maybeInitFlexFields() {
     if (flexMap == null) {
+      flexMap = new HashMap<>();
       JobProfileProtoOrBuilder p = viaProto ? proto : builder;
       if (p.hasFlexFields()) {
-        flexMap = new HashMap<>();
         flexMap.putAll(new StringStringMapPayloadPBImpl(p.getFlexFields()).getEntries());
       }
     }

@@ -1,18 +1,18 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.simple;
 
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionModel;
+import org.apache.hadoop.tools.posum.simulation.predictor.PredictionProfile;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-public abstract class SimplePredictionModel implements PredictionModel {
+public abstract class SimplePredictionModel<P extends PredictionProfile> implements PredictionModel<P> {
 
   protected int historyBuffer;
   protected Set<String> sourceJobs = new HashSet<>();
 
   public SimplePredictionModel(int historyBuffer) {
+    // TODO do something with the history buffer (keep a window of statistics)
     this.historyBuffer = historyBuffer;
   }
 
@@ -20,13 +20,7 @@ public abstract class SimplePredictionModel implements PredictionModel {
     return sourceJobs;
   }
 
-  public void updateModel(List<JobProfile> sources) {
-    if (sources == null || sources.size() < 1)
-      return;
-    for (JobProfile job : sources) {
-      updateModel(job);
-    }
+  public void updateModel(P predictionProfile) {
+    sourceJobs.add(predictionProfile.getJob().getId());
   }
-
-  public abstract void updateModel(JobProfile source);
 }

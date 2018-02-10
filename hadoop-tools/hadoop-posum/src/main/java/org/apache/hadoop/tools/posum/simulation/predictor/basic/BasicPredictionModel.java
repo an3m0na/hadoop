@@ -6,27 +6,28 @@ import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimplePredictio
 import java.util.HashMap;
 import java.util.Map;
 
-class BasicPredictionModel extends SimplePredictionModel {
+class BasicPredictionModel extends SimplePredictionModel<BasicPredictionProfile> {
 
   private Map<String, BasicPredictionStats> statsByUser = new HashMap<>();
 
-  public BasicPredictionModel(int historyBuffer) {
+  BasicPredictionModel(int historyBuffer) {
     super(historyBuffer);
   }
 
   @Override
-  public void updateModel(JobProfile job) {
-    updateStats(job);
-    sourceJobs.add(job.getId());
+  public void updateModel(BasicPredictionProfile predictionProfile) {
+    super.updateModel(predictionProfile);
+    updateStats(predictionProfile);
   }
 
-  private void updateStats(JobProfile job) {
-    BasicPredictionStats stats = statsByUser.get(job.getUser());
+  private void updateStats(BasicPredictionProfile predictionProfile) {
+    String user = predictionProfile.getJob().getUser();
+    BasicPredictionStats stats = statsByUser.get(user);
     if (stats == null) {
-      stats = new BasicPredictionStats(historyBuffer, 1);
-      statsByUser.put(job.getUser(), stats);
+      stats = new BasicPredictionStats(1);
+      statsByUser.put(user, stats);
     }
-    stats.addSource(job);
+    stats.merge(predictionProfile.getStats());
   }
 
   public BasicPredictionStats getRelevantStats(JobProfile job) {
