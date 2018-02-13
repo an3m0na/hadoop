@@ -60,7 +60,9 @@ public abstract class PredictionStats<E extends PredictionStatEntry<E>> {
 
   public void deserialize(Map<String, String> flexFields) {
     for (Enum statKey : statKeys) {
-      entries.put(statKey, emptyEntry().deserialize(flexFields.get(asFlexKey(statKey))));
+      String serializedEntry = flexFields.get(asFlexKey(statKey));
+      if (serializedEntry != null)
+        entries.put(statKey, emptyEntry().deserialize(serializedEntry));
     }
   }
 

@@ -33,8 +33,8 @@ public class TestBasicPredictor extends TestPredictor<BasicPredictor> {
 
     // check history stats for known user
     BasicPredictionStats knownUserJobStats = predictor.getModel().getRelevantStats(createJobOnKnownUser());
-    assertThat(knownUserJobStats.getAverage(MAP_DURATION), is(3652.267932489452));
-    assertThat(knownUserJobStats.getAverage(REDUCE_DURATION), is(38556.70000000001));
+    assertThat(knownUserJobStats.getAverage(MAP_DURATION), is(3651.8755274261603));
+    assertThat(knownUserJobStats.getAverage(REDUCE_DURATION), is(38555.925));
 
     // check history stats for unknown user
     BasicPredictionStats unknownUserJobStats = predictor.getModel().getRelevantStats(createJobOnUnknownUser());
@@ -46,7 +46,7 @@ public class TestBasicPredictor extends TestPredictor<BasicPredictor> {
     JobProfile knownUserJob = createJobOnKnownUser();
     JobProfile unknownUserJob = createJobOnUnknownUser();
     TaskPredictionOutput prediction = predictor.predictTaskBehavior(new TaskPredictionInput(knownUserJob.getId(), TaskType.MAP));
-    assertThat(prediction.getDuration(), is(3652L));
+    assertThat(prediction.getDuration(), is(3651L));
 
     knownUserJob.setAvgMapDuration(1000L);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(knownUserJob, TaskType.MAP));
@@ -65,7 +65,7 @@ public class TestBasicPredictor extends TestPredictor<BasicPredictor> {
     JobProfile knownUserJob = createJobOnKnownUser();
     JobProfile unknownUserJob = createJobOnUnknownUser();
     TaskPredictionOutput prediction = predictor.predictTaskBehavior(new TaskPredictionInput(knownUserJob.getId(), TaskType.REDUCE));
-    assertThat(prediction.getDuration(), is(38556L));
+    assertThat(prediction.getDuration(), is(38555L));
 
     knownUserJob.setAvgReduceDuration(1001L);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(knownUserJob, TaskType.REDUCE));

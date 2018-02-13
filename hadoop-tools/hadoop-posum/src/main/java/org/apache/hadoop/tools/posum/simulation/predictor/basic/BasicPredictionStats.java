@@ -14,8 +14,10 @@ class BasicPredictionStats extends PredictionStats<AveragingStatEntry> {
   }
 
   void addSamples(JobProfile job) {
-    addEntry(MAP_DURATION, new AveragingStatEntry(job.getAvgMapDuration(), job.getCompletedMaps()));
-    addEntry(REDUCE_DURATION, new AveragingStatEntry(job.getAvgReduceDuration(), job.getCompletedMaps()));
+    if (job.getAvgMapDuration() != null)
+      addEntry(MAP_DURATION, new AveragingStatEntry(job.getAvgMapDuration(), job.getCompletedMaps()));
+    if (job.getAvgReduceDuration() != null)
+      addEntry(REDUCE_DURATION, new AveragingStatEntry(job.getAvgReduceDuration(), job.getCompletedReduces()));
   }
 
   public Double getAverage(Enum key) {

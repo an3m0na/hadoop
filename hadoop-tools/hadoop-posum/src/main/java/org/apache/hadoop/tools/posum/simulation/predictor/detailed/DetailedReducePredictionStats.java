@@ -46,23 +46,27 @@ class DetailedReducePredictionStats extends PredictionStats<AveragingStatEntry> 
         if (task.getInputBytes() != null) {
           totalInputSize += task.getInputBytes();
         }
-        if (task.getStartTime() < mapFinish && task.getShuffleTime() != 0) {
-          // first shuffle
-          Double duration = task.getStartTime().doubleValue() - mapFinish + task.getShuffleTime();
-          shuffleFirst += duration;
-          shuffleFirstNo++;
-        } else if (task.getInputBytes() != null) { // typical shuffle; calculate rate
-          // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-          Double inputSize = Math.max(task.getInputBytes(), 1.0);
-          shuffleRate += inputSize / task.getShuffleTime();
-          shuffleTypicalNo++;
+        if (task.getShuffleTime() != null) {
+          if (task.getStartTime() < mapFinish) {
+            // first shuffle
+            Double duration = task.getStartTime().doubleValue() - mapFinish + task.getShuffleTime();
+            shuffleFirst += duration;
+            shuffleFirstNo++;
+          } else if (task.getInputBytes() != null) { // typical shuffle; calculate rate
+            // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+            Double inputSize = Math.max(task.getInputBytes(), 1.0);
+            shuffleRate += inputSize / task.getShuffleTime();
+            shuffleTypicalNo++;
+          }
         }
       }
 
       // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
       Double avgInputSize = Math.max(1.0 * totalInputSize / sampleNo, 1.0);
-      addEntry(REDUCE_RATE, new AveragingStatEntry(avgInputSize / job.getAvgReduceTime(), sampleNo));
-      addEntry(MERGE_RATE, new AveragingStatEntry(avgInputSize / job.getAvgMergeTime(), sampleNo));
+      if (job.getAvgReduceTime() != null)
+        addEntry(REDUCE_RATE, new AveragingStatEntry(avgInputSize / job.getAvgReduceTime(), sampleNo));
+      if (job.getAvgMergeTime() != null)
+        addEntry(MERGE_RATE, new AveragingStatEntry(avgInputSize / job.getAvgMergeTime(), sampleNo));
       if (shuffleFirstNo > 0)
         addEntry(SHUFFLE_FIRST_DURATION, new AveragingStatEntry(shuffleFirst / shuffleFirstNo, shuffleFirstNo));
       if (shuffleTypicalNo > 0)
