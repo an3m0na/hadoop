@@ -139,31 +139,31 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel<P>, P exten
     return input;
   }
 
-  private <T extends PredictionStats> Double getStat(Enum key, T historicalStats, T jobStats, boolean forceRelevance) {
-    Double historicalAverage = historicalStats == null ? null : historicalStats.getAverage(key);
-    Double currentAverage = jobStats == null ? null : jobStats.getAverage(key);
+  private <E extends PredictionStatEntry<E>, T extends PredictionStats<E>> E getStatEntry(Enum key, T historicalStats, T jobStats, boolean forceRelevance) {
+    E historicalEntry = historicalStats == null ? null : historicalStats.getEntry(key);
+    E currentEntry = jobStats == null ? null : jobStats.getEntry(key);
 
     // we try to get the average from the map history
-    if (historicalAverage == null) {
+    if (historicalEntry == null) {
       // we have no historical information about this job current average if it exists
-      return currentAverage;
+      return currentEntry;
     }
     // we have historical information
     if (historicalStats.getRelevance() <= 1)
       // historical info is relevant, so prefer it
-      return historicalAverage;
+      return historicalEntry;
     if (forceRelevance)
       // history is not relevant, so return current average if it exists
-      return currentAverage;
-    return currentAverage == null ? historicalAverage : currentAverage;
+      return currentEntry;
+    return currentEntry == null ? historicalEntry : currentEntry;
   }
 
-  protected <T extends PredictionStats> Double getRelevantStat(Enum key, T historicalStats, T jobStats) {
-    return getStat(key, historicalStats, jobStats, true);
+  protected <E extends PredictionStatEntry<E>, T extends PredictionStats<E>> E getRelevantStatEntry(Enum key, T historicalStats, T jobStats) {
+    return getStatEntry(key, historicalStats, jobStats, true);
   }
 
-  protected <T extends PredictionStats> Double getAnyStat(Enum key, T historicalStats, T jobStats) {
-    return getStat(key, historicalStats, jobStats, false);
+  protected <E extends PredictionStatEntry<E>, T extends PredictionStats<E>> E getAnyStatEntry(Enum key, T historicalStats, T jobStats) {
+    return getStatEntry(key, historicalStats, jobStats, false);
   }
 
   protected TaskPredictionOutput handleNoMapInfo(JobProfile job) {

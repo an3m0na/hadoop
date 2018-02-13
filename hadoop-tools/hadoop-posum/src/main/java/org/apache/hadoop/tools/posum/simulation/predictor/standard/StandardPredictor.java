@@ -48,7 +48,7 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
     }
 
     if (reduceStats.getSampleSize(REDUCE_DURATION) != job.getCompletedReduces()) { // new information is available
-      reduceStats.addSamples(job, tasks);
+      reduceStats.addSamples(job);
     }
 
     return predictionProfile;

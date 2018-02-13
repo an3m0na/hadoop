@@ -1,32 +1,30 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.basic;
 
-import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
-import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
+import org.apache.hadoop.tools.posum.simulation.predictor.simple.AveragingStatEntry;
 import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys;
 
-import java.util.List;
-
-import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.MAP_DURATION;
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.REDUCE_DURATION;
 
-class BasicPredictionStats extends PredictionStats {
+class BasicPredictionStats extends PredictionStats<AveragingStatEntry> {
   BasicPredictionStats(int relevance) {
     super(relevance, SimpleStatKeys.MAP_DURATION, REDUCE_DURATION);
   }
 
-  void addSamples(List<TaskProfile> tasks) {
-    for (TaskProfile task : tasks) {
-      if (getDuration(task) <= 0)
-        continue;
-      // this is a finished map task; calculate processing rate
-      addSample(task);
-    }
+  void addSamples(JobProfile job) {
+    addEntry(MAP_DURATION, new AveragingStatEntry(job.getAvgMapDuration(), job.getCompletedMaps()));
+    addEntry(REDUCE_DURATION, new AveragingStatEntry(job.getAvgReduceDuration(), job.getCompletedMaps()));
   }
 
-  private void addSample(TaskProfile task) {
-    Double duration = getDuration(task).doubleValue();
-    addSample(task.getType() == TaskType.MAP ? MAP_DURATION : REDUCE_DURATION, duration);
+  public Double getAverage(Enum key) {
+    AveragingStatEntry entry = getEntry(key);
+    return entry == null ? null : entry.getAverage();
+  }
+
+  @Override
+  protected AveragingStatEntry emptyEntry() {
+    return new AveragingStatEntry();
   }
 }

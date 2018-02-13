@@ -9,7 +9,7 @@ import java.util.Map;
 public class BasicPredictionProfile extends PredictionProfile {
   private BasicPredictionStats stats;
 
-  public BasicPredictionProfile(JobProfile job, BasicPredictionStats newStats) {
+  BasicPredictionProfile(JobProfile job, BasicPredictionStats newStats) {
     super(job);
     this.stats = newStats;
   }

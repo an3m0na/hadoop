@@ -38,26 +38,26 @@ public class TestStandardPredictor extends TestPredictor<StandardPredictor> {
 
     JobProfile knownUserJob = createJobOnKnownUser();
     JobProfile unknownUserJob = createJobOnUnknownUser();
-    
+
     // check history stats for known user & unknown map/reduce classes
     StandardMapPredictionStats knownUserJobMapStats = predictor.getModel().getRelevantMapStats(knownUserJob);
     StandardReducePredictionStats knownUserJobReduceStats = predictor.getModel().getRelevantReduceStats(knownUserJob);
-    assertThat(knownUserJobMapStats.getAverage(MAP_DURATION), is(3652.267932489452));
-    assertThat(knownUserJobMapStats.getAverage(MAP_RATE), is(17477.210291517793));
-    assertThat(knownUserJobMapStats.getAverage(MAP_SELECTIVITY), is(0.8537658416558236));
-    assertThat(knownUserJobReduceStats.getAverage(REDUCE_DURATION), is(38556.70000000001));
-    assertThat(knownUserJobReduceStats.getAverage(REDUCE_RATE), is(48446.2100838046));
+    assertThat(knownUserJobMapStats.getEntry(MAP_DURATION).getAverage(), is(3652.267932489452));
+    assertThat(knownUserJobMapStats.getEntry(MAP_RATE).getAverage(), is(17477.210291517793));
+    assertThat(knownUserJobMapStats.getEntry(MAP_SELECTIVITY).getAverage(), is(0.8537658416558236));
+    assertThat(knownUserJobReduceStats.getEntry(REDUCE_DURATION).getAverage(), is(38556.70000000001));
+    assertThat(knownUserJobReduceStats.getEntry(REDUCE_RATE).getAverage(), is(48446.2100838046));
 
     // check history stats for known map/reduce classes
     knownUserJob.setMapperClass("org.apache.hadoop.mapreduce.lib.map.RegexMapper");
     knownUserJob.setReducerClass("org.apache.nutch.indexer.IndexerMapReduce");
     knownUserJobMapStats = predictor.getModel().getRelevantMapStats(knownUserJob);
     knownUserJobReduceStats = predictor.getModel().getRelevantReduceStats(knownUserJob);
-    assertThat(knownUserJobMapStats.getAverage(MAP_DURATION), is(4042.3125));
-    assertThat(knownUserJobMapStats.getAverage(MAP_RATE), is(16299.558275983596));
-    assertThat(knownUserJobMapStats.getAverage(MAP_SELECTIVITY), is(9.123336002731678E-8));
-    assertThat(knownUserJobReduceStats.getAverage(REDUCE_DURATION), is(126436.0));
-    assertThat(knownUserJobReduceStats.getAverage(REDUCE_RATE), is(8426.27315355946));
+    assertThat(knownUserJobMapStats.getEntry(MAP_DURATION).getAverage(), is(4042.3125));
+    assertThat(knownUserJobMapStats.getEntry(MAP_RATE).getAverage(), is(16299.558275983596));
+    assertThat(knownUserJobMapStats.getEntry(MAP_SELECTIVITY).getAverage(), is(9.123336002731678E-8));
+    assertThat(knownUserJobReduceStats.getEntry(REDUCE_DURATION).getAverage(), is(126436.0));
+    assertThat(knownUserJobReduceStats.getEntry(REDUCE_RATE).getAverage(), is(8426.27315355946));
 
     // check history stats for unknown user
     StandardMapPredictionStats unknownUserJobMapStats = predictor.getModel().getRelevantMapStats(unknownUserJob);

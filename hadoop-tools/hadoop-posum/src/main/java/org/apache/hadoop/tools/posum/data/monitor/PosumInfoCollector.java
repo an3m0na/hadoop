@@ -118,9 +118,11 @@ public class PosumInfoCollector {
           // prediction can throw exception if data model changes state during calculation
           storePredictionForTask(basicPredictor, new TaskPredictionInput(taskId));
           storePredictionForTask(standardPredictor, new TaskPredictionInput(taskId));
-          storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, true));
-          storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, false));
           storePredictionForTask(detailedPredictor, new TaskPredictionInput(taskId));
+          if (taskId.contains("_m_")) {
+            storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, true));
+            storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, false));
+          }
         }
         lastPrediction = now;
       }

@@ -3,36 +3,12 @@ package org.apache.hadoop.tools.posum.simulation.predictor;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDouble;
-import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getInteger;
-
-public abstract class PredictionStats {
-  class StatEntry {
-    private Double average;
-    private int sampleSize;
-
-    StatEntry(Double average, int sampleSize) {
-      this.average = average;
-      this.sampleSize = sampleSize;
-    }
-
-    int getSampleSize() {
-      return sampleSize;
-    }
-
-    Double getAverage() {
-      return average;
-    }
-
-    void addSample(Double sample) {
-      average = (average * sampleSize + sample) / (++sampleSize);
-    }
-  }
+public abstract class PredictionStats<E extends PredictionStatEntry<E>> {
 
   private int relevance;
   private String flexPrefix;
   private Enum[] statKeys;
-  protected Map<Enum, StatEntry> averages = new HashMap<>();
+  protected Map<Enum, E> entries = new HashMap<>();
 
   public PredictionStats(int relevance, Enum... statKeys) {
     this.relevance = relevance;
@@ -41,13 +17,12 @@ public abstract class PredictionStats {
   }
 
   public int getSampleSize(Enum key) {
-    StatEntry entry = averages.get(key);
+    E entry = entries.get(key);
     return entry == null ? 0 : entry.getSampleSize();
   }
 
-  public Double getAverage(Enum key) {
-    StatEntry entry = averages.get(key);
-    return entry == null ? null : entry.getAverage();
+  public E getEntry(Enum key) {
+    return entries.get(key);
   }
 
   public int getRelevance() {
@@ -58,62 +33,40 @@ public abstract class PredictionStats {
     this.relevance = relevance;
   }
 
-  protected void addSample(Enum key, Double value) {
-    if (value == null)
+  protected void addEntry(Enum key, E entry) {
+    if (entry == null || entry.getSampleSize() == 0)
       return;
-    StatEntry entry = averages.get(key);
-    if (entry == null) {
-      entry = new StatEntry(value, 1);
-      averages.put(key, entry);
-    } else {
-      entry.addSample(value);
-    }
+    E oldEntry = entries.get(key);
+    entries.put(key, oldEntry == null ? entry.copy() : oldEntry.copy().merge(entry));
   }
 
-  public void merge(PredictionStats otherStats) {
+  public void merge(PredictionStats<E> otherStats) {
     if (otherStats == null)
       return;
     if (!getClass().isAssignableFrom(otherStats.getClass()))
       throw new UnsupportedOperationException();
     for (Enum statKey : statKeys) {
-      StatEntry thisEntry = averages.get(statKey);
-      StatEntry otherEntry = otherStats.averages.get(statKey);
-      if (otherEntry != null && otherEntry.getAverage() != null) {
-        if (thisEntry == null || thisEntry.getAverage() == null) {
-          averages.put(statKey, new StatEntry(otherEntry.getAverage(), otherEntry.getSampleSize()));
-        } else {
-          int newSampleSize = thisEntry.getSampleSize() + otherEntry.getSampleSize();
-          Double newAverage = (thisEntry.getAverage() * thisEntry.getSampleSize() +
-            otherEntry.getAverage() * otherEntry.getSampleSize()) / newSampleSize;
-          averages.put(statKey, new StatEntry(newAverage, newSampleSize));
-        }
-      }
+      addEntry(statKey, otherStats.getEntry(statKey));
     }
   }
 
   public Map<String, String> serialize() {
     Map<String, String> propertyMap = new HashMap<>();
-    for (Map.Entry<Enum, StatEntry> entry : averages.entrySet()) {
-      propertyMap.put(asFlexKey(entry.getKey()), String.valueOf(entry.getValue().getAverage()));
-      propertyMap.put(asSamplesFlexKey(entry.getKey()), String.valueOf(entry.getValue().getSampleSize()));
+    for (Map.Entry<Enum, E> entry : entries.entrySet()) {
+      propertyMap.put(asFlexKey(entry.getKey()), entry.getValue().serialize());
     }
     return propertyMap;
   }
 
   public void deserialize(Map<String, String> flexFields) {
     for (Enum statKey : statKeys) {
-      Double average = getDouble(flexFields, asFlexKey(statKey), null);
-      int sampleSize = getInteger(flexFields, asSamplesFlexKey(statKey), 0);
-      if (average != null)
-        averages.put(statKey, new StatEntry(average, sampleSize));
+      entries.put(statKey, emptyEntry().deserialize(flexFields.get(asFlexKey(statKey))));
     }
   }
 
-  protected String asFlexKey(Enum statKey) {
-    return flexPrefix + statKey.name();
-  }
+  protected abstract E emptyEntry();
 
-  protected String asSamplesFlexKey(Enum statKey) {
-    return asFlexKey(statKey) + "::samples";
+  private String asFlexKey(Enum statKey) {
+    return flexPrefix + statKey.name();
   }
 }

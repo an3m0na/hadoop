@@ -24,7 +24,17 @@ public abstract class SimpleRateBasedPredictor<
     super(conf);
   }
 
-  protected <T extends PredictionStats> TaskPredictionOutput handleNoMapRateInfo(JobProfile job, T historicalStats, T jobStats) {
+  protected Double getAnyStat(Enum key, PredictionStats<AveragingStatEntry> historicalStats, PredictionStats<AveragingStatEntry> jobStats) {
+    AveragingStatEntry entry = getAnyStatEntry(key, historicalStats, jobStats);
+    return entry == null ? null : entry.getAverage();
+  }
+
+  protected Double getRelevantStat(Enum key, PredictionStats<AveragingStatEntry> historicalStats, PredictionStats<AveragingStatEntry> jobStats) {
+    AveragingStatEntry entry = getRelevantStatEntry(key, historicalStats, jobStats);
+    return entry == null ? null : entry.getAverage();
+  }
+
+  protected <T extends PredictionStats<AveragingStatEntry>> TaskPredictionOutput handleNoMapRateInfo(JobProfile job, T historicalStats, T jobStats) {
     Double avgDuration = getAnyStat(MAP_DURATION, historicalStats, jobStats);
     logger.trace("Incomplete map rate info for " + job.getId() + ". Trying average duration " + avgDuration);
     if (avgDuration != null)

@@ -1,25 +1,33 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.standard;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleReducePredictionStats;
+import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
+import org.apache.hadoop.tools.posum.simulation.predictor.simple.AveragingStatEntry;
 
-import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.REDUCE_DURATION;
 import static org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardStatKeys.REDUCE_RATE;
 
-class StandardReducePredictionStats extends SimpleReducePredictionStats {
+class StandardReducePredictionStats extends PredictionStats<AveragingStatEntry> {
 
   StandardReducePredictionStats(int relevance) {
     super(relevance, REDUCE_DURATION, REDUCE_RATE);
   }
 
-  public void addSample(JobProfile job, TaskProfile task) {
-    Double duration = getDuration(task).doubleValue();
-    addSample(REDUCE_DURATION, duration);
-    if (task.getInputBytes() != null) {
-      // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-      addSample(REDUCE_RATE, Math.max(task.getInputBytes(), 1.0) / duration);
+  public void addSamples(JobProfile job) {
+    int sampleNo = job.getCompletedReduces();
+    Long avgDuration = job.getAvgReduceDuration();
+
+    if (sampleNo > 0 && avgDuration != null) {
+      addEntry(REDUCE_DURATION, new AveragingStatEntry(avgDuration, sampleNo));
+      if (job.getReduceInputBytes() != null) {
+        Double avgInputSize = Math.max(1.0 * job.getReduceInputBytes() / sampleNo, 1.0);
+        addEntry(REDUCE_RATE, new AveragingStatEntry(avgInputSize / avgDuration, sampleNo));
+      }
     }
+  }
+
+  @Override
+  protected AveragingStatEntry emptyEntry() {
+    return new AveragingStatEntry();
   }
 }

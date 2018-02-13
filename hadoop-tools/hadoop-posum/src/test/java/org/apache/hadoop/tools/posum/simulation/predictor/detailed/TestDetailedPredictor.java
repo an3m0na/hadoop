@@ -47,32 +47,32 @@ public class TestDetailedPredictor extends TestPredictor<DetailedPredictor> {
     // check history stats for known user & unknown map/reduce classes
     DetailedMapPredictionStats knownUserJobMapStats = predictor.getModel().getRelevantMapStats(knownUserJob);
     DetailedReducePredictionStats knownUserJobReduceStats = predictor.getModel().getRelevantReduceStats(knownUserJob);
-    assertThat(knownUserJobMapStats.getAverage(MAP_DURATION), is(3652.267932489452));
-    assertThat(knownUserJobMapStats.getAverage(MAP_RATE), is(17477.210291517793));
-    assertThat(knownUserJobMapStats.getAverage(MAP_SELECTIVITY), is(0.8537658416558236));
-    assertThat(knownUserJobMapStats.getAverage(MAP_LOCAL_RATE), is(17994.40641603625));
-    assertThat(knownUserJobMapStats.getAverage(MAP_REMOTE_RATE), is(18077.198895748967));
-    assertThat(knownUserJobReduceStats.getAverage(REDUCE_DURATION), is(38556.70000000001));
-    assertThat(knownUserJobReduceStats.getAverage(REDUCE_RATE), is(204901.1652928512));
-    assertThat(knownUserJobReduceStats.getAverage(MERGE_RATE), is(1856219.125144537));
-    assertThat(knownUserJobReduceStats.getAverage(SHUFFLE_FIRST_DURATION), is(1340.6));
-    assertThat(knownUserJobReduceStats.getAverage(SHUFFLE_TYPICAL_RATE), is(103647.2241162516));
+    assertThat(knownUserJobMapStats.getEntry(MAP_DURATION).getAverage(), is(3652.267932489452));
+    assertThat(knownUserJobMapStats.getEntry(MAP_RATE).getAverage(), is(17477.210291517793));
+    assertThat(knownUserJobMapStats.getEntry(MAP_SELECTIVITY).getAverage(), is(0.8537658416558236));
+    assertThat(knownUserJobMapStats.getEntry(MAP_LOCAL_RATE).getAverage(), is(17994.40641603625));
+    assertThat(knownUserJobMapStats.getEntry(MAP_REMOTE_RATE).getAverage(), is(18077.198895748967));
+    assertThat(knownUserJobReduceStats.getEntry(REDUCE_DURATION).getAverage(), is(38556.70000000001));
+    assertThat(knownUserJobReduceStats.getEntry(REDUCE_RATE).getAverage(), is(204901.1652928512));
+    assertThat(knownUserJobReduceStats.getEntry(MERGE_RATE).getAverage(), is(1856219.125144537));
+    assertThat(knownUserJobReduceStats.getEntry(SHUFFLE_FIRST_DURATION).getAverage(), is(1340.6));
+    assertThat(knownUserJobReduceStats.getEntry(SHUFFLE_TYPICAL_RATE).getAverage(), is(103647.2241162516));
 
     // check history stats for known map/reduce classes
     knownUserJob.setMapperClass("org.apache.hadoop.mapreduce.lib.map.RegexMapper");
     knownUserJob.setReducerClass("org.apache.nutch.indexer.IndexerMapReduce");
     knownUserJobMapStats = predictor.getModel().getRelevantMapStats(knownUserJob);
     knownUserJobReduceStats = predictor.getModel().getRelevantReduceStats(knownUserJob);
-    assertThat(knownUserJobMapStats.getAverage(MAP_DURATION), is(4042.3125));
-    assertThat(knownUserJobMapStats.getAverage(MAP_RATE), is(16299.558275983596));
-    assertThat(knownUserJobMapStats.getAverage(MAP_SELECTIVITY), is(9.123336002731678E-8));
-    assertThat(knownUserJobMapStats.getAverage(MAP_LOCAL_RATE), is(16290.30324995309));
-    assertThat(knownUserJobMapStats.getAverage(MAP_REMOTE_RATE), nullValue());
-    assertThat(knownUserJobReduceStats.getAverage(REDUCE_DURATION), is(126436.0));
-    assertThat(knownUserJobReduceStats.getAverage(REDUCE_RATE), is(9914.625746704905));
-    assertThat(knownUserJobReduceStats.getAverage(MERGE_RATE), is(4101254.945479382));
-    assertThat(knownUserJobReduceStats.getAverage(SHUFFLE_FIRST_DURATION), is(613.6));
-    assertThat(knownUserJobReduceStats.getAverage(SHUFFLE_TYPICAL_RATE), nullValue());
+    assertThat(knownUserJobMapStats.getEntry(MAP_DURATION).getAverage(), is(4042.3125));
+    assertThat(knownUserJobMapStats.getEntry(MAP_RATE).getAverage(), is(16299.558275983596));
+    assertThat(knownUserJobMapStats.getEntry(MAP_SELECTIVITY).getAverage(), is(9.123336002731678E-8));
+    assertThat(knownUserJobMapStats.getEntry(MAP_LOCAL_RATE).getAverage(), is(16290.30324995309));
+    assertThat(knownUserJobMapStats.getEntry(MAP_REMOTE_RATE), nullValue());
+    assertThat(knownUserJobReduceStats.getEntry(REDUCE_DURATION).getAverage(), is(126436.0));
+    assertThat(knownUserJobReduceStats.getEntry(REDUCE_RATE).getAverage(), is(9914.625746704905));
+    assertThat(knownUserJobReduceStats.getEntry(MERGE_RATE).getAverage(), is(4101254.945479382));
+    assertThat(knownUserJobReduceStats.getEntry(SHUFFLE_FIRST_DURATION).getAverage(), is(613.6));
+    assertThat(knownUserJobReduceStats.getEntry(SHUFFLE_TYPICAL_RATE), nullValue());
 
     // check history stats for unknown user
     DetailedMapPredictionStats unknownUserJobMapStats = predictor.getModel().getRelevantMapStats(unknownUserJob);

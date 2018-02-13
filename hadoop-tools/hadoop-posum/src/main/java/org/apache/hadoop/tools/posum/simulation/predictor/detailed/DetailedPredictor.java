@@ -130,7 +130,6 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
     if (avgSelectivity == null)
       return null;
     // calculate how much input the task should have based on how much is left and how many reduces remain
-    // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
     Double inputPerTask = calculateInputPerReduce(job, avgSelectivity);
     Long shuffleTime = predictShuffleTime(job, historicalStats, jobStats, inputPerTask);
     if (shuffleTime == null)

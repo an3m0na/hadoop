@@ -1,33 +1,51 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.standard;
 
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleMapPredictionStats;
+import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
+import org.apache.hadoop.tools.posum.simulation.predictor.simple.AveragingStatEntry;
 
-import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
+import java.util.List;
+
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getSplitSize;
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.MAP_DURATION;
 import static org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardStatKeys.MAP_RATE;
 import static org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardStatKeys.MAP_SELECTIVITY;
 
-class StandardMapPredictionStats extends SimpleMapPredictionStats {
+class StandardMapPredictionStats extends PredictionStats<AveragingStatEntry> {
 
   StandardMapPredictionStats(int relevance) {
     super(relevance, MAP_DURATION, MAP_RATE, MAP_SELECTIVITY);
   }
 
-  public void addSample(JobProfile job, TaskProfile task) {
-    Double duration = getDuration(task).doubleValue();
-    addSample(MAP_DURATION, duration);
+  public void addSamples(JobProfile job, List<TaskProfile> tasks) {
+    int sampleNo = job.getCompletedMaps();
+    Long avgDuration = job.getAvgMapDuration();
 
-    Long splitSize = getSplitSize(task, job);
-    if (splitSize == null)
-      return;
+    if (sampleNo > 0 && avgDuration != null) {
+      addEntry(MAP_DURATION, new AveragingStatEntry(avgDuration, sampleNo));
 
-    // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-    Double boundedSplitSize = Math.max(splitSize, 1.0);
-    addSample(MAP_RATE, boundedSplitSize / duration);
-    addSample(MAP_SELECTIVITY, orZero(task.getOutputBytes()) / boundedSplitSize);
+      if (job.getTotalSplitSize() != null) { // nothing will work if we don't know the total split size
+        Long totalInputSize = 0L;
+        for (TaskProfile task : tasks) {
+          if (getDuration(task) > 0 && task.getType().equals(TaskType.MAP))
+            totalInputSize += getSplitSize(task, job);
+        }
+        // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+        Double avgInputSize = Math.max(1.0 * totalInputSize / sampleNo, 1.0);
+        addEntry(MAP_RATE, new AveragingStatEntry(avgInputSize / avgDuration, sampleNo));
+        if (job.getMapOutputBytes() != null) {
+          Double avgOutputSize = 1.0 * job.getMapOutputBytes() / sampleNo;
+          addEntry(MAP_SELECTIVITY, new AveragingStatEntry(avgOutputSize / avgInputSize, sampleNo));
+        }
+      }
+    }
+  }
+
+  @Override
+  protected AveragingStatEntry emptyEntry() {
+    return new AveragingStatEntry();
   }
 }

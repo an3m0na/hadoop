@@ -2,12 +2,16 @@ package org.apache.hadoop.tools.posum.simulation.predictor.simple;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionProfile;
+import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStatEntry;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class SimpleMRPredictionProfile<M extends PredictionStats, R extends PredictionStats> extends PredictionProfile {
+public class SimpleMRPredictionProfile<
+  M extends PredictionStats<E>,
+  R extends PredictionStats<E>,
+  E extends PredictionStatEntry<E>> extends PredictionProfile {
   private M mapStats;
   private R reduceStats;
 

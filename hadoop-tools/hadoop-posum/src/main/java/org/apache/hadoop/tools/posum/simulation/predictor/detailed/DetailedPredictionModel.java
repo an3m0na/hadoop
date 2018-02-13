@@ -1,10 +1,12 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.detailed;
 
+import org.apache.hadoop.tools.posum.simulation.predictor.simple.AveragingStatEntry;
 import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleMRPredictionModel;
 
 class DetailedPredictionModel extends SimpleMRPredictionModel<
   DetailedMapPredictionStats,
   DetailedReducePredictionStats,
+  AveragingStatEntry,
   DetailedPredictionProfile> {
 
   DetailedPredictionModel(int historyBuffer) {
