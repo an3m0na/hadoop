@@ -3,15 +3,19 @@ package org.apache.hadoop.tools.posum.data.monitor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
+import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
+import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
+import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
@@ -38,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.ACTIVE_NODES;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.CLUSTER_METRICS;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry.Type.NODE_ADD;
@@ -112,16 +118,20 @@ public class PosumInfoCollector {
         basicPredictor.train(mainDb);
         standardPredictor.train(mainDb);
         detailedPredictor.train(mainDb);
-        IdsByQueryCall getAllTasks = IdsByQueryCall.newInstance(DataEntityCollection.TASK, null);
-        List<String> taskIds = mainDb.execute(getAllTasks).getEntries();
-        for (String taskId : taskIds) {
-          // prediction can throw exception if data model changes state during calculation
-          storePredictionForTask(basicPredictor, new TaskPredictionInput(taskId));
-          storePredictionForTask(standardPredictor, new TaskPredictionInput(taskId));
-          storePredictionForTask(detailedPredictor, new TaskPredictionInput(taskId));
-          if (taskId.contains("_m_")) {
-            storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, true));
-            storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, false));
+        IdsByQueryCall getAllJobIds = IdsByQueryCall.newInstance(JOB, null);
+        List<String> jobIds = mainDb.execute(getAllJobIds).getEntries();
+        for (String jobId : jobIds) {
+          JobProfile job = mainDb.execute(FindByIdCall.newInstance(JOB, jobId)).getEntity();
+          List<TaskProfile> tasks = mainDb.execute(FindByQueryCall.newInstance(TASK, QueryUtils.is("jobId", jobId))).getEntities();
+          for (TaskProfile task : tasks) {
+            // prediction can throw exception if data model changes state during calculation
+            storePredictionForTask(basicPredictor, new TaskPredictionInput(job, task.getType(), task.getHostName()));
+            storePredictionForTask(standardPredictor, new TaskPredictionInput(job, task.getType(), task.getHostName()));
+            storePredictionForTask(detailedPredictor, new TaskPredictionInput(job, task.getType(), task.getHostName()));
+            if (task.getType() == TaskType.MAP) {
+              storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(job, task.getType(), true));
+              storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(job, task.getType(), false));
+            }
           }
         }
         lastPrediction = now;

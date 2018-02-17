@@ -162,8 +162,7 @@ public class SimulationRunner<T extends PluginPolicy> {
         Long taskFinish = task.getFinishTime();
         Long lifeTime = taskStart != null && taskFinish != null ? taskFinish - taskStart : null;
         Long originalStartTime = task.getStartTime() == null ? null : task.getStartTime() - context.getClusterTimeAtStart();
-        ret.add(new SimulatedContainer(context, containerResource, lifeTime, task.getType().name(),
-          task.getId(), task.getSplitLocations(), originalStartTime, task.getHostName()));
+        ret.add(new SimulatedContainer(context, containerResource, task, lifeTime, originalStartTime));
       }
     }
     // sort so that containers that should already be allocated go first
