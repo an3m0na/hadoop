@@ -1,11 +1,8 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.standard;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
 import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleRateBasedPredictor;
@@ -20,8 +17,6 @@ import static org.apache.hadoop.tools.posum.simulation.predictor.standard.Standa
 import static org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardStatKeys.REDUCE_RATE;
 
 public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredictionModel, StandardPredictionProfile> {
-
-  private static final Log logger = LogFactory.getLog(StandardPredictor.class);
 
   public StandardPredictor(Configuration conf) {
     super(conf);
@@ -39,16 +34,15 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
     StandardPredictionProfile predictionProfile = new StandardPredictionProfile(job, mapStats, reduceStats);
     predictionProfile.deserialize();
 
-    List<TaskProfile> tasks = getJobTasks(job.getId(), job.getFinishTime() != null);
-    if (tasks == null)
-      throw new PosumException("Tasks not found or finished for job " + job.getId());
-
     if (mapStats.getSampleSize(MAP_DURATION) != job.getCompletedMaps()) { // new information is available
+      List<TaskProfile> tasks = getJobTasks(job.getId(), job.getFinishTime() != null);
       mapStats.addSamples(job, tasks);
+      predictionProfile.markUpdated();
     }
 
     if (reduceStats.getSampleSize(REDUCE_DURATION) != job.getCompletedReduces()) { // new information is available
       reduceStats.addSamples(job);
+      predictionProfile.markUpdated();
     }
 
     return predictionProfile;

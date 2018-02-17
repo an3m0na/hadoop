@@ -1,31 +1,25 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.simple;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.simulation.predictor.PredictionProfile;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStatEntry;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class SimpleMRPredictionProfile<
   M extends PredictionStats<E>,
   R extends PredictionStats<E>,
-  E extends PredictionStatEntry<E>> extends PredictionProfile {
-  private M mapStats;
+  E extends PredictionStatEntry<E>> extends SimplePredictionProfile<M, E> {
   private R reduceStats;
 
   public SimpleMRPredictionProfile(JobProfile job, M newMapStats, R newReduceStats) {
-    super(job);
-    this.mapStats = newMapStats;
+    super(job, newMapStats);
     this.reduceStats = newReduceStats;
   }
 
   @Override
   public Map<String, String> serialize() {
-    Map<String, String> fields = new HashMap<>();
-    if (mapStats != null)
-      fields.putAll(mapStats.serialize());
+    Map<String, String> fields = super.serialize();
     if (reduceStats != null)
       fields.putAll(reduceStats.serialize());
     return fields;
@@ -33,15 +27,20 @@ public class SimpleMRPredictionProfile<
 
   @Override
   public void deserialize() {
-    mapStats.deserialize(getJob().getFlexFields());
+    super.deserialize();
     reduceStats.deserialize(getJob().getFlexFields());
   }
 
   public M getMapStats() {
-    return mapStats;
+    return super.getStats();
   }
 
   public R getReduceStats() {
     return reduceStats;
+  }
+
+  @Override
+  public M getStats() {
+    throw new UnsupportedOperationException();
   }
 }

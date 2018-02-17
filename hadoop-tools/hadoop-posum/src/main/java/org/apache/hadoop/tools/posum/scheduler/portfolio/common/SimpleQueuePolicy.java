@@ -755,7 +755,7 @@ public abstract class SimpleQueuePolicy<
       assignOffSwitchContainers(node, application, priority);
 
 
-    logger.debug("assignContainersOnNode:" +
+    logger.trace("assignContainersOnNode:" +
       " node=" + node.getRMNode().getNodeAddress() +
       " application=" + application.getApplicationId().getId() +
       " priority=" + priority.getPriority() +
@@ -935,7 +935,7 @@ public abstract class SimpleQueuePolicy<
 
   protected void printQueue() {
     if (logger.isDebugEnabled())
-      logger.debug("Apps are now " + orderedApps);
+      logger.trace("Apps are now " + orderedApps);
   }
 
   protected abstract void updateAppPriority(A app);
@@ -944,13 +944,13 @@ public abstract class SimpleQueuePolicy<
     orderedApps.remove(app);
     updateAppPriority(app);
     orderedApps.add(app);
-    logger.debug("Added attempt " + app.getApplicationAttemptId());
+    logger.trace("Added attempt " + app.getApplicationAttemptId());
   }
 
   protected synchronized void onAppAttemptDone(A app) {
     Resources.subtractFrom(usedAMResource, app.getAMResource());
     orderedApps.remove(app);
-    logger.debug("Removed attempt " + app.getApplicationAttemptId());
+    logger.trace("Removed attempt " + app.getApplicationAttemptId());
   }
 
   @Override

@@ -18,4 +18,8 @@ public abstract class PredictionProfile {
   public abstract Map<String, String> serialize();
 
   public abstract void deserialize();
+
+  public abstract boolean isUpdated();
+
+  public abstract void markUpdated();
 }

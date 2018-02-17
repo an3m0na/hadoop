@@ -326,7 +326,7 @@ public abstract class ExtensibleCapacityScheduler<
 
       onAppAttemptAdded(attempt);
 
-      logger.debug("Submitting app attempt to queue: \n" + attempt);
+      logger.trace("Submitting app attempt to queue: \n" + attempt);
 
       queue.submitApplicationAttempt(attempt, application.getUser());
       logger.info("Added Application Attempt " + applicationAttemptId
@@ -334,7 +334,7 @@ public abstract class ExtensibleCapacityScheduler<
         + queue.getQueueName());
       if (isAttemptRecovering) {
         if (logger.isDebugEnabled()) {
-          logger.debug(applicationAttemptId
+          logger.trace(applicationAttemptId
             + " is recovering. Skipping notifying ATTEMPT_ADDED");
         }
       } else {

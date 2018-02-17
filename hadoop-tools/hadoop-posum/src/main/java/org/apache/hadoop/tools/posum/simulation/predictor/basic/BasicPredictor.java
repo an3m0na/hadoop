@@ -30,6 +30,7 @@ public class BasicPredictor extends JobBehaviorPredictor<BasicPredictionModel, B
       job.getCompletedMaps() + job.getCompletedReduces()) {
       // new information is available
       jobStats.addSamples(job);
+      predictionProfile.markUpdated();
     }
 
     return predictionProfile;

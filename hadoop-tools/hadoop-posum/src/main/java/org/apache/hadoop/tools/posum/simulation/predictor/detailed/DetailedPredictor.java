@@ -5,7 +5,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
 import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleRateBasedPredictor;
@@ -44,16 +43,18 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
     DetailedPredictionProfile predictionProfile = new DetailedPredictionProfile(job, mapStats, reduceStats);
     predictionProfile.deserialize();
 
-    List<TaskProfile> tasks = getJobTasks(job.getId(), job.getFinishTime() != null);
-    if (tasks == null)
-      throw new PosumException("Tasks not found or finished for job " + job.getId());
-
+    List<TaskProfile> tasks = null;
     if (mapStats.getSampleSize(MAP_DURATION) != job.getCompletedMaps()) { // new information is available
+      tasks = getJobTasks(job.getId(), job.getFinishTime() != null);
       mapStats.addSamples(job, tasks);
+      predictionProfile.markUpdated();
     }
 
     if (reduceStats.getSampleSize(REDUCE_DURATION) != job.getCompletedReduces()) { // new information is available
+      if (tasks == null)
+        tasks = getJobTasks(job.getId(), job.getFinishTime() != null);
       reduceStats.addSamples(job, tasks);
+      predictionProfile.markUpdated();
     }
 
     return predictionProfile;
@@ -74,6 +75,7 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
     }
 
     Long taskInput = getSplitSize(input.getTask(), job);
+
     Double avgRate = null;
     if (local != null)
       // we know locality; try to find relevant map rate w.r.t locality
@@ -82,12 +84,15 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
       // try to find any map rate
       avgRate = getAnyStat(MAP_RATE, historicalStats, jobStats);
     }
-    if (avgRate == null || taskInput == null)
+    if (avgRate == null || taskInput == null) {
       return handleNoMapRateInfo(job, historicalStats, jobStats);
+    }
 
     Long duration = predictMapByRate(job, taskInput, avgRate);
-    if (duration == null)
+    if (duration == null) {
       return handleNoMapRateInfo(job, historicalStats, jobStats);
+    }
+
     return new TaskPredictionOutput(duration);
   }
 

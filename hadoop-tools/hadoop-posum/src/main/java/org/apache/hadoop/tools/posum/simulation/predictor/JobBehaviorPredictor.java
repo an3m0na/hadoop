@@ -98,7 +98,8 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel<P>, P exten
   public TaskPredictionOutput predictTaskBehavior(TaskPredictionInput input) {
     completeInput(input);
     P predictionProfile = buildPredictionProfile(input.getJob());
-    savePredictionProfile(predictionProfile);
+    if (predictionProfile.isUpdated())
+      savePredictionProfile(predictionProfile);
     if (input.getTaskType().equals(TaskType.REDUCE))
       return predictReduceTaskBehavior(input, predictionProfile);
     return predictMapTaskBehavior(input, predictionProfile);
@@ -118,7 +119,7 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel<P>, P exten
 
   protected abstract TaskPredictionOutput predictReduceTaskBehavior(TaskPredictionInput input, P predictionProfile);
 
-  private TaskPredictionInput completeInput(TaskPredictionInput input) {
+  private void completeInput(TaskPredictionInput input) {
     if (input.getTaskId() != null) {
       if (input.getTask() == null) {
         input.setTask(getTaskById(input.getTaskId()));
@@ -136,7 +137,6 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel<P>, P exten
         input.setJob(getJobById(input.getJobId()));
       }
     }
-    return input;
   }
 
   private <E extends PredictionStatEntry<E>, T extends PredictionStats<E>> E getStatEntry(Enum key, T historicalStats, T jobStats, boolean forceRelevance) {
@@ -181,7 +181,12 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel<P>, P exten
   protected List<TaskProfile> getJobTasks(String jobId, boolean fromHistory) {
     FindByQueryCall getTasks = FindByQueryCall.newInstance(fromHistory ? TASK_HISTORY : TASK,
       QueryUtils.is("jobId", jobId));
-    return getDatabase().execute(getTasks).getEntities();
+
+    List<TaskProfile> tasks = getDatabase().execute(getTasks).getEntities();
+    if (tasks == null)
+      throw new PosumException("Tasks not found or finished for job " + jobId);
+
+    return tasks;
   }
 
   private JobProfile getJobById(String jobId) {
