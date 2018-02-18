@@ -109,7 +109,7 @@ public abstract class JobBehaviorPredictor<M extends PredictionModel<P>, P exten
     JobProfile job = predictionProfile.getJob();
     Map<String, String> profileFields = predictionProfile.serialize();
     if (profileFields != null && !profileFields.isEmpty()) {
-      SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), profileFields, job.getFinishTime() != null);
+      SaveJobFlexFieldsCall saveFlexFields = SaveJobFlexFieldsCall.newInstance(job.getId(), profileFields, orZero(job.getFinishTime()) != 0);
       getDatabase().execute(saveFlexFields);
       job.addAllFlexFields(profileFields);
     }

@@ -11,6 +11,7 @@ import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleRateBased
 
 import java.util.List;
 
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getSplitSize;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MAP_LOCAL_RATE;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MAP_RATE;
@@ -45,14 +46,14 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
 
     List<TaskProfile> tasks = null;
     if (mapStats.getSampleSize(MAP_DURATION) != job.getCompletedMaps()) { // new information is available
-      tasks = getJobTasks(job.getId(), job.getFinishTime() != null);
+      tasks = getJobTasks(job.getId(), orZero(job.getFinishTime()) != 0);
       mapStats.addSamples(job, tasks);
       predictionProfile.markUpdated();
     }
 
     if (reduceStats.getSampleSize(REDUCE_DURATION) != job.getCompletedReduces()) { // new information is available
       if (tasks == null)
-        tasks = getJobTasks(job.getId(), job.getFinishTime() != null);
+        tasks = getJobTasks(job.getId(), orZero(job.getFinishTime()) != 0);
       reduceStats.addSamples(job, tasks);
       predictionProfile.markUpdated();
     }

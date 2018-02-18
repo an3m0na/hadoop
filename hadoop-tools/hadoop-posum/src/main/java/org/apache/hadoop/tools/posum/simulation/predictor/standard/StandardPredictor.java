@@ -9,6 +9,7 @@ import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleRateBased
 
 import java.util.List;
 
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getSplitSize;
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.MAP_DURATION;
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.REDUCE_DURATION;
@@ -35,7 +36,7 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
     predictionProfile.deserialize();
 
     if (mapStats.getSampleSize(MAP_DURATION) != job.getCompletedMaps()) { // new information is available
-      List<TaskProfile> tasks = getJobTasks(job.getId(), job.getFinishTime() != null);
+      List<TaskProfile> tasks = getJobTasks(job.getId(), orZero(job.getFinishTime()) != 0);
       mapStats.addSamples(job, tasks);
       predictionProfile.markUpdated();
     }
