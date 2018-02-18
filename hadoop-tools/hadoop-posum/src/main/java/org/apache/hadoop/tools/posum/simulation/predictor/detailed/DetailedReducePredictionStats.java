@@ -31,7 +31,7 @@ class DetailedReducePredictionStats extends PredictionStats<AveragingStatEntry> 
 
       long shuffleRate = 0, shuffleFirst = 0;
       long totalInputSize = 0;
-      int shuffleTypicalNo = 0, shuffleFirstNo = 0;
+      int shuffleTypicalNo = 0, shuffleFirstNo = 0, reduceNo = 0;// use a separate reduce counter in case tasks finished in between getting job info and task info
 
       long mapFinish = -1; // keeps track of the finish time of the last map task
       // calculate when the last map task finished
@@ -45,6 +45,7 @@ class DetailedReducePredictionStats extends PredictionStats<AveragingStatEntry> 
           continue;
         if (task.getInputBytes() != null) {
           totalInputSize += task.getInputBytes();
+          reduceNo++;
         }
         if (task.getShuffleTime() != null) {
           if (task.getStartTime() < mapFinish) {
@@ -62,7 +63,7 @@ class DetailedReducePredictionStats extends PredictionStats<AveragingStatEntry> 
       }
 
       // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-      Double avgInputSize = Math.max(1.0 * totalInputSize / sampleNo, 1.0);
+      Double avgInputSize = Math.max(1.0 * totalInputSize / reduceNo, 1.0);
       if (job.getAvgReduceTime() != null)
         addEntry(REDUCE_RATE, new AveragingStatEntry(avgInputSize / job.getAvgReduceTime(), sampleNo));
       if (job.getAvgMergeTime() != null)

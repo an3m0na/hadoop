@@ -29,12 +29,15 @@ class StandardMapPredictionStats extends PredictionStats<AveragingStatEntry> {
 
       if (job.getTotalSplitSize() != null) { // nothing will work if we don't know the total split size
         Long totalInputSize = 0L;
+        int mapNo = 0; // use a separate map counter in case tasks finished in between getting job info and task info
         for (TaskProfile task : tasks) {
-          if (getDuration(task) > 0 && task.getType().equals(TaskType.MAP))
+          if (getDuration(task) > 0 && task.getType().equals(TaskType.MAP)) {
             totalInputSize += getSplitSize(task, job);
+            mapNo++;
+          }
         }
         // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-        Double avgInputSize = Math.max(1.0 * totalInputSize / sampleNo, 1.0);
+        Double avgInputSize = Math.max(1.0 * totalInputSize / mapNo, 1.0);
         addEntry(MAP_RATE, new AveragingStatEntry(avgInputSize / avgDuration, sampleNo));
         if (job.getMapOutputBytes() != null) {
           Double avgOutputSize = 1.0 * job.getMapOutputBytes() / sampleNo;

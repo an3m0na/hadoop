@@ -182,7 +182,7 @@ public class TestDetailedPredictor extends TestPredictor<DetailedPredictor> {
     knownUserJob.setCompletedReduces(2);
     save(reduceTask);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(knownUserJob, REDUCE));
-    assertThat(prediction.getDuration(), is(1250290L));
+    assertThat(prediction.getDuration(), is(625290L));
 
     // check rate-based prediction for class reduce stats and first shuffle
     knownUserJob.setReducerClass("org.apache.hadoop.mapreduce.Reducer");
@@ -193,6 +193,6 @@ public class TestDetailedPredictor extends TestPredictor<DetailedPredictor> {
     knownUserJob.setReducerClass("org.apache.hadoop.mapreduce.Reducer");
     knownUserJob.setCompletedMaps(2);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(knownUserJob, REDUCE));
-    assertThat(prediction.getDuration(), is(3L));
+    assertThat(prediction.getDuration(), is(1L));
   }
 }

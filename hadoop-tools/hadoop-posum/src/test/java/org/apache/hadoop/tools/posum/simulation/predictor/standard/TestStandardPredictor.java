@@ -108,7 +108,7 @@ public class TestStandardPredictor extends TestPredictor<StandardPredictor> {
     mapTask.setSplitSize(10_000L);
     save(mapTask);
     prediction = predictor.predictTaskBehavior(new TaskPredictionInput(knownUserJob, MAP));
-    assertThat(prediction.getDuration(), is(1_000_000L));
+    assertThat(prediction.getDuration(), is(500_000L));
   }
 
   @Test
