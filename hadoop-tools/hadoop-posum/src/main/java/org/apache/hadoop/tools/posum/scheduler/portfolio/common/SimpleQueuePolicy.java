@@ -179,7 +179,7 @@ public abstract class SimpleQueuePolicy<
                                     RMContainerEventType rmContainerEventType) {
 
     if (rmContainer == null) {
-      logger.info("Null container completed...");
+      logger.trace("Null container completed...");
       return;
     }
 
@@ -498,7 +498,7 @@ public abstract class SimpleQueuePolicy<
     onAppAttemptAdded(schedulerAppAttempt);
 
     queue.getMetrics().submitAppAttempt(user);
-    logger.info("Added Application Attempt " + appAttemptId
+    logger.trace("Added Application Attempt " + appAttemptId
       + " to scheduler from user " + application.getUser());
     if (isAttemptRecovering) {
       if (logger.isDebugEnabled()) {

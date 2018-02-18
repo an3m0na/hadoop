@@ -141,7 +141,7 @@ public class ContainerMonitor implements EventHandler<ContainerEvent> {
     JobProfile job = db.execute(JobForAppCall.newInstance(appIdString)).getEntity();
     if (job.getFinishTime() == null) {
       job.setFinishTime(simulationContext.getCurrentTime());
-      LOG.debug(MessageFormat.format("Sim={0} T={1}: Finish time for {2} is {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), job.getId(), job.getFinishTime()));
+      LOG.trace(MessageFormat.format("Sim={0} T={1}: Finish time for {2} is {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), job.getId(), job.getFinishTime()));
     }
     transaction.addCall(DeleteByIdCall.newInstance(JOB, job.getId()));
     transaction.addCall(StoreCall.newInstance(JOB_HISTORY, job));

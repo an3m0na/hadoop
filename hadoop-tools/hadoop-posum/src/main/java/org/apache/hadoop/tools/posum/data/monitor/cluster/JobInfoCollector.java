@@ -106,6 +106,8 @@ class JobInfoCollector {
 
     JobProfile profile = getFinishedJobProfile(app);
     info.setProfile(profile);
+    if (profile == null)
+      logger.error("Job was null for " + app.getId());
     api.addFinishedAttemptInfo(profile);
 
     JobConfProxy jobConf = api.getFinishedJobConf(profile.getId());
@@ -132,7 +134,7 @@ class JobInfoCollector {
       // there is no running record of the job
       job = api.getFinishedJobInfo(appId);
     } else {
-      // readStatsFromFlexFields the running info with the history info
+      // merge the running info with the history info
       job = api.getFinishedJobInfo(appId, job.getId(), job);
     }
     return job;

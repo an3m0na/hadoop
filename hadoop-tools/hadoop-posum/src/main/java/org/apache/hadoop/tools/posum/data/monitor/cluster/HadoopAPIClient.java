@@ -54,7 +54,7 @@ public class HadoopAPIClient {
 
   List<AppProfile> getAppsInfo() {
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.RM, "cluster/apps");
+      RestClient.TrackingUI.RM, "apps");
     JsonNode rawApps = getRawNode(rawString, "apps", "app");
     if (rawApps == null)
       return Collections.emptyList();
@@ -98,7 +98,7 @@ public class HadoopAPIClient {
 
   boolean checkAppFinished(AppProfile app) {
     String rawString = restClient.getInfo(String.class,
-      RestClient.TrackingUI.RM, "cluster/apps/%s", app.getId());
+      RestClient.TrackingUI.RM, "apps/%s", app.getId());
     JsonNode rawApp = getRawNode(rawString, "app");
     if (rawApp == null)
       return false;
