@@ -29,10 +29,6 @@ public abstract class PredictionStats<E extends PredictionStatEntry<E>> {
     return relevance;
   }
 
-  public void setRelevance(int relevance) {
-    this.relevance = relevance;
-  }
-
   protected void addEntry(Enum key, E entry) {
     if (entry == null || entry.getSampleSize() == 0)
       return;
@@ -41,10 +37,6 @@ public abstract class PredictionStats<E extends PredictionStatEntry<E>> {
   }
 
   public void merge(PredictionStats<E> otherStats) {
-    if (otherStats == null)
-      return;
-    if (!getClass().isAssignableFrom(otherStats.getClass()))
-      throw new UnsupportedOperationException();
     for (Enum statKey : statKeys) {
       addEntry(statKey, otherStats.getEntry(statKey));
     }
