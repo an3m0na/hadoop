@@ -147,7 +147,7 @@ public abstract class ExtensibleCapacityScheduler<
 
   /**
    * Override this to populate custom fields of an instance of A to be used for prioritisation within a queue.
-   * By default, the priority is its ApplicationId, so no readStatsFromFlexFields is necessary
+   * By default, the priority is its ApplicationId, so no update is necessary
    *
    * @param app the application attempt
    */
@@ -353,7 +353,7 @@ public abstract class ExtensibleCapacityScheduler<
       nodes.put(nodeManager.getNodeID(), schedulerNode);
       Resources.addTo(getClusterResource(), nodeManager.getTotalCapability());
 
-      // readStatsFromFlexFields this node to node label manager
+      // add this node to node label manager
       RMNodeLabelsManager labelManager = readField("labelManager");
       if (labelManager != null) {
         labelManager.activateNode(nodeManager.getNodeID(),

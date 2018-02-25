@@ -20,7 +20,6 @@ import org.apache.hadoop.yarn.api.records.ResourceRequest;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.COUNTER;
@@ -217,16 +216,6 @@ public class ClusterUtils {
         }
       }
     }
-  }
-
-  public static Double getDouble(Map<String, String> map, String key, Double defaultValue) {
-    String valueString = map.get(key);
-    return valueString == null ? defaultValue : Double.valueOf(valueString);
-  }
-
-  public static Integer getInteger(Map<String, String> map, String key, Integer defaultValue) {
-    String valueString = map.get(key);
-    return valueString == null ? defaultValue : Integer.valueOf(valueString);
   }
 
   public static void copyRunningAppInfo(DataStore dataStore, DatabaseReference source, DatabaseReference target) {

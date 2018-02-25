@@ -294,7 +294,7 @@ public abstract class SimpleQueuePolicy<
       }
 
       if (!ask.isEmpty()) {
-        logger.trace("allocate: pre-readStatsFromFlexFields" +
+        logger.trace("allocate: pre-update" +
           " applicationId=" + applicationAttemptId +
           " application=" + application);
         application.showRequests();
@@ -302,7 +302,7 @@ public abstract class SimpleQueuePolicy<
         // Update application requests
         application.updateResourceRequests(ask);
 
-        logger.trace("allocate: post-readStatsFromFlexFields" +
+        logger.trace("allocate: post-update" +
           " applicationId=" + applicationAttemptId +
           " application=" + application);
         application.showRequests();
@@ -668,7 +668,7 @@ public abstract class SimpleQueuePolicy<
     assignFromQueue(node);
 
     // Update the applications' headroom to correctly take into
-    // account the containers assigned in this readStatsFromFlexFields.
+    // account the containers assigned in this update.
     for (SchedulerApplication<A> application : applications.values()) {
       A attempt = application.getCurrentAppAttempt();
       if (attempt == null) {
