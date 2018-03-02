@@ -1,8 +1,8 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.standard;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
-import org.apache.hadoop.tools.posum.simulation.predictor.simple.AveragingStatEntry;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.AveragingStatEntry;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.PredictionStats;
 
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.REDUCE_DURATION;
 import static org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardStatKeys.REDUCE_RATE;

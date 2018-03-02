@@ -16,6 +16,8 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.PredictionStatEntry;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.PredictionStats;
 
 import java.util.LinkedList;
 import java.util.List;

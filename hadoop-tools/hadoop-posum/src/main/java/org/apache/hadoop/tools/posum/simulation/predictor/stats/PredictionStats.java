@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.simulation.predictor;
+package org.apache.hadoop.tools.posum.simulation.predictor.stats;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,9 +16,9 @@ public abstract class PredictionStats<E extends PredictionStatEntry<E>> {
     this.flexPrefix = getClass().getSimpleName() + "::";
   }
 
-  public int getSampleSize(Enum key) {
+  public long getSampleSize(Enum key) {
     E entry = entries.get(key);
-    return entry == null ? 0 : entry.getSampleSize();
+    return entry == null ? 0L : entry.getSampleSize();
   }
 
   public E getEntry(Enum key) {

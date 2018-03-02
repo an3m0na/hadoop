@@ -1,6 +1,6 @@
-package org.apache.hadoop.tools.posum.simulation.predictor.simple;
+package org.apache.hadoop.tools.posum.simulation.predictor.stats;
 
-import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStatEntry;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 public class AveragingStatEntry implements PredictionStatEntry<AveragingStatEntry> {
   private Double average;
@@ -26,11 +26,11 @@ public class AveragingStatEntry implements PredictionStatEntry<AveragingStatEntr
   }
 
   public void addSample(Double sample) {
-    average = (average * sampleSize + sample) / (++sampleSize);
+    average = (orZero(average) * sampleSize + sample) / (++sampleSize);
   }
 
   @Override
-  public int getSampleSize() {
+  public long getSampleSize() {
     return sampleSize;
   }
 

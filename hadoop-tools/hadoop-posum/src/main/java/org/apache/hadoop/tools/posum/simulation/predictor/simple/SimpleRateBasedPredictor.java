@@ -7,9 +7,10 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionModel;
 import org.apache.hadoop.tools.posum.simulation.predictor.PredictionProfile;
-import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
 import org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.AveragingStatEntry;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.PredictionStats;
 
 import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.MAP_DURATION;

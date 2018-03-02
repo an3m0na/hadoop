@@ -1,8 +1,8 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.simple;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
-import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStatEntry;
-import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.PredictionStatEntry;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.PredictionStats;
 
 import java.util.Map;
 

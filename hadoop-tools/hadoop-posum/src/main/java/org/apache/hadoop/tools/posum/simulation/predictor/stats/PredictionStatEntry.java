@@ -1,7 +1,7 @@
-package org.apache.hadoop.tools.posum.simulation.predictor;
+package org.apache.hadoop.tools.posum.simulation.predictor.stats;
 
 public interface PredictionStatEntry<T extends PredictionStatEntry> {
-  int getSampleSize();
+  long getSampleSize();
 
   T copy();
 

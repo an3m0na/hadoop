@@ -2,8 +2,8 @@ package org.apache.hadoop.tools.posum.simulation.predictor.detailed;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.simulation.predictor.PredictionStats;
-import org.apache.hadoop.tools.posum.simulation.predictor.simple.AveragingStatEntry;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.AveragingStatEntry;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.PredictionStats;
 
 import java.util.List;
 
