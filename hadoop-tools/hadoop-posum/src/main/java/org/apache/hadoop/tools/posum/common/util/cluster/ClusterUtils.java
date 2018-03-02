@@ -101,13 +101,13 @@ public class ClusterUtils {
   }
 
   public static Long getDuration(JobProfile job) {
-    if (orZero(job.getStartTime()) == 0 || orZero(job.getFinishTime()) == 0)
+    if (orZero(job.getFinishTime()) == 0)
       return 0L;
     return job.getFinishTime() - job.getStartTime();
   }
 
   public static Long getDuration(TaskProfile task) {
-    if (orZero(task.getStartTime()) == 0 || orZero(task.getFinishTime()) == 0)
+    if (orZero(task.getFinishTime()) == 0)
       return 0L;
     return task.getFinishTime() - task.getStartTime();
   }
