@@ -1,11 +1,11 @@
 package org.apache.hadoop.tools.posum.simulation.core.nodemanager;
 
-import org.apache.hadoop.tools.posum.common.util.cluster.NMCore;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEvent;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ContainerEventType;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
+import org.apache.hadoop.tools.posum.simulation.util.NMCore;
 import org.apache.hadoop.yarn.api.records.ContainerExitStatus;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerState;

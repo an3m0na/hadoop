@@ -2,11 +2,11 @@ package org.apache.hadoop.tools.posum.common.util.conf;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.edls.EDLSPriorityPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.edls.EDLSSharePolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.fifo.FifoPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.locf.LocalityFirstPolicy;
-import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.srtf.ShortestRTFirstPolicy;
 
 import java.util.HashMap;
@@ -15,11 +15,10 @@ public class PolicyPortfolio extends HashMap<String, Class<? extends PluginPolic
 
   public enum StandardPolicy {
     FIFO(FifoPolicy.class),
-    EDLS_SH(EDLSSharePolicy.class),
-    EDLS_PR(EDLSPriorityPolicy.class),
+    SRTF(ShortestRTFirstPolicy.class),
     LOCF(LocalityFirstPolicy.class),
-    SRTF(ShortestRTFirstPolicy.class)
- ;
+    EDLS_SH(EDLSSharePolicy.class),
+    EDLS_PR(EDLSPriorityPolicy.class);
 
     Class<? extends PluginPolicy> implClass;
 
