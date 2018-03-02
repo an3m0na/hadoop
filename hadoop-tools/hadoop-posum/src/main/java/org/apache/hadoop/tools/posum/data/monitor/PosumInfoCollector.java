@@ -7,13 +7,11 @@ import org.apache.hadoop.mapreduce.v2.api.records.TaskType;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
-import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.IdsByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.query.QueryUtils;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection;
 import org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference;
-import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.LogEntry;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload;
@@ -121,16 +119,19 @@ public class PosumInfoCollector {
         IdsByQueryCall getAllJobIds = IdsByQueryCall.newInstance(JOB, null);
         List<String> jobIds = mainDb.execute(getAllJobIds).getEntries();
         for (String jobId : jobIds) {
-          JobProfile job = mainDb.execute(FindByIdCall.newInstance(JOB, jobId)).getEntity();
           List<TaskProfile> tasks = mainDb.execute(FindByQueryCall.newInstance(TASK, QueryUtils.is("jobId", jobId))).getEntities();
           for (TaskProfile task : tasks) {
-            // prediction can throw exception if data model changes state during calculation
-            storePredictionForTask(basicPredictor, task.getId(), new TaskPredictionInput(job, task.getType(), task.getHostName()));
-            storePredictionForTask(standardPredictor, task.getId(), new TaskPredictionInput(job, task.getType(), task.getHostName()));
-            storePredictionForTask(detailedPredictor, task.getId(), new TaskPredictionInput(job, task.getType(), task.getHostName()));
-            if (task.getType() == TaskType.MAP) {
-              storePredictionForTask(detailedPredictor, task.getId(), new DetailedTaskPredictionInput(job, task.getType(), true));
-              storePredictionForTask(detailedPredictor, task.getId(), new DetailedTaskPredictionInput(job, task.getType(), false));
+            try { // prediction can throw exception if data model changes state during calculation
+              storePredictionForTask(basicPredictor, task.getId(), new TaskPredictionInput(task));
+              storePredictionForTask(standardPredictor, task.getId(), new TaskPredictionInput(task));
+              storePredictionForTask(detailedPredictor, task.getId(), new TaskPredictionInput(task));
+              if (task.getType() == TaskType.MAP) {
+                storePredictionForTask(detailedPredictor, task.getId(), new DetailedTaskPredictionInput(task, true));
+                storePredictionForTask(detailedPredictor, task.getId(), new DetailedTaskPredictionInput(task, false));
+              }
+            } catch (PosumException e) {
+              logger.debug("Could not predict task duration for " + task.getId() + ". Assuming job finished. Exception is:", e);
+              break;
             }
           }
         }
@@ -208,20 +209,13 @@ public class PosumInfoCollector {
   }
 
   private void storePredictionForTask(JobBehaviorPredictor predictor, String taskId, TaskPredictionInput input) {
-    try {
-      TaskPredictionPayload prediction = TaskPredictionPayload.newInstance(
-        predictor.getClass().getSimpleName(),
-        taskId,
-        predictor.predictTaskBehavior(input).getDuration(),
-        input instanceof DetailedTaskPredictionInput ? ((DetailedTaskPredictionInput) input).getLocal() : null
-      );
-      DatabaseUtils.storeLogEntry(TASK_PREDICTION, prediction, dataStore);
-    } catch (Exception e) {
-      if (!(e instanceof PosumException))
-        logger.error("Could not predict task duration for " + taskId + " due to: ", e);
-      else if (!e.getMessage().startsWith("Task has already finished"))
-        logger.debug("Could not predict task duration for " + taskId + " due to: ", e);
-    }
+    TaskPredictionPayload prediction = TaskPredictionPayload.newInstance(
+      predictor.getClass().getSimpleName(),
+      taskId,
+      predictor.predictTaskBehavior(input).getDuration(),
+      input instanceof DetailedTaskPredictionInput ? ((DetailedTaskPredictionInput) input).getLocal() : null
+    );
+    DatabaseUtils.storeLogEntry(TASK_PREDICTION, prediction, dataStore);
   }
 
   public synchronized void reset() {

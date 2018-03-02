@@ -13,39 +13,48 @@ public class TaskPredictionInput {
   private TaskProfile task;
 
   public TaskPredictionInput(String taskId) {
-    this(taskId, (String) null);
+    this.taskId = taskId;
   }
 
   public TaskPredictionInput(String taskId, String nodeAddress) {
-    this.taskId = taskId;
+    this(taskId);
+    this.nodeAddress = nodeAddress;
+  }
+
+  public TaskPredictionInput(TaskProfile task) {
+    this(task.getId());
+    this.task = task;
+    this.jobId = task.getJobId();
+    this.taskType = task.getType();
+  }
+
+  public TaskPredictionInput(TaskProfile task, String nodeAddress) {
+    this(task);
     this.nodeAddress = nodeAddress;
   }
 
   public TaskPredictionInput(String jobId, TaskType taskType) {
-    this(jobId, taskType, null);
-  }
-
-  public TaskPredictionInput(JobProfile job, TaskType taskType) {
-    this(job, taskType, null);
+    this.jobId = jobId;
+    this.taskType = taskType;
   }
 
   public TaskPredictionInput(String jobId, TaskType taskType, String nodeAddress) {
-    this.jobId = jobId;
-    this.taskType = taskType;
+    this(jobId, taskType);
     this.nodeAddress = nodeAddress;
   }
 
-  public TaskPredictionInput(JobProfile job, TaskType taskType, String nodeAddress) {
-    this(job.getId(), taskType, nodeAddress);
+  public TaskPredictionInput(JobProfile job, TaskType taskType) {
+    this(job.getId(), taskType);
     this.job = job;
+  }
+
+  public TaskPredictionInput(JobProfile job, TaskType taskType, String nodeAddress) {
+    this(job, taskType);
+    this.nodeAddress = nodeAddress;
   }
 
   public String getTaskId() {
     return taskId;
-  }
-
-  public void setTaskId(String taskId) {
-    this.taskId = taskId;
   }
 
   public TaskType getTaskType() {
@@ -58,10 +67,6 @@ public class TaskPredictionInput {
 
   public String getNodeAddress() {
     return nodeAddress;
-  }
-
-  public void setNodeAddress(String nodeAddress) {
-    this.nodeAddress = nodeAddress;
   }
 
   public JobProfile getJob() {
