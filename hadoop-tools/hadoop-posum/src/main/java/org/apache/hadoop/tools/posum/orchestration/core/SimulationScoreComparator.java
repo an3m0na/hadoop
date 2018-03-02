@@ -44,10 +44,11 @@ public class SimulationScoreComparator implements Comparator<SimulationResultPay
     if (r2.getScore() == null)
       return -1;
     CompoundScorePayload difference = r1.getScore().subtract(r2.getScore());
+    Double proportionalDifference = getSlowdownScaleFactor() * difference.getSlowdown() +
+        getPenaltyScaleFactor() * difference.getPenalty() +
+        getCostScaleFactor() * difference.getCost();
     // if the proportional difference is positive, the second is "smaller", so it goes first
-    return getSlowdownScaleFactor() * difference.getSlowdown() +
-      getPenaltyScaleFactor() * difference.getPenalty() +
-      getCostScaleFactor() * difference.getCost() > 0 ? 1 : -1;
+    return proportionalDifference > 0 ? 1 : -1;
   }
 
   public synchronized void sort(List<SimulationResultPayload> results) {

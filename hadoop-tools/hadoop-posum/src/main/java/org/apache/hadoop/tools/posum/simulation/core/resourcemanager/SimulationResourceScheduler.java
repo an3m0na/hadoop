@@ -1,8 +1,8 @@
 package org.apache.hadoop.tools.posum.simulation.core.resourcemanager;
 
-import org.apache.hadoop.tools.posum.common.util.cluster.InjectableResourceScheduler;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
+import org.apache.hadoop.tools.posum.simulation.util.InjectableResourceScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.AppRemovedSchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEvent;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.event.SchedulerEventType;

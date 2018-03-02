@@ -48,9 +48,9 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
     orchestrationContext.setSwitchEnabled(getConfig().getBoolean(POLICY_SWITCH_ENABLED, POLICY_SWITCH_ENABLED_DEFAULT));
     SimulationScoreComparator simulationScoreComparator = new SimulationScoreComparator();
     simulationScoreComparator.updateScaleFactors(
-      getConfig().getDouble(SLOWDOWN_SCALE_FACTOR, SLOWDOWN_SCALE_FACTOR_DEFAULT),
-      getConfig().getDouble(PENALTY_SCALE_FACTOR, PENALTY_SCALE_FACTOR_DEFAULT),
-      getConfig().getDouble(COST_SCALE_FACTOR, COST_SCALE_FACTOR_DEFAULT)
+        getConfig().getDouble(SLOWDOWN_SCALE_FACTOR, SLOWDOWN_SCALE_FACTOR_DEFAULT),
+        getConfig().getDouble(PENALTY_SCALE_FACTOR, PENALTY_SCALE_FACTOR_DEFAULT),
+        getConfig().getDouble(COST_SCALE_FACTOR, COST_SCALE_FACTOR_DEFAULT)
     );
     orchestrationContext.setSimulationScoreComparator(simulationScoreComparator);
     super.serviceInit(conf);
@@ -120,8 +120,16 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
     MetaScheduler scheduler = orchestrationContext.getCommService().getScheduler();
     orchestrationContext.getSimulationScoreComparator().sort(results);
     SimulationResultPayload bestResult = results.get(0);
+    for (SimulationResultPayload result : results) {
+      if (result.getPolicyName().equals(orchestrationContext.getCurrentPolicy())) {
+        if (bestResult.getScore().equals(result.getScore())) // if results are equal, prefer current policy
+          bestResult = result;
+        break;
+      }
+    }
     logger.info("Best policy is: " + bestResult.getPolicyName());
-    if (orchestrationContext.isSwitchEnabled() && scheduler != null) {
+    if (orchestrationContext.isSwitchEnabled() && scheduler != null &&
+        !bestResult.getPolicyName().equals(orchestrationContext.getCurrentPolicy())) {
       logger.info("Switching policy...");
       scheduler.changeToPolicy(bestResult.getPolicyName());
       orchestrationContext.setCurrentPolicy(bestResult.getPolicyName());

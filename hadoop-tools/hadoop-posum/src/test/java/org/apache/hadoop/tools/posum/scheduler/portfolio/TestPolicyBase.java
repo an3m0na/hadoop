@@ -1,7 +1,7 @@
 package org.apache.hadoop.tools.posum.scheduler.portfolio;
 
-import org.apache.hadoop.tools.posum.common.util.cluster.InjectableResourceScheduler;
 import org.apache.hadoop.tools.posum.scheduler.TestSchedulerBase;
+import org.apache.hadoop.tools.posum.simulation.util.InjectableResourceScheduler;
 
 import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.newProvider;
 

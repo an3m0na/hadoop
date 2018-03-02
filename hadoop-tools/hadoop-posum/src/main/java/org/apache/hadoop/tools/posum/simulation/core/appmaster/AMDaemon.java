@@ -2,11 +2,11 @@ package org.apache.hadoop.tools.posum.simulation.core.appmaster;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.classification.InterfaceStability.Unstable;
-import org.apache.hadoop.tools.posum.common.util.cluster.AMCore;
 import org.apache.hadoop.tools.posum.simulation.core.SimulationContext;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.WorkerDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.ApplicationEvent;
 import org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer;
+import org.apache.hadoop.tools.posum.simulation.util.AMCore;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
