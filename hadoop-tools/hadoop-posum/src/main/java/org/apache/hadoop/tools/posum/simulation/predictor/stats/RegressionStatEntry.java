@@ -12,21 +12,20 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 public class RegressionStatEntry extends SimpleRegression implements PredictionStatEntry<RegressionStatEntry> {
-  private Double simpleRate = null;
+  private Double simpleSlope = null;
 
-  public Double getPrediction(double inputSize) {
-    if (getN() < 2)
-      return simpleRate == null ? null : inputSize / simpleRate;
-    return predict(inputSize);
+  @Override
+  public double predict(double x) {
+    if (getN() == 1)
+      return x / simpleSlope;
+    return super.predict(x);
   }
 
   @Override
   public void addData(double x, double y) {
     super.addData(x, y);
     if (getN() == 1) {
-      if (y == 0)
-        throw new PosumException("Invalid duration 0 for regression stat entry");
-      simpleRate = Math.max(x, 1.0) / y; // restrict to at least 1 input byte to avoid division by 0
+      simpleSlope = x / y;
     }
   }
 

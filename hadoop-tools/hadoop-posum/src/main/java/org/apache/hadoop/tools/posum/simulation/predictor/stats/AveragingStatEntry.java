@@ -4,17 +4,17 @@ import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 
 public class AveragingStatEntry implements PredictionStatEntry<AveragingStatEntry> {
   private Double average;
-  private int sampleSize;
+  private long sampleSize;
 
   public AveragingStatEntry() {
   }
 
-  public AveragingStatEntry(Double average, int sampleSize) {
+  public AveragingStatEntry(Double average, long sampleSize) {
     this.average = average;
     this.sampleSize = sampleSize;
   }
 
-  public AveragingStatEntry(Long average, int sampleSize) {
+  public AveragingStatEntry(Long average, long sampleSize) {
     if (average != null && sampleSize > 0) {
       this.average = average.doubleValue();
       this.sampleSize = sampleSize;
@@ -41,7 +41,7 @@ public class AveragingStatEntry implements PredictionStatEntry<AveragingStatEntr
 
   @Override
   public AveragingStatEntry merge(AveragingStatEntry otherEntry) {
-    int newSampleSize = sampleSize + otherEntry.sampleSize;
+    long newSampleSize = sampleSize + otherEntry.sampleSize;
     average = (average * sampleSize + otherEntry.average * otherEntry.sampleSize) / newSampleSize;
     sampleSize = newSampleSize;
     return this;
