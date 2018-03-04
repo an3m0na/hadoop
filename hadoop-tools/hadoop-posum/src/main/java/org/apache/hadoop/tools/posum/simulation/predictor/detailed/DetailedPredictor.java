@@ -8,19 +8,19 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
 import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleRateBasedPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.RegressionWithFallbackStatEntry;
 
 import java.util.List;
 
 import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getSplitSize;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MAP_LOCAL_RATE;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MAP_RATE;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MAP_REMOTE_RATE;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MAP_LOCAL_DURATION;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MAP_REMOTE_DURATION;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MAP_SELECTIVITY;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MERGE_RATE;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.REDUCE_RATE;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MERGE_DURATION;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.REDUCE_ONLY_DURATION;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.SHUFFLE_FIRST_DURATION;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.SHUFFLE_TYPICAL_RATE;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.SHUFFLE_TYPICAL_DURATION;
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.MAP_DURATION;
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.REDUCE_DURATION;
 
@@ -77,24 +77,32 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
 
     Long taskInput = getSplitSize(input.getTask(), job);
 
-    Double avgRate = null;
+    RegressionWithFallbackStatEntry durationStatEntry = null;
     if (local != null)
       // we know locality; try to find relevant map rate w.r.t locality
-      avgRate = getRelevantStat(local ? MAP_LOCAL_RATE : MAP_REMOTE_RATE, historicalStats, jobStats);
-    if (avgRate == null) {
+      durationStatEntry = getRelevantStat(local ? MAP_LOCAL_DURATION : MAP_REMOTE_DURATION, historicalStats, jobStats);
+    if (durationStatEntry == null) {
       // try to find any map rate
-      avgRate = getAnyStat(MAP_RATE, historicalStats, jobStats);
+      durationStatEntry = getAnyStat(MAP_DURATION, historicalStats, jobStats);
     }
-    if (avgRate == null || taskInput == null) {
+    if (durationStatEntry == null || taskInput == null) {
       return handleNoMapRateInfo(job, historicalStats, jobStats);
     }
 
-    Long duration = predictMapByRate(job, taskInput, avgRate);
+    Long duration = predictMapFromStat(taskInput.doubleValue(), durationStatEntry);
     if (duration == null) {
       return handleNoMapRateInfo(job, historicalStats, jobStats);
     }
 
     return new TaskPredictionOutput(duration);
+  }
+
+  private static Long predictMapFromStat(Double taskInput, RegressionWithFallbackStatEntry statEntry) {
+    if (taskInput == null || statEntry == null)
+      return null;
+    // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+    Double prediction = statEntry.predict(Math.max(taskInput, 1.0));
+    return prediction == null ? null : prediction.longValue();
   }
 
   @Override
@@ -105,25 +113,26 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
 
     DetailedMapPredictionStats historicalMapStats = model.getRelevantMapStats(job);
     DetailedMapPredictionStats jobMapStats = predictionProfile.getMapStats();
-    Double avgSelectivity = getRelevantStat(MAP_SELECTIVITY, historicalMapStats, jobMapStats);
+    Double avgSelectivity = getRelevantAverage(MAP_SELECTIVITY, historicalMapStats, jobMapStats);
 
     // try a detailed prediction using phase-specific statistics
     Long duration = predictReduceByPhases(job, avgSelectivity, historicalStats, jobStats);
     if (duration != null)
       return new TaskPredictionOutput(duration);
 
-    Double avgReduceDuration = getRelevantStat(REDUCE_DURATION, historicalStats, jobStats);
+    Double avgReduceDuration = getRelevantAverage(REDUCE_DURATION, historicalStats, jobStats);
     if (avgReduceDuration != null)
       return new TaskPredictionOutput(avgReduceDuration.longValue());
 
     // assume reduce rate is equal to map rate
-    Double avgRate = getAnyStat(MAP_RATE, historicalMapStats, jobMapStats);
-    // get any historical selectivity
-    avgSelectivity = getAnyStat(MAP_SELECTIVITY, historicalMapStats, jobMapStats);
-    logger.trace("Detailed reduce prediction was not possible for " + job.getId() + ". Trying map rate " + avgRate + " and any selectivity " + avgSelectivity);
+    RegressionWithFallbackStatEntry mapDurationStatEntry = getAnyStat(MAP_DURATION, historicalMapStats, jobMapStats);
+    avgSelectivity = getAnyAverage(MAP_SELECTIVITY, historicalMapStats, jobMapStats);
+    logger.trace("Detailed reduce prediction was not possible for " + job.getId() + ". Trying map stat and any selectivity " + avgSelectivity);
 
-    // calculate average duration based on map selectivity and processing rate
-    duration = predictReduceByRate(job, avgSelectivity, avgRate);
+    // calculate how much input the task should have based on how much is left and how many reduces remain
+    Double inputPerTask = calculateInputPerReduce(job, avgSelectivity);
+    // calculate average duration based map processing rate
+    duration = predictMapFromStat(inputPerTask, mapDurationStatEntry);
     if (duration == null)
       return handleNoReduceInfo(job);
     return new TaskPredictionOutput(duration);
@@ -140,10 +149,10 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
     Long shuffleTime = predictShuffleTime(job, historicalStats, jobStats, inputPerTask);
     if (shuffleTime == null)
       return null;
-    Long mergeTime = predictTimeByRate(job, MERGE_RATE, historicalStats, jobStats, inputPerTask);
+    Long mergeTime = predictTimeByStat(MERGE_DURATION, historicalStats, jobStats, inputPerTask);
     if (mergeTime == null)
       return null;
-    Long reduceTime = predictTimeByRate(job, REDUCE_RATE, historicalStats, jobStats, inputPerTask);
+    Long reduceTime = predictTimeByStat(REDUCE_ONLY_DURATION, historicalStats, jobStats, inputPerTask);
     if (reduceTime == null)
       return null;
     Long duration = shuffleTime + mergeTime + reduceTime;
@@ -155,22 +164,20 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
                                   DetailedReducePredictionStats historicalStats,
                                   DetailedReducePredictionStats jobStats,
                                   Double inputPerTask) {
-    Double firstShuffleDuration = getRelevantStat(SHUFFLE_FIRST_DURATION, historicalStats, jobStats);
-    if (!job.getTotalMapTasks().equals(job.getCompletedMaps()) && firstShuffleDuration != null) // predictable first shuffle
-      return firstShuffleDuration.longValue();
-    return predictTimeByRate(job, SHUFFLE_TYPICAL_RATE, historicalStats, jobStats, inputPerTask);
+    RegressionWithFallbackStatEntry firstShuffleStatEntry = getRelevantStat(SHUFFLE_FIRST_DURATION, historicalStats, jobStats);
+    if (!job.getTotalMapTasks().equals(job.getCompletedMaps()) && firstShuffleStatEntry != null) // predictable first shuffle
+      return firstShuffleStatEntry.getAverage().longValue();
+    return predictTimeByStat(SHUFFLE_TYPICAL_DURATION, historicalStats, jobStats, inputPerTask);
   }
 
-  private Long predictTimeByRate(JobProfile job,
-                                 Enum key,
+  private Long predictTimeByStat(Enum key,
                                  DetailedReducePredictionStats historicalStats,
                                  DetailedReducePredictionStats jobStats,
                                  Double inputPerTask) {
-    Double rate = getRelevantStat(key, historicalStats, jobStats);
-    if (rate == null)
+    RegressionWithFallbackStatEntry statEntry = getRelevantStat(key, historicalStats, jobStats);
+    if (statEntry == null)
       return null;
-    Double duration = inputPerTask / rate;
-    logger.trace(key + " duration for " + job.getId() + " should be " + inputPerTask + " / " + rate + "=" + duration);
-    return duration.longValue();
+    Double prediction = statEntry.predict(inputPerTask);
+    return prediction == null ? null : prediction.longValue();
   }
 }

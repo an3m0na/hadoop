@@ -16,8 +16,8 @@ import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.MAP_DURATION;
 
 public abstract class SimpleRateBasedPredictor<
-  M extends PredictionModel<P>,
-  P extends PredictionProfile> extends JobBehaviorPredictor<M, P> {
+    M extends PredictionModel<P>,
+    P extends PredictionProfile> extends JobBehaviorPredictor<M, P> {
 
   private static final Log logger = LogFactory.getLog(StandardPredictor.class);
 
@@ -25,18 +25,26 @@ public abstract class SimpleRateBasedPredictor<
     super(conf);
   }
 
-  protected Double getAnyStat(Enum key, PredictionStats<AveragingStatEntry> historicalStats, PredictionStats<AveragingStatEntry> jobStats) {
+  protected <E extends AveragingStatEntry<E>, T extends PredictionStats<E>> E getAnyStat(Enum key, T historicalStats, T jobStats) {
+    return getAnyStatEntry(key, historicalStats, jobStats);
+  }
+
+  protected <E extends AveragingStatEntry<E>, T extends PredictionStats<E>> Double getAnyAverage(Enum key, T historicalStats, T jobStats) {
     AveragingStatEntry entry = getAnyStatEntry(key, historicalStats, jobStats);
     return entry == null ? null : entry.getAverage();
   }
 
-  protected Double getRelevantStat(Enum key, PredictionStats<AveragingStatEntry> historicalStats, PredictionStats<AveragingStatEntry> jobStats) {
-    AveragingStatEntry entry = getRelevantStatEntry(key, historicalStats, jobStats);
+  protected <E extends AveragingStatEntry<E>, T extends PredictionStats<E>> E getRelevantStat(Enum key, T historicalStats, T jobStats) {
+    return getRelevantStatEntry(key, historicalStats, jobStats);
+  }
+
+  protected <E extends AveragingStatEntry<E>, T extends PredictionStats<E>> Double getRelevantAverage(Enum key, T historicalStats, T jobStats) {
+    AveragingStatEntry entry = getRelevantStat(key, historicalStats, jobStats);
     return entry == null ? null : entry.getAverage();
   }
 
-  protected <T extends PredictionStats<AveragingStatEntry>> TaskPredictionOutput handleNoMapRateInfo(JobProfile job, T historicalStats, T jobStats) {
-    Double avgDuration = getAnyStat(MAP_DURATION, historicalStats, jobStats);
+  protected <E extends AveragingStatEntry<E>, T extends PredictionStats<E>> TaskPredictionOutput handleNoMapRateInfo(JobProfile job, T historicalStats, T jobStats) {
+    Double avgDuration = getAnyAverage(MAP_DURATION, historicalStats, jobStats);
     logger.trace("Incomplete map rate info for " + job.getId() + ". Trying average duration " + avgDuration);
     if (avgDuration != null)
       return new TaskPredictionOutput(avgDuration.longValue());
@@ -62,6 +70,8 @@ public abstract class SimpleRateBasedPredictor<
   }
 
   protected static Double calculateInputPerReduce(JobProfile job, Double avgSelectivity) {
+    if (avgSelectivity == null)
+      return null;
     // calculate how much reduce input remains
     Double inputLeft = orZero(job.getTotalSplitSize()) * avgSelectivity - orZero(job.getReduceInputBytes());
     // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero

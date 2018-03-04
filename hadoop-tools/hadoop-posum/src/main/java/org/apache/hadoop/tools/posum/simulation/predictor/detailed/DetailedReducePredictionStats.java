@@ -2,24 +2,24 @@ package org.apache.hadoop.tools.posum.simulation.predictor.detailed;
 
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
-import org.apache.hadoop.tools.posum.simulation.predictor.stats.AveragingStatEntry;
 import org.apache.hadoop.tools.posum.simulation.predictor.stats.PredictionStats;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.RegressionWithFallbackStatEntry;
 
 import java.util.List;
 
 import static org.apache.hadoop.mapreduce.v2.api.records.TaskType.MAP;
 import static org.apache.hadoop.mapreduce.v2.api.records.TaskType.REDUCE;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MERGE_RATE;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.REDUCE_RATE;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.MERGE_DURATION;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.REDUCE_ONLY_DURATION;
 import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.SHUFFLE_FIRST_DURATION;
-import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.SHUFFLE_TYPICAL_RATE;
+import static org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedStatKeys.SHUFFLE_TYPICAL_DURATION;
 import static org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleStatKeys.REDUCE_DURATION;
 
-class DetailedReducePredictionStats extends PredictionStats<AveragingStatEntry> {
+class DetailedReducePredictionStats extends PredictionStats<RegressionWithFallbackStatEntry> {
 
   DetailedReducePredictionStats(int relevance) {
-    super(relevance, REDUCE_DURATION, REDUCE_RATE, MERGE_RATE, SHUFFLE_TYPICAL_RATE, SHUFFLE_FIRST_DURATION);
+    super(relevance, REDUCE_DURATION, REDUCE_ONLY_DURATION, MERGE_DURATION, SHUFFLE_TYPICAL_DURATION, SHUFFLE_FIRST_DURATION);
   }
 
   public void addSamples(JobProfile job, List<TaskProfile> tasks) {
@@ -27,11 +27,12 @@ class DetailedReducePredictionStats extends PredictionStats<AveragingStatEntry> 
     Long avgDuration = job.getAvgReduceDuration();
 
     if (sampleNo > 0 && avgDuration != null) {
-      addEntry(REDUCE_DURATION, new AveragingStatEntry(avgDuration, sampleNo));
+      addEntry(REDUCE_DURATION, new RegressionWithFallbackStatEntry(avgDuration.doubleValue(), sampleNo));
 
-      long shuffleRate = 0, shuffleFirst = 0;
-      long totalInputSize = 0;
-      int shuffleTypicalNo = 0, shuffleFirstNo = 0, reduceNo = 0;// use a separate reduce counter in case tasks finished in between getting job info and task info
+      RegressionWithFallbackStatEntry reduceOnlyDurationEntry = new RegressionWithFallbackStatEntry();
+      RegressionWithFallbackStatEntry mergeDurationEntry = new RegressionWithFallbackStatEntry();
+      RegressionWithFallbackStatEntry shuffleTypicalDurationEntry = new RegressionWithFallbackStatEntry();
+      RegressionWithFallbackStatEntry shuffleFirstDurationEntry = new RegressionWithFallbackStatEntry();
 
       long mapFinish = -1; // keeps track of the finish time of the last map task
       // calculate when the last map task finished
@@ -41,42 +42,37 @@ class DetailedReducePredictionStats extends PredictionStats<AveragingStatEntry> 
       }
       // parse reduce stats
       for (TaskProfile task : tasks) {
-        if (getDuration(task) <= 0 || task.getType() != REDUCE)
+        double duration = getDuration(task);
+        if (duration <= 0 || task.getType() != REDUCE)
           continue;
-        if (task.getInputBytes() != null) {
-          totalInputSize += task.getInputBytes();
-          reduceNo++;
+        Long inputBytes = task.getInputBytes();
+        if (inputBytes != null) {
+          // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+          long boundedInputSize = Math.max(inputBytes, 1);
+          reduceOnlyDurationEntry.addSample(boundedInputSize, duration);
+          if (task.getReduceTime() != null)
+            reduceOnlyDurationEntry.addSample(boundedInputSize, task.getReduceTime());
+          if (task.getMergeTime() != null)
+            mergeDurationEntry.addSample(boundedInputSize, task.getMergeTime());
+          if (task.getShuffleTime() != null && task.getStartTime() >= mapFinish)
+            shuffleTypicalDurationEntry.addSample(boundedInputSize, task.getShuffleTime());
+
         }
-        if (task.getShuffleTime() != null) {
-          if (task.getStartTime() < mapFinish) {
-            // first shuffle
-            Double duration = task.getStartTime().doubleValue() - mapFinish + task.getShuffleTime();
-            shuffleFirst += duration;
-            shuffleFirstNo++;
-          } else if (task.getInputBytes() != null) { // typical shuffle; calculate rate
-            // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-            Double inputSize = Math.max(task.getInputBytes(), 1.0);
-            shuffleRate += inputSize / task.getShuffleTime();
-            shuffleTypicalNo++;
-          }
+        if (task.getShuffleTime() != null && task.getStartTime() < mapFinish) {
+          // first shuffle
+          duration = task.getStartTime().doubleValue() - mapFinish + task.getShuffleTime();
+          shuffleFirstDurationEntry.addSample(duration);
         }
       }
-
-      // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-      Double avgInputSize = Math.max(1.0 * totalInputSize / reduceNo, 1.0);
-      if (job.getAvgReduceTime() != null)
-        addEntry(REDUCE_RATE, new AveragingStatEntry(avgInputSize / job.getAvgReduceTime(), sampleNo));
-      if (job.getAvgMergeTime() != null)
-        addEntry(MERGE_RATE, new AveragingStatEntry(avgInputSize / job.getAvgMergeTime(), sampleNo));
-      if (shuffleFirstNo > 0)
-        addEntry(SHUFFLE_FIRST_DURATION, new AveragingStatEntry(shuffleFirst / shuffleFirstNo, shuffleFirstNo));
-      if (shuffleTypicalNo > 0)
-        addEntry(SHUFFLE_TYPICAL_RATE, new AveragingStatEntry(shuffleRate / shuffleTypicalNo, shuffleTypicalNo));
+      addEntry(REDUCE_ONLY_DURATION, reduceOnlyDurationEntry);
+      addEntry(MERGE_DURATION, mergeDurationEntry);
+      addEntry(SHUFFLE_FIRST_DURATION, shuffleFirstDurationEntry);
+      addEntry(SHUFFLE_TYPICAL_DURATION, shuffleTypicalDurationEntry);
     }
   }
 
   @Override
-  protected AveragingStatEntry emptyEntry() {
-    return new AveragingStatEntry();
+  protected RegressionWithFallbackStatEntry emptyEntry() {
+    return new RegressionWithFallbackStatEntry();
   }
 }

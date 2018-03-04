@@ -56,7 +56,7 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
     StandardMapPredictionStats jobStats = predictionProfile.getMapStats();
 
     Long taskInput = getSplitSize(input.getTask(), job);
-    Double avgRate = getAnyStat(MAP_RATE, historicalStats, jobStats);
+    Double avgRate = getAnyAverage(MAP_RATE, historicalStats, jobStats);
 
     Long duration = predictMapByRate(job, taskInput, avgRate);
     if (duration == null)
@@ -73,20 +73,20 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
     StandardMapPredictionStats historicalMapStats = model.getRelevantMapStats(job);
     StandardMapPredictionStats jobMapStats = predictionProfile.getMapStats();
 
-    Double avgSelectivity = getRelevantStat(MAP_SELECTIVITY, historicalMapStats, jobMapStats);
-    Double avgRate = getRelevantStat(REDUCE_RATE, historicalStats, jobStats);
+    Double avgSelectivity = getRelevantAverage(MAP_SELECTIVITY, historicalMapStats, jobMapStats);
+    Double avgRate = getRelevantAverage(REDUCE_RATE, historicalStats, jobStats);
     if (avgRate == null || avgSelectivity == null) {
-      Double avgReduceDuration = getRelevantStat(REDUCE_DURATION, historicalStats, jobStats);
+      Double avgReduceDuration = getRelevantAverage(REDUCE_DURATION, historicalStats, jobStats);
       if (avgReduceDuration != null)
         return new TaskPredictionOutput(avgReduceDuration.longValue());
       // get any reduce rate
-      avgRate = getAnyStat(REDUCE_RATE, historicalStats, jobStats);
+      avgRate = getAnyAverage(REDUCE_RATE, historicalStats, jobStats);
       if (avgRate == null) {
         // assume it is the same as any map rate
-        avgRate = getAnyStat(MAP_RATE, historicalMapStats, jobMapStats);
+        avgRate = getAnyAverage(MAP_RATE, historicalMapStats, jobMapStats);
       }
       // get any selectivity
-      avgSelectivity = getAnyStat(MAP_SELECTIVITY, historicalMapStats, jobMapStats);
+      avgSelectivity = getAnyAverage(MAP_SELECTIVITY, historicalMapStats, jobMapStats);
     }
 
     Long duration = predictReduceByRate(job, avgSelectivity, avgRate);

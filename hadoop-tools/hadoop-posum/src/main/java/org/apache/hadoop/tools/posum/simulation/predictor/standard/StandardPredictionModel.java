@@ -1,12 +1,12 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.standard;
 
 import org.apache.hadoop.tools.posum.simulation.predictor.simple.SimpleMRPredictionModel;
-import org.apache.hadoop.tools.posum.simulation.predictor.stats.AveragingStatEntry;
+import org.apache.hadoop.tools.posum.simulation.predictor.stats.AveragingStatEntryImpl;
 
 class StandardPredictionModel extends SimpleMRPredictionModel<
   StandardMapPredictionStats,
   StandardReducePredictionStats,
-  AveragingStatEntry,
+    AveragingStatEntryImpl,
   StandardPredictionProfile> {
 
   StandardPredictionModel(int historyBuffer) {

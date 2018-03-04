@@ -1,7 +1,6 @@
 package org.apache.hadoop.tools.posum.simulation.predictor.stats;
 
 import com.sun.jersey.core.util.Base64;
-import org.apache.commons.math3.stat.regression.ModelSpecificationException;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
 
@@ -15,45 +14,6 @@ public class RegressionStatEntry extends SimpleRegression implements PredictionS
   private Double simpleSlope = null;
 
   @Override
-  public double predict(double x) {
-    if (getN() == 1)
-      return x / simpleSlope;
-    return super.predict(x);
-  }
-
-  @Override
-  public void addData(double x, double y) {
-    super.addData(x, y);
-    if (getN() == 1) {
-      simpleSlope = x / y;
-    }
-  }
-
-  @Override
-  public void addData(double[][] data) throws ModelSpecificationException {
-    if (data.length == 1 && data[0].length >= 2) {
-      addData(data[0][0], data[0][1]);
-      return;
-    }
-    super.addData(data);
-
-  }
-
-  @Override
-  public void addObservation(double[] x, double y) throws ModelSpecificationException {
-    if (x.length == 1) {
-      addData(x[0], y);
-      return;
-    }
-    super.addObservation(x, y);
-  }
-
-  @Override
-  public void addObservations(double[][] x, double[] y) throws ModelSpecificationException {
-    super.addObservations(x, y);
-  }
-
-  @Override
   public long getSampleSize() {
     return getN();
   }
@@ -65,6 +25,8 @@ public class RegressionStatEntry extends SimpleRegression implements PredictionS
 
   @Override
   public RegressionStatEntry merge(RegressionStatEntry otherEntry) {
+    if (this.simpleSlope == null)
+      this.simpleSlope = otherEntry.simpleSlope;
     append(otherEntry);
     return this;
   }
