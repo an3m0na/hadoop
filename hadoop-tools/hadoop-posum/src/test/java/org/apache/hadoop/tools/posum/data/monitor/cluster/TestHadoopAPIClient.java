@@ -58,11 +58,11 @@ public class TestHadoopAPIClient {
 
   @Test
   public void getAppsInfoTest() throws Exception {
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("cluster/apps"))).thenReturn("{}");
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("apps"))).thenReturn("{}");
     List<AppProfile> ret = testSubject.getAppsInfo();
     assertThat(ret, empty());
 
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("cluster/apps")))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("apps")))
       .thenReturn(Utils.getApiJson("apps.json"));
     ret = testSubject.getAppsInfo();
     ret.get(0).setLastUpdated(entities.FINISHED_APP.getLastUpdated());
@@ -74,13 +74,13 @@ public class TestHadoopAPIClient {
     String finishedJson = Utils.getApiJson("apps_app.json");
     String unfinishedJson = finishedJson.replace("History", "ApplicationMaster");
 
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("cluster/apps/%s"), any(String[].class)))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("apps/%s"), any(String[].class)))
       .thenReturn(unfinishedJson);
     AppProfile savedApp = entities.RUNNING_APP;
     assertFalse(testSubject.checkAppFinished(entities.RUNNING_APP));
     assertThat(entities.RUNNING_APP, is(savedApp));
 
-    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("cluster/apps/%s"), any(String[].class)))
+    when(restClient.getInfo(eq(String.class), eq(TrackingUI.RM), eq("apps/%s"), any(String[].class)))
       .thenReturn(finishedJson);
     assertTrue(testSubject.checkAppFinished(entities.RUNNING_APP));
     assertThat(entities.RUNNING_APP, is(entities.FINISHED_APP));

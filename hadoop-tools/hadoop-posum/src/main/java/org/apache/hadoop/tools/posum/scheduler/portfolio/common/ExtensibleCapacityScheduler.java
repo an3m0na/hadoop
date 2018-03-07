@@ -147,7 +147,7 @@ public abstract class ExtensibleCapacityScheduler<
 
   /**
    * Override this to populate custom fields of an instance of A to be used for prioritisation within a queue.
-   * By default, the priority is its ApplicationId, so no addSource is necessary
+   * By default, the priority is its ApplicationId, so no update is necessary
    *
    * @param app the application attempt
    */
@@ -326,7 +326,7 @@ public abstract class ExtensibleCapacityScheduler<
 
       onAppAttemptAdded(attempt);
 
-      logger.debug("Submitting app attempt to queue: \n" + attempt);
+      logger.trace("Submitting app attempt to queue: \n" + attempt);
 
       queue.submitApplicationAttempt(attempt, application.getUser());
       logger.info("Added Application Attempt " + applicationAttemptId
@@ -334,7 +334,7 @@ public abstract class ExtensibleCapacityScheduler<
         + queue.getQueueName());
       if (isAttemptRecovering) {
         if (logger.isDebugEnabled()) {
-          logger.debug(applicationAttemptId
+          logger.trace(applicationAttemptId
             + " is recovering. Skipping notifying ATTEMPT_ADDED");
         }
       } else {
@@ -353,7 +353,7 @@ public abstract class ExtensibleCapacityScheduler<
       nodes.put(nodeManager.getNodeID(), schedulerNode);
       Resources.addTo(getClusterResource(), nodeManager.getTotalCapability());
 
-      // addSource this node to node label manager
+      // add this node to node label manager
       RMNodeLabelsManager labelManager = readField("labelManager");
       if (labelManager != null) {
         labelManager.activateNode(nodeManager.getNodeID(),

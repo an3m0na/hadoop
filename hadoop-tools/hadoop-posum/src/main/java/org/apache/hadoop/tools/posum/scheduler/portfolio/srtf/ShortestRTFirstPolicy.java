@@ -33,7 +33,7 @@ public class ShortestRTFirstPolicy extends SimpleQueuePolicy<SRTFAppAttempt, FiC
 
   @Override
   protected void updateAppPriority(SRTFAppAttempt app) {
-    logger.debug("Updating app priority");
+    logger.trace("Updating app priority");
     try {
       appWorkCalculator.updateRemainingTime(app);
     } catch (Exception e) {
@@ -91,7 +91,7 @@ public class ShortestRTFirstPolicy extends SimpleQueuePolicy<SRTFAppAttempt, FiC
       for (SRTFAppAttempt orderedApp : this.orderedApps) {
         builder.append(orderedApp.toShortString()).append(", ");
       }
-      logger.debug(builder.toString());
+      logger.trace(builder.toString());
     }
   }
 

@@ -179,7 +179,7 @@ public abstract class SimpleQueuePolicy<
                                     RMContainerEventType rmContainerEventType) {
 
     if (rmContainer == null) {
-      logger.info("Null container completed...");
+      logger.trace("Null container completed...");
       return;
     }
 
@@ -294,7 +294,7 @@ public abstract class SimpleQueuePolicy<
       }
 
       if (!ask.isEmpty()) {
-        logger.trace("allocate: pre-addSource" +
+        logger.trace("allocate: pre-update" +
           " applicationId=" + applicationAttemptId +
           " application=" + application);
         application.showRequests();
@@ -302,7 +302,7 @@ public abstract class SimpleQueuePolicy<
         // Update application requests
         application.updateResourceRequests(ask);
 
-        logger.trace("allocate: post-addSource" +
+        logger.trace("allocate: post-update" +
           " applicationId=" + applicationAttemptId +
           " application=" + application);
         application.showRequests();
@@ -498,7 +498,7 @@ public abstract class SimpleQueuePolicy<
     onAppAttemptAdded(schedulerAppAttempt);
 
     queue.getMetrics().submitAppAttempt(user);
-    logger.info("Added Application Attempt " + appAttemptId
+    logger.trace("Added Application Attempt " + appAttemptId
       + " to scheduler from user " + application.getUser());
     if (isAttemptRecovering) {
       if (logger.isDebugEnabled()) {
@@ -668,7 +668,7 @@ public abstract class SimpleQueuePolicy<
     assignFromQueue(node);
 
     // Update the applications' headroom to correctly take into
-    // account the containers assigned in this addSource.
+    // account the containers assigned in this update.
     for (SchedulerApplication<A> application : applications.values()) {
       A attempt = application.getCurrentAppAttempt();
       if (attempt == null) {
@@ -755,7 +755,7 @@ public abstract class SimpleQueuePolicy<
       assignOffSwitchContainers(node, application, priority);
 
 
-    logger.debug("assignContainersOnNode:" +
+    logger.trace("assignContainersOnNode:" +
       " node=" + node.getRMNode().getNodeAddress() +
       " application=" + application.getApplicationId().getId() +
       " priority=" + priority.getPriority() +
@@ -935,7 +935,7 @@ public abstract class SimpleQueuePolicy<
 
   protected void printQueue() {
     if (logger.isDebugEnabled())
-      logger.debug("Apps are now " + orderedApps);
+      logger.trace("Apps are now " + orderedApps);
   }
 
   protected abstract void updateAppPriority(A app);
@@ -944,13 +944,13 @@ public abstract class SimpleQueuePolicy<
     orderedApps.remove(app);
     updateAppPriority(app);
     orderedApps.add(app);
-    logger.debug("Added attempt " + app.getApplicationAttemptId());
+    logger.trace("Added attempt " + app.getApplicationAttemptId());
   }
 
   protected synchronized void onAppAttemptDone(A app) {
     Resources.subtractFrom(usedAMResource, app.getAMResource());
     orderedApps.remove(app);
-    logger.debug("Removed attempt " + app.getApplicationAttemptId());
+    logger.trace("Removed attempt " + app.getApplicationAttemptId());
   }
 
   @Override

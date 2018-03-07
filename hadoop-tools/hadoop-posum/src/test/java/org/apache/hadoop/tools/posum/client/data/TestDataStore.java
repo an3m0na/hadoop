@@ -36,11 +36,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.ID_FIELD;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.APP;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.HISTORY;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DatabaseReference.Type.MAIN;
-import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.ID_FIELD;
 import static org.apache.hadoop.tools.posum.test.Utils.APP1;
 import static org.apache.hadoop.tools.posum.test.Utils.APP1_ID;
 import static org.apache.hadoop.tools.posum.test.Utils.APP2;

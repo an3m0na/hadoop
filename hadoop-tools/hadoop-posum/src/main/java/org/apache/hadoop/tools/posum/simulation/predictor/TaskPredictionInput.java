@@ -35,7 +35,7 @@ public class TaskPredictionInput {
     this.nodeAddress = nodeAddress;
   }
 
-  private TaskPredictionInput(JobProfile job, TaskType taskType, String nodeAddress) {
+  public TaskPredictionInput(JobProfile job, TaskType taskType, String nodeAddress) {
     this(job.getId(), taskType, nodeAddress);
     this.job = job;
   }

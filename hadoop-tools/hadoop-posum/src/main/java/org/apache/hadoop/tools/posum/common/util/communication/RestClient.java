@@ -30,7 +30,7 @@ public class RestClient {
   }
 
   public enum TrackingUI {
-    RM("ResourceManager", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, "ws/v1/"),
+    RM("ResourceManager", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, "ws/v1/cluster/"),
     HISTORY("History", JHAdminConfig.DEFAULT_MR_HISTORY_WEBAPP_ADDRESS, "ws/v1/history/mapreduce/"),
     AM("ApplicationMaster", YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, "proxy/%s/ws/v1/mapreduce/"),
     PS("PortfolioScheduler", getHostnameOnly(YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS) + ":" + PosumConfiguration.SCHEDULER_WEBAPP_PORT_DEFAULT, "/ajax/"),
@@ -104,7 +104,7 @@ public class RestClient {
       WebResource resource = client.resource(trackingUI.address).path(destination);
       response = resource.head();
       if (response.getStatus() != 200) {
-        logger.trace("Could not connect to resource " + resource.toString());
+        logger.debug("Could not connect to resource " + resource.toString());
         return null;
       }
 

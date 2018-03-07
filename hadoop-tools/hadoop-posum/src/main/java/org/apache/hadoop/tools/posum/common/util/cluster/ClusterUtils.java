@@ -13,7 +13,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterGroupInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.CounterInfoPayload;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.GeneralUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.Priority;
 import org.apache.hadoop.yarn.api.records.Resource;
@@ -27,6 +26,7 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.JOB_CONF;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.yarn.server.utils.BuilderUtils.newResourceRequest;
 
 public class ClusterUtils {
@@ -77,7 +77,7 @@ public class ClusterUtils {
           // make sure to record map materialized (compressed) bytes if compression is enabled
           // this is because reduce_shuffle_bytes are also in compressed form
           case "MAP_OUTPUT_BYTES":
-            Long previous = GeneralUtils.orZero(job.getMapOutputBytes());
+            Long previous = orZero(job.getMapOutputBytes());
             if (previous == 0)
               job.setMapOutputBytes(counter.getTotalCounterValue());
             break;
@@ -101,15 +101,28 @@ public class ClusterUtils {
   }
 
   public static Long getDuration(JobProfile job) {
-    if (job.getStartTime() == null || job.getFinishTime() == null || job.getFinishTime() == 0)
+    if (orZero(job.getFinishTime()) == 0)
       return 0L;
     return job.getFinishTime() - job.getStartTime();
   }
 
   public static Long getDuration(TaskProfile task) {
-    if (task.getStartTime() == null || task.getFinishTime() == null || task.getFinishTime() == 0)
+    if (orZero(task.getFinishTime()) == 0)
       return 0L;
     return task.getFinishTime() - task.getStartTime();
+  }
+
+  public static Long getSplitSize(TaskProfile task, JobProfile job) {
+    if (task != null && task.getSplitSize() != null)
+      return task.getSplitSize();
+    return getAvgSplitSize(job);
+  }
+
+  public static Long getAvgSplitSize(JobProfile job) {
+    if (job.getTotalSplitSize() == null || job.getTotalMapTasks() < 1)
+      return null;
+    // consider equal sizes; restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+    return Math.max(job.getTotalSplitSize() / job.getTotalMapTasks(), 1);
   }
 
   public static void updateJobStatisticsFromTasks(JobProfile job, List<TaskProfile> tasks) {
@@ -126,8 +139,8 @@ public class ClusterUtils {
       if (TaskType.MAP.equals(task.getType())) {
         mapDuration += getDuration(task);
         mapNo++;
-        mapInputSize += GeneralUtils.orZero(task.getInputBytes());
-        mapOutputSize += GeneralUtils.orZero(task.getOutputBytes());
+        mapInputSize += orZero(task.getInputBytes());
+        mapOutputSize += orZero(task.getOutputBytes());
         if (task.getSplitLocations() != null && task.getHostName() != null) {
           if (task.getSplitLocations().contains(task.getHostName()))
             task.setLocal(true);
@@ -135,12 +148,12 @@ public class ClusterUtils {
       }
       if (TaskType.REDUCE.equals(task.getType())) {
         reduceDuration += getDuration(task);
-        reduceTime += GeneralUtils.orZero(task.getReduceTime());
-        shuffleTime += GeneralUtils.orZero(task.getShuffleTime());
-        mergeTime += GeneralUtils.orZero(task.getMergeTime());
+        reduceTime += orZero(task.getReduceTime());
+        shuffleTime += orZero(task.getShuffleTime());
+        mergeTime += orZero(task.getMergeTime());
         reduceNo++;
-        reduceInputSize += GeneralUtils.orZero(task.getInputBytes());
-        reduceOutputSize += GeneralUtils.orZero(task.getOutputBytes());
+        reduceInputSize += orZero(task.getInputBytes());
+        reduceOutputSize += orZero(task.getOutputBytes());
       }
       avgNo++;
     }
@@ -175,7 +188,7 @@ public class ClusterUtils {
           // this is because reduce_shuffle_bytes are also in compressed form
           case "MAP_OUTPUT_BYTES":
             if (task.getType().equals(TaskType.MAP)) {
-              Long previous = GeneralUtils.orZero(task.getOutputBytes());
+              Long previous = orZero(task.getOutputBytes());
               if (previous == 0)
                 task.setOutputBytes(counter.getTotalCounterValue());
             }
