@@ -128,8 +128,7 @@ public class Orchestrator extends CompositeService implements EventHandler<Posum
       }
     }
     logger.info("Best policy is: " + bestResult.getPolicyName());
-    if (orchestrationContext.isSwitchEnabled() && scheduler != null &&
-        !bestResult.getPolicyName().equals(orchestrationContext.getCurrentPolicy())) {
+    if (orchestrationContext.isSwitchEnabled() && scheduler != null) {
       logger.info("Switching policy...");
       scheduler.changeToPolicy(bestResult.getPolicyName());
       orchestrationContext.setCurrentPolicy(bestResult.getPolicyName());
