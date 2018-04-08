@@ -85,7 +85,7 @@ public class PosumConfiguration {
   //should be a comma separated list of NAME=CLASS groups
   public static final String SCHEDULER_POLICY_MAP = SCHEDULER_PREFIX + "policies";
   public static final String DEFAULT_POLICY = SCHEDULER_PREFIX + "default";
-  public static final String DEFAULT_POLICY_DEFAULT = "FIFO";
+  public static final String DEFAULT_POLICY_DEFAULT = "EDLS_SH";
   public static final String POLICY_SWITCH_ENABLED = SCHEDULER_PREFIX + "policy-switch-enabled";
   public static final boolean POLICY_SWITCH_ENABLED_DEFAULT = true;
   public static final String DATABASE_DEADLINES = SCHEDULER_PREFIX + "db.deadlines";

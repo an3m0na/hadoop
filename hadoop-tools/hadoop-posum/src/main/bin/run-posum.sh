@@ -65,10 +65,10 @@ runMaster() {
         fi
     fi
 
-    echo ">>> Starting POSUM processes" > run-posum.out
+    echo ">>> Starting POSUM processes"
     for (( i=0; i<${#PROCESSES[@]}; i++ )); do
-      echo ">> Starting ${PROCESSES[${i}]}" >> run-posum.out
-      java -cp ${POSUM_CLASSPATH} -Xmx${maxmem}M -Dhadoop.log.dir="${HADOOP_HOME}/logs" ${PROCESSES[${i}]} >> run-posum.out 2>&1 &
+      echo ">> Starting ${PROCESSES[${i}]}"
+      java -cp ${POSUM_CLASSPATH} -Xmx${maxmem}M -Dhadoop.log.dir="${HADOOP_HOME}/logs" ${PROCESSES[${i}]} > /dev/null 2>&1 &
       sleep 3
     done
 

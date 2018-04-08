@@ -36,7 +36,7 @@ public class ClusterUtils {
     try {
       String[] parts = id.split("_");
       return ApplicationId.newInstance(Long.parseLong(parts[1]),
-        Integer.parseInt(parts[2]));
+          Integer.parseInt(parts[2]));
     } catch (Exception e) {
       throw new PosumException("Id parse exception for " + id, e);
     }
@@ -59,9 +59,9 @@ public class ClusterUtils {
     try {
       String[] parts = id.split("_");
       return MRBuilderUtils.newTaskId(
-        composeJobId(Long.parseLong(parts[1]), Integer.parseInt(parts[2])),
-        Integer.parseInt(parts[4]),
-        "m".equals(parts[3]) ? TaskType.MAP : TaskType.REDUCE
+          composeJobId(Long.parseLong(parts[1]), Integer.parseInt(parts[2])),
+          Integer.parseInt(parts[4]),
+          "m".equals(parts[3]) ? TaskType.MAP : TaskType.REDUCE
       );
     } catch (Exception e) {
       throw new PosumException("Id parse exception for " + id, e);
@@ -142,8 +142,7 @@ public class ClusterUtils {
         mapInputSize += orZero(task.getInputBytes());
         mapOutputSize += orZero(task.getOutputBytes());
         if (task.getSplitLocations() != null && task.getHostName() != null) {
-          if (task.getSplitLocations().contains(task.getHostName()))
-            task.setLocal(true);
+          task.setLocal(task.getSplitLocations().contains(task.getHostName()));
         }
       }
       if (TaskType.REDUCE.equals(task.getType())) {

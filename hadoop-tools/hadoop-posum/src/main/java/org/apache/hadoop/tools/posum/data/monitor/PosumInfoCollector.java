@@ -78,9 +78,9 @@ public class PosumInfoCollector {
     mainDb = Database.from(dataStore, DatabaseReference.getMain());
     performanceEvaluator = new PerformanceEvaluator(DatabaseUtils.newProvider(mainDb));
     fineGrained = conf.getBoolean(PosumConfiguration.FINE_GRAINED_MONITOR,
-      PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
+        PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
     continuousPrediction = conf.getBoolean(PosumConfiguration.CONTINUOUS_PREDICTION,
-      PosumConfiguration.CONTINUOUS_PREDICTION_DEFAULT);
+        PosumConfiguration.CONTINUOUS_PREDICTION_DEFAULT);
     api = new PosumAPIClient(conf);
     policyMap = new HashMap<>();
     initializePolicyMap();
@@ -89,7 +89,7 @@ public class PosumInfoCollector {
     standardPredictor = JobBehaviorPredictor.newInstance(conf, StandardPredictor.class);
     detailedPredictor = JobBehaviorPredictor.newInstance(conf, DetailedPredictor.class);
     predictionTimeout = conf.getLong(PosumConfiguration.PREDICTOR_TIMEOUT,
-      PosumConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
+        PosumConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
   }
 
   private void initializePolicyMap() {
@@ -151,11 +151,11 @@ public class PosumInfoCollector {
 
   private void aggregatePolicyChanges(long now) {
     FindByQueryCall findPolicyChanges = FindByQueryCall.newInstance(DataEntityCollection.AUDIT_LOG,
-      QueryUtils.and(
-        QueryUtils.is("type", POLICY_CHANGE),
-        QueryUtils.greaterThan("lastUpdated", lastCollectTime),
-        QueryUtils.lessThanOrEqual("lastUpdated", now)
-      ));
+        QueryUtils.and(
+            QueryUtils.is("type", POLICY_CHANGE),
+            QueryUtils.greaterThan("lastUpdated", lastCollectTime),
+            QueryUtils.lessThanOrEqual("lastUpdated", now)
+        ));
     List<LogEntry<SimplePropertyPayload>> policyChanges = logDb.execute(findPolicyChanges).getEntities();
     if (policyChanges.size() > 0) {
       if (schedulingStart == 0)
@@ -177,11 +177,11 @@ public class PosumInfoCollector {
 
   private void aggregateNodeChanges(long now) {
     FindByQueryCall findNodeChanges = FindByQueryCall.newInstance(DataEntityCollection.AUDIT_LOG,
-      QueryUtils.and(
-        QueryUtils.in("type", Arrays.asList(NODE_ADD, NODE_REMOVE)),
-        QueryUtils.greaterThan("lastUpdated", lastCollectTime),
-        QueryUtils.lessThanOrEqual("lastUpdated", now)
-      ));
+        QueryUtils.and(
+            QueryUtils.in("type", Arrays.asList(NODE_ADD, NODE_REMOVE)),
+            QueryUtils.greaterThan("lastUpdated", lastCollectTime),
+            QueryUtils.lessThanOrEqual("lastUpdated", now)
+        ));
     List<LogEntry<SimplePropertyPayload>> nodeChanges = logDb.execute(findNodeChanges).getEntities();
     if (nodeChanges.size() > 0) {
       for (LogEntry<SimplePropertyPayload> nodeChange : nodeChanges) {
@@ -198,10 +198,10 @@ public class PosumInfoCollector {
   private void storePredictionForTask(JobBehaviorPredictor predictor, TaskPredictionInput input) {
     try {
       TaskPredictionPayload prediction = TaskPredictionPayload.newInstance(
-        predictor.getClass().getSimpleName(),
-        input.getTaskId(),
-        predictor.predictTaskBehavior(input).getDuration(),
-        input instanceof DetailedTaskPredictionInput ? ((DetailedTaskPredictionInput) input).getLocal() : null
+          predictor.getClass().getSimpleName(),
+          input.getTaskId(),
+          predictor.predictTaskBehavior(input).getDuration(),
+          input instanceof DetailedTaskPredictionInput ? ((DetailedTaskPredictionInput) input).getLocal() : null
       );
       DatabaseUtils.storeLogEntry(TASK_PREDICTION, prediction, dataStore);
     } catch (Exception e) {
@@ -226,8 +226,10 @@ public class PosumInfoCollector {
     initializePolicyMap();
     long now = System.currentTimeMillis();
     schedulingStart = now;
-    PolicyInfoPayload info = policyMap.get(lastUsedPolicy);
-    info.start(now);
+    if (lastUsedPolicy != null) {
+      PolicyInfoPayload info = policyMap.get(lastUsedPolicy);
+      info.start(now);
+    }
     DatabaseUtils.storeStatReportCall(POLICY_MAP, PolicyInfoMapPayload.newInstance(policyMap), dataStore);
   }
 }

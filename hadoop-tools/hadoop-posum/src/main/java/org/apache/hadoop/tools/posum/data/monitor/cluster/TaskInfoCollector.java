@@ -15,10 +15,10 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
-import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.ArrayList;
@@ -30,8 +30,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.ID_FIELD;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.util.ShutdownThreadsHelper.shutdownExecutorService;
 
 class TaskInfoCollector {
@@ -68,8 +68,7 @@ class TaskInfoCollector {
           return null;
         }
         if (task.isLocal() == null && task.getSplitLocations() != null && task.getHostName() != null) {
-          if (task.getSplitLocations().contains(task.getHostName()))
-            task.setLocal(true);
+          task.setLocal(task.getSplitLocations().contains(task.getHostName()));
         }
         CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
         if (counters == null) {
@@ -96,8 +95,7 @@ class TaskInfoCollector {
       api.addFinishedAttemptInfo(task);
       task.setAppId(job.getAppId());
       if (task.isLocal() == null && task.getSplitLocations() != null && task.getHostName() != null) {
-        if (task.getSplitLocations().contains(task.getHostName()))
-          task.setLocal(true);
+        task.setLocal(task.getSplitLocations().contains(task.getHostName()));
       }
       CountersProxy counters = api.getFinishedTaskCounters(task.getJobId(), task.getId());
       if (counters != null) {
@@ -186,7 +184,7 @@ class TaskInfoCollector {
 
   private List<TaskProfile> getCurrentTaskProfiles(JobProfile job) {
     MultiEntityPayload ret =
-      db.execute(FindByQueryCall.newInstance(TASK, QueryUtils.is("jobId", job.getId()), ID_FIELD, false));
+        db.execute(FindByQueryCall.newInstance(TASK, QueryUtils.is("jobId", job.getId()), ID_FIELD, false));
     if (ret == null)
       return null;
     return ret.getEntities();
