@@ -70,15 +70,18 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     String oldJobIdString = oldJobId.toString();
     JobProfile job = sourceDb.execute(FindByIdCall.newInstance(JOB, oldJobIdString)).getEntity();
     job.setAppId(appIdString);
-    if (simulationContext.isOnlineSimulation() && job.getHostName() != null)
-      job.setStartTime(job.getStartTime() - simulationContext.getClusterTimeAtStart());
-    else {
+
+    long clusterTimeAtStart = simulationContext.getClusterTimeAtStart();
+    job.setSubmitTime(job.getSubmitTime() - clusterTimeAtStart);
+    job.setFinishTime(null);
+    if (simulationContext.isOnlineSimulation() && job.getHostName() != null) {
+      job.setStartTime(job.getStartTime() - clusterTimeAtStart);
+    } else {
       job.setStartTime(null);
-      job.setFinishTime(null);
       job.setHostName(null);
     }
     if (orZero(job.getDeadline()) != 0) {
-      long newDeadline = job.getDeadline() - simulationContext.getClusterTimeAtStart();
+      long newDeadline = job.getDeadline() - clusterTimeAtStart;
       if (newDeadline == 0)
         newDeadline = 1; // to avoid considering this job a batch job due to deadline=0
       job.setDeadline(newDeadline);
@@ -97,14 +100,14 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
     }
 
     List<TaskProfile> tasks =
-      sourceDb.execute(FindByQueryCall.newInstance(TASK, QueryUtils.is("jobId", oldJobIdString))).getEntities();
+        sourceDb.execute(FindByQueryCall.newInstance(TASK, QueryUtils.is("jobId", oldJobIdString))).getEntities();
     transaction.addCall(StoreAllCall.newInstance(TASK, tasks));
     for (TaskProfile task : tasks) {
       task.setAppId(appIdString);
       if (simulationContext.isOnlineSimulation() && task.getHostName() != null) {
-        task.setStartTime(task.getStartTime() - simulationContext.getClusterTimeAtStart());
+        task.setStartTime(task.getStartTime() - clusterTimeAtStart);
         if (task.getFinishTime() != null)
-          task.setFinishTime(task.getFinishTime() - simulationContext.getClusterTimeAtStart());
+          task.setFinishTime(task.getFinishTime() - clusterTimeAtStart);
       } else {
         task.setStartTime(null);
         task.setFinishTime(null);

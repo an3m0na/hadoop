@@ -3,6 +3,7 @@ package org.apache.hadoop.tools.posum.web;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
 import org.apache.hadoop.tools.posum.common.records.call.RawDocumentsByQueryCall;
@@ -15,6 +16,7 @@ import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoMapPayload
 import org.apache.hadoop.tools.posum.common.records.payload.PolicyInfoPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.SimplePropertyPayload;
 import org.apache.hadoop.tools.posum.common.records.payload.StringStringMapPayload;
+import org.apache.hadoop.tools.posum.common.util.cluster.PerformanceEvaluator;
 import org.apache.hadoop.tools.posum.common.util.json.JsonArray;
 import org.apache.hadoop.tools.posum.common.util.json.JsonElement;
 import org.apache.hadoop.tools.posum.common.util.json.JsonObject;
@@ -44,8 +46,10 @@ public class DataMasterWebApp extends PosumWebApp {
         return getAllSystemMetrics(extractSince(request));
       case "/all-cluster":
         return getAllClusterMetrics(extractSince(request));
-      case "/performance":
+      case "/all-performance":
         return getPerformanceReadings(extractSince(request));
+      case "/performance":
+        return getPerformanceNow();
       case "/logs":
         return getLogs(extractSince(request));
       default:
@@ -59,43 +63,52 @@ public class DataMasterWebApp extends PosumWebApp {
             collection = path.substring(index);
           }
           return wrapResult(context.getDataStore().execute(
-            RawDocumentsByQueryCall.newInstance(
-              DataEntityCollection.fromLabel(collection),
-              QueryUtils.withParams(request.getParameterMap())
-            ),
-            DatabaseReference.fromName(db)));
+              RawDocumentsByQueryCall.newInstance(
+                  DataEntityCollection.fromLabel(collection),
+                  QueryUtils.withParams(request.getParameterMap())
+              ),
+              DatabaseReference.fromName(db)));
         }
         return handleUnknownRoute();
     }
   }
 
+  private JsonNode getPerformanceNow() {
+    Database db = Database.from(context.getDataStore(), DatabaseReference.getMain());
+    CompoundScorePayload score = new PerformanceEvaluator(DatabaseUtils.newProvider(db)).evaluate();
+    return wrapResult(new JsonObject()
+        .put("time", System.currentTimeMillis())
+        .put("score", JsonElement.write(score))
+        .getNode());
+  }
+
   private JsonNode getPerformanceReadings(long since) {
     FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.PERFORMANCE.getCollection(),
-      QueryUtils.and(
-        QueryUtils.is("type", LogEntry.Type.PERFORMANCE),
-        QueryUtils.greaterThan("lastUpdated", since)
-      ), "lastUpdated", false);
+        QueryUtils.and(
+            QueryUtils.is("type", LogEntry.Type.PERFORMANCE),
+            QueryUtils.greaterThan("lastUpdated", since)
+        ), "lastUpdated", false);
     List<LogEntry<CompoundScorePayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
     JsonArray ret = new JsonArray();
     for (LogEntry<CompoundScorePayload> log : logs) {
       ret.add(
-        new JsonObject()
-          .put("time", log.getLastUpdated())
-          .put("score", JsonElement.write(log.getDetails()))
+          new JsonObject()
+              .put("time", log.getLastUpdated())
+              .put("score", JsonElement.write(log.getDetails()))
       );
     }
     return wrapResult(new JsonObject()
-      .put("time", System.currentTimeMillis())
-      .put("entries", ret)
-      .getNode());
+        .put("time", System.currentTimeMillis())
+        .put("entries", ret)
+        .getNode());
   }
 
   private JsonNode getAllSystemMetrics(long since) {
     FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.SYSTEM_METRICS.getCollection(),
-      QueryUtils.and(
-        QueryUtils.is("type", LogEntry.Type.SYSTEM_METRICS),
-        QueryUtils.greaterThan("lastUpdated", since)
-      ), "lastUpdated", false);
+        QueryUtils.and(
+            QueryUtils.is("type", LogEntry.Type.SYSTEM_METRICS),
+            QueryUtils.greaterThan("lastUpdated", since)
+        ), "lastUpdated", false);
     List<LogEntry<StringStringMapPayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
     JsonObject ret = new JsonObject().put("time", System.currentTimeMillis());
     for (LogEntry<StringStringMapPayload> log : logs) {
@@ -119,10 +132,10 @@ public class DataMasterWebApp extends PosumWebApp {
 
   private JsonNode getAllClusterMetrics(long since) {
     FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.CLUSTER_METRICS.getCollection(),
-      QueryUtils.and(
-        QueryUtils.is("type", LogEntry.Type.CLUSTER_METRICS),
-        QueryUtils.greaterThan("lastUpdated", since)
-      ), "lastUpdated", false);
+        QueryUtils.and(
+            QueryUtils.is("type", LogEntry.Type.CLUSTER_METRICS),
+            QueryUtils.greaterThan("lastUpdated", since)
+        ), "lastUpdated", false);
     List<LogEntry<SimplePropertyPayload>> logs = context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
     JsonArray entries = new JsonArray();
     for (LogEntry<SimplePropertyPayload> log : logs) {
@@ -136,17 +149,17 @@ public class DataMasterWebApp extends PosumWebApp {
       }
     }
     return wrapResult(new JsonObject()
-      .put("time", System.currentTimeMillis())
-      .put("entries", entries)
-      .getNode());
+        .put("time", System.currentTimeMillis())
+        .put("entries", entries)
+        .getNode());
   }
 
   private JsonNode getPolicyMetrics(Long since) {
     return wrapResult(new JsonObject()
-      .put("time", System.currentTimeMillis())
-      .put("distribution", composePolicyMap())
-      .put("entries", composeRecentChoices(since))
-      .getNode());
+        .put("time", System.currentTimeMillis())
+        .put("distribution", composePolicyMap())
+        .put("entries", composeRecentChoices(since))
+        .getNode());
   }
 
   private JsonObject composePolicyMap() {
@@ -155,8 +168,8 @@ public class DataMasterWebApp extends PosumWebApp {
     if (policyReport != null) {
       for (Map.Entry<String, PolicyInfoPayload> policyInfo : policyReport.getDetails().getEntries().entrySet()) {
         ret.put(policyInfo.getKey(), new JsonObject()
-          .put("time", policyInfo.getValue().getUsageTime())
-          .put("number", policyInfo.getValue().getUsageNumber()));
+            .put("time", policyInfo.getValue().getUsageTime())
+            .put("number", policyInfo.getValue().getUsageNumber()));
       }
     }
     return ret;
@@ -165,17 +178,17 @@ public class DataMasterWebApp extends PosumWebApp {
   private JsonArray composeRecentChoices(long since) {
     JsonArray choices = new JsonArray();
     FindByQueryCall findChoices = FindByQueryCall.newInstance(LogEntry.Type.POLICY_CHANGE.getCollection(),
-      QueryUtils.and(
-        QueryUtils.is("type", LogEntry.Type.POLICY_CHANGE),
-        QueryUtils.greaterThan("lastUpdated", since)
-      ));
+        QueryUtils.and(
+            QueryUtils.is("type", LogEntry.Type.POLICY_CHANGE),
+            QueryUtils.greaterThan("lastUpdated", since)
+        ));
     List<LogEntry<SimplePropertyPayload>> choiceLogs =
-      context.getDataStore().execute(findChoices, DatabaseReference.getLogs()).getEntities();
+        context.getDataStore().execute(findChoices, DatabaseReference.getLogs()).getEntities();
     for (LogEntry<SimplePropertyPayload> choiceEntry : choiceLogs) {
       String policy = choiceEntry.getDetails().getValueAs();
       choices.add(new JsonObject()
-        .put("time", choiceEntry.getLastUpdated())
-        .put("policy", policy)
+          .put("time", choiceEntry.getLastUpdated())
+          .put("policy", policy)
       );
     }
     return choices;
@@ -184,17 +197,17 @@ public class DataMasterWebApp extends PosumWebApp {
   private JsonNode getLogs(Long since) {
     JsonArray list = new JsonArray();
     FindByQueryCall findLogs = FindByQueryCall.newInstance(LogEntry.Type.GENERAL.getCollection(),
-      QueryUtils.and(
-        QueryUtils.is("type", LogEntry.Type.GENERAL),
-        QueryUtils.greaterThan("lastUpdated", since)
-      ), "lastUpdated", false);
+        QueryUtils.and(
+            QueryUtils.is("type", LogEntry.Type.GENERAL),
+            QueryUtils.greaterThan("lastUpdated", since)
+        ), "lastUpdated", false);
     List<LogEntry<SimplePropertyPayload>> logs =
-      context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
+        context.getDataStore().execute(findLogs, DatabaseReference.getLogs()).getEntities();
     for (LogEntry<SimplePropertyPayload> logEntry : logs) {
       String message = logEntry.getDetails().getValueAs();
       list.add(new JsonObject()
-        .put("timestamp", logEntry.getLastUpdated())
-        .put("message", message));
+          .put("timestamp", logEntry.getLastUpdated())
+          .put("message", message));
     }
     return wrapResult(list.getNode());
   }

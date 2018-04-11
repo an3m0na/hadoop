@@ -4,7 +4,7 @@ function PerformanceTab(id, container, env) {
 
   self.refresh = function () {
     self.loading = true;
-    var path = env.isTest ? "mocks/dmmetrics_performance.json" : self.comm.paths.DM + "/performance?since=" + self.lastRefreshed;
+    var path = env.isTest ? "mocks/dmmetrics_performance.json" : self.comm.paths.DM + "/all-performance?since=" + self.lastRefreshed;
     self.comm.requestData(path, function (data) {
       self.lastRefreshed = data.time;
       updateTimeSeriesPlot(self, "plot_performance_slowdown", data, {

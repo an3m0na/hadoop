@@ -38,7 +38,7 @@ public class PerformanceEvaluator {
     for (JobProfile job : finishedJobs) {
       if (orZero(job.getDeadline()) == 0) {
         // BC job; calculate slowdown
-        long runtime = getDuration(job);
+        long runtime = job.getFinishTime() - job.getSubmitTime();
         FindByQueryCall findTasks = FindByQueryCall.newInstance(DataEntityCollection.TASK_HISTORY, QueryUtils.is("jobId", job.getId()));
         List<TaskProfile> tasks = db.execute(findTasks).getEntities();
         long executionTime = 0;
