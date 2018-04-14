@@ -134,7 +134,7 @@ public class MRAMDaemon extends AMDaemon {
           if (cs.getExitStatus() == ContainerExitStatus.SUCCESS) {
             if (assignedMaps.containsKey(containerId)) {
               LOG.trace(MessageFormat.format("T={0}: Application {1} has one " +
-                "mapper finished ({2}).", core.getAppId(), containerId));
+                  "mapper finished ({2}).", simulationContext.getCurrentTime(), core.getAppId(), containerId));
               SimulatedContainer simulatedContainer = assignedMaps.remove(containerId);
               mapFinished++;
               finishedContainers++;
@@ -192,8 +192,8 @@ public class MRAMDaemon extends AMDaemon {
           if (startPreAssigned(container))
             continue;
           if (preAssignedRemaining()) // container was not pre-assigned but there are pre-assignments waiting
-            throw new PosumException(MessageFormat.format("Sim={0} T={1}: Unexpected container during pre-assignments: {2} on {3}",
-              simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), container.getId(), container.getNodeId()));
+            throw new PosumException(MessageFormat.format("Sim={0} T={1}: Unexpected container during pre-assignments: {2}",
+                simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), container));
         }
         // assign regular container
         assignContainer(container);

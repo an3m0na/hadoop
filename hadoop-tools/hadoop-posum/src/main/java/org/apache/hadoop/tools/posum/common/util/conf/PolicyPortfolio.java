@@ -23,6 +23,10 @@ public class PolicyPortfolio extends HashMap<String, Class<? extends PluginPolic
     StandardPolicy(Class<? extends PluginPolicy> implClass) {
       this.implClass = implClass;
     }
+
+    public Class<? extends PluginPolicy> getImplClass() {
+      return implClass;
+    }
   }
 
   private String defaultPolicyName;

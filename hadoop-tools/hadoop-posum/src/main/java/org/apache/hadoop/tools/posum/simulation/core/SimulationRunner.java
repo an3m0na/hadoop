@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
@@ -42,23 +43,24 @@ import java.util.concurrent.CountDownLatch;
 
 import static org.apache.hadoop.mapreduce.MRJobConfig.COMPLETED_MAPS_FOR_REDUCE_SLOWSTART;
 import static org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator.DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART;
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.AM_DAEMON_HEARTBEAT_INTERVAL_MS;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.AM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.NM_DAEMON_HEARTBEAT_INTERVAL_MS;
 import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.NM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT;
-import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.NM_DAEMON_MEMORY_MB;
-import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.NM_DAEMON_MEMORY_MB_DEFAULT;
-import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.NM_DAEMON_VCORES;
-import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.NM_DAEMON_VCORES_DEFAULT;
-import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SIMULATION_CONTAINER_MEMORY_MB;
-import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SIMULATION_CONTAINER_MEMORY_MB_DEFAULT;
-import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SIMULATION_CONTAINER_VCORES;
-import static org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration.SIMULATION_CONTAINER_VCORES_DEFAULT;
 
 public class SimulationRunner<T extends PluginPolicy> {
   private final static Logger LOG = Logger.getLogger(SimulationRunner.class);
-  private final IdsByQueryCall GET_STARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.isNot("startTime", null), "submitTime", false);
-  private final IdsByQueryCall GET_NOTSTARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB, QueryUtils.is("startTime", null), "submitTime", false);
+  private final IdsByQueryCall GET_STARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB,
+      QueryUtils.and(
+          QueryUtils.isNot("startTime", null),
+          QueryUtils.isNot("startTime", null)
+      ), "submitTime", false);
+  private final IdsByQueryCall GET_NOTSTARTED_JOBS = IdsByQueryCall.newInstance(DataEntityCollection.JOB,
+      QueryUtils.or(
+          QueryUtils.is("startTime", null),
+          QueryUtils.is("startTime", 0L)
+      ), "submitTime", false);
   private final FindByIdCall GET_JOB = FindByIdCall.newInstance(DataEntityCollection.JOB, null);
   private final FindByIdCall GET_CONF = FindByIdCall.newInstance(DataEntityCollection.JOB_CONF, null);
   private final FindByQueryCall GET_TASKS = FindByQueryCall.newInstance(DataEntityCollection.TASK, null);
@@ -75,8 +77,8 @@ public class SimulationRunner<T extends PluginPolicy> {
     this.context = context;
     conf = context.getConf();
     daemonPool = new DaemonPool(context);
-    int containerMemoryMB = conf.getInt(SIMULATION_CONTAINER_MEMORY_MB, SIMULATION_CONTAINER_MEMORY_MB_DEFAULT);
-    int containerVCores = conf.getInt(SIMULATION_CONTAINER_VCORES, SIMULATION_CONTAINER_VCORES_DEFAULT);
+    int containerMemoryMB = conf.getInt(MRJobConfig.MAP_MEMORY_MB, YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB);
+    int containerVCores = conf.getInt(MRJobConfig.MAP_CPU_VCORES, YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES);
     containerResource = BuilderUtils.newResource(containerMemoryMB, containerVCores);
   }
 
@@ -138,7 +140,7 @@ public class SimulationRunner<T extends PluginPolicy> {
       GET_CONF.setId(job.getId());
       JobConfProxy jobConf = sourceDb.execute(GET_CONF).getEntity();
       float slowStartRatio = jobConf.getConf().getFloat(COMPLETED_MAPS_FOR_REDUCE_SLOWSTART,
-        DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART);
+          DEFAULT_COMPLETED_MAPS_PERCENT_FOR_REDUCE_SLOWSTART);
 
       MRAMDaemon amSim = new MRAMDaemon(context);
       amSim.init(heartbeatInterval, createContainers(jobId), rm, jobSubmitTime, user, queue, oldAppId, job.getHostName(), slowStartRatio);
@@ -157,20 +159,22 @@ public class SimulationRunner<T extends PluginPolicy> {
     List<TaskProfile> jobTasks = context.getSourceDatabase().execute(GET_TASKS).getEntities();
 
     for (TaskProfile task : jobTasks) {
-      if (!context.isOnlineSimulation() || task.getFinishTime() == null) { // only schedule unfinished tasks if simulating online
+      if (!context.isOnlineSimulation() || orZero(task.getFinishTime()) == 0) { // only schedule finished tasks if not simulating online
         Long taskStart = task.getStartTime();
         Long taskFinish = task.getFinishTime();
         Long lifeTime = taskStart != null && taskFinish != null ? taskFinish - taskStart : null;
         Long originalStartTime = task.getStartTime() == null ? null : task.getStartTime() - context.getClusterTimeAtStart();
         ret.add(new SimulatedContainer(context, containerResource, lifeTime, task.getType().name(),
-          task.getId(), task.getSplitLocations(), originalStartTime, task.getHostName()));
+            task.getId(), task.getSplitLocations(), originalStartTime, task.getHostName()));
       }
     }
     // sort so that containers that should already be allocated go first
     Collections.sort(ret, new Comparator<SimulatedContainer>() {
       @Override
       public int compare(SimulatedContainer o1, SimulatedContainer o2) {
-        return o1.getHostName() != null ? -1 : 1;
+        if (o1.getHostName() != null)
+          return o2.getHostName() == null ? -1 : o1.getTaskId().compareTo(o2.getTaskId());
+        return o2.getHostName() != null ? 1 : o1.getTaskId().compareTo(o2.getTaskId());
       }
     });
     return ret;
@@ -186,8 +190,8 @@ public class SimulationRunner<T extends PluginPolicy> {
 
   private void queueNMs() throws YarnException, IOException {
     // nm configuration
-    int nmMemoryMB = conf.getInt(NM_DAEMON_MEMORY_MB, NM_DAEMON_MEMORY_MB_DEFAULT);
-    int nmVCores = conf.getInt(NM_DAEMON_VCORES, NM_DAEMON_VCORES_DEFAULT);
+    int nmMemoryMB = conf.getInt(YarnConfiguration.NM_PMEM_MB, YarnConfiguration.DEFAULT_NM_PMEM_MB);
+    int nmVCores = conf.getInt(YarnConfiguration.NM_VCORES, YarnConfiguration.DEFAULT_NM_VCORES);
     int heartbeatInterval = conf.getInt(NM_DAEMON_HEARTBEAT_INTERVAL_MS, NM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT);
 
     //FIXME: use a dynamic snapshot mechanism
@@ -198,10 +202,10 @@ public class SimulationRunner<T extends PluginPolicy> {
       // randomize the start time from -heartbeatInterval to zero, in order to start NMs before AMs
       NMDaemon nm = new NMDaemon(context);
       nm.init(hostName,
-        nmMemoryMB,
-        nmVCores,
-        -random.nextInt(heartbeatInterval),
-        heartbeatInterval, rm
+          nmMemoryMB,
+          nmVCores,
+          -random.nextInt(heartbeatInterval),
+          heartbeatInterval, rm
       );
       nmMap.put(hostName, nm);
       daemonPool.schedule(nm);

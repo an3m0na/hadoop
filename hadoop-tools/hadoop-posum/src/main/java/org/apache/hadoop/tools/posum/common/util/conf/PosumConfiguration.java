@@ -137,20 +137,11 @@ public class PosumConfiguration {
   public static final String SIMULATION_RUNNER_POOL_SIZE = SIMULATION_PREFIX + "concurrent.daemons";
   public static final int SIMULATION_RUNNER_POOL_SIZE_DEFAULT = 10;
   public static final String NM_DAEMON_PREFIX = SIMULATION_PREFIX + "nm.";
-  public static final String NM_DAEMON_MEMORY_MB = NM_DAEMON_PREFIX + "memory.mb";
-  public static final int NM_DAEMON_MEMORY_MB_DEFAULT = 10240;
-  public static final String NM_DAEMON_VCORES = NM_DAEMON_PREFIX + "vcores";
-  public static final int NM_DAEMON_VCORES_DEFAULT = 10;
   public static final String NM_DAEMON_HEARTBEAT_INTERVAL_MS = NM_DAEMON_PREFIX + "heartbeat.interval.ms";
   public static final int NM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT = 1000;
   public static final String AM_DAEMON_PREFIX = SIMULATION_PREFIX + "am.";
   public static final String AM_DAEMON_HEARTBEAT_INTERVAL_MS = AM_DAEMON_PREFIX + "heartbeat.interval.ms";
   public static final int AM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT = 1000;
-  public static final String SIMULATION_CONTAINER_PREFIX = SIMULATION_PREFIX + "container.";
-  public static final String SIMULATION_CONTAINER_MEMORY_MB = SIMULATION_CONTAINER_PREFIX + "memory.mb";
-  public static final int SIMULATION_CONTAINER_MEMORY_MB_DEFAULT = 1024;
-  public static final String SIMULATION_CONTAINER_VCORES = SIMULATION_CONTAINER_PREFIX + "vcores";
-  public static final int SIMULATION_CONTAINER_VCORES_DEFAULT = 1;
 
   public static final String SLOWDOWN_SCALE_FACTOR = ORCHESTRATOR_PREFIX + "scale-factor.alpha";
   public static final double SLOWDOWN_SCALE_FACTOR_DEFAULT = 1.00;
