@@ -106,7 +106,7 @@ public class ApplicationMonitor implements EventHandler<ApplicationEvent> {
       task.setAppId(appIdString);
       if (simulationContext.isOnlineSimulation() && task.getHostName() != null) {
         task.setStartTime(task.getStartTime() - clusterTimeAtStart);
-        if (task.getFinishTime() != null)
+        if (task.isFinished())
           task.setFinishTime(task.getFinishTime() - clusterTimeAtStart);
       } else {
         task.setStartTime(null);

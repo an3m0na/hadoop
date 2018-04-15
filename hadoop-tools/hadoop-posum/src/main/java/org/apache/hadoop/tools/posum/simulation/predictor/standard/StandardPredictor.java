@@ -15,10 +15,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDoubleField;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getIntField;
-import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.simulation.predictor.standard.FlexKeys.MAP_RATE;
 import static org.apache.hadoop.tools.posum.simulation.predictor.standard.FlexKeys.MAP_SELECTIVITY;
 import static org.apache.hadoop.tools.posum.simulation.predictor.standard.FlexKeys.PROFILED_MAPS;
@@ -54,7 +54,7 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
         if (tasks == null)
           throw new PosumException("Tasks not found or finished for job " + job.getId());
         for (TaskProfile task : tasks) {
-          if (getDuration(task) <= 0 || !task.getType().equals(TaskType.MAP))
+          if (!task.isFinished() || !task.getType().equals(TaskType.MAP))
             continue;
           // this is a finished map task; calculate general, local and remote processing rates
           Long taskInput = getSplitSize(task, job);
@@ -66,8 +66,8 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
           fieldMap.put(MAP_RATE.getKey(), Double.toString(mapRate / taskNo));
           if (job.getMapOutputBytes() != null) {
             fieldMap.put(MAP_SELECTIVITY.getKey(),
-              // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-              Double.toString(1.0 * orZero(job.getMapOutputBytes()) / parsedInputBytes));
+                // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+                Double.toString(1.0 * orZero(job.getMapOutputBytes()) / parsedInputBytes));
           }
         }
       }
@@ -114,9 +114,9 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
 
     // calculate average duration based on map selectivity and historical processing rates
     Double avgSelectivity = getMapTaskSelectivity(
-      job,
-      model.getRelevantMapStats(job),
-      MAP_SELECTIVITY.getKey()
+        job,
+        model.getRelevantMapStats(job),
+        MAP_SELECTIVITY.getKey()
     );
 
     StandardReducePredictionStats reduceStats = model.getRelevantReduceStats(job);

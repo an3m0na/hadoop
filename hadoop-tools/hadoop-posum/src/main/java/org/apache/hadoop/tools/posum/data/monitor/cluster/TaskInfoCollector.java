@@ -22,6 +22,8 @@ import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -107,25 +109,32 @@ class TaskInfoCollector {
   }
 
   TaskInfo getRunningTaskInfo(AppProfile app, JobProfile job) {
-    List<TaskProfile> tasks = getCurrentTaskProfiles(job);
-    if (tasks == null || tasks.size() < 1) {
-      tasks = createTaskStubs(job);
+    List<TaskProfile> sortedCurrentTasks = getCurrentTaskProfiles(job);
+    if (sortedCurrentTasks == null || sortedCurrentTasks.size() < 1) {
+      sortedCurrentTasks = createTaskStubs(job);
     }
     if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-      tasks = api.getRunningTasksInfo(job, tasks);
-      if (tasks == null || tasks.size() == 0) {
+      List<TaskProfile> updatedTasks = api.getRunningTasksInfo(job, sortedCurrentTasks);
+      if (updatedTasks == null || updatedTasks.size() == 0) {
         // job might have finished
         return null;
       }
-      List<Future<CountersProxy>> fetchers = new ArrayList<>(tasks.size());
-      for (TaskProfile task : tasks) {
-        fetchers.add(executor.submit(new TaskDetailFetcher(task)));
+      Collections.sort(updatedTasks, new Comparator<TaskProfile>() {
+        @Override
+        public int compare(TaskProfile o1, TaskProfile o2) {
+          return o1.getId().compareTo(o2.getId());
+        }
+      });
+      List<Future<CountersProxy>> fetchers = new ArrayList<>(sortedCurrentTasks.size());
+      for (int i = 0; i < sortedCurrentTasks.size(); i++) {
+        if (!sortedCurrentTasks.get(i).isFinished())
+          fetchers.add(executor.submit(new TaskDetailFetcher(updatedTasks.get(i))));
       }
       List<CountersProxy> countersList = resolveFetchers(fetchers);
       if (countersList == null) return null;
-      return new TaskInfo(tasks, countersList);
+      return new TaskInfo(sortedCurrentTasks, countersList);
     }
-    return new TaskInfo(tasks);
+    return new TaskInfo(sortedCurrentTasks);
   }
 
   private List<CountersProxy> resolveFetchers(List<Future<CountersProxy>> fetchers) {

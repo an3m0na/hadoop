@@ -101,13 +101,13 @@ public class ClusterUtils {
   }
 
   public static Long getDuration(JobProfile job) {
-    if (orZero(job.getFinishTime()) == 0)
+    if (!job.isFinished())
       return 0L;
     return job.getFinishTime() - job.getStartTime();
   }
 
   public static Long getDuration(TaskProfile task) {
-    if (orZero(task.getFinishTime()) == 0)
+    if (!task.isFinished())
       return 0L;
     return task.getFinishTime() - task.getStartTime();
   }
@@ -133,7 +133,7 @@ public class ClusterUtils {
     long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
 
     for (TaskProfile task : tasks) {
-      if (getDuration(task) <= 0)
+      if (!task.isFinished())
         // skip unfinished tasks
         continue;
       if (TaskType.MAP.equals(task.getType())) {

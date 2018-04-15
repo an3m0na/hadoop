@@ -82,4 +82,6 @@ public interface TaskProfile extends GeneralDataEntity<TaskProfile> {
   Long getSplitSize();
 
   void setSplitSize(Long splitSize);
+
+  boolean isFinished();
 }

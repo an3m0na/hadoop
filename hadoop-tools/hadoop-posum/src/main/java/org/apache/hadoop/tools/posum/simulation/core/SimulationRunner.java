@@ -161,9 +161,9 @@ public class SimulationRunner<T extends PluginPolicy> {
     List<TaskProfile> jobTasks = context.getSourceDatabase().execute(GET_TASKS).getEntities();
 
     for (TaskProfile task : jobTasks) {
-      Long taskStart = orZero(task.getStartTime());
-      Long taskFinish = orZero(task.getFinishTime());
-      if (!context.isOnlineSimulation() || orZero(task.getFinishTime()) == 0) { // only schedule finished tasks if not simulating online
+      if (!context.isOnlineSimulation() || !task.isFinished()) { // only schedule finished tasks if not simulating online
+        Long taskStart = orZero(task.getStartTime());
+        Long taskFinish = orZero(task.getFinishTime());
         Long lifeTime = taskStart != 0 && taskFinish != 0 ? taskFinish - taskStart : null;
         Long originalStartTime = taskStart == 0 ? null : task.getStartTime() - context.getClusterTimeAtStart();
         ret.add(new SimulatedContainer(context, containerResource, lifeTime, task.getType().name(),

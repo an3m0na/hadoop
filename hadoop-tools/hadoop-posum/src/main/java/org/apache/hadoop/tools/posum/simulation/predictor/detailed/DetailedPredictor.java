@@ -64,7 +64,7 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
         if (tasks == null)
           throw new PosumException("Tasks not found or finished for job " + job.getId());
         for (TaskProfile task : tasks) {
-          if (getDuration(task) <= 0 || !task.getType().equals(TaskType.MAP))
+          if (!task.isFinished() || !task.getType().equals(TaskType.MAP))
             continue;
           totalMaps++;
           // this is a finished map task; calculate general, local and remote processing rates
@@ -93,8 +93,8 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
           }
           if (job.getMapOutputBytes() != null) {
             fieldMap.put(MAP_SELECTIVITY.getKey(),
-              // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-              Double.toString(1.0 * orZero(job.getMapOutputBytes()) / parsedInputBytes));
+                // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+                Double.toString(1.0 * orZero(job.getMapOutputBytes()) / parsedInputBytes));
           }
           if (totalMaps == job.getTotalMapTasks()) {
             // all map tasks were parsed
@@ -116,7 +116,7 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
         mapFinish = getLongField(job, MAP_FINISH.getKey(), Long.MAX_VALUE);
       }
       for (TaskProfile task : tasks) {
-        if (getDuration(task) <= 0 || !task.getType().equals(TaskType.REDUCE) || task.getInputBytes() == null)
+        if (!task.isFinished() || !task.getType().equals(TaskType.REDUCE) || task.getInputBytes() == null)
           continue;
         reduceNo++;
         // this is a finished reduce task; split stats into shuffle, merge and reduce
@@ -139,11 +139,11 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
         fieldMap.put(MERGE.getKey(), Double.toString(mergeRate / reduceNo));
         if (shuffleFirstTime != 0) {
           fieldMap.put(SHUFFLE_FIRST.getKey(),
-            Long.toString(shuffleFirstTime / firstShuffleNo));
+              Long.toString(shuffleFirstTime / firstShuffleNo));
         }
         if (shuffleTypicalRate != 0) {
           fieldMap.put(SHUFFLE_TYPICAL.getKey(),
-            Double.toString(shuffleTypicalRate / typicalShuffleNo));
+              Double.toString(shuffleTypicalRate / typicalShuffleNo));
         }
         fieldMap.put(PROFILED_REDUCES.getKey(), Integer.toString(reduceNo));
       }
@@ -201,9 +201,9 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
   protected TaskPredictionOutput predictReduceTaskBehavior(TaskPredictionInput input) {
     JobProfile job = input.getJob();
     Double avgSelectivity = getMapTaskSelectivity(
-      job,
-      model.getRelevantMapStats(job),
-      MAP_SELECTIVITY.getKey()
+        job,
+        model.getRelevantMapStats(job),
+        MAP_SELECTIVITY.getKey()
     );
 
     DetailedReducePredictionStats jobStats = new DetailedReducePredictionStats(1, 0);
@@ -241,13 +241,13 @@ public class DetailedPredictor extends SimpleRateBasedPredictor<DetailedPredicti
     Double inputLeft = orZero(job.getTotalSplitSize()) * avgSelectivity - orZero(job.getReduceInputBytes());
     Double inputPerTask = Math.max(inputLeft / (job.getTotalReduceTasks() - job.getCompletedReduces()), 1);
     Long shuffleTime =
-      predictShuffleTime(jobStats, ObjectUtils.equals(job.getCompletedMaps(), job.getTotalMapTasks()), inputPerTask);
+        predictShuffleTime(jobStats, ObjectUtils.equals(job.getCompletedMaps(), job.getTotalMapTasks()), inputPerTask);
     if (shuffleTime == null)
       return null;
     Double duration = shuffleTime + inputPerTask / jobStats.getAvgMergeRate() + inputPerTask / jobStats.getAvgReduceRate();
     logger.trace("Reduce duration for " + job.getId() + " should be " + shuffleTime + " + " +
-      inputPerTask + " / " + jobStats.getAvgMergeRate() + " + " +
-      inputPerTask + " / " + jobStats.getAvgReduceRate() + "=" + duration);
+        inputPerTask + " / " + jobStats.getAvgMergeRate() + " + " +
+        inputPerTask + " / " + jobStats.getAvgReduceRate() + "=" + duration);
     return new TaskPredictionOutput(duration.longValue());
   }
 
