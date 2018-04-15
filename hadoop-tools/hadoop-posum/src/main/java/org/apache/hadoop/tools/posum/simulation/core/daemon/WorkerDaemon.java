@@ -29,15 +29,20 @@ public abstract class WorkerDaemon implements Daemon {
   public void init(long startTime, long repeatInterval) {
     if (repeatInterval < 0) {
       throw new IllegalArgumentException(MessageFormat.format(
-        "repeatInterval[{0}] cannot be less than 1", repeatInterval));
+          "repeatInterval[{0}] cannot be less than 1", repeatInterval));
     }
     this.startTime = startTime;
     this.repeatInterval = repeatInterval;
     this.nextRun = startTime;
   }
 
-  public int getId() {
-    return id;
+  public String formatLog(String messageFormat, Object... messageArguments) {
+    String prefix = MessageFormat.format("Sim={0} Worker={1} T={2}: ", simulationContext.getSchedulerClass().getSimpleName(), getId(), simulationContext.getCurrentTime());
+    return prefix + MessageFormat.format(messageFormat, messageArguments);
+  }
+
+  public String getId() {
+    return Integer.toString(id);
   }
 
   public abstract void doFirstStep() throws Exception;
@@ -98,10 +103,10 @@ public abstract class WorkerDaemon implements Daemon {
   @Override
   public String toString() {
     return getClass().getSimpleName() + "{" +
-      "id=" + id +
-      ", nextRun=" + nextRun +
-      ", startTime=" + startTime +
-      ", repeatInterval=" + repeatInterval +
-      '}';
+        "id=" + id +
+        ", nextRun=" + nextRun +
+        ", startTime=" + startTime +
+        ", repeatInterval=" + repeatInterval +
+        '}';
   }
 }

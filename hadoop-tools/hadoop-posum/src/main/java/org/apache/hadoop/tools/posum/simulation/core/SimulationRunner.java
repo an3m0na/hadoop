@@ -1,7 +1,6 @@
 package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
@@ -12,7 +11,6 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.JobConfProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
-import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.core.appmaster.AMDaemon;
 import org.apache.hadoop.tools.posum.simulation.core.appmaster.MRAMDaemon;
@@ -72,14 +70,17 @@ public class SimulationRunner<T extends PluginPolicy> {
   private Resource containerResource;
   private Map<String, NMDaemon> nmMap;
   private Map<String, AMDaemon> amMap;
+  private SimulationSanityChecker sanityChecker;
+
 
   public SimulationRunner(SimulationContext<T> context) throws IOException, ClassNotFoundException {
     this.context = context;
     conf = context.getConf();
     daemonPool = new DaemonPool(context);
-    int containerMemoryMB = conf.getInt(MRJobConfig.MAP_MEMORY_MB, YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB);
-    int containerVCores = conf.getInt(MRJobConfig.MAP_CPU_VCORES, YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES);
+    int containerMemoryMB = conf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB, YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB);
+    int containerVCores = conf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES, YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES);
     containerResource = BuilderUtils.newResource(containerMemoryMB, containerVCores);
+    sanityChecker = new SimulationSanityChecker(conf);
   }
 
   public void run() throws Exception {
@@ -144,6 +145,7 @@ public class SimulationRunner<T extends PluginPolicy> {
 
       MRAMDaemon amSim = new MRAMDaemon(context);
       amSim.init(heartbeatInterval, createContainers(jobId), rm, jobSubmitTime, user, queue, oldAppId, job.getHostName(), slowStartRatio);
+      sanityChecker.countContainers(amSim);
       amMap.put(oldAppId, amSim);
     }
 
@@ -159,11 +161,11 @@ public class SimulationRunner<T extends PluginPolicy> {
     List<TaskProfile> jobTasks = context.getSourceDatabase().execute(GET_TASKS).getEntities();
 
     for (TaskProfile task : jobTasks) {
+      Long taskStart = orZero(task.getStartTime());
+      Long taskFinish = orZero(task.getFinishTime());
       if (!context.isOnlineSimulation() || orZero(task.getFinishTime()) == 0) { // only schedule finished tasks if not simulating online
-        Long taskStart = task.getStartTime();
-        Long taskFinish = task.getFinishTime();
-        Long lifeTime = taskStart != null && taskFinish != null ? taskFinish - taskStart : null;
-        Long originalStartTime = task.getStartTime() == null ? null : task.getStartTime() - context.getClusterTimeAtStart();
+        Long lifeTime = taskStart != 0 && taskFinish != 0 ? taskFinish - taskStart : null;
+        Long originalStartTime = taskStart == 0 ? null : task.getStartTime() - context.getClusterTimeAtStart();
         ret.add(new SimulatedContainer(context, containerResource, lifeTime, task.getType().name(),
             task.getId(), task.getSplitLocations(), originalStartTime, task.getHostName()));
       }
@@ -182,7 +184,7 @@ public class SimulationRunner<T extends PluginPolicy> {
 
   private void startRM() throws IOException, ClassNotFoundException {
     rm = new SimulationResourceManager<>(context);
-    Configuration conf = PosumConfiguration.newInstance(new YarnConfiguration());
+    Configuration conf = new Configuration(this.conf);
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME, false);
     rm.init(conf);
     rm.start();
@@ -234,8 +236,10 @@ public class SimulationRunner<T extends PluginPolicy> {
   }
 
   private void addRunningContainers() throws Exception {
+    if (!context.isOnlineSimulation())
+      return;
     for (AMDaemon am : amMap.values()) {
-      if (context.isOnlineSimulation() && am.getHostName() != null) { // AM container should be running
+      if (am.getHostName() != null) { // AM container should be running
         while (!am.isRegistered())
           Thread.sleep(100);
         ApplicationId appId = am.getAppId();
@@ -248,10 +252,10 @@ public class SimulationRunner<T extends PluginPolicy> {
         int preAssignedContainers = 0;
         for (SimulatedContainer container : am.getContainers()) {
           if (context.isOnlineSimulation() && container.getHostName() != null) {
+            LOG.trace(MessageFormat.format("Sim={0}: Pre-assigning container for {1} on {2}", context.getSchedulerClass().getSimpleName(), container.getTaskId(), container.getHostName()));
             if (!(rm.getPluginPolicy()).forceContainerAssignment(appId, container.getHostName(), container.getPriority()))
               throw new PosumException(MessageFormat.format("Sim={0}: Could not pre-assign container for {1}", context.getSchedulerClass().getSimpleName(), container.getTaskId()));
             preAssignedContainers++;
-            LOG.debug(MessageFormat.format("Sim={0}: Pre-assigned container for {1}", context.getSchedulerClass().getSimpleName(), container.getTaskId()));
           }
         }
         if (preAssignedContainers > 0)

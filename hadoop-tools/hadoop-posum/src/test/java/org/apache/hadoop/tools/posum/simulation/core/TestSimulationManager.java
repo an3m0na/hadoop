@@ -100,8 +100,7 @@ public class TestSimulationManager {
     REAL_TOPOLOGY.put("node317.cm.cluster", DEFAULT_RACK);
     REAL_TOPOLOGY.put("node318.cm.cluster", DEFAULT_RACK);
 
-    REAL_CONF.setInt(MRJobConfig.MAP_MEMORY_MB, 3072);
-    REAL_CONF.setInt(MRJobConfig.REDUCE_MEMORY_MB, 3072);
+    REAL_CONF.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB, 3072);
     REAL_CONF.setInt(YarnConfiguration.NM_VCORES, 16);
     REAL_CONF.setInt(YarnConfiguration.NM_PMEM_MB, 49152);
     REAL_CONF.setDouble(YarnConfiguration.NM_VMEM_PMEM_RATIO, 2.1);
@@ -270,7 +269,7 @@ public class TestSimulationManager {
   }
 
   @Test
-//  @Ignore
+  @Ignore
   public void testOnRealDB() throws Exception {
     DataStore dataStore = new DataStoreImpl(REAL_CONF);
     StandardPredictor predictor = realStandardPredictor(dataStore);

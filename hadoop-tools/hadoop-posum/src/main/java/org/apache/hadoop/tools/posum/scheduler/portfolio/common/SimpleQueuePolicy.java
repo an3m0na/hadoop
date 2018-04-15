@@ -501,7 +501,7 @@ public abstract class SimpleQueuePolicy<
     logger.trace("Added Application Attempt " + appAttemptId
       + " to scheduler from user " + application.getUser());
     if (isAttemptRecovering) {
-      if (logger.isDebugEnabled()) {
+      if (logger.isTraceEnabled()) {
         logger.trace(appAttemptId
           + " is recovering. Skipping notifying ATTEMPT_ADDED");
       }
@@ -536,7 +536,7 @@ public abstract class SimpleQueuePolicy<
     logger.info("Accepted application " + applicationId + " from user: " + user
       + ", currently num of applications: " + applications.size());
     if (isAppRecovering) {
-      if (logger.isDebugEnabled()) {
+      if (logger.isTraceEnabled()) {
         logger.trace(applicationId + " is recovering. Skip notifying APP_ACCEPTED");
       }
     } else {
