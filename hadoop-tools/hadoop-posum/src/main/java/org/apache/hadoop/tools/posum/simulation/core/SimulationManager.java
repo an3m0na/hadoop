@@ -110,7 +110,7 @@ class SimulationManager<T extends PluginPolicy> implements Callable<SimulationRe
       DatabaseUtils.storeLogEntry("Score for simulation of " + policyName + ": " + result, dataStore);
       return result;
     } catch (SimulationSanityChecker.InconsistentStateException e) {
-      logger.error("Inconsistent state detected. Cancelling simulation for " + policyName, e);
+      logger.warn("Inconsistent state detected. Cancelling simulation for " + policyName);
       DatabaseUtils.storeLogEntry("Inconsistent state detected. Cancelling simulation for " + policyName, dataStore);
       return SimulationResultPayload.newInstance(policyName, null);
     } catch (InterruptedException e) {

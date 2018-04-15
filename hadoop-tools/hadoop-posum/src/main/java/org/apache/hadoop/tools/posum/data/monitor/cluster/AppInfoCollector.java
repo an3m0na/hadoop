@@ -62,7 +62,7 @@ public class AppInfoCollector {
 
   void collect() {
     List<AppProfile> apps = api.getAppsInfo();
-    logger.trace("Found " + apps.size() + " apps");
+    logger.trace("Updating info for " + apps.size() + " apps");
     for (AppProfile app : apps) {
       if (!finished.contains(app.getId())) {
         logger.trace("App " + app.getId() + " not finished");
@@ -75,6 +75,7 @@ public class AppInfoCollector {
         }
       }
     }
+    logger.trace("Finished app info update");
     db.notifyUpdate();
   }
 

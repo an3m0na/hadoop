@@ -165,7 +165,8 @@ public class SimulationRunner<T extends PluginPolicy> {
         Long taskStart = orZero(task.getStartTime());
         Long taskFinish = orZero(task.getFinishTime());
         Long lifeTime = taskStart != 0 && taskFinish != 0 ? taskFinish - taskStart : null;
-        Long originalStartTime = taskStart == 0 ? null : task.getStartTime() - context.getClusterTimeAtStart();
+        // if task hostName is not set, the task either hasn't really started, or we don't know where, so ignore startTime
+        Long originalStartTime = taskStart == 0 || task.getHostName() == null ? null : task.getStartTime() - context.getClusterTimeAtStart();
         ret.add(new SimulatedContainer(context, containerResource, lifeTime, task.getType().name(),
             task.getId(), task.getSplitLocations(), originalStartTime, task.getHostName()));
       }

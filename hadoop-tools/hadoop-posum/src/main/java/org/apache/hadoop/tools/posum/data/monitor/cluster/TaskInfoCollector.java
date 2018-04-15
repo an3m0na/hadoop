@@ -132,7 +132,7 @@ class TaskInfoCollector {
       }
       List<CountersProxy> countersList = resolveFetchers(fetchers);
       if (countersList == null) return null;
-      return new TaskInfo(sortedCurrentTasks, countersList);
+      return new TaskInfo(updatedTasks, countersList);
     }
     return new TaskInfo(sortedCurrentTasks);
   }
