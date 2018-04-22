@@ -73,7 +73,7 @@ public class AppWorkCalculator {
     JobForAppCall getJobProfileForApp = JobForAppCall.newInstance(appId);
     JobProfile job = db.execute(getJobProfileForApp).getEntity();
     if (job == null) {
-      logger.warn("Could not retrieve job info for " + appId);
+      logger.debug("Could not retrieve job info for " + appId);
       return null;
     }
     return job;

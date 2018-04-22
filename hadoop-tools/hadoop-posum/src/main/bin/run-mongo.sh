@@ -37,6 +37,10 @@ parseArgs() {
 runMaster() {
 
   HADOOP_BIN=${HADOOP_HOME}/bin
+  if [[ -z ${HADOOP_LOG_DIR} ]]; then
+    HADOOP_LOG_DIR=${HADOOP_HOME}/logs
+  fi
+  HADOOP_BIN=${HADOOP_HOME}/bin
   POSUM_CLASSPATH=`${HADOOP_BIN}/hadoop classpath`:${HADOOP_HOME}/share/hadoop/tools/lib/*
 
   echo ">>> Checking mongod..."
@@ -57,7 +61,8 @@ runMaster() {
         rm -rf ${dbPath}
       fi
       mkdir -p ${dbPath}
-      mongod --fork --logpath ${HADOOP_HOME}/logs/mongodb.log --dbpath ${dbPath} --bind_ip 127.0.0.1
+      mkdir -p ${HADOOP_LOG_DIR}
+      mongod --fork --logpath ${HADOOP_LOG_DIR}/mongodb.log --dbpath ${dbPath} --bind_ip 127.0.0.1
 	fi
   fi
 }

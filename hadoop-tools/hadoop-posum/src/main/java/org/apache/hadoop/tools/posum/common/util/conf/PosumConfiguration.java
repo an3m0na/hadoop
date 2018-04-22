@@ -69,8 +69,8 @@ public class PosumConfiguration {
   public static String CLIENT_FAILOVER_SLEEPTIME_MAX_MS = PREFIX + "failover.sleeptime.max.ms";
   public static String CLIENT_FAILOVER_MAX_ATTEMPTS = PREFIX + "failover.max.attempts";
 
-  public static final String MONITOR_KEEP_HISTORY = MONITOR_PREFIX + "history.on";
-  public static final boolean MONITOR_KEEP_HISTORY_DEFAULT = true;
+  public static final String MONITOR_HISTORY_ON = MONITOR_PREFIX + "history.on";
+  public static final boolean MONITOR_HISTORY_ON_DEFAULT = true;
   public static final String COLLECTOR_THREAD_COUNT = MONITOR_PREFIX + "collector.thread-count";
   public static final int COLLECTOR_THREAD_COUNT_DEFAULT = 50;
 
@@ -116,11 +116,11 @@ public class PosumConfiguration {
   public static final String SCHEDULER_METRICS_ON = SCHEDULER_PREFIX + "metrics.on";
   public static final boolean SCHEDULER_METRICS_ON_DEFAULT = true;
 
-  public static final String FINE_GRAINED_MONITOR = MONITOR_PREFIX + "fine-grained";
-  public static final boolean FINE_GRAINED_MONITOR_DEFAULT = true;
+  public static final String MONITOR_METRICS_ON = MONITOR_PREFIX + "metrics.on";
+  public static final boolean MONITOR_METRICS_ON_DEFAULT = true;
 
-  public static final String CONTINUOUS_PREDICTION = MONITOR_PREFIX + "continuous-prediction";
-  public static final boolean CONTINUOUS_PREDICTION_DEFAULT = false;
+  public static final String MONITOR_PREDICTIONS_ON = MONITOR_PREFIX + "predictions.on";
+  public static final boolean MONITOR_PREDICTIONS_ON_DEFAULT = false;
 
   public static final String APP_DEADLINE = YarnConfiguration.YARN_PREFIX + "application.deadline";
   public static final long APP_DEADLINE_DEFAULT = 120000;

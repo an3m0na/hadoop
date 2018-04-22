@@ -100,7 +100,7 @@ public class SimulatorImpl extends CompositeService implements Simulator, Simula
         simulationsDone(Collections.<SimulationResultPayload>emptyList());
         executor = Executors.newFixedThreadPool(policies.size());
       }
-      predictor.clearHistory();
+//      predictor.clearHistory();
       logger.debug("Reset successful");
     } catch (Exception e) {
       logger.error("An error occurred while resetting simulator", e);

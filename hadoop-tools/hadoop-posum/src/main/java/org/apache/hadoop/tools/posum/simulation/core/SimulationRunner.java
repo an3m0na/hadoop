@@ -1,6 +1,7 @@
 package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.service.Service;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.common.records.call.FindByIdCall;
 import org.apache.hadoop.tools.posum.common.records.call.FindByQueryCall;
@@ -22,12 +23,10 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.NodeState;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode;
 import org.apache.hadoop.yarn.server.utils.BuilderUtils;
 import org.apache.log4j.Logger;
 
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,7 +72,7 @@ public class SimulationRunner<T extends PluginPolicy> {
   private SimulationSanityChecker sanityChecker;
 
 
-  public SimulationRunner(SimulationContext<T> context) throws IOException, ClassNotFoundException {
+  public SimulationRunner(SimulationContext<T> context) {
     this.context = context;
     conf = context.getConf();
     daemonPool = new DaemonPool(context);
@@ -86,26 +85,29 @@ public class SimulationRunner<T extends PluginPolicy> {
   public void run() throws Exception {
     LOG.info("SimulationRunner starting for " + context.getSchedulerClass().getSimpleName());
 
-    startRM();
-    prepareAMs();
-    queueNMs();
+    try {
+      startRM();
+      prepareAMs();
+      queueNMs();
 
-    // blocked until all NMs are RUNNING
-    waitForNodesRunning();
+      // blocked until all NMs are RUNNING
+      waitForNodesRunning();
 
-    queueAMs();
-    // wait for apps to be running and assign containers that are already running
-    addRunningContainers();
+      queueAMs();
+      // wait for apps to be running and assign containers that are already running
+      addRunningContainers();
 
-    daemonPool.start();
-    context.getRemainingJobsCounter().await();
-    daemonPool.shutDown();
-    rm.stop();
-
-    LOG.info("SimulationRunner finished for " + context.getSchedulerClass().getSimpleName());
+      daemonPool.start();
+      context.getRemainingJobsCounter().await();
+    } finally {
+      daemonPool.shutDown();
+      if (rm != null && rm.isInState(Service.STATE.STARTED))
+        rm.stop();
+      LOG.info("SimulationRunner finished for " + context.getSchedulerClass().getSimpleName());
+    }
   }
 
-  private void prepareAMs() throws YarnException, IOException {
+  private void prepareAMs() {
     int heartbeatInterval = conf.getInt(AM_DAEMON_HEARTBEAT_INTERVAL_MS, AM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT);
 
     Map<String, Integer> queueAppNumMap = new HashMap<>();
@@ -183,7 +185,7 @@ public class SimulationRunner<T extends PluginPolicy> {
     return ret;
   }
 
-  private void startRM() throws IOException, ClassNotFoundException {
+  private void startRM() {
     rm = new SimulationResourceManager<>(context);
     Configuration conf = new Configuration(this.conf);
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME, false);
@@ -191,7 +193,7 @@ public class SimulationRunner<T extends PluginPolicy> {
     rm.start();
   }
 
-  private void queueNMs() throws YarnException, IOException {
+  private void queueNMs() {
     // nm configuration
     int nmMemoryMB = conf.getInt(YarnConfiguration.NM_PMEM_MB, YarnConfiguration.DEFAULT_NM_PMEM_MB);
     int nmVCores = conf.getInt(YarnConfiguration.NM_VCORES, YarnConfiguration.DEFAULT_NM_VCORES);

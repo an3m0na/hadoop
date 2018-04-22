@@ -64,8 +64,8 @@ public class PosumInfoCollector {
   private Long predictionTimeout = 0L;
   private Long schedulingStart = 0L;
   private String lastUsedPolicy;
-  private boolean fineGrained;
-  private boolean continuousPrediction;
+  private boolean metricsOn;
+  private boolean predictionsOn;
   private JobBehaviorPredictor basicPredictor;
   private JobBehaviorPredictor standardPredictor;
   private JobBehaviorPredictor detailedPredictor;
@@ -77,10 +77,10 @@ public class PosumInfoCollector {
     logDb = Database.from(dataStore, DatabaseReference.getLogs());
     mainDb = Database.from(dataStore, DatabaseReference.getMain());
     performanceEvaluator = new PerformanceEvaluator(DatabaseUtils.newProvider(mainDb));
-    fineGrained = conf.getBoolean(PosumConfiguration.FINE_GRAINED_MONITOR,
-        PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
-    continuousPrediction = conf.getBoolean(PosumConfiguration.CONTINUOUS_PREDICTION,
-        PosumConfiguration.CONTINUOUS_PREDICTION_DEFAULT);
+    metricsOn = conf.getBoolean(PosumConfiguration.MONITOR_METRICS_ON,
+        PosumConfiguration.MONITOR_METRICS_ON_DEFAULT);
+    predictionsOn = conf.getBoolean(PosumConfiguration.MONITOR_PREDICTIONS_ON,
+        PosumConfiguration.MONITOR_PREDICTIONS_ON_DEFAULT);
     api = new PosumAPIClient(conf);
     policyMap = new HashMap<>();
     initializePolicyMap();
@@ -102,11 +102,11 @@ public class PosumInfoCollector {
   synchronized void collect() {
     long now = System.currentTimeMillis();
 
-    if (fineGrained) {
+    if (metricsOn) {
       storeMetricsSnapshots();
     }
 
-    if (continuousPrediction) {
+    if (predictionsOn) {
       if (now - lastPrediction > predictionTimeout) {
         // make new predictions
         basicPredictor.train(mainDb);
@@ -207,8 +207,8 @@ public class PosumInfoCollector {
     } catch (Exception e) {
       if (!(e instanceof PosumException))
         logger.error("Could not predict task duration for " + input.getTaskId() + " due to: ", e);
-      else if (!e.getMessage().startsWith("Task has already finished"))
-        logger.debug("Could not predict task duration for " + input.getTaskId() + " due to: ", e);
+      else if (!e.getMessage().startsWith("Task not found or finished"))
+        logger.debug("Could not predict task duration for " + input.getTaskId() + " due to: " + e.getMessage());
     }
   }
 

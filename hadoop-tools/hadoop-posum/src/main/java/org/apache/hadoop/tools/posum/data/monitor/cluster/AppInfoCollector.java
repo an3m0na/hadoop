@@ -56,8 +56,8 @@ public class AppInfoCollector {
     this.api = new HadoopAPIClient();
     this.jobInfoCollector = new JobInfoCollector(conf, db);
     this.taskInfoCollector = new TaskInfoCollector(conf, db);
-    this.auditEnabled = conf.getBoolean(PosumConfiguration.MONITOR_KEEP_HISTORY,
-        PosumConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
+    this.auditEnabled = conf.getBoolean(PosumConfiguration.MONITOR_HISTORY_ON,
+        PosumConfiguration.MONITOR_HISTORY_ON_DEFAULT);
   }
 
   void collect() {

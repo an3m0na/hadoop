@@ -50,6 +50,9 @@ runMaster() {
         )
 
     HADOOP_BIN=${HADOOP_HOME}/bin
+    if [[ -z ${HADOOP_LOG_DIR} ]]; then
+      HADOOP_LOG_DIR=${HADOOP_HOME}/logs
+    fi
     POSUM_CLASSPATH=`${HADOOP_BIN}/hadoop classpath`:${HADOOP_HOME}/share/hadoop/tools/lib/*
 
     if [[ ${doStop} == true ]] || [[ ${doRestart} == true ]]; then
@@ -68,7 +71,7 @@ runMaster() {
     echo ">>> Starting POSUM processes"
     for (( i=0; i<${#PROCESSES[@]}; i++ )); do
       echo ">> Starting ${PROCESSES[${i}]}"
-      java -cp ${POSUM_CLASSPATH} -Xmx${maxmem}M -Dhadoop.log.dir="${HADOOP_HOME}/logs" ${PROCESSES[${i}]} > /dev/null 2>&1 &
+      java -cp ${POSUM_CLASSPATH} -Xmx${maxmem}M -Dhadoop.log.dir="${HADOOP_LOG_DIR}" ${PROCESSES[${i}]} > /dev/null 2>&1 &
       sleep 3
     done
 
