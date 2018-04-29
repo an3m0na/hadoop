@@ -28,6 +28,7 @@ import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedTaskPredictionInput;
+import org.apache.hadoop.tools.posum.simulation.predictor.optimal.OptimalPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardPredictor;
 
 import java.util.ArrayList;
@@ -69,6 +70,7 @@ public class PosumInfoCollector {
   private JobBehaviorPredictor basicPredictor;
   private JobBehaviorPredictor standardPredictor;
   private JobBehaviorPredictor detailedPredictor;
+  private JobBehaviorPredictor optimalPredictor;
   private PerformanceEvaluator performanceEvaluator;
 
   public PosumInfoCollector(Configuration conf, DataStore dataStore) {
@@ -88,6 +90,7 @@ public class PosumInfoCollector {
     basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
     standardPredictor = JobBehaviorPredictor.newInstance(conf, StandardPredictor.class);
     detailedPredictor = JobBehaviorPredictor.newInstance(conf, DetailedPredictor.class);
+    optimalPredictor = JobBehaviorPredictor.newInstance(conf, OptimalPredictor.class);
     predictionTimeout = conf.getLong(PosumConfiguration.PREDICTOR_TIMEOUT,
         PosumConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
   }
@@ -112,6 +115,7 @@ public class PosumInfoCollector {
         basicPredictor.train(mainDb);
         standardPredictor.train(mainDb);
         detailedPredictor.train(mainDb);
+        optimalPredictor.train(mainDb);
         IdsByQueryCall getAllTasks = IdsByQueryCall.newInstance(DataEntityCollection.TASK, null);
         List<String> taskIds = mainDb.execute(getAllTasks).getEntries();
         for (String taskId : taskIds) {
@@ -121,6 +125,7 @@ public class PosumInfoCollector {
           storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, true));
           storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, false));
           storePredictionForTask(detailedPredictor, new TaskPredictionInput(taskId));
+          storePredictionForTask(optimalPredictor, new TaskPredictionInput(taskId));
         }
         lastPrediction = now;
       }
@@ -221,6 +226,7 @@ public class PosumInfoCollector {
     basicPredictor.clearHistory();
     standardPredictor.clearHistory();
     detailedPredictor.clearHistory();
+    optimalPredictor.clearHistory();
 
     // reinitialize policy map
     initializePolicyMap();
