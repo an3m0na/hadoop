@@ -23,7 +23,7 @@ import org.apache.hadoop.tools.posum.scheduler.portfolio.edls.EDLSSharePolicy;
 import org.apache.hadoop.tools.posum.simulation.predictor.JobBehaviorPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionOutput;
-import org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardPredictor;
+import org.apache.hadoop.tools.posum.simulation.predictor.optimal.OptimalPredictor;
 import org.apache.hadoop.tools.posum.test.IntegrationTest;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.util.Records;
@@ -91,14 +91,14 @@ public class TestSimulationManager {
     SMALL_TOPOLOGY.put(NODE2, DEFAULT_RACK);
 
     REAL_TOPOLOGY = new HashMap<>(8);
-    REAL_TOPOLOGY.put("node311.cm.cluster", DEFAULT_RACK);
-    REAL_TOPOLOGY.put("node312.cm.cluster", DEFAULT_RACK);
-    REAL_TOPOLOGY.put("node313.cm.cluster", DEFAULT_RACK);
-    REAL_TOPOLOGY.put("node314.cm.cluster", DEFAULT_RACK);
-    REAL_TOPOLOGY.put("node315.cm.cluster", DEFAULT_RACK);
-    REAL_TOPOLOGY.put("node316.cm.cluster", DEFAULT_RACK);
-    REAL_TOPOLOGY.put("node317.cm.cluster", DEFAULT_RACK);
-    REAL_TOPOLOGY.put("node318.cm.cluster", DEFAULT_RACK);
+    REAL_TOPOLOGY.put("node409.cm.cluster", DEFAULT_RACK);
+    REAL_TOPOLOGY.put("node410.cm.cluster", DEFAULT_RACK);
+    REAL_TOPOLOGY.put("node411.cm.cluster", DEFAULT_RACK);
+    REAL_TOPOLOGY.put("node412.cm.cluster", DEFAULT_RACK);
+    REAL_TOPOLOGY.put("node413.cm.cluster", DEFAULT_RACK);
+    REAL_TOPOLOGY.put("node414.cm.cluster", DEFAULT_RACK);
+    REAL_TOPOLOGY.put("node415.cm.cluster", DEFAULT_RACK);
+    REAL_TOPOLOGY.put("node416.cm.cluster", DEFAULT_RACK);
 
     REAL_CONF.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB, 3072);
     REAL_CONF.setInt(YarnConfiguration.NM_VCORES, 16);
@@ -132,10 +132,10 @@ public class TestSimulationManager {
     jobConf2.setId(job2.getId());
 
     TransactionCall transaction = TransactionCall.newInstance()
-        .addCall(StoreAllCall.newInstance(APP, Arrays.asList(APP1, APP2)))
-        .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(job1, job2)))
-        .addCall(StoreAllCall.newInstance(JOB_CONF, Arrays.asList(jobConf1, jobConf2)))
-        .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(TASK11, TASK12, TASK21, TASK22)));
+      .addCall(StoreAllCall.newInstance(APP, Arrays.asList(APP1, APP2)))
+      .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(job1, job2)))
+      .addCall(StoreAllCall.newInstance(JOB_CONF, Arrays.asList(jobConf1, jobConf2)))
+      .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(TASK11, TASK12, TASK21, TASK22)));
     sourceDb.execute(transaction);
 
 
@@ -180,7 +180,7 @@ public class TestSimulationManager {
     Database sourceDb = Database.from(dataStoreMock, DatabaseReference.getSimulation());
 
     when(predictorMock.predictTaskBehavior(any(TaskPredictionInput.class)))
-        .thenReturn(new TaskPredictionOutput(DURATION_UNIT * 2));
+      .thenReturn(new TaskPredictionOutput(DURATION_UNIT * 2));
 
     JobProfile job1 = JOB1.copy();
     job1.setDeadline(0L);
@@ -222,9 +222,9 @@ public class TestSimulationManager {
 
 
     TransactionCall transaction = TransactionCall.newInstance()
-        .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(job1, job2)))
-        .addCall(StoreAllCall.newInstance(JOB_CONF, Arrays.asList(jobConf1, jobConf2)))
-        .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(task11, task12, task13, task21, task22)));
+      .addCall(StoreAllCall.newInstance(JOB, Arrays.asList(job1, job2)))
+      .addCall(StoreAllCall.newInstance(JOB_CONF, Arrays.asList(jobConf1, jobConf2)))
+      .addCall(StoreAllCall.newInstance(TASK, Arrays.asList(task11, task12, task13, task21, task22)));
     sourceDb.execute(transaction);
 
     testSubject = new SimulationManager<>(EMPTY_CONF, predictorMock, SCHEDULER_NAME, SCHEDULER_CLASS, dataStoreMock, SMALL_TOPOLOGY, true);
@@ -272,15 +272,15 @@ public class TestSimulationManager {
   @Ignore
   public void testOnRealDB() throws Exception {
     DataStore dataStore = new DataStoreImpl(REAL_CONF);
-    StandardPredictor predictor = realStandardPredictor(dataStore);
+    JobBehaviorPredictor predictor = realPredictor(dataStore);
 
     PolicyPortfolio.StandardPolicy policy = SRTF;
     SimulationManager<? extends PluginPolicy> simulationManager = new SimulationManager<>(REAL_CONF, predictor, policy.name(), policy.getImplClass(), dataStore, REAL_TOPOLOGY, true);
     System.out.println(simulationManager.call());
   }
 
-  private StandardPredictor realStandardPredictor(DataStore dataStore) {
-    StandardPredictor predictor = new StandardPredictor(REAL_CONF);
+  private JobBehaviorPredictor realPredictor(DataStore dataStore) {
+    JobBehaviorPredictor predictor = new OptimalPredictor(REAL_CONF);
     predictor.train(Database.from(dataStore, DatabaseReference.getMain()));
     predictor.switchDatabase(Database.from(dataStore, DatabaseReference.getSimulation()));
     return predictor;
@@ -290,7 +290,7 @@ public class TestSimulationManager {
   @Ignore
   public void testMultipleSimulationsOnRealDB() throws InterruptedException {
     DataStore dataStore = new DataStoreImpl(REAL_CONF);
-    StandardPredictor predictor = realStandardPredictor(dataStore);
+    JobBehaviorPredictor predictor = realPredictor(dataStore);
     PolicyPortfolio portfolio = new PolicyPortfolio(REAL_CONF);
 
     List<PendingResult> simulations = new ArrayList<>(portfolio.size());
