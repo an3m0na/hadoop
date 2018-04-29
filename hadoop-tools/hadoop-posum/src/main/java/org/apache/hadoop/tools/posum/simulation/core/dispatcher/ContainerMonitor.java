@@ -39,6 +39,7 @@ import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntity
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK_HISTORY;
 import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
+import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
 import static org.apache.hadoop.tools.posum.simulation.core.nodemanager.SimulatedContainer.AM_TYPE;
 
 public class ContainerMonitor implements EventHandler<ContainerEvent> {
@@ -115,11 +116,16 @@ public class ContainerMonitor implements EventHandler<ContainerEvent> {
       JobProfile job =
         db.execute(FindByIdCall.newInstance(jobFinished ? JOB_HISTORY : JOB, task.getJobId())).getEntity();
       if (task.getType() == TaskType.MAP) {
-        int completedMaps = orZero(job.getCompletedMaps());
-        job.setCompletedMaps(completedMaps + 1);
+        int previousCompletedMaps = orZero(job.getCompletedMaps());
+        job.setCompletedMaps(previousCompletedMaps + 1);
+        long splitSize = orZero(task.getSplitSize()) == 0 ? job.getTotalSplitSize() / job.getTotalMapTasks() : task.getSplitSize();
+        job.setMapOutputBytes(job.getMapOutputBytes() + splitSize);
+        job.setAvgMapDuration((orZero(job.getAvgMapDuration()) * previousCompletedMaps + getDuration(task)) / job.getCompletedMaps());
+
       } else {
-        int completedReduces = orZero(job.getCompletedReduces());
-        job.setCompletedReduces(completedReduces + 1);
+        int previousCompletedReduces = orZero(job.getCompletedReduces());
+        job.setCompletedReduces(previousCompletedReduces + 1);
+        job.setAvgReduceDuration((orZero(job.getAvgReduceDuration()) * previousCompletedReduces + getDuration(task)) / job.getCompletedReduces());
       }
       TransactionCall transaction = TransactionCall.newInstance()
         .addCall(UpdateOrStoreCall.newInstance(jobFinished ? TASK_HISTORY : TASK, task))
