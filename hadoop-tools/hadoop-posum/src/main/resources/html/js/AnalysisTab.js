@@ -68,11 +68,8 @@ function AnalysisTab(id, container, env) {
       self.createBoxPlotWithTaskType("plot_" + predictorName + "_sort", label + "Error By Task Type For Sort", predictorData.filter(function (record) {
         return record["JobType"] === "SORT"
       }));
-      self.createBoxPlotWithTaskType("plot_" + predictorName + "_grep_search", label + "Error By Task Type For Grep Search", predictorData.filter(function (record) {
-        return record["JobType"] === "GREP_SEARCH"
-      }));
-      self.createBoxPlotWithTaskType("plot_" + predictorName + "_grep_sort", label + "Error By Task Type For Grep Sort", predictorData.filter(function (record) {
-        return record["JobType"] === "GREP_SORT"
+      self.createBoxPlotWithTaskType("plot_" + predictorName + "_wordcount", label + "Error By Task Type For Wordcount", predictorData.filter(function (record) {
+        return record["JobType"] === "WORDCOUNT"
       }));
       self.createBoxPlotWithTaskType("plot_" + predictorName + "_index", label + "Error By Task Type For Index", predictorData.filter(function (record) {
         return record["JobType"] === "INDEX"
