@@ -1,8 +1,15 @@
-For the latest information about Hadoop, please visit our website at:
+Apache Hadoop YARN 2.7.1 with POSUM
+
+This repository is a fork of Apache Hadoop, with an extra tool for
+enabling version 2.7.1 to dynamically switch scheduling policies.
+For more details see hadoop-tools/hadoop-posum/README.md
+
+
+For the latest information about Hadoop, please visit the website at:
 
    http://hadoop.apache.org/core/
 
-and our wiki, at:
+and the wiki, at:
 
    http://wiki.apache.org/hadoop/
 
