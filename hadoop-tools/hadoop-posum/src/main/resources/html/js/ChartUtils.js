@@ -89,6 +89,10 @@ function createBoxPlot(tab,
   var config = $.extend(true, {}, defaultBoxPlotConfig, customConfig);
   var parser = function (data) {
     var traces = [];
+    var allTrace = defaultBoxPlotConfig.traceFactory("All");
+    allTrace = $.extend(true, allTrace, config.traceFactory("All"));
+    traces.push(allTrace);
+
     $.each(data, function (index, record) {
       var entry = config.entryExtractor(record);
       var trace = traces.find(function (trace) {
@@ -101,7 +105,10 @@ function createBoxPlot(tab,
       }
       trace.x.push(entry.x === undefined ? entry.name : entry.x);
       trace.y.push(entry.y);
+      allTrace.x.push(entry.x === undefined ? entry.name : entry.x);
+      allTrace.y.push(entry.y);
     });
+
     var plotConfig = $.extend(true, {
       title: config.plotTitle,
       xaxis: config.xaxis,

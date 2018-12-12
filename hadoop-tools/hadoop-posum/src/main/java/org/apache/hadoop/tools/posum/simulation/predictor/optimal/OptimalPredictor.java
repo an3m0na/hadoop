@@ -91,17 +91,29 @@ public class OptimalPredictor extends SimpleRateBasedPredictor<OptimalPrediction
   @Override
   protected TaskPredictionOutput predictMapTaskBehavior(TaskPredictionInput input) {
     JobProfile job = input.getJob();
-    // try to predict from history
-    OptimalMapPredictionStats mapStats = model.getRelevantMapStats(job);
-    Long inputPerMap = getSplitSize(input.getTask(), job);
-    if (mapStats == null || mapStats.getRelevance() > 1 || mapStats.getAvgRate() == null || inputPerMap == null) {
-      // history is not relevant or we don't have enough for a detailed calculation
-      if (job.getAvgMapDuration() != null)
-        return new TaskPredictionOutput(job.getAvgMapDuration());
-      return handleNoMapInfo(job);
+    OptimalMapPredictionStats jobStats = new OptimalMapPredictionStats(1, 0);
+    jobStats.addSource(job);
+
+    Double rate = jobStats.getAvgRate();
+
+    if (rate == null) {
+      // we don't know the rate of that type
+      // get the appropriate average map processing rate from history
+      OptimalMapPredictionStats mapStats = model.getRelevantMapStats(job);
+      if (mapStats == null || mapStats.getRelevance() > 1 || mapStats.getAvgRate() == null) {
+        // history is not relevant or we don't have enough for a detailed calculation
+        if (job.getAvgMapDuration() != null)
+          return new TaskPredictionOutput(job.getAvgMapDuration());
+        return handleNoMapInfo(job);
+      }
+      rate = mapStats.getAvgRate();
+      if (rate == null)
+        return handleNoMapInfo(job);
     }
-    double duration = 1.0 * inputPerMap / mapStats.getAvgRate();
-    logger.trace("Map duration for " + job.getId() + " should be " + inputPerMap + " / " + mapStats.getAvgRate() + " = " + duration);
+    // multiply by how much input each task has
+    Long inputPerMap = getSplitSize(input.getTask(), job);
+    double duration = 1.0 * inputPerMap / rate;
+    logger.trace("Map duration for " + job.getId() + " should be " + inputPerMap + " / " + rate + " = " + duration);
     return new TaskPredictionOutput((long) duration);
   }
 
