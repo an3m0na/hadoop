@@ -28,7 +28,7 @@ import java.util.concurrent.Executors;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.copyRunningAppInfo;
 import static org.apache.hadoop.util.ShutdownThreadsHelper.shutdownExecutorService;
 
-public class SimulatorImpl extends CompositeService implements Simulator {
+public class SimulatorImpl extends CompositeService implements Simulator, SimulationResultHandler {
 
   private static Log logger = LogFactory.getLog(SimulatorImpl.class);
 
@@ -77,7 +77,7 @@ public class SimulatorImpl extends CompositeService implements Simulator {
       logger.debug("Starting simulation for " + policy.getKey());
       Class<? extends PluginPolicy> policyClass = policy.getValue();
       // TODO add topology
-      SimulationManager<? extends PluginPolicy> simulation = new SimulationManager<>(predictor, policy.getKey(), policyClass, dataStore, null, true);
+      SimulationManager<? extends PluginPolicy> simulation = new SimulationManager<>(getConfig(), predictor, policy.getKey(), policyClass, dataStore, null, true);
       simulations.add(new PendingResult(simulation, executor.submit(simulation)));
     }
     resultAggregator = new ResultAggregator(simulations, this);
@@ -112,7 +112,8 @@ public class SimulatorImpl extends CompositeService implements Simulator {
     return context.getDataBroker().execute(allJobs, DatabaseReference.getMain()).getEntries().size();
   }
 
-  void simulationsDone(List<SimulationResultPayload> results) {
+  @Override
+  public void simulationsDone(List<SimulationResultPayload> results) {
     HandleSimResultRequest resultRequest = HandleSimResultRequest.newInstance();
     resultRequest.setResults(results);
     logger.trace("Sending simulation result request");

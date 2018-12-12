@@ -16,6 +16,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
+
 public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobProfileProto, JobProfileProto.Builder>
   implements JobProfile {
 
@@ -735,5 +737,10 @@ public class JobProfilePBImpl extends GeneralDataEntityPBImpl<JobProfile, JobPro
       return;
     }
     builder.setHostName(hostName);
+  }
+
+  @Override
+  public boolean isFinished() {
+    return orZero(getFinishTime()) != 0;
   }
 }

@@ -2,9 +2,8 @@ package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.Database;
-import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
-import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.cluster.TopologyProvider;
+import org.apache.hadoop.tools.posum.common.util.communication.DatabaseProvider;
 import org.apache.hadoop.tools.posum.scheduler.portfolio.PluginPolicy;
 import org.apache.hadoop.tools.posum.simulation.core.daemon.DaemonQueue;
 import org.apache.hadoop.tools.posum.simulation.core.dispatcher.SimpleDispatcher;
@@ -18,7 +17,7 @@ public class SimulationContext<T extends PluginPolicy> implements DatabaseProvid
   private volatile long currentTime = 0;
   private CountDownLatch remainingJobsCounter;
   private DaemonQueue daemonQueue;
-  private Configuration conf = PosumConfiguration.newInstance();
+  private Configuration conf;
   private Class<T> schedulerClass;
   private TopologyProvider topologyProvider;
   private Database database;
@@ -29,8 +28,9 @@ public class SimulationContext<T extends PluginPolicy> implements DatabaseProvid
   private boolean onlineSimulation;
   private long clusterTimeAtStart;
 
-  public SimulationContext(Class<T> schedulerClass) {
+  public SimulationContext(Configuration conf, Class<T> schedulerClass) {
     this.schedulerClass = schedulerClass;
+    this.conf = conf;
   }
 
   public long getCurrentTime() {
@@ -67,10 +67,6 @@ public class SimulationContext<T extends PluginPolicy> implements DatabaseProvid
 
   public Configuration getConf() {
     return conf;
-  }
-
-  public void setConf(Configuration conf) {
-    this.conf = conf;
   }
 
   public Class<T> getSchedulerClass() {

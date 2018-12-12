@@ -56,13 +56,13 @@ public class AppInfoCollector {
     this.api = new HadoopAPIClient();
     this.jobInfoCollector = new JobInfoCollector(conf, db);
     this.taskInfoCollector = new TaskInfoCollector(conf, db);
-    this.auditEnabled = conf.getBoolean(PosumConfiguration.MONITOR_KEEP_HISTORY,
-      PosumConfiguration.MONITOR_KEEP_HISTORY_DEFAULT);
+    this.auditEnabled = conf.getBoolean(PosumConfiguration.MONITOR_HISTORY_ON,
+        PosumConfiguration.MONITOR_HISTORY_ON_DEFAULT);
   }
 
   void collect() {
     List<AppProfile> apps = api.getAppsInfo();
-    logger.trace("Found " + apps.size() + " apps");
+    logger.trace("Updating info for " + apps.size() + " apps");
     for (AppProfile app : apps) {
       if (!finished.contains(app.getId())) {
         logger.trace("App " + app.getId() + " not finished");
@@ -75,23 +75,25 @@ public class AppInfoCollector {
         }
       }
     }
+    logger.trace("Finished app info update");
     db.notifyUpdate();
   }
 
   private void moveAppToHistory(final AppProfile app) {
     final String appId = app.getId();
-    finished.add(appId);
 
     JobInfo jobInfo = jobInfoCollector.getFinishedJobInfo(app);
+    if (jobInfo == null)
+      return;
     JobProfile job = jobInfo.getProfile();
 
     TransactionCall updateCalls = TransactionCall.newInstance()
-      .addCall(DeleteByIdCall.newInstance(APP, appId))
-      .addCall(StoreCall.newInstance(APP_HISTORY, app))
-      .addCall(DeleteByQueryCall.newInstance(JOB, QueryUtils.is("appId", appId)))
-      .addCall(DeleteByQueryCall.newInstance(TASK, QueryUtils.is("appId", appId)))
-      .addCall(DeleteByIdCall.newInstance(JOB_CONF, job.getId()))
-      .addCall(DeleteByIdCall.newInstance(COUNTER, job.getId()));
+        .addCall(DeleteByIdCall.newInstance(APP, appId))
+        .addCall(StoreCall.newInstance(APP_HISTORY, app))
+        .addCall(DeleteByQueryCall.newInstance(JOB, QueryUtils.is("appId", appId)))
+        .addCall(DeleteByQueryCall.newInstance(TASK, QueryUtils.is("appId", appId)))
+        .addCall(DeleteByIdCall.newInstance(JOB_CONF, job.getId()))
+        .addCall(DeleteByIdCall.newInstance(COUNTER, job.getId()));
 
     updateCalls.addCall(StoreCall.newInstance(JOB_CONF_HISTORY, jobInfo.getConf()));
 
@@ -113,6 +115,8 @@ public class AppInfoCollector {
     } catch (Exception e) {
       logger.error("Could not move app data to history", e);
     }
+
+    finished.add(appId);
   }
 
   private void updateAppInfo(final AppProfile app) {

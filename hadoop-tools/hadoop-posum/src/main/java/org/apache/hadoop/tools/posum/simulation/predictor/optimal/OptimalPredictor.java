@@ -1,4 +1,4 @@
-package org.apache.hadoop.tools.posum.simulation.predictor.standard;
+package org.apache.hadoop.tools.posum.simulation.predictor.optimal;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,23 +19,23 @@ import static org.apache.hadoop.tools.posum.common.util.GeneralUtils.orZero;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDoubleField;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getDuration;
 import static org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils.getIntField;
-import static org.apache.hadoop.tools.posum.simulation.predictor.standard.FlexKeys.MAP_RATE;
-import static org.apache.hadoop.tools.posum.simulation.predictor.standard.FlexKeys.MAP_SELECTIVITY;
-import static org.apache.hadoop.tools.posum.simulation.predictor.standard.FlexKeys.PROFILED_MAPS;
-import static org.apache.hadoop.tools.posum.simulation.predictor.standard.FlexKeys.PROFILED_REDUCES;
-import static org.apache.hadoop.tools.posum.simulation.predictor.standard.FlexKeys.REDUCE_RATE;
+import static org.apache.hadoop.tools.posum.simulation.predictor.optimal.FlexKeys.MAP_RATE;
+import static org.apache.hadoop.tools.posum.simulation.predictor.optimal.FlexKeys.MAP_SELECTIVITY;
+import static org.apache.hadoop.tools.posum.simulation.predictor.optimal.FlexKeys.PROFILED_MAPS;
+import static org.apache.hadoop.tools.posum.simulation.predictor.optimal.FlexKeys.PROFILED_REDUCES;
+import static org.apache.hadoop.tools.posum.simulation.predictor.optimal.FlexKeys.REDUCE_RATE;
 
-public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredictionModel> {
+public class OptimalPredictor extends SimpleRateBasedPredictor<OptimalPredictionModel> {
 
-  private static final Log logger = LogFactory.getLog(StandardPredictor.class);
+  private static final Log logger = LogFactory.getLog(OptimalPredictor.class);
 
-  public StandardPredictor(Configuration conf) {
+  public OptimalPredictor(Configuration conf) {
     super(conf);
   }
 
   @Override
-  protected StandardPredictionModel initializeModel() {
-    return new StandardPredictionModel(historyBuffer);
+  protected OptimalPredictionModel initializeModel() {
+    return new OptimalPredictionModel(historyBuffer);
   }
 
   @Override
@@ -66,8 +66,8 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
           fieldMap.put(MAP_RATE.getKey(), Double.toString(mapRate / taskNo));
           if (job.getMapOutputBytes() != null) {
             fieldMap.put(MAP_SELECTIVITY.getKey(),
-                // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
-                Double.toString(1.0 * orZero(job.getMapOutputBytes()) / parsedInputBytes));
+              // restrict to a minimum of 1 byte per task to avoid multiplication or division by zero
+              Double.toString(1.0 * orZero(job.getMapOutputBytes()) / parsedInputBytes));
           }
         }
       }
@@ -91,16 +91,15 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
   @Override
   protected TaskPredictionOutput predictMapTaskBehavior(TaskPredictionInput input) {
     JobProfile job = input.getJob();
-    if (orZero(job.getAvgMapDuration()) != 0)
-      // we have average map duration; assume it will be the same
-      return new TaskPredictionOutput(orZero(job.getAvgMapDuration()));
-    // we have no information about this job; predict from history
-    StandardMapPredictionStats mapStats = model.getRelevantMapStats(job);
-    Long inputPerMap = getAvgSplitSize(job);
-    if (mapStats == null || inputPerMap == null || mapStats.getAvgRate() == null) {
+    // try to predict from history
+    OptimalMapPredictionStats mapStats = model.getRelevantMapStats(job);
+    Long inputPerMap = getSplitSize(input.getTask(), job);
+    if (mapStats == null || mapStats.getRelevance() > 1 || mapStats.getAvgRate() == null || inputPerMap == null) {
+      // history is not relevant or we don't have enough for a detailed calculation
+      if (job.getAvgMapDuration() != null)
+        return new TaskPredictionOutput(job.getAvgMapDuration());
       return handleNoMapInfo(job);
     }
-
     double duration = 1.0 * inputPerMap / mapStats.getAvgRate();
     logger.trace("Map duration for " + job.getId() + " should be " + inputPerMap + " / " + mapStats.getAvgRate() + " = " + duration);
     return new TaskPredictionOutput((long) duration);
@@ -114,12 +113,12 @@ public class StandardPredictor extends SimpleRateBasedPredictor<StandardPredicti
 
     // calculate average duration based on map selectivity and historical processing rates
     Double avgSelectivity = getMapTaskSelectivity(
-        job,
-        model.getRelevantMapStats(job),
-        MAP_SELECTIVITY.getKey()
+      job,
+      model.getRelevantMapStats(job),
+      MAP_SELECTIVITY.getKey()
     );
 
-    StandardReducePredictionStats reduceStats = model.getRelevantReduceStats(job);
+    OptimalReducePredictionStats reduceStats = model.getRelevantReduceStats(job);
     if (reduceStats == null) {
       return handleNoReduceInfo(job, avgSelectivity, getDoubleField(job, MAP_RATE.getKey(), null));
     }

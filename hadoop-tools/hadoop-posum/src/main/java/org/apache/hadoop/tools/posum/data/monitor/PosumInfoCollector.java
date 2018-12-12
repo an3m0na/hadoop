@@ -28,6 +28,7 @@ import org.apache.hadoop.tools.posum.simulation.predictor.TaskPredictionInput;
 import org.apache.hadoop.tools.posum.simulation.predictor.basic.BasicPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.detailed.DetailedTaskPredictionInput;
+import org.apache.hadoop.tools.posum.simulation.predictor.optimal.OptimalPredictor;
 import org.apache.hadoop.tools.posum.simulation.predictor.standard.StandardPredictor;
 
 import java.util.ArrayList;
@@ -64,11 +65,12 @@ public class PosumInfoCollector {
   private Long predictionTimeout = 0L;
   private Long schedulingStart = 0L;
   private String lastUsedPolicy;
-  private boolean fineGrained;
-  private boolean continuousPrediction;
+  private boolean metricsOn;
+  private boolean predictionsOn;
   private JobBehaviorPredictor basicPredictor;
   private JobBehaviorPredictor standardPredictor;
   private JobBehaviorPredictor detailedPredictor;
+  private JobBehaviorPredictor optimalPredictor;
   private PerformanceEvaluator performanceEvaluator;
 
   public PosumInfoCollector(Configuration conf, DataStore dataStore) {
@@ -77,10 +79,10 @@ public class PosumInfoCollector {
     logDb = Database.from(dataStore, DatabaseReference.getLogs());
     mainDb = Database.from(dataStore, DatabaseReference.getMain());
     performanceEvaluator = new PerformanceEvaluator(DatabaseUtils.newProvider(mainDb));
-    fineGrained = conf.getBoolean(PosumConfiguration.FINE_GRAINED_MONITOR,
-      PosumConfiguration.FINE_GRAINED_MONITOR_DEFAULT);
-    continuousPrediction = conf.getBoolean(PosumConfiguration.CONTINUOUS_PREDICTION,
-      PosumConfiguration.CONTINUOUS_PREDICTION_DEFAULT);
+    metricsOn = conf.getBoolean(PosumConfiguration.MONITOR_METRICS_ON,
+        PosumConfiguration.MONITOR_METRICS_ON_DEFAULT);
+    predictionsOn = conf.getBoolean(PosumConfiguration.MONITOR_PREDICTIONS_ON,
+        PosumConfiguration.MONITOR_PREDICTIONS_ON_DEFAULT);
     api = new PosumAPIClient(conf);
     policyMap = new HashMap<>();
     initializePolicyMap();
@@ -88,8 +90,9 @@ public class PosumInfoCollector {
     basicPredictor = JobBehaviorPredictor.newInstance(conf, BasicPredictor.class);
     standardPredictor = JobBehaviorPredictor.newInstance(conf, StandardPredictor.class);
     detailedPredictor = JobBehaviorPredictor.newInstance(conf, DetailedPredictor.class);
+    optimalPredictor = JobBehaviorPredictor.newInstance(conf, OptimalPredictor.class);
     predictionTimeout = conf.getLong(PosumConfiguration.PREDICTOR_TIMEOUT,
-      PosumConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
+        PosumConfiguration.PREDICTOR_TIMEOUT_DEFAULT);
   }
 
   private void initializePolicyMap() {
@@ -102,16 +105,17 @@ public class PosumInfoCollector {
   synchronized void collect() {
     long now = System.currentTimeMillis();
 
-    if (fineGrained) {
+    if (metricsOn) {
       storeMetricsSnapshots();
     }
 
-    if (continuousPrediction) {
+    if (predictionsOn) {
       if (now - lastPrediction > predictionTimeout) {
         // make new predictions
         basicPredictor.train(mainDb);
         standardPredictor.train(mainDb);
         detailedPredictor.train(mainDb);
+        optimalPredictor.train(mainDb);
         IdsByQueryCall getAllTasks = IdsByQueryCall.newInstance(DataEntityCollection.TASK, null);
         List<String> taskIds = mainDb.execute(getAllTasks).getEntries();
         for (String taskId : taskIds) {
@@ -121,6 +125,7 @@ public class PosumInfoCollector {
           storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, true));
           storePredictionForTask(detailedPredictor, new DetailedTaskPredictionInput(taskId, false));
           storePredictionForTask(detailedPredictor, new TaskPredictionInput(taskId));
+          storePredictionForTask(optimalPredictor, new TaskPredictionInput(taskId));
         }
         lastPrediction = now;
       }
@@ -151,11 +156,11 @@ public class PosumInfoCollector {
 
   private void aggregatePolicyChanges(long now) {
     FindByQueryCall findPolicyChanges = FindByQueryCall.newInstance(DataEntityCollection.AUDIT_LOG,
-      QueryUtils.and(
-        QueryUtils.is("type", POLICY_CHANGE),
-        QueryUtils.greaterThan("lastUpdated", lastCollectTime),
-        QueryUtils.lessThanOrEqual("lastUpdated", now)
-      ));
+        QueryUtils.and(
+            QueryUtils.is("type", POLICY_CHANGE),
+            QueryUtils.greaterThan("lastUpdated", lastCollectTime),
+            QueryUtils.lessThanOrEqual("lastUpdated", now)
+        ));
     List<LogEntry<SimplePropertyPayload>> policyChanges = logDb.execute(findPolicyChanges).getEntities();
     if (policyChanges.size() > 0) {
       if (schedulingStart == 0)
@@ -177,11 +182,11 @@ public class PosumInfoCollector {
 
   private void aggregateNodeChanges(long now) {
     FindByQueryCall findNodeChanges = FindByQueryCall.newInstance(DataEntityCollection.AUDIT_LOG,
-      QueryUtils.and(
-        QueryUtils.in("type", Arrays.asList(NODE_ADD, NODE_REMOVE)),
-        QueryUtils.greaterThan("lastUpdated", lastCollectTime),
-        QueryUtils.lessThanOrEqual("lastUpdated", now)
-      ));
+        QueryUtils.and(
+            QueryUtils.in("type", Arrays.asList(NODE_ADD, NODE_REMOVE)),
+            QueryUtils.greaterThan("lastUpdated", lastCollectTime),
+            QueryUtils.lessThanOrEqual("lastUpdated", now)
+        ));
     List<LogEntry<SimplePropertyPayload>> nodeChanges = logDb.execute(findNodeChanges).getEntities();
     if (nodeChanges.size() > 0) {
       for (LogEntry<SimplePropertyPayload> nodeChange : nodeChanges) {
@@ -198,17 +203,17 @@ public class PosumInfoCollector {
   private void storePredictionForTask(JobBehaviorPredictor predictor, TaskPredictionInput input) {
     try {
       TaskPredictionPayload prediction = TaskPredictionPayload.newInstance(
-        predictor.getClass().getSimpleName(),
-        input.getTaskId(),
-        predictor.predictTaskBehavior(input).getDuration(),
-        input instanceof DetailedTaskPredictionInput ? ((DetailedTaskPredictionInput) input).getLocal() : null
+          predictor.getClass().getSimpleName(),
+          input.getTaskId(),
+          predictor.predictTaskBehavior(input).getDuration(),
+          input instanceof DetailedTaskPredictionInput ? ((DetailedTaskPredictionInput) input).getLocal() : null
       );
       DatabaseUtils.storeLogEntry(TASK_PREDICTION, prediction, dataStore);
     } catch (Exception e) {
       if (!(e instanceof PosumException))
         logger.error("Could not predict task duration for " + input.getTaskId() + " due to: ", e);
-      else if (!e.getMessage().startsWith("Task has already finished"))
-        logger.debug("Could not predict task duration for " + input.getTaskId() + " due to: ", e);
+      else if (!e.getMessage().startsWith("Task not found or finished"))
+        logger.debug("Could not predict task duration for " + input.getTaskId() + " due to: " + e.getMessage());
     }
   }
 
@@ -221,13 +226,16 @@ public class PosumInfoCollector {
     basicPredictor.clearHistory();
     standardPredictor.clearHistory();
     detailedPredictor.clearHistory();
+    optimalPredictor.clearHistory();
 
     // reinitialize policy map
     initializePolicyMap();
     long now = System.currentTimeMillis();
     schedulingStart = now;
-    PolicyInfoPayload info = policyMap.get(lastUsedPolicy);
-    info.start(now);
+    if (lastUsedPolicy != null) {
+      PolicyInfoPayload info = policyMap.get(lastUsedPolicy);
+      info.start(now);
+    }
     DatabaseUtils.storeStatReportCall(POLICY_MAP, PolicyInfoMapPayload.newInstance(policyMap), dataStore);
   }
 }

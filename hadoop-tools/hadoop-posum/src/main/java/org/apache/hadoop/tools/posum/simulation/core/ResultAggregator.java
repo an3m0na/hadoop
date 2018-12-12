@@ -14,13 +14,13 @@ class ResultAggregator implements Runnable {
 
   private volatile boolean exit = false;
   private Collection<PendingResult> pendingResults;
-  private SimulatorImpl simulator;
+  private SimulationResultHandler resultHandler;
   private List<SimulationResultPayload> finalResults;
 
   ResultAggregator(Collection<PendingResult> pendingResults,
-                   SimulatorImpl simulator) {
+                   SimulationResultHandler resultHandler) {
     this.pendingResults = pendingResults;
-    this.simulator = simulator;
+    this.resultHandler = resultHandler;
     this.finalResults = new ArrayList<>(pendingResults.size());
   }
 
@@ -52,6 +52,6 @@ class ResultAggregator implements Runnable {
       finalResults.add(SimulationResultPayload.newInstance(result.getSimulation().getPolicyName(), null));
     }
     if (finalResults.size() == pendingResults.size())
-      simulator.simulationsDone(finalResults);
+      resultHandler.simulationsDone(finalResults);
   }
 }

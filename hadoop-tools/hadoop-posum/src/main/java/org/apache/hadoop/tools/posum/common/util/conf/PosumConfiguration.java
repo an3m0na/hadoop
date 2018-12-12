@@ -69,8 +69,8 @@ public class PosumConfiguration {
   public static String CLIENT_FAILOVER_SLEEPTIME_MAX_MS = PREFIX + "failover.sleeptime.max.ms";
   public static String CLIENT_FAILOVER_MAX_ATTEMPTS = PREFIX + "failover.max.attempts";
 
-  public static final String MONITOR_KEEP_HISTORY = MONITOR_PREFIX + "history.on";
-  public static final boolean MONITOR_KEEP_HISTORY_DEFAULT = true;
+  public static final String MONITOR_HISTORY_ON = MONITOR_PREFIX + "history.on";
+  public static final boolean MONITOR_HISTORY_ON_DEFAULT = true;
   public static final String COLLECTOR_THREAD_COUNT = MONITOR_PREFIX + "collector.thread-count";
   public static final int COLLECTOR_THREAD_COUNT_DEFAULT = 50;
 
@@ -85,7 +85,7 @@ public class PosumConfiguration {
   //should be a comma separated list of NAME=CLASS groups
   public static final String SCHEDULER_POLICY_MAP = SCHEDULER_PREFIX + "policies";
   public static final String DEFAULT_POLICY = SCHEDULER_PREFIX + "default";
-  public static final String DEFAULT_POLICY_DEFAULT = "FIFO";
+  public static final String DEFAULT_POLICY_DEFAULT = "EDLS_SH";
   public static final String POLICY_SWITCH_ENABLED = SCHEDULER_PREFIX + "policy-switch-enabled";
   public static final boolean POLICY_SWITCH_ENABLED_DEFAULT = true;
   public static final String DATABASE_DEADLINES = SCHEDULER_PREFIX + "db.deadlines";
@@ -116,11 +116,11 @@ public class PosumConfiguration {
   public static final String SCHEDULER_METRICS_ON = SCHEDULER_PREFIX + "metrics.on";
   public static final boolean SCHEDULER_METRICS_ON_DEFAULT = true;
 
-  public static final String FINE_GRAINED_MONITOR = MONITOR_PREFIX + "fine-grained";
-  public static final boolean FINE_GRAINED_MONITOR_DEFAULT = true;
+  public static final String MONITOR_METRICS_ON = MONITOR_PREFIX + "metrics.on";
+  public static final boolean MONITOR_METRICS_ON_DEFAULT = true;
 
-  public static final String CONTINUOUS_PREDICTION = MONITOR_PREFIX + "continuous-prediction";
-  public static final boolean CONTINUOUS_PREDICTION_DEFAULT = false;
+  public static final String MONITOR_PREDICTIONS_ON = MONITOR_PREFIX + "predictions.on";
+  public static final boolean MONITOR_PREDICTIONS_ON_DEFAULT = false;
 
   public static final String APP_DEADLINE = YarnConfiguration.YARN_PREFIX + "application.deadline";
   public static final long APP_DEADLINE_DEFAULT = 120000;
@@ -137,20 +137,11 @@ public class PosumConfiguration {
   public static final String SIMULATION_RUNNER_POOL_SIZE = SIMULATION_PREFIX + "concurrent.daemons";
   public static final int SIMULATION_RUNNER_POOL_SIZE_DEFAULT = 10;
   public static final String NM_DAEMON_PREFIX = SIMULATION_PREFIX + "nm.";
-  public static final String NM_DAEMON_MEMORY_MB = NM_DAEMON_PREFIX + "memory.mb";
-  public static final int NM_DAEMON_MEMORY_MB_DEFAULT = 10240;
-  public static final String NM_DAEMON_VCORES = NM_DAEMON_PREFIX + "vcores";
-  public static final int NM_DAEMON_VCORES_DEFAULT = 10;
   public static final String NM_DAEMON_HEARTBEAT_INTERVAL_MS = NM_DAEMON_PREFIX + "heartbeat.interval.ms";
   public static final int NM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT = 1000;
   public static final String AM_DAEMON_PREFIX = SIMULATION_PREFIX + "am.";
   public static final String AM_DAEMON_HEARTBEAT_INTERVAL_MS = AM_DAEMON_PREFIX + "heartbeat.interval.ms";
   public static final int AM_DAEMON_HEARTBEAT_INTERVAL_MS_DEFAULT = 1000;
-  public static final String SIMULATION_CONTAINER_PREFIX = SIMULATION_PREFIX + "container.";
-  public static final String SIMULATION_CONTAINER_MEMORY_MB = SIMULATION_CONTAINER_PREFIX + "memory.mb";
-  public static final int SIMULATION_CONTAINER_MEMORY_MB_DEFAULT = 1024;
-  public static final String SIMULATION_CONTAINER_VCORES = SIMULATION_CONTAINER_PREFIX + "vcores";
-  public static final int SIMULATION_CONTAINER_VCORES_DEFAULT = 1;
 
   public static final String SLOWDOWN_SCALE_FACTOR = ORCHESTRATOR_PREFIX + "scale-factor.alpha";
   public static final double SLOWDOWN_SCALE_FACTOR_DEFAULT = 1.00;

@@ -2,6 +2,7 @@ package org.apache.hadoop.tools.posum.simulation.core;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.tools.posum.client.data.DataStore;
 import org.apache.hadoop.tools.posum.client.data.Database;
 import org.apache.hadoop.tools.posum.client.data.DatabaseUtils;
@@ -37,11 +38,12 @@ class SimulationManager<T extends PluginPolicy> implements Callable<SimulationRe
   private Database sourceDb;
   private SimulationStatistics stats;
   private static final FindByQueryCall GET_LATEST =
-    FindByQueryCall.newInstance(JOB, null, "lastUpdated", true, 0, 1);
+      FindByQueryCall.newInstance(JOB, null, "lastUpdated", true, 0, 1);
   private SimulationContext<T> simulationContext;
   private PerformanceEvaluator performanceEvaluator;
 
-  SimulationManager(JobBehaviorPredictor predictor,
+  SimulationManager(Configuration conf,
+                    JobBehaviorPredictor predictor,
                     String policyName,
                     Class<T> policyClass,
                     DataStore dataStore,
@@ -51,10 +53,10 @@ class SimulationManager<T extends PluginPolicy> implements Callable<SimulationRe
     this.policyName = policyName;
     this.dataStore = dataStore;
     stats = new SimulationStatistics();
-    simulationContext = new SimulationContext<>(policyClass);
+    simulationContext = new SimulationContext<>(conf, policyClass);
     performanceEvaluator = new PerformanceEvaluator(simulationContext);
     TopologyProvider topologyProvider = topology == null ? new TopologyProvider(simulationContext.getConf(), dataStore) :
-      new TopologyProvider(topology);
+        new TopologyProvider(topology);
     simulationContext.setTopologyProvider(topologyProvider);
     simulationContext.setOnlineSimulation(onlineSimulation);
   }
@@ -107,6 +109,10 @@ class SimulationManager<T extends PluginPolicy> implements Callable<SimulationRe
       SimulationResultPayload result = SimulationResultPayload.newInstance(policyName, performanceEvaluator.evaluate());
       DatabaseUtils.storeLogEntry("Score for simulation of " + policyName + ": " + result, dataStore);
       return result;
+    } catch (SimulationSanityChecker.InconsistentStateException e) {
+      logger.warn("Inconsistent state detected. Cancelling simulation for " + policyName);
+      DatabaseUtils.storeLogEntry("Inconsistent state detected. Cancelling simulation for " + policyName, dataStore);
+      return SimulationResultPayload.newInstance(policyName, null);
     } catch (InterruptedException e) {
       if (!exit)
         // exiting was not intentional

@@ -136,4 +136,6 @@ public interface JobProfile extends GeneralDataEntity<JobProfile> {
   String getHostName();
 
   void setHostName(String hostName);
+
+  boolean isFinished();
 }

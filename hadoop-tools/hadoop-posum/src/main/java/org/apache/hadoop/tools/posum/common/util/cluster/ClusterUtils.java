@@ -36,7 +36,7 @@ public class ClusterUtils {
     try {
       String[] parts = id.split("_");
       return ApplicationId.newInstance(Long.parseLong(parts[1]),
-        Integer.parseInt(parts[2]));
+          Integer.parseInt(parts[2]));
     } catch (Exception e) {
       throw new PosumException("Id parse exception for " + id, e);
     }
@@ -59,9 +59,9 @@ public class ClusterUtils {
     try {
       String[] parts = id.split("_");
       return MRBuilderUtils.newTaskId(
-        composeJobId(Long.parseLong(parts[1]), Integer.parseInt(parts[2])),
-        Integer.parseInt(parts[4]),
-        "m".equals(parts[3]) ? TaskType.MAP : TaskType.REDUCE
+          composeJobId(Long.parseLong(parts[1]), Integer.parseInt(parts[2])),
+          Integer.parseInt(parts[4]),
+          "m".equals(parts[3]) ? TaskType.MAP : TaskType.REDUCE
       );
     } catch (Exception e) {
       throw new PosumException("Id parse exception for " + id, e);
@@ -101,13 +101,13 @@ public class ClusterUtils {
   }
 
   public static Long getDuration(JobProfile job) {
-    if (orZero(job.getFinishTime()) == 0)
+    if (!job.isFinished())
       return 0L;
     return job.getFinishTime() - job.getStartTime();
   }
 
   public static Long getDuration(TaskProfile task) {
-    if (orZero(task.getFinishTime()) == 0)
+    if (!task.isFinished())
       return 0L;
     return task.getFinishTime() - task.getStartTime();
   }
@@ -133,7 +133,7 @@ public class ClusterUtils {
     long mapInputSize = 0, mapOutputSize = 0, reduceInputSize = 0, reduceOutputSize = 0;
 
     for (TaskProfile task : tasks) {
-      if (getDuration(task) <= 0)
+      if (!task.isFinished())
         // skip unfinished tasks
         continue;
       if (TaskType.MAP.equals(task.getType())) {
@@ -142,8 +142,7 @@ public class ClusterUtils {
         mapInputSize += orZero(task.getInputBytes());
         mapOutputSize += orZero(task.getOutputBytes());
         if (task.getSplitLocations() != null && task.getHostName() != null) {
-          if (task.getSplitLocations().contains(task.getHostName()))
-            task.setLocal(true);
+          task.setLocal(task.getSplitLocations().contains(task.getHostName()));
         }
       }
       if (TaskType.REDUCE.equals(task.getType())) {

@@ -106,8 +106,10 @@ class JobInfoCollector {
 
     JobProfile profile = getFinishedJobProfile(app);
     info.setProfile(profile);
-    if (profile == null)
-      logger.error("Job was null for " + app.getId());
+    if (profile == null) {
+      logger.warn("No finished job info for " + app.getId());
+      return null;
+    }
     api.addFinishedAttemptInfo(profile);
 
     JobConfProxy jobConf = api.getFinishedJobConf(profile.getId());

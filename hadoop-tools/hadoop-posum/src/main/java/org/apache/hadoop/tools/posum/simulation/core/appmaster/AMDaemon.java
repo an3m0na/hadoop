@@ -20,7 +20,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -66,18 +65,22 @@ public abstract class AMDaemon extends WorkerDaemon {
     this.initialContainers = containerList;
   }
 
+  @Override
+  public String getId() {
+    return super.getId() + "=" + getAppId();
+  }
+
   /**
    * register with RM
    */
   @Override
   public void doFirstStep() throws Exception {
-    LOG.trace(MessageFormat.format("Sim={0} T={1}: Submitting app for {2}", simulationContext.getSchedulerClass().getSimpleName(), oldAppId));
+    LOG.trace(formatLog("Submitting app for {0}", oldAppId));
     core.submit();
-    simulationContext.getDispatcher().getEventHandler().handle(new ApplicationEvent(APPLICATION_SUBMITTED, oldAppId, core.getAppId()));
+    simulationContext.getDispatcher().getEventHandler().handle(new ApplicationEvent(APPLICATION_SUBMITTED, oldAppId, getAppId()));
 
-    LOG.trace(MessageFormat.format("Sim={0} T={1}: Registering a new application {2}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
     core.registerWithRM();
-    LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} is registered", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
+    LOG.trace(formatLog("Application is registered"));
 
     requestAMContainer();
 
@@ -87,10 +90,10 @@ public abstract class AMDaemon extends WorkerDaemon {
   private void requestAMContainer() throws YarnException, IOException, InterruptedException {
     AllocateResponse response;
     if (simulationContext.isOnlineSimulation() && hostName != null) {
-      LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for its AM on {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId(), hostName));
+      LOG.trace(formatLog("App sends out allocate request for its AM on {0}", hostName));
       response = core.requestContainerOnNode(hostName, simulationContext.getTopologyProvider().getRack(hostName));
     } else {
-      LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for its AM", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
+      LOG.trace(formatLog("App sends out allocate request for its AM"));
       response = core.requestContainer();
     }
     if (response != null) {
@@ -109,7 +112,7 @@ public abstract class AMDaemon extends WorkerDaemon {
 
   @Override
   public void cleanUp() throws Exception {
-    LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} is shutting down.", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId()));
+    LOG.trace(formatLog("App is shutting down."));
     core.unregister();
   }
 
@@ -132,7 +135,7 @@ public abstract class AMDaemon extends WorkerDaemon {
           ask.add(ResourceRequest.newInstance(request.getPriority(), request.getResourceName(), request.getCapability(), request.getNumContainers()));
         }
       }
-      LOG.trace(MessageFormat.format("Sim={0} T={1}: Application {2} sends out allocate request for {3}", simulationContext.getSchedulerClass().getSimpleName(), simulationContext.getCurrentTime(), core.getAppId(), ask));
+      LOG.trace(formatLog("App sends out allocate request for {0}", ask));
     }
 
     final AllocateRequest request = core.createAllocateRequest(ask);

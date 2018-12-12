@@ -15,13 +15,15 @@ import org.apache.hadoop.tools.posum.common.records.dataentity.CountersProxy;
 import org.apache.hadoop.tools.posum.common.records.dataentity.JobProfile;
 import org.apache.hadoop.tools.posum.common.records.dataentity.TaskProfile;
 import org.apache.hadoop.tools.posum.common.records.payload.MultiEntityPayload;
-import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
-import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.tools.posum.common.util.PosumException;
+import org.apache.hadoop.tools.posum.common.util.cluster.ClusterUtils;
 import org.apache.hadoop.tools.posum.common.util.communication.RestClient;
+import org.apache.hadoop.tools.posum.common.util.conf.PosumConfiguration;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -30,8 +32,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.tools.posum.client.data.DatabaseUtils.ID_FIELD;
+import static org.apache.hadoop.tools.posum.common.records.dataentity.DataEntityCollection.TASK;
 import static org.apache.hadoop.util.ShutdownThreadsHelper.shutdownExecutorService;
 
 class TaskInfoCollector {
@@ -68,8 +70,7 @@ class TaskInfoCollector {
           return null;
         }
         if (task.isLocal() == null && task.getSplitLocations() != null && task.getHostName() != null) {
-          if (task.getSplitLocations().contains(task.getHostName()))
-            task.setLocal(true);
+          task.setLocal(task.getSplitLocations().contains(task.getHostName()));
         }
         CountersProxy counters = api.getRunningTaskCounters(task.getAppId(), task.getJobId(), task.getId());
         if (counters == null) {
@@ -96,8 +97,7 @@ class TaskInfoCollector {
       api.addFinishedAttemptInfo(task);
       task.setAppId(job.getAppId());
       if (task.isLocal() == null && task.getSplitLocations() != null && task.getHostName() != null) {
-        if (task.getSplitLocations().contains(task.getHostName()))
-          task.setLocal(true);
+        task.setLocal(task.getSplitLocations().contains(task.getHostName()));
       }
       CountersProxy counters = api.getFinishedTaskCounters(task.getJobId(), task.getId());
       if (counters != null) {
@@ -109,25 +109,32 @@ class TaskInfoCollector {
   }
 
   TaskInfo getRunningTaskInfo(AppProfile app, JobProfile job) {
-    List<TaskProfile> tasks = getCurrentTaskProfiles(job);
-    if (tasks == null || tasks.size() < 1) {
-      tasks = createTaskStubs(job);
+    List<TaskProfile> sortedCurrentTasks = getCurrentTaskProfiles(job);
+    if (sortedCurrentTasks == null || sortedCurrentTasks.size() < 1) {
+      sortedCurrentTasks = createTaskStubs(job);
     }
     if (RestClient.TrackingUI.AM.equals(app.getTrackingUI())) {
-      tasks = api.getRunningTasksInfo(job, tasks);
-      if (tasks == null || tasks.size() == 0) {
+      List<TaskProfile> updatedTasks = api.getRunningTasksInfo(job, sortedCurrentTasks);
+      if (updatedTasks == null || updatedTasks.size() == 0) {
         // job might have finished
         return null;
       }
-      List<Future<CountersProxy>> fetchers = new ArrayList<>(tasks.size());
-      for (TaskProfile task : tasks) {
-        fetchers.add(executor.submit(new TaskDetailFetcher(task)));
+      Collections.sort(updatedTasks, new Comparator<TaskProfile>() {
+        @Override
+        public int compare(TaskProfile o1, TaskProfile o2) {
+          return o1.getId().compareTo(o2.getId());
+        }
+      });
+      List<Future<CountersProxy>> fetchers = new ArrayList<>(sortedCurrentTasks.size());
+      for (int i = 0; i < sortedCurrentTasks.size(); i++) {
+        if (!sortedCurrentTasks.get(i).isFinished())
+          fetchers.add(executor.submit(new TaskDetailFetcher(updatedTasks.get(i))));
       }
       List<CountersProxy> countersList = resolveFetchers(fetchers);
       if (countersList == null) return null;
-      return new TaskInfo(tasks, countersList);
+      return new TaskInfo(updatedTasks, countersList);
     }
-    return new TaskInfo(tasks);
+    return new TaskInfo(sortedCurrentTasks);
   }
 
   private List<CountersProxy> resolveFetchers(List<Future<CountersProxy>> fetchers) {
@@ -186,7 +193,7 @@ class TaskInfoCollector {
 
   private List<TaskProfile> getCurrentTaskProfiles(JobProfile job) {
     MultiEntityPayload ret =
-      db.execute(FindByQueryCall.newInstance(TASK, QueryUtils.is("jobId", job.getId()), ID_FIELD, false));
+        db.execute(FindByQueryCall.newInstance(TASK, QueryUtils.is("jobId", job.getId()), ID_FIELD, false));
     if (ret == null)
       return null;
     return ret.getEntities();
